@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DJOUSSE-TECH-MD — Connexion WhatsApp</title>
+<style>
+  :root {
+    --bg      : #050a12;
+    --surface : #0c1524;
+    --card    : #101e30;
+    --border  : #1a2e44;
+    --cyan    : #00c8ff;
+    --cyan2   : #00ffe7;
+    --green   : #39ff98;
+    --purple  : #a855f7;
+    --red     : #ff4455;
+    --text    : #e2f0ff;
+    --muted   : #6b8aad;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%, #00c8ff0a 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, #a855f70a 0%, transparent 50%);pointer-events:none}
+  .logo{text-align:center;margin-bottom:32px}
+  .logo-icon{font-size:56px;display:block;margin-bottom:8px;filter:drop-shadow(0 0 20px var(--cyan))}
+  .logo h1{font-size:22px;font-weight:700;letter-spacing:2px;background:linear-gradient(90deg,var(--cyan),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .logo p{color:var(--muted);font-size:13px;margin-top:4px;letter-spacing:1px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:420px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--purple),var(--cyan2))}
+  .status-bar{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:24px;font-size:13px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+  .dot.online{background:var(--green);box-shadow:0 0 8px var(--green)}
+  .dot.connecting{background:#fbbf24;animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  #status-text{color:var(--muted);flex:1}
+  h2{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--text)}
+  .subtitle{color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.5}
+  .input-group{margin-bottom:16px}
+  label{display:block;font-size:12px;font-weight:500;color:var(--cyan);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+  input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s}
+  input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #00c8ff15}
+  input::placeholder{color:var(--muted)}
+  .flag-hint{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:var(--muted)}
+  .examples{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .ex{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .15s}
+  .ex:hover{border-color:var(--cyan);color:var(--cyan)}
+  .btn{width:100%;background:linear-gradient(135deg,var(--cyan),var(--cyan2));border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:700;color:#050a12;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+  .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px #00c8ff30}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .code-box{display:none;background:var(--surface);border:1px solid var(--cyan);border-radius:10px;padding:20px;text-align:center;margin-top:20px}
+  .code-box.show{display:block}
+  .code-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .code-value{font-family:'Courier New',monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:var(--cyan);text-shadow:0 0 20px var(--cyan)}
+  .code-hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .countdown{font-size:13px;color:var(--green);margin-top:8px;font-weight:600}
+  .error-box{display:none;background:#ff445510;border:1px solid var(--red);border-radius:8px;padding:12px;color:var(--red);font-size:13px;margin-top:14px;line-height:1.5}
+  .error-box.show{display:block}
+  .steps{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+  .step{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+  .step-n{background:var(--surface);border:1px solid var(--border);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:var(--cyan)}
+  .features{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+  .feat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;display:flex;align-items:center;gap:8px}
+  .feat-icon{font-size:16px}
+  @media(max-width:480px){.card{padding:20px}.code-value{font-size:24px;letter-spacing:4px}.features{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="logo">
+  <span class="logo-icon">🤖</span>
+  <h1>DJOUSSE-TECH-MD</h1>
+  <p>DJOUSSE TECH EVOLUTION</p>
+</div>
+<div class="card">
+  <div class="status-bar">
+    <div class="dot connecting" id="status-dot"></div>
+    <span id="status-text">Connexion au bot en cours...</span>
+  </div>
+  <h2>Connecter un compte WhatsApp</h2>
+  <p class="subtitle">Entrez n'importe quel numéro de téléphone avec l'indicatif pays.</p>
+  <div class="input-group">
+    <label>Numéro de téléphone</label>
+    <input type="tel" id="phone" placeholder="237612345678" autocomplete="tel" inputmode="numeric">
+    <div class="flag-hint">🌍 Indicatif pays + numéro sans espaces ni +</div>
+    <div class="examples">
+      <span class="ex" onclick="fillEx('237')">🇨🇲 237</span>
+      <span class="ex" onclick="fillEx('33')">🇫🇷 33</span>
+      <span class="ex" onclick="fillEx('1')">🇺🇸 1</span>
+      <span class="ex" onclick="fillEx('221')">🇸🇳 221</span>
+      <span class="ex" onclick="fillEx('225')">🇨🇮 225</span>
+      <span class="ex" onclick="fillEx('242')">🇨🇬 242</span>
+    </div>
+  </div>
+  <button class="btn" id="pair-btn" onclick="requestCode()">Générer le code de connexion</button>
+  <div class="code-box" id="code-box">
+    <div class="code-label">Code de connexion WhatsApp</div>
+    <div class="code-value" id="code-val">····-····</div>
+    <div class="countdown" id="countdown"></div>
+    <div class="code-hint">
+      📱 Ouvrez WhatsApp sur votre téléphone<br>
+      ⚙️ Paramètres → Appareils liés → Lier un appareil<br>
+      🔢 Entrez ce code (valable <strong>60 secondes</strong>)
+    </div>
+  </div>
+  <div class="error-box" id="error-box"></div>
+  <div class="steps">
+    <div class="step"><span class="step-n">1</span> Entrez votre numéro avec indicatif pays</div>
+    <div class="step"><span class="step-n">2</span> Cliquez "Générer le code"</div>
+    <div class="step"><span class="step-n">3</span> Ouvrez WhatsApp → Paramètres → Appareils liés</div>
+    <div class="step"><span class="step-n">4</span> Entrez le code affiché ici</div>
+    <div class="step"><span class="step-n">5</span> Vous recevrez un message de configuration</div>
+  </div>
+  <div class="features">
+    <div class="feat"><span class="feat-icon">🎓</span> Groupes scolaires</div>
+    <div class="feat"><span class="feat-icon">🎮</span> Gaming Roblox</div>
+    <div class="feat"><span class="feat-icon">🎌</span> Otaku Empire</div>
+    <div class="feat"><span class="feat-icon">🔥</span> Communautés</div>
+    <div class="feat"><span class="feat-icon">🛡️</span> Modération auto</div>
+    <div class="feat"><span class="feat-icon">🤖</span> IA adaptative</div>
+  </div>
+</div>
+<script>
+let countdownTimer = null;
+async function checkStatus() {
+  try {
+    const r = await fetch('/status');
+    const d = await r.json();
+    const dot  = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    const btn  = document.getElementById('pair-btn');
+    if (d.connected) {
+      dot.className  = 'dot online';
+      text.textContent = `✅ Connecté — ${d.user?.name || 'Bot actif'}`;
+      btn.textContent = '✅ Déjà connecté';
+      btn.disabled    = true;
+    } else {
+      dot.className  = 'dot';
+      text.textContent = 'Bot prêt — entrez un numéro pour vous connecter';
+    }
+  } catch {
+    document.getElementById('status-text').textContent = 'Impossible de joindre le bot — vérifiez qu\'il est démarré';
+  }
+}
+function fillEx(prefix) {
+  document.getElementById('phone').value = prefix;
+  document.getElementById('phone').focus();
+}
+async function requestCode() {
+  const phone = document.getElementById('phone').value.replace(/[^0-9]/g, '');
+  const btn   = document.getElementById('pair-btn');
+  const codeBox  = document.getElementById('code-box');
+  const errorBox = document.getElementById('error-box');
+  codeBox.classList.remove('show');
+  errorBox.classList.remove('show');
+  if (!phone || phone.length < 7) {
+    showError('Numéro invalide. Entrez l\'indicatif pays suivi du numéro.');
+    return;
+  }
+  btn.disabled    = true;
+  btn.textContent = '⏳ Génération en cours...';
+  try {
+    const r = await fetch('/pair', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ number: phone }),
+    });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('code-val').textContent = d.code;
+      codeBox.classList.add('show');
+      btn.textContent = 'Nouveau code';
+      btn.disabled    = false;
+      startCountdown(60);
+    } else if (d.connected) {
+      document.getElementById('status-text').textContent = '✅ Déjà connecté !';
+      document.getElementById('status-dot').className = 'dot online';
+      btn.textContent = '✅ Connecté';
+    } else {
+      showError(d.message || 'Erreur inconnue');
+      btn.textContent = 'Réessayer';
+      btn.disabled    = false;
+    }
+  } catch (err) {
+    showError('Erreur réseau. Vérifiez que le bot est démarré.');
+    btn.textContent = 'Réessayer';
+    btn.disabled    = false;
+  }
+}
+function startCountdown(secs) {
+  if (countdownTimer) clearInterval(countdownTimer);
+  const el = document.getElementById('countdown');
+  let remaining = secs;
+  el.textContent = `⏱️ Code valable ${remaining}s`;
+  countdownTimer = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(countdownTimer);
+      el.textContent = '⚠️ Code expiré — cliquez "Nouveau code"';
+      el.style.color = 'var(--red)';
+    } else {
+      el.textContent = `⏱️ Code valable ${remaining}s`;
+      el.style.color = 'var(--green)';
+    }
+  }, 1000);
+}
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = '❌ ' + msg;
+  el.classList.add('show');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('phone').addEventListener('keydown', e => {
+    if (e.key === 'Enter') requestCode();
+  });
+  checkStatus();
+  setInterval(checkStatus, 30_000);
+});
+</script>
+</body>
+</html>

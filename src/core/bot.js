@@ -1,0 +1,343 @@
+import {
+  default as makeWASocket,
+  DisconnectReason,
+  useMultiFileAuthState,
+  fetchLatestBaileysVersion,
+  makeCacheableSignalKeyStore,
+  isJidGroup,
+} from '@whiskeysockets/baileys';
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+import { Boom } from '@hapi/boom';
+import { EventEmitter } from 'events';
+
+import { createLogger } from './logger.js';
+import { handleMessage } from './handler.js';
+import { handleGroupEvent } from './group-handler.js';
+import { loadAllPlugins } from './loader.js';
+import { initDB, closeDB } from '../lib/database.js';
+import { restoreGroups, registerGroup, handleGroupMessage, isRegistered } from '../modules/groups/multi-group-engine.js';
+
+const require = createRequire(import.meta.url);
+const config  = require('../../config.cjs');
+const log     = createLogger('BOT');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const SESSION_DIR = path.resolve(__dirname, '../../session');
+const RECONNECT_DELAYS = [3000, 6000, 12000, 24000, 48000];
+
+let sock = null;
+let reconnectAttempt = 0;
+let isShuttingDown = false;
+let isConnecting = false;
+let connectionState = 'close';
+let pendingPairing = null;
+
+const callCounts = new Map();
+
+export const botEvents = new EventEmitter();
+
+export async function startBot() {
+  await loadAllPlugins();
+  await connect();
+}
+
+async function connect() {
+  if (isShuttingDown || isConnecting) return;
+  isConnecting = true;
+
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
+    const { version } = await fetchLatestBaileysVersion();
+
+    log.info(`Baileys v${version.join('.')}`);
+
+    sock = makeWASocket({
+      version,
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, log),
+      },
+      browser: config.BROWSER,
+      printQRInTerminal: false,
+      logger: log,
+      syncFullHistory: false,
+      markOnlineOnConnect: false,
+      getMessage: async () => ({ conversation: '' }),
+    });
+
+    connectionState = 'connecting';
+    botEvents.emit('connection-update', 'connecting');
+
+    sock.ev.on('creds.update', saveCreds);
+
+    sock.ev.on('connection.update', async (update) => {
+      const { connection, lastDisconnect, qr } = update;
+      if (qr) {
+        log.info('QR reçu (ignoré) — utilisez l\'interface web pour le pairage par code');
+      }
+      if (connection) {
+        connectionState = connection;
+        botEvents.emit('connection-update', connection);
+      }
+      if (connection === 'open') {
+        reconnectAttempt = 0;
+        log.info('✅ WhatsApp connecté');
+        try { await restoreGroups(sock); } catch (e) { log.warn(`restoreGroups: ${e.message}`); }
+        await _autoScanAdminGroups();
+        await _notifyOwnerOnline();
+      }
+      if (connection === 'close') {
+        const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
+        await _handleDisconnect(reason);
+      }
+    });
+
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      if (type !== 'notify') return;
+      for (const rawMsg of messages) {
+        if (!rawMsg.message) continue;
+        if (rawMsg.key.fromMe) continue;
+        try {
+          const { serializeMessage } = await import('./serializer.js');
+          const m = await serializeMessage(sock, rawMsg);
+          if (!m) continue;
+          const chatJid = rawMsg.key.remoteJid;
+          const isGroup = isJidGroup(chatJid);
+          if (isGroup && isRegistered(chatJid)) {
+            const text = m.body ?? '';
+            if (text && !text.startsWith(config.PREFIX)) {
+              handleGroupMessage(sock, m, text, chatJid).catch(() => {});
+            }
+          }
+          await handleMessage(sock, rawMsg, m);
+        } catch (err) {
+          log.error({ err }, 'Erreur traitement message');
+        }
+      }
+    });
+
+    sock.ev.on('group-participants.update', async (update) => {
+      try {
+        await handleGroupEvent(sock, update);
+        const botJid = sock.user?.id;
+        if (botJid && update.participants?.includes(botJid)) {
+          if (update.action === 'add') {
+            await _onBotAddedToGroup(update.id);
+          }
+        }
+      } catch (err) {
+        log.error({ err }, 'Erreur group-participants.update');
+      }
+    });
+
+    sock.ev.on('groups.update', async (updates) => {
+      for (const update of updates) {
+        try {
+          const { Groups } = await import('../lib/database.js');
+          if (update.subject) {
+            Groups.upsert(update.id, update.subject);
+            if (isRegistered(update.id)) {
+              log.info(`Groupe renommé : ${update.subject} — re-détection du profil`);
+              const { unregisterGroup, registerGroup } = await import('../modules/groups/multi-group-engine.js');
+              unregisterGroup(update.id);
+              registerGroup(update.id, update.subject, sock);
+            }
+          }
+        } catch (e) {
+          log.warn(`groups.update: ${e.message}`);
+        }
+      }
+    });
+
+    sock.ev.on('call', async (calls) => {
+      if (!config.REJECT_CALLS) return;
+      for (const call of calls) {
+        if (call.status === 'offer') {
+          const count = (callCounts.get(call.from) || 0) + 1;
+          callCounts.set(call.from, count);
+          try {
+            await sock.rejectCall(call.id, call.from);
+            if (count <= 2) {
+              await sock.sendMessage(call.from, {
+                text: `☎️ Je ne peux pas répondre aux appels. Envoie-moi un message, je te répondrai dès que possible. — *${config.BOT_NAME}*`,
+              });
+            }
+          } catch {}
+        }
+      }
+    });
+
+    setInterval(() => callCounts.clear(), 30 * 60 * 1000).unref();
+
+    return sock;
+  } finally {
+    isConnecting = false;
+  }
+}
+
+async function _autoScanAdminGroups() {
+  try {
+    const groups = await sock.groupFetchAllParticipating();
+    const botJid = sock.user?.id?.replace(/:.*@/, '@');
+    let adminCount = 0;
+    for (const [jid, meta] of Object.entries(groups)) {
+      const botParticipant = meta.participants?.find(p => {
+        const pJid = p.id.replace(/:.*@/, '@');
+        return pJid === botJid;
+      });
+      const isAdmin = botParticipant?.admin === 'admin' || botParticipant?.admin === 'superadmin';
+      if (isAdmin && !isRegistered(jid)) {
+        registerGroup(jid, meta.subject, sock);
+        adminCount++;
+      }
+    }
+    log.info(`Auto-scan groupes : ${adminCount} groupe(s) admin enregistré(s)`);
+  } catch (e) {
+    log.warn(`_autoScanAdminGroups: ${e.message}`);
+  }
+}
+
+async function _onBotAddedToGroup(groupJid) {
+  try {
+    const meta = await sock.groupMetadata(groupJid);
+    const botJid = sock.user?.id?.replace(/:.*@/, '@');
+    const isAdmin = meta.participants?.find(p => p.id.replace(/:.*@/, '@') === botJid)?.admin;
+    if (isAdmin) {
+      registerGroup(groupJid, meta.subject, sock);
+      log.info(`Bot ajouté comme admin dans : ${meta.subject}`);
+    }
+  } catch (e) {
+    log.warn(`_onBotAddedToGroup: ${e.message}`);
+  }
+}
+
+async function _notifyOwnerOnline() {
+  if (!config.OWNER_NUMBER) return;
+  try {
+    const ownerJid = config.OWNER_NUMBER.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+    const now = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Douala' });
+    await sock.sendMessage(ownerJid, {
+      text: `╔══『 *${config.BOT_NAME}* 』══╗\n║ ✅ *Bot en ligne*\n║ 🕐 ${now}\n║ 🌍 Heure : Cameroun (WAT)\n║ 🔗 ${config.COMPANY_NAME}\n╚══════════════════════╝`,
+    });
+  } catch {}
+}
+
+async function _handleDisconnect(reason) {
+  if (isShuttingDown) return;
+  log.warn(`Déconnecté — raison : ${reason}`);
+  botEvents.emit('disconnected', reason);
+
+  switch (reason) {
+    case DisconnectReason.loggedOut:
+    case DisconnectReason.badSession:
+      log.error('Session invalide — suppression et redémarrage');
+      _rejectPendingPairing(new Error('Session invalide, redemandez un code.'));
+      _clearSession();
+      reconnectAttempt = 0;
+      setTimeout(() => connect(), 3000);
+      return;
+    case DisconnectReason.restartRequired:
+      log.info('Redémarrage requis — reconnexion dans 3s');
+      setTimeout(() => connect(), 3000);
+      return;
+    case DisconnectReason.connectionReplaced:
+      log.warn('Connexion remplacée par une autre session — arrêt');
+      _rejectPendingPairing(new Error('Connexion remplacée.'));
+      return;
+    case DisconnectReason.multideviceMismatch:
+    case DisconnectReason.forbidden:
+      log.error(`Erreur bloquante (${reason}) — vérifiez le numéro`);
+      _rejectPendingPairing(new Error('Pairage refusé par WhatsApp.'));
+      return;
+    default:
+      if (reconnectAttempt >= 10) {
+        log.error('Max reconnexions atteint. Arrêt.');
+        botEvents.emit('fatal', 'max-reconnects');
+        process.exit(1);
+      }
+      reconnectAttempt++;
+      const idx = Math.min(reconnectAttempt - 1, RECONNECT_DELAYS.length - 1);
+      const delay = RECONNECT_DELAYS[idx] + Math.floor(Math.random() * 1000);
+      log.info(`Reconnexion ${reconnectAttempt}/10 dans ${delay}ms...`);
+      setTimeout(() => connect(), delay);
+  }
+}
+
+function _clearSession() {
+  try {
+    sock?.ev?.removeAllListeners();
+    sock?.end?.(undefined);
+  } catch {}
+  sock = null;
+  try {
+    const fs = require('fs');
+    if (fs.existsSync(SESSION_DIR)) {
+      fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+      fs.mkdirSync(SESSION_DIR, { recursive: true });
+    }
+  } catch {}
+}
+
+function _rejectPendingPairing(error) {
+  if (pendingPairing) {
+    clearTimeout(pendingPairing.timeoutId);
+    pendingPairing.reject(error);
+    pendingPairing = null;
+  }
+}
+
+export function requestPairingCode(phone) {
+  return new Promise((resolve, reject) => {
+    if (!sock) return reject(new Error('Bot non initialisé, réessayez dans quelques secondes.'));
+    if (sock.authState?.creds?.registered) return reject(new Error('already-registered'));
+    if (pendingPairing) return reject(new Error('pairing-in-progress'));
+    const timeoutId = setTimeout(() => {
+      if (pendingPairing) { pendingPairing = null; reject(new Error('timed out')); }
+    }, 30000);
+    pendingPairing = { phone, resolve, reject, timeoutId };
+    sock.requestPairingCode(phone)
+      .then((code) => {
+        if (pendingPairing && pendingPairing.phone === phone) {
+          clearTimeout(pendingPairing.timeoutId);
+          pendingPairing = null;
+          botEvents.emit('pairing-code', { phone, code });
+          resolve(code);
+        }
+      })
+      .catch((err) => {
+        if (pendingPairing && pendingPairing.phone === phone) {
+          clearTimeout(pendingPairing.timeoutId);
+          pendingPairing = null;
+        }
+        reject(err);
+      });
+  });
+}
+
+export function getSocket() { return sock; }
+
+export function getConnectionState() { return connectionState; }
+
+export function isSessionRegistered() {
+  return !!sock?.authState?.creds?.registered;
+}
+
+export async function stopBot() {
+  isShuttingDown = true;
+  log.info('Arrêt demandé...');
+  _rejectPendingPairing(new Error('Arrêt du bot en cours.'));
+  try {
+    sock?.ev?.removeAllListeners();
+    await sock?.end?.(undefined);
+    await closeDB();
+  } catch {}
+  log.info('Bot arrêté proprement.');
+}
+
+setInterval(() => {
+  const mem = process.memoryUsage();
+  log.debug(`Mémoire RSS: ${Math.round(mem.rss / 1024 / 1024)}MB`);
+}, 10 * 60 * 1000).unref();

@@ -1,0 +1,24 @@
+# Données sensibles — NE JAMAIS committer
+.env
+session/
+src/auth/session/
+
+# Base de données
+data/*.db
+data/*.log
+
+# Logs
+*.log
+bot-*.log
+bot-error.txt
+bot-output.txt
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Temporaires
+.botx_temp/
+cls
+node
+*.tmp
