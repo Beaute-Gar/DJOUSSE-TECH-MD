@@ -14,7 +14,7 @@ const config = require('../../config.cjs');
 const log = createLogger('WEBSERVER');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const SESSION_DIR = path.resolve(__dirname, '../../session');
+const SESSION_DIR = path.resolve(config.PATHS.SESSION);
 
 const pairingLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -71,6 +71,20 @@ export function startWebServer(port = 3000) {
     }
   });
 
+  app.get('/qr', async (req, res) => {
+    try {
+      const { getLastQR } = await import('./bot.js');
+      const qr = getLastQR();
+      if (qr) {
+        res.json({ qr });
+      } else {
+        res.json({ qr: null, message: 'Pas de QR disponible, patientez...' });
+      }
+    } catch {
+      res.json({ qr: null, message: 'Erreur' });
+    }
+  });
+
   app.post('/pair', pairingLimiter, async (req, res) => {
     const rawNumber = (req.body.number || req.body.phone || '').toString().trim();
     const number = rawNumber.replace(/[^0-9]/g, '');
@@ -87,7 +101,7 @@ export function startWebServer(port = 3000) {
     phoneCooldowns.set(number, Date.now());
 
     try {
-      const { getSocket } = await import('./bot.js');
+      const { getSocket, requestPairingCode } = await import('./bot.js');
       const sock = getSocket();
 
       if (!sock) {
@@ -98,8 +112,9 @@ export function startWebServer(port = 3000) {
         return res.json({ success: false, message: 'Déjà connecté !', connected: true });
       }
 
-      const code = await sock.requestPairingCode(number);
-      const formatted = code?.match(/.{1,4}/g)?.join('-') ?? code;
+      const code = await requestPairingCode(number);
+      const raw = typeof code === 'string' ? code.replace(/[^0-9A-Za-z]/g, '').toUpperCase() : String(code);
+      const formatted = raw.length === 8 ? raw.slice(0,4) + '-' + raw.slice(4) : raw;
 
       log.info(`Pairing code demandé pour : +${number}`);
 

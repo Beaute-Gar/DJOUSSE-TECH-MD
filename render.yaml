@@ -1,0 +1,62 @@
+# Render.com deployment configuration
+# https://dashboard.render.com/blueprint
+
+services:
+  - type: web
+    name: djousse-tech-md
+    runtime: node
+    repo: https://github.com/Beaute-Gar/DJOUSSE-TECH-MD
+    branch: master
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: BOT_NAME
+        value: DJOUSSE-TECH-MD
+      - key: COMPANY_NAME
+        value: Djousse Tech Evolution
+      - key: OWNER_NAME
+        value: Beaute Gar
+      - key: OWNER_NUMBER
+        sync: false
+      - key: PREFIX
+        value: .
+      - key: MODE
+        value: public
+      - key: REJECT_CALLS
+        value: true
+      - key: ANTI_LINK
+        value: false
+      - key: ANTI_BOT
+        value: false
+      - key: ANTI_DELETE
+        value: false
+      - key: AUTO_REACT
+        value: true
+      - key: DB_TYPE
+        value: postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: djousse-db
+          property: connectionString
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_TO_FILE
+        value: false
+      - key: RATE_LIMIT_MAX
+        value: 20
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 5000
+
+databases:
+  - name: djousse-db
+    plan: free
+    databaseName: djousse
+    user: djousse

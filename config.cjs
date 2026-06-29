@@ -28,7 +28,7 @@ const config = {
   LOG_TO_FILE: process.env.LOG_TO_FILE === 'true',
   LOG_FILE:   process.env.LOG_FILE    || './data/bot.log',
   PATHS: {
-    SESSION:  './session',
+    SESSION:  process.env.SESSION_PATH || './session',
     COMMANDS: './src/commands',
     DATA:     './data',
     MYDATA:   './mydata',

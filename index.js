@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import http from 'http';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -21,6 +22,18 @@ log.info(`║   ${config.BOT_NAME.padEnd(36)}║`);
 log.info(`║   ${config.COMPANY_NAME.padEnd(36)}║`);
 log.info(`╚══════════════════════════════════════╝`);
 
+// Keep-alive : empêche Render de s'endormir
+function startKeepAlive() {
+  const url = process.env.RENDER_EXTERNAL_URL || process.env.KEEP_ALIVE_URL;
+  if (!url) return;
+  log.info(`Keep-alive activé → ${url}`);
+  setInterval(() => {
+    http.get(url, (res) => {
+      log.debug(`Keep-alive ping: ${res.statusCode}`);
+    }).on('error', () => {});
+  }, 10 * 60 * 1000); // toutes les 10 minutes
+}
+
 async function main() {
   try {
     const { initDB } = await import('./src/lib/database.js');
@@ -33,6 +46,8 @@ async function main() {
 
     const { startBot } = await import('./src/core/bot.js');
     await startBot();
+
+    startKeepAlive();
   } catch (err) {
     log.error({ err }, 'Erreur fatale au démarrage');
     process.exit(1);

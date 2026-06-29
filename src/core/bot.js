@@ -25,7 +25,7 @@ const config  = require('../../config.cjs');
 const log     = createLogger('BOT');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const SESSION_DIR = path.resolve(__dirname, '../../session');
+const SESSION_DIR = path.resolve(config.PATHS.SESSION);
 const RECONNECT_DELAYS = [3000, 6000, 12000, 24000, 48000];
 
 let sock = null;
@@ -34,6 +34,7 @@ let isShuttingDown = false;
 let isConnecting = false;
 let connectionState = 'close';
 let pendingPairing = null;
+let lastQR = null;
 
 const callCounts = new Map();
 
@@ -52,6 +53,17 @@ async function connect() {
     const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
     const { version } = await fetchLatestBaileysVersion();
 
+    if (state.creds?.me && !state.creds?.registered) {
+      log.warn('Creds partiels (pairing non abouti) — nettoyage de la session');
+      isConnecting = false;
+      const fs = require('fs');
+      if (fs.existsSync(SESSION_DIR)) {
+        fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+      }
+      setTimeout(() => connect(), 1000);
+      return;
+    }
+
     log.info(`Baileys v${version.join('.')}`);
 
     sock = makeWASocket({
@@ -63,8 +75,6 @@ async function connect() {
       browser: config.BROWSER,
       printQRInTerminal: false,
       logger: log,
-      syncFullHistory: false,
-      markOnlineOnConnect: false,
       getMessage: async () => ({ conversation: '' }),
     });
 
@@ -76,7 +86,9 @@ async function connect() {
     sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
       if (qr) {
-        log.info('QR reçu (ignoré) — utilisez l\'interface web pour le pairage par code');
+        lastQR = qr;
+        botEvents.emit('qr', qr);
+        log.info('QR reçu');
       }
       if (connection) {
         connectionState = connection;
@@ -289,37 +301,28 @@ function _rejectPendingPairing(error) {
   }
 }
 
-export function requestPairingCode(phone) {
-  return new Promise((resolve, reject) => {
-    if (!sock) return reject(new Error('Bot non initialisé, réessayez dans quelques secondes.'));
-    if (sock.authState?.creds?.registered) return reject(new Error('already-registered'));
-    if (pendingPairing) return reject(new Error('pairing-in-progress'));
-    const timeoutId = setTimeout(() => {
-      if (pendingPairing) { pendingPairing = null; reject(new Error('timed out')); }
-    }, 30000);
-    pendingPairing = { phone, resolve, reject, timeoutId };
-    sock.requestPairingCode(phone)
-      .then((code) => {
-        if (pendingPairing && pendingPairing.phone === phone) {
-          clearTimeout(pendingPairing.timeoutId);
-          pendingPairing = null;
-          botEvents.emit('pairing-code', { phone, code });
-          resolve(code);
-        }
-      })
-      .catch((err) => {
-        if (pendingPairing && pendingPairing.phone === phone) {
-          clearTimeout(pendingPairing.timeoutId);
-          pendingPairing = null;
-        }
-        reject(err);
-      });
+export async function requestPairingCode(phone) {
+  if (!sock) throw new Error('Bot non initialisé, réessayez dans quelques secondes.');
+  if (sock.authState?.creds?.registered) throw new Error('already-registered');
+  if (pendingPairing) throw new Error('pairing-in-progress');
+  if (sock.authState?.creds?.me && !sock.authState?.creds?.registered) {
+    log.warn('Creds partiels détectés — nettoyage avant pairage');
+    try {
+      sock.authState.creds.me = undefined;
+      sock.authState.creds.pairingCode = undefined;
+    } catch {}
+  }
+  const code = await sock.requestPairingCode(phone).catch((err) => {
+    throw err;
   });
+  return code;
 }
 
 export function getSocket() { return sock; }
 
 export function getConnectionState() { return connectionState; }
+
+export function getLastQR() { return lastQR; }
 
 export function isSessionRegistered() {
   return !!sock?.authState?.creds?.registered;
