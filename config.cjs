@@ -19,6 +19,7 @@ const config = {
   DATABASE_URL: process.env.DATABASE_URL || null,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || null,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || null,
+  PAIRING_TOKEN:  process.env.PAIRING_TOKEN  || null,
   PORT: parseInt(process.env.PORT || '3000', 10),
   RATE_LIMIT_MAX:       parseInt(process.env.RATE_LIMIT_MAX        || '10', 10),
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS  || '5000', 10),

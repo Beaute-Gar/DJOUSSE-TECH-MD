@@ -3,221 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DJOUSSE-TECH-MD — Connexion WhatsApp</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<title>DJOUSSE-TECH-MD</title>
 <style>
-  :root {
-    --bg      : #050a12;
-    --surface : #0c1524;
-    --card    : #0f1a2e;
-    --border  : #1a2e44;
-    --cyan    : #00c8ff;
-    --cyan2   : #00ffe7;
-    --green   : #39ff98;
-    --purple  : #a855f7;
-    --pink    : #ff2d95;
-    --red     : #ff4455;
-    --text    : #e2f0ff;
-    --muted   : #6b8aad;
-  }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-x:hidden}
-  #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
-  .scanline{position:fixed;inset:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,200,255,.03)2px,rgba(0,200,255,.03)4px)}
-  .orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(80px);opacity:.12;animation:orbFloat 14s ease-in-out infinite alternate}
-  .orb-1{width:450px;height:450px;background:var(--cyan);top:-12%;left:-8%;animation-delay:0s}
-  .orb-2{width:380px;height:380px;background:var(--purple);bottom:-10%;right:-8%;animation-delay:-5s}
-  .orb-3{width:320px;height:320px;background:var(--pink);top:55%;left:50%;transform:translate(-50%,-50%);animation-delay:-9s}
-  @keyframes orbFloat{0%{transform:translate(0,0)scale(1)}33%{transform:translate(50px,-40px)scale(1.12)}66%{transform:translate(-30px,50px)scale(.88)}100%{transform:translate(40px,30px)scale(1.06)}}
-  .content{position:relative;z-index:2;width:100%;max-width:500px}
-  .logo{text-align:center;margin-bottom:24px}
-  .logo-icon{font-size:48px;display:block;margin-bottom:4px;animation:glowPulse 3s ease-in-out infinite;filter:drop-shadow(0 0 20px var(--cyan))}
-  @keyframes glowPulse{0%,100%{filter:drop-shadow(0 0 20px var(--cyan))}50%{filter:drop-shadow(0 0 40px var(--cyan),0 0 80px var(--purple))}}
-  .logo h1{font-size:20px;font-weight:700;letter-spacing:3px;background:linear-gradient(90deg,var(--cyan),var(--cyan2),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradientShift 4s ease-in-out infinite;background-size:200% auto}
-  @keyframes gradientShift{0%,100%{background-position:0% center}50%{background-position:100% center}}
-  .logo p{color:var(--muted);font-size:10px;margin-top:2px;letter-spacing:3px;text-transform:uppercase}
-  .logo p span{color:var(--cyan);animation:blink 2s step-end infinite}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-  .card{background:rgba(15,26,46,.85);backdrop-filter:blur(12px);border:1px solid rgba(0,200,255,.12);border-radius:16px;padding:28px;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(0,200,255,.05),inset 0 1px 0 rgba(0,200,255,.08)}
-  .card::before{content:'';position:absolute;top:0;left:-100%;width:200%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),var(--purple),transparent);animation:cardSweep 4s linear infinite}
-  @keyframes cardSweep{0%{transform:translateX(-50%)}100%{transform:translateX(50%)}}
-  .card-glow{position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 50% 50%,rgba(0,200,255,.03),transparent 70%);pointer-events:none;animation:cardGlow 10s ease-in-out infinite alternate}
-  @keyframes cardGlow{0%{opacity:.4;transform:scale(1)}100%{opacity:1;transform:scale(1.15)}}
-  .status{display:flex;align-items:center;gap:10px;margin-bottom:20px;font-size:12px;color:var(--muted);background:rgba(12,21,36,.6);border:1px solid var(--border);border-radius:8px;padding:10px 14px;position:relative;z-index:1}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all .3s}
-  .dot.green{background:var(--green);box-shadow:0 0 12px var(--green);animation:pulseDot 1.5s ease-in-out infinite}
-  @keyframes pulseDot{0%,100%{box-shadow:0 0 6px var(--green)}50%{box-shadow:0 0 20px var(--green),0 0 40px rgba(57,255,152,.3)}}
-  .section{display:none;animation:fadeIn .5s ease-out}
-  .section.active{display:block}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-
-  /* Pairing */
-  h2{font-size:14px;margin-bottom:2px}
-  .sub{color:var(--muted);font-size:12px;margin-bottom:16px}
-  input{width:100%;background:rgba(12,21,36,.7);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:all .3s;margin-bottom:12px}
-  input:focus{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,200,255,.15),inset 0 0 20px rgba(0,200,255,.05)}
-  input::placeholder{color:rgba(107,138,173,.5)}
-  .btn{width:100%;background:linear-gradient(135deg,var(--cyan),var(--cyan2));border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;color:#050a12;cursor:pointer;position:relative;z-index:1;transition:all .3s;letter-spacing:1px;text-transform:uppercase}
-  .btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,200,255,.3)}
-  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-
-  /* Tabs */
-  .tabs{display:flex;gap:8px;margin-bottom:16px}
-  .tab{flex:1;background:rgba(12,21,36,.6);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;font-size:12px;cursor:pointer;transition:all .3s;color:var(--muted)}
-  .tab.active{background:rgba(0,200,255,.1);border-color:var(--cyan);color:var(--cyan)}
-  .tab-content{display:none}
-  .tab-content.active{display:block;animation:fadeIn .4s ease-out}
-
-  /* Code box */
-  .code-box{display:none;background:rgba(12,21,36,.8);border:1px solid var(--cyan);border-radius:10px;padding:20px;text-align:center;margin-top:16px;animation:fadeIn .4s ease-out;box-shadow:0 0 30px rgba(0,200,255,.1)}
+  body{background:#050a12;color:#e2f0ff;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+  .card{background:#0f1a2e;border:1px solid #1a2e44;border-radius:16px;padding:28px;width:100%;max-width:400px;text-align:center}
+  .logo h1{font-size:20px;font-weight:700;letter-spacing:3px;background:linear-gradient(90deg,#00c8ff,#00ffe7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+  .logo p{color:#6b8aad;font-size:11px;margin-bottom:24px}
+  .status{font-size:13px;color:#6b8aad;margin-bottom:20px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b8aad;margin-right:6px;vertical-align:middle}
+  .dot.green{background:#39ff98;box-shadow:0 0 12px #39ff98}
+  input{width:100%;background:#0c1524;border:1px solid #1a2e44;border-radius:8px;padding:12px;color:#e2f0ff;font-size:15px;outline:none;margin-bottom:12px;text-align:center}
+  input:focus{border-color:#00c8ff}
+  .btn{width:100%;background:linear-gradient(135deg,#00c8ff,#00ffe7);border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;color:#050a12;cursor:pointer}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .code-box{display:none;background:#0c1524;border:1px solid #00c8ff;border-radius:10px;padding:20px;margin-top:16px;text-align:center}
   .code-box.show{display:block}
-  .code-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
-  .code-value{font-family:'Courier New',monospace;font-size:34px;font-weight:700;letter-spacing:10px;background:linear-gradient(90deg,var(--cyan),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:codeGlow 2s ease-in-out infinite alternate}
-  @keyframes codeGlow{0%{filter:drop-shadow(0 0 10px var(--cyan))}100%{filter:drop-shadow(0 0 30px var(--cyan))}}
-  .code-raw{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:2px}
-  .countdown{font-size:12px;color:var(--green);margin-top:8px;font-weight:600}
-  .code-hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
-  .error{display:none;background:rgba(255,68,85,.1);border:1px solid rgba(255,68,85,.4);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-top:12px}
-  .error.show{display:block;animation:fadeIn .3s ease-out}
-
-  /* QR */
-  .qr-box{display:none;text-align:center;margin-top:16px;animation:fadeIn .4s ease-out}
-  .qr-box.show{display:block}
-  #qrcode{display:inline-block;background:white;padding:12px;border-radius:10px;margin-bottom:10px}
-  #qrcode img,#qrcode canvas{display:block;margin:0 auto}
-  .qr-hint{font-size:11px;color:var(--muted);line-height:1.6}
-
-  .trust-section{display:none;animation:fadeIn .5s ease-out}
-  .trust-section.active{display:block}
-  .trust-header{text-align:center;margin-bottom:20px}
-  .trust-header .shield{font-size:42px;display:block;margin-bottom:6px;filter:drop-shadow(0 0 15px var(--green))}
-  .trust-header h2{font-size:16px;font-weight:700;color:var(--green);text-align:center}
-  .trust-block{background:rgba(12,21,36,.5);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
-  .trust-block h3{font-size:12px;color:var(--cyan);margin-bottom:8px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px}
-  .trust-block ul{list-style:none;padding:0}
-  .trust-block ul li{padding:4px 0;padding-left:20px;position:relative;font-size:12px;color:var(--text);line-height:1.7}
-  .trust-block ul li::before{content:'\203A';position:absolute;left:4px;color:var(--green);font-weight:700}
-  .trust-footer{text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
-  .trust-footer .btn-sm{background:transparent;border:1px solid var(--border);color:var(--muted);padding:8px 20px;border-radius:6px;cursor:pointer;font-size:11px;transition:all .3s;margin:0 4px}
-  .trust-footer .btn-sm:hover{border-color:var(--cyan);color:var(--cyan)}
-  .trust-footer .btn-sm.danger:hover{border-color:var(--red);color:var(--red)}
-  .footer{margin-top:14px;text-align:center;font-size:10px;color:rgba(107,138,173,.4);letter-spacing:2px;text-transform:uppercase}
-  @media(max-width:480px){.card{padding:20px}.code-value{font-size:22px;letter-spacing:4px}}
+  .code-value{font-family:monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#00c8ff}
+  .countdown{font-size:12px;color:#39ff98;margin-top:8px}
+  .error{display:none;background:#ff445510;border:1px solid #ff4455;border-radius:8px;padding:10px;font-size:12px;color:#ff4455;margin-top:12px}
+  .error.show{display:block}
+  .hidden{display:none}
+  .footer{font-size:10px;color:#6b8aad44;margin-top:16px}
 </style>
 </head>
 <body>
-<canvas id="bg-canvas"></canvas>
-<div class="scanline"></div>
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
-<div class="orb orb-3"></div>
-
-<div class="content">
+<div class="card">
   <div class="logo">
-    <span class="logo-icon">&#9881;</span>
     <h1>DJOUSSE-TECH-MD</h1>
-    <p><span>&#9670;</span> DJOUSSETECH EVOLUTION <span>&#9670;</span></p>
+    <p>DJoussetech Evolution</p>
   </div>
-  <div class="card">
-    <div class="card-glow"></div>
+
+  <!-- Écran token -->
+  <div id="screen-token">
+    <div class="status">Entrez le token de securite</div>
+    <input type="password" id="token-input" placeholder="Token de securite">
+    <button class="btn" id="token-btn" onclick="authToken()">Valider</button>
+    <div class="error" id="token-error"></div>
+  </div>
+
+  <!-- Écran pairage -->
+  <div id="screen-pair" class="hidden">
     <div class="status">
-      <div class="dot" id="dot"></div>
+      <span class="dot" id="dot"></span>
       <span id="status-text">Initialisation...</span>
     </div>
-
-    <!-- Section connexion -->
-    <div class="section active" id="section-pair">
-      <h2>Connecter WhatsApp</h2>
-      <p class="sub">Choisis une methode :</p>
-
-      <div class="tabs">
-        <div class="tab active" id="tab-code" onclick="switchTab('code')">Code</div>
-        <div class="tab" id="tab-qr" onclick="switchTab('qr')">QR</div>
-      </div>
-
-      <!-- Onglet Code -->
-      <div class="tab-content active" id="panel-code">
-        <input type="tel" id="phone" placeholder="237659809751" autocomplete="tel">
-        <button class="btn" id="pair-btn" onclick="requestCode()">Generer le code</button>
-        <div class="code-box" id="code-box">
-          <div class="code-label">Code de pairage</div>
-          <div class="code-value" id="code-val">---- ----</div>
-          <div class="code-raw" id="code-raw">--------</div>
-          <div class="countdown" id="countdown"></div>
-          <div class="code-hint">WhatsApp &rarr; Parametres &rarr; Appareils lies &rarr; Lier un appareil</div>
-        </div>
-      </div>
-
-      <!-- Onglet QR -->
-      <div class="tab-content" id="panel-qr">
-        <p class="sub">Scanne le QR avec ton WhatsApp</p>
-        <div class="qr-box" id="qr-box">
-          <div id="qrcode"></div>
-          <div class="qr-hint">WhatsApp &rarr; Appareils lies &rarr; Scanner le code</div>
-        </div>
-        <div id="qr-wait" style="font-size:12px;color:var(--muted);text-align:center;padding:30px">Generation du QR en cours...</div>
-      </div>
-
-      <div class="error" id="error"></div>
+    <input type="tel" id="phone" placeholder="237659809751">
+    <button class="btn" id="pair-btn" onclick="requestCode()">Generer le code</button>
+    <div class="code-box" id="code-box">
+      <div class="code-value" id="code-val">---- ----</div>
+      <div class="countdown" id="countdown"></div>
     </div>
-
-    <!-- Section confiance (post-connexion) -->
-    <div class="trust-section" id="section-trust">
-      <div class="trust-header">
-        <span class="shield">&#128737;</span>
-        <h2>&#10003; Connexion reussie</h2>
-        <p>Votre appareil est lie a DJOUSSE-TECH-MD</p>
-      </div>
-      <div class="trust-block">
-        <h3>&#128274; Confidentialite des donnees</h3>
-        <ul>
-          <li>Aucun message prive stocke sur nos serveurs</li>
-          <li>Session conservee localement sur votre machine</li>
-          <li>Votre numero jamais partage a des tiers</li>
-          <li>Messages antidelete detruits apres 24h</li>
-        </ul>
-      </div>
-      <div class="trust-block">
-        <h3>&#128214; Conditions d'utilisation</h3>
-        <ul>
-          <li>Usage personnel et communautaire</li>
-          <li>Spam, harcelement et abus interdits</li>
-          <li>L'utilisateur est responsable de ses actions</li>
-        </ul>
-      </div>
-      <div class="trust-block">
-        <h3>&#128161; Fonctionnalites actives</h3>
-        <ul>
-          <li>IA Gemini, menu, alive, sticker et +</li>
-          <li>Moderation auto (anti-lien, anti-spam)</li>
-          <li>Modules Roblox et Multi-groupes</li>
-          <li>Economie : XP, niveaux, classement</li>
-        </ul>
-      </div>
-      <div class="trust-footer">
-        <button class="btn-sm" onclick="showPairSection()">&#8592; Lier un autre appareil</button>
-        <button class="btn-sm danger" onclick="deconnecter()">&#128682; Deconnecter</button>
-      </div>
-    </div>
+    <div class="error" id="error"></div>
+    <div class="footer">WhatsApp &rarr; Parametres &rarr; Appareils lies &rarr; Lier un appareil</div>
   </div>
-  <div class="footer">DJousse Tech Evolution &copy; 2026</div>
 </div>
 
 <script>
-const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
-let W,H,particles=[];
-function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight}
-resize();addEventListener('resize',resize);
-class P{constructor(){this.reset()}reset(){this.x=Math.random()*W;this.y=Math.random()*H;this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;this.r=Math.random()*2+.5;this.a=Math.random()*.4+.1}update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>W||this.y<0||this.y>H)this.reset()}draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,200,255,${this.a})`;ctx.fill()}}
-for(let i=0;i<80;i++)particles.push(new P());
-function drawGrid(){ctx.strokeStyle='rgba(0,200,255,.04)';ctx.lineWidth=1;const s=40,o=Date.now()*.01%s;ctx.beginPath();for(let x=0;x<W;x+=s){ctx.moveTo(x,0);ctx.lineTo(x,H)}for(let y=-o;y<H;y+=s){ctx.moveTo(0,y);ctx.lineTo(W,y)}ctx.stroke()}
-function drawConnections(){for(let i=0;i<particles.length;i++){for(let j=i+1;j<particles.length;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<120){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(0,200,255,${.08*(1-d/120)})`;ctx.stroke()}}}}
-function animate(){ctx.clearRect(0,0,W,H);drawGrid();particles.forEach(p=>{p.update();p.draw()});drawConnections();requestAnimationFrame(animate)}
-animate();
+let timer=null;
+const TOKEN_KEY='djousse_token';
 
-let timer=null,qrTimer=null;
-function switchTab(t){document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.getElementById('panel-'+t).classList.add('active');if(t==='qr')initQR()}
-function showPairSection(){document.getElementById('section-trust').classList.remove('active');document.getElementById('section-pair').classList.add('active')}
+async function authToken(){
+  const t=document.getElementById('token-input').value.trim();
+  const btn=document.getElementById('token-btn');
+  const err=document.getElementById('token-error');
+  err.classList.remove('show');
+  if(!t){err.textContent='Entrez le token';err.classList.add('show');return}
+  btn.disabled=true;btn.textContent='Verification...';
+  try{
+    const r=await fetch('/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});
+    const d=await r.json();
+    if(d.success){
+      localStorage.setItem(TOKEN_KEY,t);
+      document.getElementById('screen-token').classList.add('hidden');
+      document.getElementById('screen-pair').classList.remove('hidden');
+      checkStatus();
+    }else{err.textContent='Token invalide';err.classList.add('show');btn.disabled=false;btn.textContent='Valider'}
+  }catch{err.textContent='Erreur reseau';err.classList.add('show');btn.disabled=false;btn.textContent='Valider'}
+}
 
 async function requestCode(){
   const phone=document.getElementById('phone').value.replace(/[^0-9]/g,'');
@@ -225,74 +88,40 @@ async function requestCode(){
   codeBox.classList.remove('show');error.classList.remove('show');
   if(!phone||phone.length<7){showError('Numero invalide');return}
   btn.disabled=true;btn.textContent='Generation...';
+  const token=localStorage.getItem(TOKEN_KEY);
   try{
-    const r=await fetch('/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({number:phone})});
+    const r=await fetch('/pair',{method:'POST',headers:{'Content-Type':'application/json','X-Pairing-Token':token||''},body:JSON.stringify({number:phone})});
     const d=await r.json();
     if(d.success){
-      const raw=d.code.replace(/-/g,'');
       document.getElementById('code-val').textContent=d.code;
-      document.getElementById('code-raw').textContent=raw;
       codeBox.classList.add('show');btn.textContent='Nouveau code';btn.disabled=false;startCountdown(120);
-    }else if(d.connected){goTrust();btn.textContent='Connecte'}
+    }else if(d.connected){document.getElementById('status-text').textContent='Connecte';document.getElementById('dot').className='dot green'}
     else{showError(d.message||'Erreur');btn.textContent='Reessayer';btn.disabled=false}
   }catch{showError('Erreur reseau');btn.textContent='Reessayer';btn.disabled=false}
 }
 
-async function initQR(){
-  document.getElementById('qr-box').classList.remove('show');
-  document.getElementById('qr-wait').style.display='block';
+async function checkStatus(){
   try{
-    const r=await fetch('/qr');const d=await r.json();
-    if(d.qr){
-      document.getElementById('qr-wait').style.display='none';
-      document.getElementById('qr-box').classList.add('show');
-      document.getElementById('qrcode').innerHTML='';
-      new QRCode(document.getElementById('qrcode'),{text:d.qr,width:220,height:220,colorDark:'#050a12',colorLight:'#ffffff'});
-    }
-  }catch{}
-  if(qrTimer)clearInterval(qrTimer);
-  qrTimer=setInterval(async()=>{
-    if(document.getElementById('panel-qr').classList.contains('active')){
-      try{
-        const r=await fetch('/qr');const d=await r.json();
-        if(d.qr){
-          document.getElementById('qr-wait').style.display='none';
-          document.getElementById('qr-box').classList.add('show');
-          document.getElementById('qrcode').innerHTML='';
-          new QRCode(document.getElementById('qrcode'),{text:d.qr,width:220,height:220,colorDark:'#050a12',colorLight:'#ffffff'});
-        }
-      }catch{}
-    }
-  },3000);
-}
-
-function goTrust(){
-  document.getElementById('section-pair').classList.remove('active');
-  document.getElementById('section-trust').classList.add('active');
-  document.getElementById('dot').className='dot green';
-  document.getElementById('status-text').textContent='Connecte';
-}
-
-async function deconnecter(){
-  if(!confirm('Voulez-vous vraiment deconnecter le bot ?'))return;
-  try{const r=await fetch('/logout',{method:'POST'});const d=await r.json();if(d.success)location.reload();else alert('Erreur: '+d.message)}catch{alert('Erreur reseau')}
+    const r=await fetch('/status');const d=await r.json();
+    if(d.connected){document.getElementById('dot').className='dot green';document.getElementById('status-text').textContent='Connecte'}
+    else{document.getElementById('dot').className='dot';document.getElementById('status-text').textContent='Prete'}
+  }catch{document.getElementById('status-text').textContent='Hors ligne'}
 }
 
 function startCountdown(s){if(timer)clearInterval(timer);const el=document.getElementById('countdown');let r=s;el.textContent=r+'s';timer=setInterval(()=>{r--;if(r<=0){clearInterval(timer);el.textContent='Expire'}else el.textContent=r+'s'},1000)}
 function showError(m){const el=document.getElementById('error');el.textContent=m;el.classList.add('show')}
 
-async function checkStatus(){
-  try{
-    const r=await fetch('/status');const d=await r.json();
-    const dot=document.getElementById('dot'),txt=document.getElementById('status-text');
-    if(d.connected){dot.className='dot green';txt.textContent='Connecte - '+d.botName;if(document.getElementById('section-pair').classList.contains('active'))goTrust()}
-    else{dot.className='dot';txt.textContent='Prete'}
-  }catch{document.getElementById('status-text').textContent='Hors ligne'}
-}
-
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded',async()=>{
+  const r=await fetch('/status');const d=await r.json();
+  if(d.connected){document.getElementById('screen-token').classList.add('hidden');document.getElementById('screen-pair').classList.remove('hidden');document.getElementById('dot').className='dot green';document.getElementById('status-text').textContent='Connecte';return}
+  if(!d.hasToken){document.getElementById('screen-token').classList.add('hidden');document.getElementById('screen-pair').classList.remove('hidden');setInterval(checkStatus,5000);return}
+  const saved=localStorage.getItem(TOKEN_KEY);
+  if(saved){
+    const r2=await fetch('/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:saved})});
+    const d2=await r2.json();
+    if(d2.success){document.getElementById('screen-token').classList.add('hidden');document.getElementById('screen-pair').classList.remove('hidden');setInterval(checkStatus,5000);return}
+  }
   document.getElementById('phone').addEventListener('keydown',e=>{if(e.key==='Enter')requestCode()});
-  checkStatus();setInterval(checkStatus,5000);
 });
 </script>
 </body>

@@ -18,7 +18,7 @@ const SESSION_DIR = path.resolve(config.PATHS.SESSION);
 
 const pairingLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 5,
   message: { success: false, message: 'Trop de tentatives. Réessayez dans 15 minutes.' },
 });
 
@@ -28,6 +28,13 @@ const generalLimiter = rateLimit({
 });
 
 const phoneCooldowns = new Map();
+
+function checkToken(req) {
+  const token = config.PAIRING_TOKEN;
+  if (!token) return true;
+  const provided = req.headers['x-pairing-token'] || req.query.token || '';
+  return provided === token;
+}
 
 export function startWebServer(port = 3000) {
   const app = express();
@@ -61,6 +68,7 @@ export function startWebServer(port = 3000) {
       const connected = !!(sock?.user);
       res.json({
         connected,
+        hasToken: !!config.PAIRING_TOKEN,
         botName: config.BOT_NAME,
         company: config.COMPANY_NAME,
         user: connected ? { id: sock.user.id, name: sock.user.name } : null,
@@ -71,7 +79,21 @@ export function startWebServer(port = 3000) {
     }
   });
 
+  app.post('/auth', (req, res) => {
+    const token = (req.body.token || '').trim();
+    if (!config.PAIRING_TOKEN) {
+      return res.json({ success: true });
+    }
+    if (token === config.PAIRING_TOKEN) {
+      return res.json({ success: true });
+    }
+    return res.status(403).json({ success: false, message: 'Token invalide' });
+  });
+
   app.get('/qr', async (req, res) => {
+    if (!checkToken(req)) {
+      return res.status(403).json({ qr: null, message: 'Non autorisé' });
+    }
     try {
       const { getLastQR } = await import('./bot.js');
       const qr = getLastQR();
@@ -86,11 +108,20 @@ export function startWebServer(port = 3000) {
   });
 
   app.post('/pair', pairingLimiter, async (req, res) => {
+    if (!checkToken(req)) {
+      return res.status(403).json({ success: false, message: 'Token de sécurité invalide' });
+    }
     const rawNumber = (req.body.number || req.body.phone || '').toString().trim();
     const number = rawNumber.replace(/[^0-9]/g, '');
 
     if (!number || number.length < 7 || number.length > 15) {
       return res.status(400).json({ success: false, message: 'Numéro invalide. Format : indicatif + numéro (ex: 237612345678)' });
+    }
+
+    const ownerClean = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+    if (number !== ownerClean) {
+      log.warn(`Tentative de pairage refusée pour +${number} (pas le propriétaire)`);
+      return res.status(403).json({ success: false, message: 'Ce numéro n\'est pas autorisé à connecter ce bot.' });
     }
 
     const cooldown = phoneCooldowns.get(number);
