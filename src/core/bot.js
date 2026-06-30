@@ -310,21 +310,7 @@ async function _notifyOwnerOnline() {
     const fs = require('fs');
     const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
     const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
-    const msg =
-`👋 *Bienvenue sur DJOUSSE TECH Cognitive OS !*
-Votre assistant intelligent est désormais actif.
-✨ Il peut vous aider à :
-• Animer automatiquement vos groupes.
-• Maintenir des discussions toujours actives.
-• Lancer des sondages, quiz et jeux.
-• Assister les administrateurs dans la gestion des communautés.
-• Automatiser certaines tâches, même lorsque vous êtes hors ligne.
-
-🚀 Pour commencer, envoyez :
-
-*.menu* ou *.OS aide*
-
-Bienvenue dans une nouvelle façon de gérer WhatsApp avec *DJOUSSE TECH*.`;
+    const msg = `Bonjour @utilisateur, je suis en ligne et prêt à vous assister.`;
     if (fs.existsSync(img1)) {
       await sock.sendMessage(ownerJid, { image: fs.readFileSync(img1), caption: msg });
     }
