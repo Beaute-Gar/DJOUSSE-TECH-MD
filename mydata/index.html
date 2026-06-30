@@ -448,7 +448,7 @@ function initPair(){
       conLog('Session déconnectée','ok');setAI('yellow','WAITING');setObserver('gray','INIT');setWorkspace('gray','INIT');setSCG('cyan','STANDBY');
       qs('post-connect').classList.remove('show');qs('connector').style.display='flex';
       qs('pair-btn').disabled=false;qs('pair-btn').textContent='Obtenir le code';qs('phone-inp').disabled=false;
-      qs('logout-btn').classList.add('hidden');qs('init-lines').innerHTML='';
+      qs('logout-btn').classList.add('hidden');qs('init-bar').style.width='0%';qs('init-status').textContent='';qs('init-status').className='init-status';
       qs('qr-spin').style.display='block';
       showStatus('pair-status','info','✅ Déconnecté. QR disponible...');
       setTimeout(()=>location.reload(),1500);
