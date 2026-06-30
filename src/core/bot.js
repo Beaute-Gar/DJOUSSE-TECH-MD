@@ -304,14 +304,12 @@ async function _onBotAddedToGroup(groupJid) {
 }
 
 async function _notifyOwnerOnline() {
-  if (!config.OWNER_NUMBER) return;
+  if (!config.OWNER_NUMBER || !sock) return;
   try {
     const ownerJid = config.OWNER_NUMBER.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
     const now = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Douala' });
-    const { executor, ACTION_TYPES } = await import('../cognitive/action-executor.js');
-    await executor.execute({
-      type: ACTION_TYPES.SEND_MESSAGE,
-      payload: { jid: ownerJid, text: `╔═══════════════════════════════════╗
+    await sock.sendMessage(ownerJid, {
+      text: `╔═══════════════════════════════════╗
 ║    *DJOUSSE-TECH MD*              ║
 ║    Intelligence Artificielle      ║
 ║    au service de votre succès     ║
@@ -356,10 +354,12 @@ async function _notifyOwnerOnline() {
 
 ━━━━━━━━━━━━━━━━━━━━━
 *${config.COMPANY_NAME}*
-*Technologie au service de l'humain*` },
-      source: 'bot:owner_notify',
+*Technologie au service de l'humain*`,
     });
-  } catch {}
+    log.info('Message de bienvenue envoyé au propriétaire');
+  } catch (e) {
+    log.warn(`_notifyOwnerOnline: ${e.message}`);
+  }
 }
 
 async function _handleDisconnect(reason) {
