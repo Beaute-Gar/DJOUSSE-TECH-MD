@@ -50,6 +50,19 @@ export const EVENTS = {
   WORKFLOW_COMPLETED:   'workflow:completed',
   ERROR:                'system:error',
   SHUTDOWN:             'system:shutdown',
+  SCG_POLL_CREATED:     'scg:poll:created',
+  SCG_POLL_VOTED:       'scg:poll:voted',
+  SCG_POLL_CLOSED:      'scg:poll:closed',
+  SCG_POLL_MANDATORY:   'scg:poll:mandatory',
+  SCG_MODE_CHANGED:     'scg:mode:changed',
+  SCG_GAME_STARTED:     'scg:game:started',
+  SCG_GAME_ENDED:       'scg:game:ended',
+  SCG_REWARD_AWARDED:   'scg:reward:awarded',
+  SCG_MEMBER_LOCKED:    'scg:member:locked',
+  SCG_MEMBER_UNLOCKED:  'scg:member:unlocked',
+  SCG_SUMMARY_HOURLY:   'scg:summary:hourly',
+  SCG_SUMMARY_DAILY:    'scg:summary:daily',
+  SCG_PROFILE_UPDATED:  'scg:profile:updated',
 };
 
 class EventBus {

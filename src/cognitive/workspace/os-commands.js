@@ -9,6 +9,11 @@ import { orchestrator } from '../agents/agent-framework.js';
 import { trust, audit, approval, policy } from '../governance/index.js';
 import { planner } from '../planning-engine.js';
 import { semanticMemory } from '../semantic-memory.js';
+import {
+  handleCreatePoll, handleSetMandatory,
+  handleStartQuiz, handleStartDevinette, handleClassement,
+  handleSetMode, handleGetMode,
+} from '../community/index.js';
 
 const log = createLogger('OSCMD');
 
@@ -38,6 +43,13 @@ const HANDLERS = {
   'sync':         cmdSync,
   'synchronisation': cmdSync,
   'cleanup':      cmdCleanup,
+  'sondage':      cmdPoll,
+  'créer':        cmdPoll,
+  'participation': cmdMandatory,
+  'quiz':         cmdQuiz,
+  'devinette':    cmdDevinette,
+  'classement':   cmdClassement,
+  'mode':         cmdMode,
 };
 
 export async function handleOSCommand(ctx, sock) {
@@ -387,6 +399,42 @@ async function cmdCleanup(ctx, sock, ws) {
     await sendReply(ctx, sock, `✅ Nettoyage terminé. ${groups.length - ws.groups.size} groupes retirés.`);
   } catch (err) {
     await sendReply(ctx, sock, `❌ Erreur: ${err.message}`);
+  }
+}
+
+async function cmdPoll(ctx, sock, ws) {
+  const text = ctx.cleanText || ctx.text || '';
+  const rest = text.replace(/^\.os\s*(sondage|créer|cree?r)\s*/i, '').trim();
+  if (rest) {
+    await handleCreatePoll(ctx, rest.split(/\s+/), sock);
+  } else {
+    await sendReply(ctx, sock, 'Usage : .OS créer un sondage Question | Option1 | Option2 | ... | durée(min)\n\nExemple: .OS créer un sondage Quel jeu ce soir ? | Roblox | Minecraft | Free Fire | 120');
+  }
+}
+
+async function cmdMandatory(ctx, sock, ws) {
+  await handleSetMandatory(ctx, [], sock);
+}
+
+async function cmdQuiz(ctx, sock, ws) {
+  await handleStartQuiz(ctx, [], sock);
+}
+
+async function cmdDevinette(ctx, sock, ws) {
+  await handleStartDevinette(ctx, [], sock);
+}
+
+async function cmdClassement(ctx, sock, ws) {
+  await handleClassement(ctx, [], sock);
+}
+
+async function cmdMode(ctx, sock, ws) {
+  const text = ctx.cleanText || ctx.text || '';
+  const rest = text.replace(/^\.os\s*mode\s*/i, '').trim();
+  if (rest) {
+    await handleSetMode(ctx, rest.split(/\s+/), sock);
+  } else {
+    await handleGetMode(ctx, [], sock);
   }
 }
 

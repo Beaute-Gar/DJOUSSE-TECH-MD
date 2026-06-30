@@ -132,8 +132,15 @@ export { executor, ActionExecutor, ACTION_TYPES } from './action-executor.js';
 export {
   registerMemoryPlugin, registerProactivePlugin,
   registerSuggestionHandler, registerProactiveCleanup,
-  registerHeartbeatPlugins,
+  registerHeartbeatPlugins, registerCommunityPlugin,
 } from './plugins/index.js';
+
+export {
+  communityStore,
+  handleCreatePoll, handleSetMandatory,
+  handleStartQuiz, handleStartDevinette, handleClassement,
+  handleSetMode, handleGetMode,
+} from './community/index.js';
 
 export async function initCognitive() {
   const { addDefaultRules } = await import('./decision-engine.js');
@@ -181,7 +188,7 @@ export async function initCognitive() {
   const {
     registerMemoryPlugin, registerProactivePlugin,
     registerSuggestionHandler, registerProactiveCleanup,
-    registerHeartbeatPlugins,
+    registerHeartbeatPlugins, registerCommunityPlugin,
   } = await import('./plugins/index.js');
 
   registerMemoryPlugin(pipeline);
@@ -189,6 +196,7 @@ export async function initCognitive() {
   registerSuggestionHandler(pipeline);
   registerProactiveCleanup(pipeline);
   registerHeartbeatPlugins(pipeline);
+  registerCommunityPlugin(pipeline);
 
   heartbeat.start();
   observer.start();
