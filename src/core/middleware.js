@@ -20,7 +20,7 @@ export async function runMiddlewares(ctx, middlewares) {
 }
 
 export function buildCtx(m, sock) {
-  const jid = m.remoteJid || '';
+  const jid = m.chatJid || m.key?.remoteJid || '';
   const senderJid = cleanJid(m.sender || jid);
   const isGroup = isGroupJid(jid);
   return {
@@ -28,12 +28,12 @@ export function buildCtx(m, sock) {
     pushName: m.pushName || '',
     isGroupAdmin: m.isGroupAdmin || false,
     botIsAdmin: m.botIsAdmin || false,
-    text: m.text || '',
-    type: m.type || '',
-    quoted: m.quoted || null,
-    mentionedJid: m.mentionedJid || [],
+    text: m.body || '',
+    type: m.msgType || '',
+    quoted: m.quotedMsg || null,
+    mentionedJid: m.mentions || [],
     cleanText: '', textFlags: [], authLevel: LEVEL.USER, groupData: null,
-    intent: null, command: null, args: [], body: '',
+    intent: null, command: null, args: [], body: m.body || '',
     aborted: false, skipAgent: false, error: null, startedAt: Date.now(),
   };
 }

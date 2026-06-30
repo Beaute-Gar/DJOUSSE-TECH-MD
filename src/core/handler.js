@@ -63,7 +63,7 @@ async function _routeCommand(ctx) {
   try {
     await m.react('\u23F3');
     log.info(`CMD ${ctx.senderJid} \u2192 ${PREFIX}${command}`);
-    await handler(m, { ...ctx, prefix: PREFIX });
+    await handler(ctx.sock, m, { ...ctx, prefix: PREFIX });
     await m.react('\u2705');
   } catch (err) {
     log.error(`Plugin ${command}: ${err.message}`);
