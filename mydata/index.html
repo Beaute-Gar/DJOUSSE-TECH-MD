@@ -294,11 +294,16 @@ const ASCII_ART = [
 ];
 
 const INIT_STEPS = [
-  { pct: 10, text: 'Initializing Runtime...' },
-  { pct: 30, text: 'Loading Workspace...' },
-  { pct: 50, text: 'Synchronizing Knowledge Mesh...' },
-  { pct: 70, text: 'Starting Agents...' },
-  { pct: 85, text: 'Activating Governance...' },
+  { pct: 10, text: 'Initializing Workspace...' },
+  { pct: 20, text: 'Scanning Contacts...' },
+  { pct: 30, text: 'Scanning Groups...' },
+  { pct: 40, text: 'Creating Digital Twins...' },
+  { pct: 50, text: 'Loading Memories...' },
+  { pct: 60, text: 'Synchronizing Knowledge Graph...' },
+  { pct: 70, text: 'Starting Community Agents...' },
+  { pct: 80, text: 'Synchronizing Knowledge Mesh...' },
+  { pct: 88, text: 'Starting Agents...' },
+  { pct: 94, text: 'Activating Governance...' },
   { pct: 100, text: 'Ready.' },
 ];
 
@@ -429,7 +434,7 @@ async function checkConn(){
     for(let i=0;i<INIT_STEPS.length;i++){
       const step=INIT_STEPS[i];
       bar.style.width=step.pct+'%';
-      status.textContent=step.text;
+      status.textContent=step.pct+'% '+step.text;
       await new Promise(r=>setTimeout(r,200+Math.random()*300));
     }
     status.classList.add('done');
