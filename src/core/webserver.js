@@ -214,18 +214,9 @@ export function startWebServer(port = 3000) {
       });
 
     } catch (err) {
-      log.error({ err }, `Erreur pairing pour ${number}`);
-      const msg = err.message || '';
-      if (msg.includes('already-registered')) {
-        return res.status(400).json({ success: false, message: 'Le bot est déjà connecté à WhatsApp. Utilisez le bouton "Déconnecter" d\'abord.' });
-      }
-      if (msg.includes('pairing-in-progress') || msg.includes('pending')) {
-        return res.status(400).json({ success: false, message: 'Un pairage est déjà en cours. Patientez quelques secondes.' });
-      }
-      if (msg.includes('not-authorized') || msg.includes('not connected') || msg.includes('connection')) {
-        return res.status(503).json({ success: false, message: 'Le bot n\'est pas encore connecté au serveur WhatsApp. Rechargez la page dans 10 secondes.' });
-      }
-      res.status(500).json({ success: false, message: `Erreur : ${msg}. Vérifiez le numéro et réessayez.` });
+      const msg = (err?.message || err?.toString?.() || 'Erreur inconnue').slice(0, 200);
+      log.warn(`Pairing error for ${number}: ${msg}`);
+      res.status(500).json({ success: false, message: msg });
     }
   });
 
