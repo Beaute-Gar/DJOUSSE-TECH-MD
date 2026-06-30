@@ -29,7 +29,6 @@
       position: relative;
     }
 
-    /* ── Canvas animation background ── */
     #particles-canvas {
       position: fixed;
       top: 0; left: 0;
@@ -38,7 +37,6 @@
       pointer-events: none;
     }
 
-    /* ── Scanline overlay ── */
     body::before {
       content: '';
       position: fixed;
@@ -55,7 +53,6 @@
       z-index: 1;
     }
 
-    /* ── Glow orbs ── */
     .orb {
       position: fixed;
       border-radius: 50%;
@@ -81,7 +78,6 @@
       50% { transform: translate(30px, -20px) scale(1.1); }
     }
 
-    /* ── Card ── */
     .card {
       position: relative;
       z-index: 2;
@@ -145,7 +141,6 @@
       opacity: 0.6;
     }
 
-    /* ── Tabs ── */
     .tabs {
       display: flex;
       gap: 4px;
@@ -174,16 +169,19 @@
     }
     .tab:hover { color: #fff; }
 
-    /* ── Panel ── */
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* ── QR ── */
     #qr-container {
       text-align: center;
       padding: 16px 0;
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
-    #qr-container canvas, #qr-container img {
+    #qr-container img {
       border-radius: 12px;
       max-width: 220px;
       image-rendering: pixelated;
@@ -195,7 +193,6 @@
     }
     .qr-label strong { color: var(--cyan); }
 
-    /* ── Form ── */
     .form-group { margin-bottom: 16px; }
     .form-group label {
       display: block;
@@ -222,10 +219,7 @@
       border-color: var(--cyan);
       box-shadow: 0 0 12px rgba(0, 200, 255, 0.08);
     }
-    .form-group input::placeholder {
-      color: #3a4a5a;
-      font-size: 13px;
-    }
+    .form-group input::placeholder { color: #3a4a5a; font-size: 13px; }
 
     .btn {
       width: 100%;
@@ -255,7 +249,17 @@
       transform: none;
     }
 
-    /* ── Status ── */
+    .btn-danger {
+      background: linear-gradient(135deg, #ff4757, #cc3333);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255, 71, 87, 0.2);
+      margin-top: 12px;
+    }
+    .btn-danger:hover {
+      box-shadow: 0 0 30px rgba(255, 71, 87, 0.4);
+      transform: translateY(-1px);
+    }
+
     #status {
       margin-top: 16px;
       padding: 10px 14px;
@@ -263,6 +267,7 @@
       font-size: 13px;
       display: none;
       text-align: center;
+      word-break: break-word;
     }
     #status.success {
       display: block;
@@ -282,8 +287,36 @@
       border: 1px solid rgba(0, 200, 255, 0.2);
       color: var(--cyan);
     }
+    #status.code {
+      display: block;
+      background: rgba(57, 255, 152, 0.1);
+      border: 1px solid rgba(57, 255, 152, 0.3);
+      color: var(--green);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      font-family: monospace;
+      padding: 16px;
+    }
 
-    /* ── Features bar ── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    .spinner-lg {
+      width: 40px; height: 40px;
+      border-width: 3px;
+      border-color: rgba(0,200,255,0.1);
+      border-top-color: var(--cyan);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .features {
       display: flex;
       justify-content: center;
@@ -303,29 +336,16 @@
       margin-bottom: 4px;
     }
 
-    /* ── Loading spinner ── */
-    .spinner {
-      display: inline-block;
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-      margin-right: 6px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Responsive ── */
     @media (max-width: 480px) {
       .card { padding: 28px 20px; }
       .logo h1 { font-size: 15px; letter-spacing: 2px; }
       .features { gap: 12px; flex-wrap: wrap; }
     }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <canvas id="particles-canvas"></canvas>
@@ -346,8 +366,8 @@
     <!-- QR Panel -->
     <div class="panel active" id="panel-qr">
       <div id="qr-container">
-        <div id="qr-spinner" class="spinner"></div>
-        <div id="qr-image" style="display:none"></div>
+        <div id="qr-spinner"><div class="spinner spinner-lg"></div></div>
+        <div id="qr-image" class="hidden"></div>
         <div class="qr-label">
           Scannez le QR avec WhatsApp<br>
           <strong>WhatsApp → Appareils liés → Lier un appareil</strong>
@@ -362,6 +382,7 @@
         <input type="tel" id="phone-input" placeholder="237612345678" autocomplete="tel">
       </div>
       <button class="btn btn-primary" id="pair-btn">Obtenir le code</button>
+      <button class="btn btn-danger hidden" id="logout-btn">Déconnecter</button>
       <div id="status"></div>
     </div>
 
@@ -441,8 +462,6 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const p of particles) { p.update(); p.draw(); }
       drawConnections();
-
-      // Mouse connection
       for (const p of particles) {
         const dx = p.x - mouse.x; const dy = p.y - mouse.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -469,103 +488,136 @@
       });
     });
 
-    // ── QR Code polling ──
+    // ── Helpers ──
+    function getToken() {
+      return new URLSearchParams(window.location.search).get('token') || '';
+    }
+
+    async function api(url, opts = {}) {
+      const token = getToken();
+      const headers = { ...(opts.headers || {}) };
+      if (token) headers['x-pairing-token'] = token;
+      const res = await fetch(url, { ...opts, headers });
+      return res.json();
+    }
+
+    function showStatus(type, msg) {
+      const el = document.getElementById('status');
+      el.className = type;
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    // ── QR Code polling (FIX: data:image prefix) ──
     async function pollQR() {
       try {
-        const token = new URLSearchParams(window.location.search).get('token') || '';
-        const res = await fetch('/qr' + (token ? '?token=' + token : ''));
-        const data = await res.json();
+        const data = await api('/qr');
         const container = document.getElementById('qr-image');
         const spinner = document.getElementById('qr-spinner');
 
         if (data.qr) {
-          spinner.style.display = 'none';
-          container.style.display = 'block';
-          // Try to render as QR code image
+          spinner.classList.add('hidden');
+          container.classList.remove('hidden');
+          const src = 'data:image/png;base64,' + data.qr;
           if (container.querySelector('img')) {
-            container.querySelector('img').src = data.qr;
+            container.querySelector('img').src = src;
           } else {
             const img = document.createElement('img');
-            img.src = data.qr;
+            img.src = src;
             img.alt = 'QR Code WhatsApp';
             container.innerHTML = '';
             container.appendChild(img);
           }
         } else {
-          spinner.style.display = 'inline-block';
-          container.style.display = 'none';
+          spinner.classList.remove('hidden');
+          container.classList.add('hidden');
         }
       } catch { /* retry */ }
       setTimeout(pollQR, 3000);
     }
     pollQR();
 
+    // ── Check connection status ──
+    async function checkStatus() {
+      try {
+        const data = await api('/status');
+        const pairBtn = document.getElementById('pair-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const input = document.getElementById('phone-input');
+
+        if (data.connected) {
+          document.getElementById('qr-spinner').classList.add('hidden');
+          const container = document.getElementById('qr-image');
+          container.classList.remove('hidden');
+          container.innerHTML = '<div style="text-align:center;padding:20px;color:#39ff98;font-size:14px">✅ Connecté ✓</div>';
+          pairBtn.disabled = true;
+          pairBtn.textContent = 'Déjà connecté';
+          input.disabled = true;
+          logoutBtn.classList.remove('hidden');
+          showStatus('success', '✅ Connecté — ' + (data.user?.name || data.user?.id || ''));
+        } else {
+          pairBtn.disabled = false;
+          pairBtn.textContent = 'Obtenir le code';
+          input.disabled = false;
+          logoutBtn.classList.add('hidden');
+        }
+      } catch {}
+    }
+    setInterval(checkStatus, 5000);
+    checkStatus();
+
     // ── Pairing ──
     document.getElementById('pair-btn').addEventListener('click', async () => {
       const btn = document.getElementById('pair-btn');
       const input = document.getElementById('phone-input');
-      const status = document.getElementById('status');
       const number = input.value.trim();
 
       if (!number) {
-        status.className = 'error';
-        status.textContent = 'Veuillez entrer un numéro valide (ex: 237612345678)';
+        showStatus('error', '❌ Entrez un numéro (ex: 237612345678)');
         return;
       }
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Connexion...';
-      status.className = 'info';
-      status.textContent = 'Génération du code en cours...';
+      showStatus('info', 'Génération du code...');
 
       try {
-        const token = new URLSearchParams(window.location.search).get('token') || '';
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['x-pairing-token'] = token;
-
-        const res = await fetch('/pair', {
+        const data = await api('/pair', {
           method: 'POST',
-          headers,
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ number }),
         });
-        const data = await res.json();
 
-        if (data.success) {
-          status.className = 'success';
-          status.textContent = '✅ Code : ' + data.code + '\nEntrez-le dans WhatsApp > Appareils liés > Lier un appareil';
+        if (data.success && data.code) {
+          showStatus('info', `✅ Code généré\n\n${data.code}\n\nEntrez ce code dans WhatsApp > Appareils liés > Lier un appareil`);
         } else {
-          status.className = 'error';
-          status.textContent = '❌ ' + (data.message || 'Erreur inconnue');
+          showStatus('error', '❌ ' + (data.message || 'Erreur serveur'));
         }
       } catch (err) {
-        status.className = 'error';
-        status.textContent = '❌ Erreur de connexion au serveur';
+        showStatus('error', '❌ Erreur réseau: ' + err.message);
       }
 
       btn.disabled = false;
       btn.textContent = 'Obtenir le code';
     });
 
-    // Enter key on phone input
     document.getElementById('phone-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('pair-btn').click();
     });
 
-    // Check connection status
-    async function checkStatus() {
-      try {
-        const res = await fetch('/status');
-        const data = await res.json();
-        if (data.connected) {
-          document.getElementById('qr-spinner').style.display = 'none';
-          const container = document.getElementById('qr-image');
-          container.style.display = 'block';
-          container.innerHTML = '<div style="text-align:center;padding:20px;color:#39ff98;font-size:14px">✅ Connecté en tant que ' + (data.user?.name || data.user?.id || '') + '</div>';
-        }
-      } catch {}
-    }
-    setInterval(checkStatus, 5000);
-    checkStatus();
+    // ── Logout ──
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      if (!confirm('Déconnecter le bot ? Vous devrez re-scanner un QR.')) return;
+      const data = await api('/logout', { method: 'POST' });
+      if (data.success) {
+        document.getElementById('pair-btn').disabled = false;
+        document.getElementById('pair-btn').textContent = 'Obtenir le code';
+        document.getElementById('phone-input').disabled = false;
+        document.getElementById('logout-btn').classList.add('hidden');
+        showStatus('info', 'Déconnecté. QR disponible dans quelques secondes...');
+        setTimeout(() => location.reload(), 2000);
+      }
+    });
   </script>
 </body>
 </html>
