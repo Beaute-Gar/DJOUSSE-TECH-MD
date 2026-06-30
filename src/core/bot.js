@@ -19,6 +19,7 @@ import { handleGroupEvent } from './group-handler.js';
 import { loadAllPlugins } from './loader.js';
 import { initDB, closeDB } from '../lib/database.js';
 import { restoreGroups, registerGroup, handleGroupMessage, isRegistered } from '../modules/groups/multi-group-engine.js';
+import { bus, EVENTS } from '../cognitive/event-bus.js';
 
 const require = createRequire(import.meta.url);
 const config  = require('../../config.cjs');
@@ -125,9 +126,45 @@ async function connect() {
           const { serializeMessage } = await import('./serializer.js');
           const m = await serializeMessage(sock, rawMsg);
           if (!m) continue;
+
+          bus.emit(EVENTS.MESSAGE_RECEIVED, {
+            jid: rawMsg.key.remoteJid,
+            senderJid: rawMsg.key.participant || rawMsg.key.remoteJid,
+            text: m.body || m.message?.conversation || '',
+            isGroup: rawMsg.key.remoteJid?.endsWith('@g.us'),
+            pushName: rawMsg.pushName,
+            msg: m,
+            key: rawMsg.key,
+          });
+
           await handleMessage(m, sock);
         } catch (err) {
           log.error({ err }, 'Erreur traitement message');
+        }
+      }
+    });
+
+    sock.ev.on('messages.update', async (updates) => {
+      for (const update of updates) {
+        try {
+          if (update.update?.messageStubType === 'REVOKE' || update.key?.fromMe === false) {
+            bus.emit(EVENTS.MESSAGE_DELETED, {
+              jid: update.key.remoteJid,
+              key: update.key,
+              author: update.key.participant || update.key.remoteJid,
+              timestamp: Date.now(),
+            });
+          }
+          if (update.update?.reaction) {
+            bus.emit(EVENTS.MESSAGE_REACTED, {
+              jid: update.key.remoteJid,
+              senderJid: update.key.participant || update.key.remoteJid,
+              reaction: update.update.reaction.text,
+              messageKey: update.key,
+            });
+          }
+        } catch (err) {
+          log.warn(`messages.update: ${err.message}`);
         }
       }
     });
@@ -141,6 +178,24 @@ async function connect() {
             await _onBotAddedToGroup(update.id);
           }
         }
+
+        for (const participant of update.participants || []) {
+          const eventData = { groupJid: update.id, participantJid: participant, timestamp: Date.now() };
+          switch (update.action) {
+            case 'add':
+              bus.emit(EVENTS.GROUP_JOIN, eventData);
+              break;
+            case 'remove':
+              bus.emit(EVENTS.GROUP_LEAVE, eventData);
+              break;
+            case 'promote':
+              bus.emit(EVENTS.GROUP_PROMOTE, eventData);
+              break;
+            case 'demote':
+              bus.emit(EVENTS.GROUP_DEMOTE, eventData);
+              break;
+          }
+        }
       } catch (err) {
         log.error({ err }, 'Erreur group-participants.update');
       }
@@ -152,12 +207,25 @@ async function connect() {
           const { Groups } = await import('../lib/database.js');
           if (update.subject) {
             Groups.upsert(update.id, update.subject);
+            bus.emit(EVENTS.GROUP_UPDATE, {
+              groupJid: update.id, subject: update.subject, timestamp: Date.now(),
+            });
             if (isRegistered(update.id)) {
               log.info(`Groupe renommé : ${update.subject} — re-détection du profil`);
               const { unregisterGroup, registerGroup } = await import('../modules/groups/multi-group-engine.js');
               unregisterGroup(update.id);
               registerGroup(update.id, update.subject, sock);
             }
+          }
+          if (update.desc !== undefined) {
+            bus.emit(EVENTS.GROUP_DESCRIPTION, {
+              groupJid: update.id, description: update.desc, timestamp: Date.now(),
+            });
+          }
+          if (update.restrict !== undefined) {
+            bus.emit(EVENTS.GROUP_SETTINGS, {
+              groupJid: update.id, restrict: update.restrict, timestamp: Date.now(),
+            });
           }
         } catch (e) {
           log.warn(`groups.update: ${e.message}`);
@@ -166,8 +234,11 @@ async function connect() {
     });
 
     sock.ev.on('call', async (calls) => {
-      if (!config.REJECT_CALLS) return;
       for (const call of calls) {
+        bus.emit(EVENTS.CALL_RECEIVED, {
+          from: call.from, status: call.status, id: call.id, timestamp: Date.now(),
+        });
+        if (!config.REJECT_CALLS) continue;
         if (call.status === 'offer') {
           const count = (callCounts.get(call.from) || 0) + 1;
           callCounts.set(call.from, count);

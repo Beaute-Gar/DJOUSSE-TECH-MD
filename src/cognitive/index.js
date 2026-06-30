@@ -123,6 +123,16 @@ export {
 
 export { vision, VisionEngine } from './vision-engine.js';
 export { cache, PerfCache } from './perf-cache.js';
+export { observer, ObserverLoop } from './observer-loop.js';
+export { pipeline, CognitivePipeline } from './cognitive-pipeline.js';
+export { heartbeat, HeartbeatScheduler } from './heartbeat-scheduler.js';
+export { clock, CognitiveClock } from './cognitive-clock.js';
+export { episodeFactory, EpisodeFactory, EPISODE_TYPES } from './episode-factory.js';
+export {
+  registerMemoryPlugin, registerProactivePlugin,
+  registerSuggestionHandler, registerProactiveCleanup,
+  registerHeartbeatPlugins,
+} from './plugins/index.js';
 
 export async function initCognitive() {
   const { addDefaultRules } = await import('./decision-engine.js');
@@ -159,5 +169,24 @@ export async function initCognitive() {
   await initGovernance().catch(err => console.error('Governance init failed:', err.message));
   await initAgents().catch(err => console.error('Agent init failed:', err.message));
   const { bus, EVENTS } = await import('./event-bus.js');
+  const { pipeline } = await import('./cognitive-pipeline.js');
+  const { heartbeat } = await import('./heartbeat-scheduler.js');
+  const { observer } = await import('./observer-loop.js');
+  const { getSocket } = await import('../core/bot.js');
+
+  const {
+    registerMemoryPlugin, registerProactivePlugin,
+    registerSuggestionHandler, registerProactiveCleanup,
+    registerHeartbeatPlugins,
+  } = await import('./plugins/index.js');
+
+  registerMemoryPlugin(pipeline);
+  registerProactivePlugin(pipeline);
+  registerSuggestionHandler(pipeline, () => getSocket());
+  registerProactiveCleanup(pipeline);
+  registerHeartbeatPlugins(pipeline);
+
+  heartbeat.start();
+  observer.start();
   bus.emit('cognitive:ready', { timestamp: Date.now() });
 }

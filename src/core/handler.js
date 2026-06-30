@@ -35,9 +35,6 @@ export async function handleMessage(m, sock) {
     return;
   }
 
-  /* ── Cognitive Pipeline (non-bloquant) ─────────────────── */
-  _runCognitive(ctx).catch(() => {});
-
   await detectIntent(ctx, PREFIX);
   if (!ctx.intent || ctx.intent === 'ignore') return;
 
@@ -46,30 +43,6 @@ export async function handleMessage(m, sock) {
     case 'question': return _routeQuestion(ctx);
     case 'task': return _routeTask(ctx);
     case 'auto': return _routeAuto(ctx);
-  }
-}
-
-async function _runCognitive(ctx) {
-  try {
-    const { bus, EVENTS } = await import('../cognitive/event-bus.js');
-    const { addToContext } = await import('../cognitive/context-engine.js');
-    const { evaluate } = await import('../cognitive/decision-engine.js');
-    const { answerWithContext } = await import('../cognitive/ai-orchestrator.js');
-
-    bus.emit(EVENTS.MESSAGE_RECEIVED, {
-      jid: ctx.jid, senderJid: ctx.senderJid, text: ctx.cleanText || ctx.text,
-      isGroup: ctx.isGroup, type: ctx.type, msg: ctx.m,
-    });
-
-    addToContext(ctx.senderJid, ctx.senderJid, ctx.cleanText || ctx.text, ctx.type);
-
-    if (ctx.isGroup) {
-      addToContext(ctx.jid, ctx.senderJid, ctx.cleanText || ctx.text, ctx.type);
-    }
-
-    evaluate(ctx).catch(() => {});
-  } catch (err) {
-    log.error(`[Cognitive] ${err.message}`);
   }
 }
 
