@@ -41,7 +41,9 @@ const callCounts = new Map();
 export const botEvents = new EventEmitter();
 
 export async function startBot() {
+  await initDB();
   await loadAllPlugins();
+  try { await initCognitive(); log.info('Cognitive Kernel initialise'); } catch (e) { log.warn(`Cognitive init: ${e.message}`); }
   await connect();
 }
 
@@ -96,10 +98,17 @@ async function connect() {
       }
       if (connection === 'open') {
         reconnectAttempt = 0;
-        log.info('✅ WhatsApp connecté');
+        log.info('? WhatsApp connecte');
         try { await restoreGroups(sock); } catch (e) { log.warn(`restoreGroups: ${e.message}`); }
         await _autoScanAdminGroups();
         await _notifyOwnerOnline();
+        try {
+          const userJid = sock.user?.id?.replace(/:.*@/, '@');
+          if (userJid) {
+            const { discovery } = await import('../cognitive/workspace/auto-discovery.js');
+            discovery.discoverAll(sock, userJid).catch(e => log.warn(`discovery: ${e.message}`));
+          }
+        } catch (e) { log.warn(`auto-discovery init: ${e.message}`); }
       }
       if (connection === 'close') {
         const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
@@ -116,15 +125,7 @@ async function connect() {
           const { serializeMessage } = await import('./serializer.js');
           const m = await serializeMessage(sock, rawMsg);
           if (!m) continue;
-          const chatJid = rawMsg.key.remoteJid;
-          const isGroup = isJidGroup(chatJid);
-          if (isGroup && isRegistered(chatJid)) {
-            const text = m.body ?? '';
-            if (text && !text.startsWith(config.PREFIX)) {
-              handleGroupMessage(sock, m, text, chatJid).catch(() => {});
-            }
-          }
-          await handleMessage(sock, rawMsg, m);
+          await handleMessage(m, sock);
         } catch (err) {
           log.error({ err }, 'Erreur traitement message');
         }

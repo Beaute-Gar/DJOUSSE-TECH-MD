@@ -13,6 +13,7 @@ const SUDO_JIDS = new Set(
 const knownOwnerJids = new Set();
 
 export const LEVELS = { owner: 3, sudo: 2, premium: 2, user: 1 };
+export const LEVEL = { OWNER: 3, SUDO: 2, PREMIUM: 2, USER: 1 };
 
 export function getPrivilege(jid) {
   if (!jid) return 'user';
@@ -97,4 +98,26 @@ export function removeSudoRuntime(jid) {
 
 export function reloadAuth() {
   knownOwnerJids.clear();
+}
+
+export async function checkPermission(jid, meta, opts = {}) {
+  const level = meta?.level || 'user';
+  const has = hasAccess(jid, level);
+  if (!has) return { allowed: false, reason: `LEVEL_REQUIRED:${level}` };
+  if (opts.isGroup && meta?.groupOnly && !opts.isGroup) return { allowed: false, reason: 'GROUP_ONLY' };
+  if (opts.isGroup && meta?.adminOnly && !opts.isGroupAdmin) return { allowed: false, reason: 'ADMIN_ONLY' };
+  if (meta?.ownerOnly && !isOwner(jid)) return { allowed: false, reason: 'OWNER_ONLY' };
+  return { allowed: true };
+}
+
+export function denyMessage(reason = 'ACCESS_DENIED') {
+  const messages = {
+    'LEVEL_REQUIRED:owner': '🚫 Commande réservée au propriétaire.',
+    'LEVEL_REQUIRED:sudo':  '🚫 Commande réservée aux admins du bot.',
+    'LEVEL_REQUIRED:premium': '⭐ Commande réservée aux membres Premium.',
+    'GROUP_ONLY':   '👥 Cette commande ne fonctionne qu\'en groupe.',
+    'ADMIN_ONLY':   '👑 Cette commande nécessite les droits d\'admin du groupe.',
+    'OWNER_ONLY':   '🚫 Seul le propriétaire peut faire ça.',
+  };
+  return messages[reason] || '🚫 Accès refusé.';
 }

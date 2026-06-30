@@ -5,6 +5,10 @@ const LIMITS = {
   MAX_ARG_LENGTH     : 1_000,
 };
 
+const ZALGO_RE = /[\u0300-\u036f]{5,}/;
+const CONTROL_RE = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
+const BIDI_OVERRIDE_RE = /[\u200e\u200f\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069]/;
+
 const DANGEROUS_PATTERNS = [
   /[\u200b-\u200f\u202a-\u202e\u2060-\u206f\uFEFF]/,
   /\u0000/,
@@ -36,6 +40,24 @@ function normalize(text) {
     .replace(/\r/g, '\n')
     .replace(/[ \t]{2,}/g, ' ')
     .trim();
+}
+
+export function analyzeText(text) {
+  const flags = [];
+  let cleaned = (text || '').normalize('NFC');
+  if (ZALGO_RE.test(cleaned)) flags.push('ZALGO');
+  if (CONTROL_RE.test(cleaned)) flags.push('CONTROL_CHARS');
+  if (BIDI_OVERRIDE_RE.test(cleaned)) flags.push('BIDI_OVERRIDE');
+  cleaned = cleaned.replace(ZALGO_RE, '').replace(CONTROL_RE, '').replace(BIDI_OVERRIDE_RE, '').trim();
+  return { flags, cleaned };
+}
+
+export function parseCommand(text, prefix) {
+  if (!text.startsWith(prefix)) return null;
+  const body = text.slice(prefix.length).trim();
+  if (!body) return null;
+  const parts = body.split(/\s+/);
+  return { command: parts[0].toLowerCase(), args: parts.slice(1), text: parts.slice(1).join(' ') };
 }
 
 export function validateText(text) {

@@ -1,175 +1,125 @@
-import { createRequire } from 'module';
+import { buildCtx, runMiddlewares, MIDDLEWARE_STACK } from './middleware.js';
+import { detectIntent } from './agent.js';
+import { resolveCommand, commandCount } from './loader.js';
+import { checkPermission, denyMessage } from '../security/auth.js';
+import { checkCommandCooldown } from '../security/rateLimit.js';
 import { createLogger } from './logger.js';
-import { validateText, validateCommand } from '../security/validator.js';
-import { checkRateLimit } from '../security/rateLimit.js';
-import { hasAccess, getPrivilege, isModeAllowed, isOwner, registerOwnerJid } from '../security/auth.js';
-import { getPlugin } from './loader.js';
-import { Users, Groups, ensureUser, ensureGroup, addXp, getUserLevel, incrementCmd } from '../lib/database.js';
-import { robloxHook } from '../modules/roblox-hook.js';
 
-const require = createRequire(import.meta.url);
-const config  = require('../../config.cjs');
-const log     = createLogger('HANDLER');
+let _handleOSCommand;
 
-const LEVEL_XP = [0, 100, 250, 500, 1000, 2000, 4000, 8000, 15000, 30000];
-const GROUP_SETTINGS_CACHE = new Map();
+const log = createLogger('HANDLER');
+const PREFIX = process.env.PREFIX || '.';
+const OS_PREFIX = '.OS';
 
-function parseCommand(text, prefix) {
-  if (!text.startsWith(prefix)) return null;
-  const body    = text.slice(prefix.length).trim();
-  if (!body)    return null;
-  const parts   = body.split(/\s+/);
-  const command = parts[0].toLowerCase();
-  const args    = parts.slice(1);
-  const argText = args.join(' ');
-  return { command, args, text: argText };
-}
+export async function handleMessage(m, sock) {
+  if (!m?.message) return;
 
-async function sendError(sock, m, message) {
-  try {
-    await sock.sendMessage(m.key.remoteJid, { text: `❌ ${message}` }, { quoted: m });
-  } catch {}
-}
+  const ctx = buildCtx(m, sock);
 
-export async function handleMessage(sock, rawMsg, m) {
-  const chatJid   = m.key.remoteJid;
-  const senderJid = m.sender;
-  const isGroup   = chatJid?.endsWith('@g.us') ?? false;
-  const rawText   = m.body ?? '';
+  await runMiddlewares(ctx, MIDDLEWARE_STACK);
+  if (ctx.aborted) return;
 
-  const validation = validateText(rawText);
-  if (!validation.safe) {
-    log.warn({ jid: senderJid, reason: validation.reason }, 'Message invalide rejeté');
-    return;
-  }
-  const text = validation.sanitized;
-
-  try {
-    const senderName = m.pushName || 'Inconnu';
-    Users.upsert(senderJid, senderName);
-    if (isGroup) Groups.upsert(chatJid, m.groupMetadata?.subject || 'Groupe');
-  } catch {}
-
-  if (Users.isBanned(senderJid)) return;
-
-  if (isGroup) {
-    const grp = Groups.get(chatJid);
-    if (grp?.is_banned) return;
-    if (grp?.botban === 1) return;
-  }
-
-  if (!isOwner(senderJid)) {
-    const controlled = Groups.get(chatJid);
-    if (!isGroup || (controlled && chatJid)) {
-      registerOwnerJid(senderJid);
-    }
-  }
-
-  if (isGroup && !text.startsWith(config.PREFIX)) {
-    ensureUser(senderJid, m.pushName || '');
-    const user = getUserLevel(senderJid);
-    const oldXp = user?.xp || 0;
-    addXp(senderJid, 1);
-    const newUser = getUserLevel(senderJid);
-    const newLevel = newUser.level || 0;
-    const newXp = newUser.xp || 0;
-    const xpNeeded = LEVEL_XP[newLevel] || LEVEL_XP[LEVEL_XP.length - 1];
-    if (newXp >= xpNeeded && newLevel < LEVEL_XP.length) {
-      const { getDB } = await import('../lib/database.js');
-      getDB().prepare('UPDATE users SET level = level + 1, xp = 0 WHERE jid = ?').run(senderJid);
-    }
-  }
-
-  if (config.AUTO_REACT && m.key?.id && text.startsWith(config.PREFIX)) {
-    sock.sendMessage(chatJid, { react: { text: '⏳', key: m.key } }).catch(() => {});
-  }
-
-  if (isGroup && config.ANTI_LINK) {
-    const grp = Groups.get(chatJid);
-    if (grp?.antilink && !hasAccess(senderJid, 'sudo')) {
-      const linkRegex = /(?:https?:\/\/)?(?:www\.)?(?:chat\.whatsapp\.com|wa\.me)\/\S+/gi;
-      if (linkRegex.test(text)) {
-        await sock.sendMessage(chatJid, { text: '❌ *Liens WhatsApp interdits* dans ce groupe.', delete: m.key });
+  /* ── .OS Command (Cognitive OS) ─────────────────────────── */
+  const rawText = ctx.cleanText || ctx.text || '';
+  if (rawText.toUpperCase().startsWith(OS_PREFIX)) {
+    if (!_handleOSCommand) {
+      try {
+        const mod = await import('../cognitive/workspace/os-commands.js');
+        _handleOSCommand = mod.handleOSCommand;
+      } catch {
+        log.warn('.OS commands not available');
         return;
       }
     }
-  }
-
-  if (isGroup && text && !text.startsWith(config.PREFIX)) {
-    try {
-      const handled = await robloxHook(sock, m, text, chatJid, isGroup);
-      if (handled) return;
-    } catch {}
-  }
-
-  const parsed = parseCommand(text, config.PREFIX);
-  if (!parsed) return;
-
-  const { command, args, text: argText } = parsed;
-
-  const cmdValidation = validateCommand(command, args);
-  if (!cmdValidation.safe) {
-    log.debug({ command, reason: cmdValidation.reason }, 'Commande invalide');
+    await _handleOSCommand(ctx, sock);
     return;
   }
 
-  const privilege = getPrivilege(senderJid);
-  if (privilege === 'user') {
-    const rl = checkRateLimit(senderJid);
-    if (!rl.allowed) {
-      if (rl.reason === 'RATE_LIMIT_EXCEEDED') {
-        await sendError(sock, m, 'Trop de commandes envoyées. Patiente quelques secondes.');
-      }
-      return;
-    }
-  }
+  /* ── Cognitive Pipeline (non-bloquant) ─────────────────── */
+  _runCognitive(ctx).catch(() => {});
 
-  if (!isModeAllowed(m)) {
-    log.debug({ mode: config.MODE, sender: senderJid }, 'Mode ne permet pas cette commande');
-    return;
-  }
+  await detectIntent(ctx, PREFIX);
+  if (!ctx.intent || ctx.intent === 'ignore') return;
 
-  const plugin = getPlugin(command);
-  if (!plugin) return;
-
-  const required = plugin.level || 'user';
-  if (!hasAccess(senderJid, required)) {
-    await sendError(sock, m,
-      required === 'owner' ? 'Commande réservée au propriétaire.' :
-      required === 'sudo'  ? 'Commande réservée aux administrateurs du bot.' :
-      'Accès refusé.'
-    );
-    return;
-  }
-
-  log.info({ command, sender: senderJid, chat: chatJid, privilege }, `.${command}`);
-
-  try {
-    await plugin.handler(sock, m, {
-      args,
-      text: argText,
-      prefix: config.PREFIX,
-      config,
-      isGroup,
-      privilege,
-    });
-
-    if (config.AUTO_REACT && m.key?.id) {
-      sock.sendMessage(chatJid, { react: { text: '✅', key: m.key } }).catch(() => {});
-    }
-
-    incrementCmd(command);
-  } catch (err) {
-    log.error({ err, command, sender: senderJid }, `Erreur dans le plugin .${command}`);
-    if (config.AUTO_REACT && m.key?.id) {
-      sock.sendMessage(chatJid, { react: { text: '❌', key: m.key } }).catch(() => {});
-    }
-    await sendError(sock, m, 'Une erreur est survenue. Réessaie ou contacte l\'admin.');
+  switch (ctx.intent) {
+    case 'command': return _routeCommand(ctx);
+    case 'question': return _routeQuestion(ctx);
+    case 'task': return _routeTask(ctx);
+    case 'auto': return _routeAuto(ctx);
   }
 }
 
-export { handleMessage as msgHandler };
+async function _runCognitive(ctx) {
+  try {
+    const { bus, EVENTS } = await import('../cognitive/event-bus.js');
+    const { addToContext } = await import('../cognitive/context-engine.js');
+    const { evaluate } = await import('../cognitive/decision-engine.js');
+    const { answerWithContext } = await import('../cognitive/ai-orchestrator.js');
 
-export function clearGroupCache() {
-  GROUP_SETTINGS_CACHE.clear();
+    bus.emit(EVENTS.MESSAGE_RECEIVED, {
+      jid: ctx.jid, senderJid: ctx.senderJid, text: ctx.cleanText || ctx.text,
+      isGroup: ctx.isGroup, type: ctx.type, msg: ctx.m,
+    });
+
+    addToContext(ctx.senderJid, ctx.senderJid, ctx.cleanText || ctx.text, ctx.type);
+
+    if (ctx.isGroup) {
+      addToContext(ctx.jid, ctx.senderJid, ctx.cleanText || ctx.text, ctx.type);
+    }
+
+    evaluate(ctx).catch(() => {});
+  } catch (err) {
+    log.error(`[Cognitive] ${err.message}`);
+  }
+}
+
+async function _routeCommand(ctx) {
+  const { command, args, body, m } = ctx;
+  const resolved = resolveCommand(command);
+  if (!resolved) {
+    await m.reply(`\u2753 Commande inconnue. \nTape *${PREFIX}menu* pour voir les ${commandCount()} commandes.`);
+    return;
+  }
+  const { handler, meta } = resolved;
+  const perm = checkPermission(ctx.senderJid, meta, { isGroup: ctx.isGroup, isGroupAdmin: ctx.isGroupAdmin, botIsAdmin: ctx.botIsAdmin });
+  if (!perm.allowed) { await m.reply(denyMessage(perm.reason)); return; }
+  if (meta.cooldown > 0) {
+    const cd = checkCommandCooldown(ctx.senderJid, command, meta.cooldown * 1000);
+    if (!cd.allowed) { await m.reply(`\u23F3 Attends ${cd.retryAfter}s.`); return; }
+  }
+  try {
+    await m.react('\u23F3');
+    log.info(`CMD ${ctx.senderJid} \u2192 ${PREFIX}${command}`);
+    await handler(m, { ...ctx, prefix: PREFIX });
+    await m.react('\u2705');
+  } catch (err) {
+    log.error(`Plugin ${command}: ${err.message}`);
+    await m.reply(`\u274C Erreur: ${err.message}`);
+    await m.react('\u274C');
+  }
+}
+
+async function _routeQuestion(ctx) {
+  try {
+    await ctx.m.react('\uD83E\uDD14');
+    const { answerWithContext } = await import('../cognitive/ai-orchestrator.js');
+    const reply = await answerWithContext(ctx.senderJid, ctx.cleanText || ctx.text);
+    await ctx.m.react('\u2705');
+    await ctx.m.reply(`\uD83E\uDD16 *DTE AI*\n\n${reply}`);
+  } catch (err) {
+    log.error(`Question: ${err.message}`);
+    const { agentAnswer } = await import('./agent.js');
+    try { await agentAnswer(ctx); } catch {}
+  }
+}
+
+async function _routeTask(ctx) {
+  const { agentTask } = await import('./agent.js');
+  try { await ctx.m.react('\u2699\uFE0F'); await agentTask(ctx); }
+  catch (err) { await ctx.m.reply(`\u274C T\u00e2che: ${err.message}`); await ctx.m.react('\u274C'); }
+}
+
+async function _routeAuto(ctx) {
+  const { agentAuto } = await import('./agent.js');
+  try { await agentAuto(ctx); } catch {}
 }

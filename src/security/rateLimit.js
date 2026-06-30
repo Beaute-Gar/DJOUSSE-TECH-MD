@@ -41,6 +41,19 @@ export function unban(jid) {
   rateLimitCache.del(`rl:${jid}`);
 }
 
+const cmdCooldowns = new Map();
+
+export function checkCommandCooldown(jid, command, cooldownMs) {
+  const key = `cd:${jid}:${command}`;
+  const last = cmdCooldowns.get(key) || 0;
+  const now = Date.now();
+  if (now - last < cooldownMs) {
+    return { allowed: false, retryAfter: Math.ceil((cooldownMs - (now - last)) / 1000) };
+  }
+  cmdCooldowns.set(key, now);
+  return { allowed: true };
+}
+
 export function sanitizeInput(text) {
   if (!text || typeof text !== 'string') {
     return { safe: false, reason: 'EMPTY_OR_INVALID_TYPE' };

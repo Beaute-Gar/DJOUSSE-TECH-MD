@@ -1,7 +1,7 @@
 {
-  "name": "djousse-tech-md",
-  "version": "2.0.0",
-  "description": "WhatsApp Bot intelligent — Djousse Tech Evolution",
+  "name": "cognitive-os",
+  "version": "2.1.0",
+  "description": "Cognitive OS — Plateforme cognitive multi-agents conversationnelle (interface WhatsApp)",
   "author": "Djousse Tech Evolution <contact@djoussetech.com>",
   "license": "MIT",
   "type": "module",

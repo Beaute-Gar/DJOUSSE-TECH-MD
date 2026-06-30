@@ -6,6 +6,10 @@ src/auth/session/
 # Base de données
 data/*.db
 data/*.log
+data/database.sqlite
+
+# Workspace persistence (généré automatiquement)
+data/workspaces.json
 
 # Logs
 *.log
@@ -22,3 +26,5 @@ npm-debug.log*
 cls
 node
 *.tmp
+mydata/
+node/

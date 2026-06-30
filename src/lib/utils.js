@@ -124,4 +124,27 @@ export function chunkArray(arr, size) {
   return chunks;
 }
 
+export function isGroup(jid) {
+  return jid?.endsWith('@g.us') ?? false;
+}
+
+export function truncate(str, maxLen = 200) {
+  if (!str) return '';
+  return str.length > maxLen ? str.slice(0, maxLen) + '…' : str;
+}
+
+export function detectMime(buf) {
+  if (!buf || buf.length < 4) return 'application/octet-stream';
+  const h = buf.toString('hex', 0, 4).toLowerCase();
+  if (h.startsWith('ffd8')) return 'image/jpeg';
+  if (h.startsWith('89504e47')) return 'image/png';
+  if (h.startsWith('474946')) return 'image/gif';
+  if (h.startsWith('52494646') && buf.slice(8, 12).toString() === 'WEBP') return 'image/webp';
+  if (h.startsWith('000000') || (h.startsWith('000001') && [0x66, 0x65, 0x6d].includes(buf[4]))) return 'video/mp4';
+  if (h.startsWith('1a45dfa3')) return 'video/webm';
+  if (h.startsWith('89494e')) return 'application/zip';
+  if (h.startsWith('25504446')) return 'application/pdf';
+  return 'application/octet-stream';
+}
+
 

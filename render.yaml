@@ -1,9 +1,9 @@
-# Render.com deployment configuration
+# Cognitive OS v2.1 — Render Deployment Configuration
 # https://dashboard.render.com/blueprint
 
 services:
   - type: web
-    name: djousse-tech-md
+    name: cognitive-os
     runtime: node
     repo: https://github.com/Beaute-Gar/DJOUSSE-TECH-MD
     branch: master
@@ -42,9 +42,11 @@ services:
         value: postgres
       - key: DATABASE_URL
         fromDatabase:
-          name: djousse-db
+          name: cognitive-db
           property: connectionString
       - key: GEMINI_API_KEY
+        sync: false
+      - key: PAIRING_TOKEN
         sync: false
       - key: LOG_LEVEL
         value: info
@@ -54,9 +56,11 @@ services:
         value: 20
       - key: RATE_LIMIT_WINDOW_MS
         value: 5000
+      - key: KEEP_ALIVE_URL
+        value: https://cognitive-os.onrender.com/health
 
 databases:
-  - name: djousse-db
+  - name: cognitive-db
     plan: free
-    databaseName: djousse
-    user: djousse
+    databaseName: cognitive
+    user: cognitive

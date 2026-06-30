@@ -140,3 +140,16 @@ export async function reloadAll() {
 }
 
 export const loadCommands = loadAllPlugins;
+
+export function resolveCommand(commandName) {
+  if (!commandName) return null;
+  const plugin = getPlugin(commandName);
+  if (!plugin) return null;
+  const handler = plugin.handler || plugin.default;
+  if (typeof handler !== 'function') return null;
+  return { handler, meta: plugin };
+}
+
+export function commandCount() {
+  return pluginMap.size;
+}

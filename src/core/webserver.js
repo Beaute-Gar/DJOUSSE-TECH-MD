@@ -188,6 +188,136 @@ export function startWebServer(port = 3000) {
     }
   });
 
+  /* ── Cognitive OS Dashboard API ─────────────────────── */
+  app.get('/api/status', async (req, res) => {
+    try {
+      const { orchestrator } = await import('../cognitive/agents/agent-framework.js');
+      const { trust, audit, approval, policy } = await import('../cognitive/governance/index.js');
+      const { workspaceManager } = await import('../cognitive/workspace/workspace-manager.js');
+      const { planner } = await import('../cognitive/planning-engine.js');
+      const agents = await orchestrator.list().catch(() => []);
+      const trustSummary = trust.getSummary();
+      const auditSummary = audit.summary();
+      const approvalStats = approval.getStats();
+      const policies = policy.list();
+      const workspaces = workspaceManager.list();
+      const missionStats = planner.getStats();
+      res.json({
+        brain: { agents: agents.length, workspaces: workspaces.length, uptime: process.uptime() },
+        agents: agents.map(a => ({ name: a.name, state: a.state, trust: a.trustScore, executions: a.executions })),
+        governance: {
+          trust: { avg: trustSummary.averageScore, trusted: trustSummary.trusted, critical: trustSummary.critical },
+          audit: { total24h: auditSummary.total, errors: auditSummary.errors },
+          approvals: approvalStats,
+          policies: policies.filter(p => p.enabled).length,
+        },
+        missions: { active: missionStats.active, overdue: missionStats.overdue, completed: missionStats.completed },
+        workspaces: workspaces.map(w => ({ id: w.id, owner: w.owner, groups: w.groups, autonomy: w.autonomy })),
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/agents', async (req, res) => {
+    try {
+      const { orchestrator } = await import('../cognitive/agents/agent-framework.js');
+      const { trust } = await import('../cognitive/governance/index.js');
+      const { groupFactory } = await import('../cognitive/workspace/group-agent-factory.js');
+      const agents = await orchestrator.list();
+      const factoryStats = await groupFactory.getStats().catch(() => ({}));
+      res.json({
+        total: agents.length,
+        groupAgents: factoryStats.total || 0,
+        byType: factoryStats.byType || {},
+        list: agents,
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/workspaces', async (req, res) => {
+    try {
+      const { workspaceManager } = await import('../cognitive/workspace/workspace-manager.js');
+      res.json({ workspaces: workspaceManager.list() });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/trust', async (req, res) => {
+    try {
+      const { trust } = await import('../cognitive/governance/index.js');
+      res.json(trust.getSummary());
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/audit', async (req, res) => {
+    try {
+      const { audit } = await import('../cognitive/governance/index.js');
+      const limit = parseInt(req.query.limit) || 20;
+      res.json({ entries: audit.getRecent(limit), summary: audit.summary() });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/missions', async (req, res) => {
+    try {
+      const { planner } = await import('../cognitive/planning-engine.js');
+      const all = planner.getAllMissions();
+      res.json({ total: all.length, active: all.filter(m => m.status === 'active').length, list: all.slice(0, 50) });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/approvals', async (req, res) => {
+    try {
+      const { approval } = await import('../cognitive/governance/index.js');
+      res.json({ pending: approval.listPending(), stats: approval.getStats() });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/approve', async (req, res) => {
+    try {
+      const { approval } = await import('../cognitive/governance/index.js');
+      const { id, action, reason } = req.body;
+      if (action === 'approve') res.json({ success: approval.approve(id, 'dashboard', reason) });
+      else if (action === 'reject') res.json({ success: approval.reject(id, 'dashboard', reason) });
+      else res.status(400).json({ error: 'invalid action' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/groups', async (req, res) => {
+    try {
+      const { groupStore } = await import('../cognitive/workspace/group-cognitive-object.js');
+      res.json({ groups: groupStore.list(), stats: groupStore.getStats() });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/search', async (req, res) => {
+    try {
+      const { api } = await import('../cognitive/cognitive-api.js');
+      const q = req.query.q || '';
+      if (!q) return res.json({ error: 'query required' });
+      const results = await api.search(q, { includeMissions: true });
+      res.json(results);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.use((err, req, res, next) => {
     log.error({ err }, 'Erreur serveur web');
     res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
