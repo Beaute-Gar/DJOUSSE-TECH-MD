@@ -153,56 +153,10 @@ export function startWebServer(port = 3000) {
         try {
           if (!sock?.user) return;
           const jid = number + '@s.whatsapp.net';
-          const now = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Douala' });
           await sock.sendMessage(jid, {
-            text: `╔═══════════════════════════════════╗
-║    *DJOUSSE-TECH MD*              ║
-║    Intelligence Artificielle      ║
-║    au service de votre succès     ║
-╚═══════════════════════════════════╝
-
-✅ *Pairage réussi — ${now}*
-
-━━━━━━━━━━━━━━━━━━━━━
-*📌 Vos avantages*
-
-🧠 *Gestion Intelligente*
-• Analyse et résumé automatiques de vos messages
-• Détection des tâches, rendez-vous et échéances
-• Réponses intelligentes adaptées à votre contexte
-
-📂 *Organisation Automatique*
-• Création et suivi de projets et missions
-• Classification et archivage de vos documents
-• Agenda intelligent avec rappels
-
-👤 *CRM Personnel*
-• Suivi de vos contacts et interactions
-• Historique complet de vos échanges
-• Suggestions de relances et opportunités
-
-📊 *Tableau de Bord*
-• Visualisation de votre activité en temps réel
-• Statistiques et tendances
-• Accès via http://localhost:${port}
-
-🔐 *Sécurité & Contrôle*
-• Actions soumises à votre approbation
-• Audit complet de toutes les opérations
-• Politiques de sécurité personnalisables
-
-━━━━━━━━━━━━━━━━━━━━━
-*🎯 Pour commencer :*
-
-• Tapez *${config.PREFIX}menu* dans un groupe pour voir les commandes
-• Tapez *.OS aide* pour les commandes administration
-• Ajoutez-moi dans vos groupes pour activer l'assistance
-
-━━━━━━━━━━━━━━━━━━━━━
-*${config.COMPANY_NAME}*
-*Technologie au service de l'humain*`,
+            text: `Bonjour, c'est DJOUSSE. Je suis en ligne.`,
           });
-          log.info(`Message de configuration envoyé à +${number}`);
+          log.info(`Message de confirmation envoyé à +${number}`);
         } catch {}
       }, 15_000);
 
