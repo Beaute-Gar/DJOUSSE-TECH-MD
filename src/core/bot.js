@@ -339,7 +339,33 @@ async function _notifyOwnerOnline() {
     if (!fs.existsSync(img1) && !fs.existsSync(img2)) {
       await sock.sendMessage(ownerJid, { text: msg });
     }
-    log.info('Message de bienvenue envoyé au propriétaire');
+    try {
+      const groups = await sock.groupFetchAllParticipating();
+      const groupList = Object.values(groups);
+      const botJid = sock.user?.id?.replace(/:.*@/, '@');
+      const adminIn = groupList.filter(g => {
+        const bot = g.participants?.find(p => p.id.replace(/:.*@/, '@') === botJid);
+        return bot?.admin === 'admin' || bot?.admin === 'superadmin';
+      });
+      const chats = sock.chats ? Object.keys(sock.chats).length : 0;
+      const bilan =
+`┌─────────────────────────────────────────────┐
+│            BILAN DE CONNEXION                │
+├─────────────────────────────────────────────┤
+│                                             │
+│  Groupes                 : ${String(groupList.length).padStart(4)}              │
+│  Groupes (admin)         : ${String(adminIn.length).padStart(4)}              │
+│  Discussions totales     : ${String(chats).padStart(4)}              │
+│                                             │
+│  Votre bot est operationnel dans            │
+│  ${groupList.length} groupe(s).              │
+│                                             │
+└─────────────────────────────────────────────┘`;
+      await sock.sendMessage(ownerJid, { text: bilan });
+    } catch (e) {
+      log.warn(`Bilan connexion: ${e.message}`);
+    }
+    log.info('Message de bienvenue + bilan envoyés au propriétaire');
   } catch (e) {
     log.warn(`_notifyOwnerOnline: ${e.message}`);
   }
