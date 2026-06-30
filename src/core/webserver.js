@@ -96,20 +96,13 @@ export function startWebServer(port = 3000) {
     }
     try {
       const { getLastQR } = await import('./bot.js');
-      const raw = getLastQR();
-      if (!raw) {
-        return res.json({ qr: null, message: 'Pas de QR disponible, patientez...' });
+      const qr = getLastQR();
+      if (qr) {
+        res.json({ qr });
+      } else {
+        res.json({ qr: null, message: 'Pas de QR disponible, patientez...' });
       }
-      // Baileys v6+ returns QR as a text string (e.g. "2@base64,...").
-      // Convert it to a PNG image on the server so the browser just displays it.
-      const QR = require('qrcode');
-      const pngBuffer = await QR.toBuffer(raw, {
-        width: 512, margin: 2, color: { dark: '#ffffff', light: '#0b1424' },
-      });
-      const b64 = pngBuffer.toString('base64');
-      res.json({ qr: b64 });
-    } catch (err) {
-      log.error(`QR generation: ${err.message}`);
+    } catch {
       res.json({ qr: null, message: 'Erreur' });
     }
   });

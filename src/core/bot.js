@@ -89,8 +89,16 @@ async function connect() {
     sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
       if (qr) {
-        lastQR = qr;
-        botEvents.emit('qr', qr);
+        try {
+          const QRCode = require('qrcode');
+          lastQR = (await QRCode.toDataURL(qr, {
+            width: 512, margin: 2, color: { dark: '#ffffff', light: '#0b1424' },
+          })).split(',')[1];
+        } catch (e) {
+          lastQR = qr;
+          log.warn(`QR conversion: ${e.message}`);
+        }
+        botEvents.emit('qr', lastQR);
         log.info('QR reçu');
       }
       if (connection) {
