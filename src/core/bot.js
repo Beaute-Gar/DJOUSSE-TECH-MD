@@ -4,6 +4,7 @@ import {
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
+  Browsers,
   isJidGroup,
 } from '@whiskeysockets/baileys';
 
@@ -57,14 +58,7 @@ async function connect() {
     const { version } = await fetchLatestBaileysVersion();
 
     if (state.creds?.me && !state.creds?.registered) {
-      log.warn('Creds partiels (pairing non abouti) — nettoyage de la session');
-      isConnecting = false;
-      const fs = require('fs');
-      if (fs.existsSync(SESSION_DIR)) {
-        fs.rmSync(SESSION_DIR, { recursive: true, force: true });
-      }
-      setTimeout(() => connect(), 1000);
-      return;
+      log.warn('Creds partiels détectés — on continue sans nettoyer');
     }
 
     log.info(`Baileys v${version.join('.')}`);
@@ -75,7 +69,7 @@ async function connect() {
         creds: state.creds,
         keys: makeCacheableSignalKeyStore(state.keys, log),
       },
-      browser: config.BROWSER,
+      browser: Browsers.ubuntu(config.BOT_NAME),
       printQRInTerminal: false,
       logger: log,
       getMessage: async () => ({ conversation: '' }),
@@ -383,8 +377,10 @@ async function _handleDisconnect(reason) {
       setTimeout(() => connect(), 3000);
       return;
     case DisconnectReason.restartRequired:
-      log.info('Redémarrage requis — reconnexion dans 3s');
-      setTimeout(() => connect(), 3000);
+      // Pendant le pairing, WhatsApp ferme/rouvre volontairement (515).
+      // 3500ms pour laisser saveCreds flush sur disque avant de relire l'état.
+      log.info('Redémarrage requis — reconnexion dans 3.5s');
+      setTimeout(() => connect(), 3500);
       return;
     case DisconnectReason.connectionReplaced:
       log.warn('Connexion remplacée par une autre session — arrêt');
