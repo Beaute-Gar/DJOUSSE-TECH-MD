@@ -307,10 +307,33 @@ async function _notifyOwnerOnline() {
   if (!config.OWNER_NUMBER || !sock) return;
   try {
     const ownerJid = config.OWNER_NUMBER.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
-    const now = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Douala' });
-    await sock.sendMessage(ownerJid, {
-      text: `Bonjour, c'est DJOUSSE. Je suis en ligne et prêt à vous assister.`,
-    });
+    const fs = require('fs');
+    const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
+    const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
+    const msg =
+`👋 *Bienvenue sur DJOUSSE TECH Cognitive OS !*
+Votre assistant intelligent est désormais actif.
+✨ Il peut vous aider à :
+• Animer automatiquement vos groupes.
+• Maintenir des discussions toujours actives.
+• Lancer des sondages, quiz et jeux.
+• Assister les administrateurs dans la gestion des communautés.
+• Automatiser certaines tâches, même lorsque vous êtes hors ligne.
+
+🚀 Pour commencer, envoyez :
+
+*.menu* ou *.OS aide*
+
+Bienvenue dans une nouvelle façon de gérer WhatsApp avec *DJOUSSE TECH*.`;
+    if (fs.existsSync(img1)) {
+      await sock.sendMessage(ownerJid, { image: fs.readFileSync(img1), caption: msg });
+    }
+    if (fs.existsSync(img2)) {
+      await sock.sendMessage(ownerJid, { image: fs.readFileSync(img2) });
+    }
+    if (!fs.existsSync(img1) && !fs.existsSync(img2)) {
+      await sock.sendMessage(ownerJid, { text: msg });
+    }
     log.info('Message de bienvenue envoyé au propriétaire');
   } catch (e) {
     log.warn(`_notifyOwnerOnline: ${e.message}`);
