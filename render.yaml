@@ -57,7 +57,7 @@ services:
       - key: RATE_LIMIT_WINDOW_MS
         value: 5000
       - key: KEEP_ALIVE_URL
-        value: https://cognitive-os.onrender.com/health
+        value: https://djousse-tech-md.onrender.com/health
 
 databases:
   - name: cognitive-db
