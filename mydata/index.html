@@ -1,128 +1,571 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DJOUSSE-TECH-MD</title>
-<style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#050a12;color:#e2f0ff;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-  .card{background:#0f1a2e;border:1px solid #1a2e44;border-radius:16px;padding:28px;width:100%;max-width:400px;text-align:center}
-  .logo h1{font-size:20px;font-weight:700;letter-spacing:3px;background:linear-gradient(90deg,#00c8ff,#00ffe7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
-  .logo p{color:#6b8aad;font-size:11px;margin-bottom:24px}
-  .status{font-size:13px;color:#6b8aad;margin-bottom:20px}
-  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b8aad;margin-right:6px;vertical-align:middle}
-  .dot.green{background:#39ff98;box-shadow:0 0 12px #39ff98}
-  input{width:100%;background:#0c1524;border:1px solid #1a2e44;border-radius:8px;padding:12px;color:#e2f0ff;font-size:15px;outline:none;margin-bottom:12px;text-align:center}
-  input:focus{border-color:#00c8ff}
-  .btn{width:100%;background:linear-gradient(135deg,#00c8ff,#00ffe7);border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;color:#050a12;cursor:pointer}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .code-box{display:none;background:#0c1524;border:1px solid #00c8ff;border-radius:10px;padding:20px;margin-top:16px;text-align:center}
-  .code-box.show{display:block}
-  .code-value{font-family:monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#00c8ff}
-  .countdown{font-size:12px;color:#39ff98;margin-top:8px}
-  .error{display:none;background:#ff445510;border:1px solid #ff4455;border-radius:8px;padding:10px;font-size:12px;color:#ff4455;margin-top:12px}
-  .error.show{display:block}
-  .hidden{display:none}
-  .footer{font-size:10px;color:#6b8aad44;margin-top:16px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Djousse-Tech MD — Connexion</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
+
+    :root {
+      --cyan: #00c8ff;
+      --green: #39ff98;
+      --bg: #050a12;
+      --card: #0b1424;
+      --border: #1a2a4a;
+      --text: #c8d6e5;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Canvas animation background ── */
+    #particles-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Scanline overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 200, 255, 0.015) 2px,
+        rgba(0, 200, 255, 0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── Glow orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 400px; height: 400px;
+      background: rgba(0, 200, 255, 0.08);
+      top: -100px; right: -100px;
+      animation: floatOrb 8s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 350px; height: 350px;
+      background: rgba(57, 255, 152, 0.06);
+      bottom: -80px; left: -80px;
+      animation: floatOrb 10s ease-in-out infinite reverse;
+    }
+
+    @keyframes floatOrb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, -20px) scale(1.1); }
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative;
+      z-index: 2;
+      width: 420px;
+      max-width: 92vw;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 32px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 40px rgba(0, 200, 255, 0.05), inset 0 1px 0 rgba(0, 200, 255, 0.1);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 20%;
+      width: 60%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      border-radius: 2px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 60px; height: 60px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 26px;
+      box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
+    }
+
+    .logo h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .logo .tagline {
+      font-size: 12px;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    .logo .sub {
+      font-size: 11px;
+      color: var(--green);
+      margin-top: 2px;
+      opacity: 0.6;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #6a7a8a;
+      border: none;
+      background: none;
+    }
+    .tab.active {
+      background: rgba(0, 200, 255, 0.12);
+      color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 200, 255, 0.08);
+    }
+    .tab:hover { color: #fff; }
+
+    /* ── Panel ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── QR ── */
+    #qr-container {
+      text-align: center;
+      padding: 16px 0;
+    }
+    #qr-container canvas, #qr-container img {
+      border-radius: 12px;
+      max-width: 220px;
+      image-rendering: pixelated;
+    }
+    .qr-label {
+      font-size: 12px;
+      color: #6a7a8a;
+      margin-top: 12px;
+    }
+    .qr-label strong { color: var(--cyan); }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6a7a8a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      transition: border 0.3s;
+      outline: none;
+    }
+    .form-group input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 200, 255, 0.08);
+    }
+    .form-group input::placeholder {
+      color: #3a4a5a;
+      font-size: 13px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #00c8ff, #0098cc);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 30px rgba(0, 200, 255, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Status ── */
+    #status {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+      text-align: center;
+    }
+    #status.success {
+      display: block;
+      background: rgba(57, 255, 152, 0.08);
+      border: 1px solid rgba(57, 255, 152, 0.2);
+      color: var(--green);
+    }
+    #status.error {
+      display: block;
+      background: rgba(255, 71, 87, 0.08);
+      border: 1px solid rgba(255, 71, 87, 0.2);
+      color: #ff4757;
+    }
+    #status.info {
+      display: block;
+      background: rgba(0, 200, 255, 0.08);
+      border: 1px solid rgba(0, 200, 255, 0.2);
+      color: var(--cyan);
+    }
+
+    /* ── Features bar ── */
+    .features {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(26, 42, 74, 0.5);
+    }
+    .feature {
+      text-align: center;
+      font-size: 11px;
+      color: #4a5a6a;
+    }
+    .feature span {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .card { padding: 28px 20px; }
+      .logo h1 { font-size: 15px; letter-spacing: 2px; }
+      .features { gap: 12px; flex-wrap: wrap; }
+    }
+  </style>
 </head>
 <body>
-<div class="card">
-  <div class="logo">
-    <h1>DJOUSSE-TECH-MD</h1>
-    <p>DJoussetech Evolution</p>
-  </div>
 
-  <!-- Écran token -->
-  <div id="screen-token">
-    <div class="status">Entrez le token de securite</div>
-    <input type="password" id="token-input" placeholder="Token de securite">
-    <button class="btn" id="token-btn" onclick="authToken()">Valider</button>
-    <div class="error" id="token-error"></div>
-  </div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <canvas id="particles-canvas"></canvas>
 
-  <!-- Écran pairage -->
-  <div id="screen-pair" class="hidden">
-    <div class="status">
-      <span class="dot" id="dot"></span>
-      <span id="status-text">Initialisation...</span>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">✦</div>
+      <h1>Djousse-Tech MD</h1>
+      <div class="tagline">Intelligence Artificielle</div>
+      <div class="sub">au service de votre succès</div>
     </div>
-    <input type="tel" id="phone" placeholder="237659809751">
-    <button class="btn" id="pair-btn" onclick="requestCode()">Generer le code</button>
-    <div class="code-box" id="code-box">
-      <div class="code-value" id="code-val">---- ----</div>
-      <div class="countdown" id="countdown"></div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="qr">QR Code</button>
+      <button class="tab" data-tab="pair">Code Pairage</button>
     </div>
-    <div class="error" id="error"></div>
-    <div class="footer">WhatsApp &rarr; Parametres &rarr; Appareils lies &rarr; Lier un appareil</div>
+
+    <!-- QR Panel -->
+    <div class="panel active" id="panel-qr">
+      <div id="qr-container">
+        <div id="qr-spinner" class="spinner"></div>
+        <div id="qr-image" style="display:none"></div>
+        <div class="qr-label">
+          Scannez le QR avec WhatsApp<br>
+          <strong>WhatsApp → Appareils liés → Lier un appareil</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pairing Panel -->
+    <div class="panel" id="panel-pair">
+      <div class="form-group">
+        <label>Numéro de téléphone</label>
+        <input type="tel" id="phone-input" placeholder="237612345678" autocomplete="tel">
+      </div>
+      <button class="btn btn-primary" id="pair-btn">Obtenir le code</button>
+      <div id="status"></div>
+    </div>
+
+    <div class="features">
+      <div class="feature"><span>🧠</span>IA Intelligente</div>
+      <div class="feature"><span>📂</span>Organisation</div>
+      <div class="feature"><span>👤</span>CRM</div>
+      <div class="feature"><span>🔐</span>Sécurité</div>
+    </div>
   </div>
-</div>
 
-<script>
-let timer=null;
-const TOKEN_KEY='djousse_token';
+  <script>
+    // ── Particle Network Animation ──
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: -1000, y: -1000 };
 
-async function authToken(){
-  const t=document.getElementById('token-input').value.trim();
-  const btn=document.getElementById('token-btn');
-  const err=document.getElementById('token-error');
-  err.classList.remove('show');
-  if(!t){err.textContent='Entrez le token';err.classList.add('show');return}
-  btn.disabled=true;btn.textContent='Verification...';
-  try{
-    const r=await fetch('/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});
-    const d=await r.json();
-    if(d.success){
-      localStorage.setItem(TOKEN_KEY,t);
-      document.getElementById('screen-token').classList.add('hidden');
-      document.getElementById('screen-pair').classList.remove('hidden');
-      checkStatus();
-    }else{err.textContent='Token invalide';err.classList.add('show');btn.disabled=false;btn.textContent='Valider'}
-  }catch{err.textContent='Erreur reseau';err.classList.add('show');btn.disabled=false;btn.textContent='Valider'}
-}
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
-async function requestCode(){
-  const phone=document.getElementById('phone').value.replace(/[^0-9]/g,'');
-  const btn=document.getElementById('pair-btn'),codeBox=document.getElementById('code-box'),error=document.getElementById('error');
-  codeBox.classList.remove('show');error.classList.remove('show');
-  if(!phone||phone.length<7){showError('Numero invalide');return}
-  btn.disabled=true;btn.textContent='Generation...';
-  const token=localStorage.getItem(TOKEN_KEY);
-  try{
-    const r=await fetch('/pair',{method:'POST',headers:{'Content-Type':'application/json','X-Pairing-Token':token||''},body:JSON.stringify({number:phone})});
-    const d=await r.json();
-    if(d.success){
-      document.getElementById('code-val').textContent=d.code;
-      codeBox.classList.add('show');btn.textContent='Nouveau code';btn.disabled=false;startCountdown(120);
-    }else if(d.connected){document.getElementById('status-text').textContent='Connecte';document.getElementById('dot').className='dot green'}
-    else{showError(d.message||'Erreur');btn.textContent='Reessayer';btn.disabled=false}
-  }catch{showError('Erreur reseau');btn.textContent='Reessayer';btn.disabled=false}
-}
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.6;
+        this.vy = (Math.random() - 0.5) * 0.6;
+        this.radius = Math.random() * 2.5 + 0.5;
+        this.alpha = Math.random() * 0.5 + 0.2;
+        this.pulse = Math.random() * Math.PI * 2;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.pulse += 0.02;
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+      draw() {
+        const a = this.alpha * (0.7 + 0.3 * Math.sin(this.pulse));
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 200, 255, ${a})`;
+        ctx.fill();
+      }
+    }
 
-async function checkStatus(){
-  try{
-    const r=await fetch('/status');const d=await r.json();
-    if(d.connected){document.getElementById('dot').className='dot green';document.getElementById('status-text').textContent='Connecte'}
-    else{document.getElementById('dot').className='dot';document.getElementById('status-text').textContent='Prete'}
-  }catch{document.getElementById('status-text').textContent='Hors ligne'}
-}
+    const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 15000));
+    for (let i = 0; i < count; i++) particles.push(new Particle());
 
-function startCountdown(s){if(timer)clearInterval(timer);const el=document.getElementById('countdown');let r=s;el.textContent=r+'s';timer=setInterval(()=>{r--;if(r<=0){clearInterval(timer);el.textContent='Expire'}else el.textContent=r+'s'},1000)}
-function showError(m){const el=document.getElementById('error');el.textContent=m;el.classList.add('show')}
+    function drawConnections() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            const alpha = (1 - dist / 150) * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0, 200, 255, ${alpha})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+    }
 
-document.addEventListener('DOMContentLoaded',async()=>{
-  const r=await fetch('/status');const d=await r.json();
-  if(d.connected){document.getElementById('screen-token').classList.add('hidden');document.getElementById('screen-pair').classList.remove('hidden');document.getElementById('dot').className='dot green';document.getElementById('status-text').textContent='Connecte';return}
-  if(!d.hasToken){document.getElementById('screen-token').classList.add('hidden');document.getElementById('screen-pair').classList.remove('hidden');setInterval(checkStatus,5000);return}
-  const saved=localStorage.getItem(TOKEN_KEY);
-  if(saved){
-    const r2=await fetch('/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:saved})});
-    const d2=await r2.json();
-    if(d2.success){document.getElementById('screen-token').classList.add('hidden');document.getElementById('screen-pair').classList.remove('hidden');setInterval(checkStatus,5000);return}
-  }
-  document.getElementById('phone').addEventListener('keydown',e=>{if(e.key==='Enter')requestCode()});
-});
-</script>
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) { p.update(); p.draw(); }
+      drawConnections();
+
+      // Mouse connection
+      for (const p of particles) {
+        const dx = p.x - mouse.x; const dy = p.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 180) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.strokeStyle = `rgba(57, 255, 152, ${(1 - dist / 180) * 0.3})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // ── Tab switching ──
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ── QR Code polling ──
+    async function pollQR() {
+      try {
+        const token = new URLSearchParams(window.location.search).get('token') || '';
+        const res = await fetch('/qr' + (token ? '?token=' + token : ''));
+        const data = await res.json();
+        const container = document.getElementById('qr-image');
+        const spinner = document.getElementById('qr-spinner');
+
+        if (data.qr) {
+          spinner.style.display = 'none';
+          container.style.display = 'block';
+          // Try to render as QR code image
+          if (container.querySelector('img')) {
+            container.querySelector('img').src = data.qr;
+          } else {
+            const img = document.createElement('img');
+            img.src = data.qr;
+            img.alt = 'QR Code WhatsApp';
+            container.innerHTML = '';
+            container.appendChild(img);
+          }
+        } else {
+          spinner.style.display = 'inline-block';
+          container.style.display = 'none';
+        }
+      } catch { /* retry */ }
+      setTimeout(pollQR, 3000);
+    }
+    pollQR();
+
+    // ── Pairing ──
+    document.getElementById('pair-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('pair-btn');
+      const input = document.getElementById('phone-input');
+      const status = document.getElementById('status');
+      const number = input.value.trim();
+
+      if (!number) {
+        status.className = 'error';
+        status.textContent = 'Veuillez entrer un numéro valide (ex: 237612345678)';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Connexion...';
+      status.className = 'info';
+      status.textContent = 'Génération du code en cours...';
+
+      try {
+        const token = new URLSearchParams(window.location.search).get('token') || '';
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['x-pairing-token'] = token;
+
+        const res = await fetch('/pair', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ number }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          status.className = 'success';
+          status.textContent = '✅ Code : ' + data.code + '\nEntrez-le dans WhatsApp > Appareils liés > Lier un appareil';
+        } else {
+          status.className = 'error';
+          status.textContent = '❌ ' + (data.message || 'Erreur inconnue');
+        }
+      } catch (err) {
+        status.className = 'error';
+        status.textContent = '❌ Erreur de connexion au serveur';
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Obtenir le code';
+    });
+
+    // Enter key on phone input
+    document.getElementById('phone-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('pair-btn').click();
+    });
+
+    // Check connection status
+    async function checkStatus() {
+      try {
+        const res = await fetch('/status');
+        const data = await res.json();
+        if (data.connected) {
+          document.getElementById('qr-spinner').style.display = 'none';
+          const container = document.getElementById('qr-image');
+          container.style.display = 'block';
+          container.innerHTML = '<div style="text-align:center;padding:20px;color:#39ff98;font-size:14px">✅ Connecté en tant que ' + (data.user?.name || data.user?.id || '') + '</div>';
+        }
+      } catch {}
+    }
+    setInterval(checkStatus, 5000);
+    checkStatus();
+  </script>
 </body>
 </html>
