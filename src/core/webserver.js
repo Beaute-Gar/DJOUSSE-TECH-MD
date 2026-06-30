@@ -104,7 +104,7 @@ export function startWebServer(port = 3000) {
       // Convert it to a PNG image on the server so the browser just displays it.
       const QR = require('qrcode');
       const pngBuffer = await QR.toBuffer(raw, {
-        width: 512, margin: 2, color: { dark: '#00c8ff', light: '#0a0d1a' },
+        width: 512, margin: 2, color: { dark: '#ffffff', light: '#0b1424' },
       });
       const b64 = pngBuffer.toString('base64');
       res.json({ qr: b64 });
