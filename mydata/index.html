@@ -133,11 +133,10 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .console .log.info{color:var(--cyan);opacity:1}
 
 /* ── Post-Connect ── */
-.post-connect{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:380px;text-align:center}
+.post-connect{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:420px;text-align:center}
 .post-connect.show{display:flex}
-.post-connect .icon{font-size:clamp(32px,3vw,48px);margin-bottom:12px}
-.post-connect h2{font-size:clamp(16px,1.4vw,22px);color:var(--green);margin-bottom:4px;font-weight:600}
-.post-connect .sub{font-size:12px;color:var(--dim);margin-bottom:20px}
+.post-connect pre{font-family:'JetBrains Mono',monospace;font-size:clamp(6px,0.5vw,9px);line-height:1.25;color:var(--cyan);text-align:left;margin-bottom:8px;white-space:pre}
+.post-connect .sub{font-size:12px;color:var(--dim);margin-bottom:16px}
 .post-connect .init-bar-wrap{width:100%;height:3px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:10px}
 .post-connect .init-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px;transition:width 0.6s ease}
 .post-connect .init-status{font-family:'JetBrains Mono',monospace;font-size:clamp(10px,0.75vw,12px);color:var(--dim);opacity:0;transition:opacity 0.4s}
@@ -226,8 +225,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 
       <!-- Post-Connect -->
       <div class="post-connect" id="post-connect">
-        <div class="icon">✅</div>
-        <h2>CONNECTED</h2>
+        <pre id="ascii-art"></pre>
         <div class="sub" id="conn-user">WhatsApp Authentifié</div>
         <div class="init-bar-wrap"><div class="init-bar-fill" id="init-bar"></div></div>
         <div class="init-status" id="init-status">Initialisation...</div>
@@ -280,14 +278,27 @@ const BOOT_LINES = [
   'Loading Smart Community Governance...',
   'Waiting for WhatsApp Authentication...',
 ];
+const ASCII_ART = [
+  '  ╔═══════════════════════════════════╗',
+  '  ║       DJOUSSE  TECH               ║',
+  '  ║       COGNITIVE  OS               ║',
+  '  ║       ONLINE                      ║',
+  '  ╚═══════════════════════════════════╝',
+  '                                       ',
+  '   ██████╗ ██████╗ ███╗   ██╗███╗   ██╗',
+  '  ██╔════╝██╔═══██╗████╗  ██║████╗  ██║',
+  '  ██║     ██║   ██║██╔██╗ ██║██╔██╗ ██║',
+  '  ██║     ██║   ██║██║╚██╗██║██║╚██╗██║',
+  '  ╚██████╗╚██████╔╝██║ ╚████║██║ ╚████║',
+  '   ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝',
+];
+
 const INIT_STEPS = [
-  { pct: 10, text: 'Initializing Workspace...' },
-  { pct: 25, text: 'Scanning Contacts...' },
-  { pct: 35, text: 'Scanning Groups...' },
-  { pct: 50, text: 'Creating Digital Twins...' },
-  { pct: 65, text: 'Loading Memories...' },
-  { pct: 80, text: 'Synchronizing Knowledge Graph...' },
-  { pct: 92, text: 'Starting Community Agents...' },
+  { pct: 10, text: 'Initializing Runtime...' },
+  { pct: 30, text: 'Loading Workspace...' },
+  { pct: 50, text: 'Synchronizing Knowledge Mesh...' },
+  { pct: 70, text: 'Starting Agents...' },
+  { pct: 85, text: 'Activating Governance...' },
   { pct: 100, text: 'Ready.' },
 ];
 
@@ -411,8 +422,9 @@ async function checkConn(){
     if(qrTimer)clearInterval(qrTimer);
     pairBtn.disabled=true;pairBtn.textContent='Connecté';inp.disabled=true;logoutBtn.classList.remove('hidden');
     conLog('WhatsApp connecté : '+(d.user?.name||''),'ok');
-    // Post-connect init sequence — progression 0→100%
-    const bar=qs('init-bar'),status=qs('init-status');
+    // Affiche l'ASCII art puis la barre de progression
+    const pre=qs('ascii-art'),bar=qs('init-bar'),status=qs('init-status');
+    pre.textContent=ASCII_ART.join('\n');
     status.classList.add('show');
     for(let i=0;i<INIT_STEPS.length;i++){
       const step=INIT_STEPS[i];
@@ -448,7 +460,7 @@ function initPair(){
       conLog('Session déconnectée','ok');setAI('yellow','WAITING');setObserver('gray','INIT');setWorkspace('gray','INIT');setSCG('cyan','STANDBY');
       qs('post-connect').classList.remove('show');qs('connector').style.display='flex';
       qs('pair-btn').disabled=false;qs('pair-btn').textContent='Obtenir le code';qs('phone-inp').disabled=false;
-      qs('logout-btn').classList.add('hidden');qs('init-bar').style.width='0%';qs('init-status').textContent='';qs('init-status').className='init-status';
+      qs('logout-btn').classList.add('hidden');qs('init-bar').style.width='0%';qs('init-status').textContent='';qs('init-status').className='init-status';qs('ascii-art').textContent='';
       qs('qr-spin').style.display='block';
       showStatus('pair-status','info','✅ Déconnecté. QR disponible...');
       setTimeout(()=>location.reload(),1500);
