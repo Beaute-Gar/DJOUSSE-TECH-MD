@@ -1,6 +1,7 @@
 import { createLogger } from '../../core/logger.js';
 import { bus } from '../event-bus.js';
 import { api } from '../cognitive-api.js';
+import { executor, ACTION_TYPES } from '../action-executor.js';
 import { workspaceManager } from './workspace-manager.js';
 import { discovery } from './auto-discovery.js';
 import { groupFactory } from './group-agent-factory.js';
@@ -391,8 +392,15 @@ async function cmdCleanup(ctx, sock, ws) {
 
 async function sendReply(ctx, sock, text) {
   try {
-    if (ctx.m?.reply) await ctx.m.reply(text);
-    else if (sock?.sendMessage) await sock.sendMessage(ctx.jid, { text });
+    if (ctx.m?.reply) {
+      await ctx.m.reply(text);
+    } else if (sock?.sendMessage) {
+      await executor.execute({
+        type: ACTION_TYPES.SEND_MESSAGE,
+        payload: { jid: ctx.jid, text },
+        source: 'os-commands:sendReply',
+      });
+    }
   } catch (err) {
     log.error(`[OSCMD] sendReply: ${err.message}`);
   }

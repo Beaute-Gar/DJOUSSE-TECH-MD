@@ -27,7 +27,7 @@ export {
 export {
   createAction, completeAction, cancelAction, getPendingActions,
   getActionsByJid, detectTasksFromText, getOverdueActions,
-  loadPersistedActions, ACTION_TYPES,
+  loadPersistedActions, ACTION_TYPES as AUTOMATION_ACTION_TYPES,
 } from './automation-engine.js';
 export {
   query, answerWithContext, getQueueStats,
@@ -128,6 +128,7 @@ export { pipeline, CognitivePipeline } from './cognitive-pipeline.js';
 export { heartbeat, HeartbeatScheduler } from './heartbeat-scheduler.js';
 export { clock, CognitiveClock } from './cognitive-clock.js';
 export { episodeFactory, EpisodeFactory, EPISODE_TYPES } from './episode-factory.js';
+export { executor, ActionExecutor, ACTION_TYPES } from './action-executor.js';
 export {
   registerMemoryPlugin, registerProactivePlugin,
   registerSuggestionHandler, registerProactiveCleanup,
@@ -172,7 +173,10 @@ export async function initCognitive() {
   const { pipeline } = await import('./cognitive-pipeline.js');
   const { heartbeat } = await import('./heartbeat-scheduler.js');
   const { observer } = await import('./observer-loop.js');
+  const { executor } = await import('./action-executor.js');
   const { getSocket } = await import('../core/bot.js');
+
+  executor.setSockProvider(getSocket);
 
   const {
     registerMemoryPlugin, registerProactivePlugin,
@@ -182,7 +186,7 @@ export async function initCognitive() {
 
   registerMemoryPlugin(pipeline);
   registerProactivePlugin(pipeline);
-  registerSuggestionHandler(pipeline, () => getSocket());
+  registerSuggestionHandler(pipeline);
   registerProactiveCleanup(pipeline);
   registerHeartbeatPlugins(pipeline);
 

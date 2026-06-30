@@ -1,5 +1,6 @@
 import { downloadMediaMessage, isJidGroup } from '@whiskeysockets/baileys';
 import { createLogger } from './logger.js';
+import { executor, ACTION_TYPES } from '../cognitive/action-executor.js';
 const log = createLogger('SERIALIZER');
 
 function extractBody(message) {
@@ -69,16 +70,32 @@ export async function serializeMessage(sock, rawMsg) {
       isGroupAdmin,
       botIsAdmin,
 
-      reply: (text) => sock.sendMessage(chatJid, { text: String(text) }, { quoted: rawMsg }),
+      reply: (text) => executor.execute({
+        type: ACTION_TYPES.SEND_MESSAGE,
+        payload: { jid: chatJid, text: String(text), options: { quoted: rawMsg } },
+        source: 'serializer:reply',
+      }).catch(() => {}),
 
-      react: (emoji) => sock.sendMessage(chatJid, { react: { text: emoji, key: rawMsg.key } }),
+      react: (emoji) => executor.execute({
+        type: ACTION_TYPES.REACT,
+        payload: { jid: chatJid, emoji, messageKey: rawMsg.key },
+        source: 'serializer:react',
+      }).catch(() => {}),
 
-      send: (content) => sock.sendMessage(chatJid, content),
+      send: (content) => executor.execute({
+        type: ACTION_TYPES.SEND_MESSAGE,
+        payload: { jid: chatJid, ...content },
+        source: 'serializer:send',
+      }).catch(() => {}),
 
-      mention: (jids, text) => sock.sendMessage(chatJid, {
-        text,
-        mentions: Array.isArray(jids) ? jids : [jids],
-      }, { quoted: rawMsg }),
+      mention: (jids, text) => executor.execute({
+        type: ACTION_TYPES.SEND_MESSAGE,
+        payload: {
+          jid: chatJid, text,
+          options: { mentions: Array.isArray(jids) ? jids : [jids], quoted: rawMsg },
+        },
+        source: 'serializer:mention',
+      }).catch(() => {}),
 
       download: async () => {
         try { return await downloadMediaMessage(rawMsg, 'buffer', {}); }
@@ -91,28 +108,61 @@ export async function serializeMessage(sock, rawMsg) {
       },
 
       sendImage: async (buffer, caption = '') =>
-        sock.sendMessage(chatJid, { image: buffer, caption }, { quoted: rawMsg }),
+        executor.execute({
+          type: ACTION_TYPES.SEND_IMAGE,
+          payload: { jid: chatJid, buffer, caption, options: { quoted: rawMsg } },
+          source: 'serializer:sendImage',
+        }).catch(() => {}),
 
       sendVideo: async (buffer, caption = '') =>
-        sock.sendMessage(chatJid, { video: buffer, caption }, { quoted: rawMsg }),
+        executor.execute({
+          type: ACTION_TYPES.SEND_VIDEO,
+          payload: { jid: chatJid, buffer, caption, options: { quoted: rawMsg } },
+          source: 'serializer:sendVideo',
+        }).catch(() => {}),
 
       sendAudio: async (buffer, ptt = false) =>
-        sock.sendMessage(chatJid, { audio: buffer, mimetype: 'audio/mp4', ptt }, { quoted: rawMsg }),
+        executor.execute({
+          type: ACTION_TYPES.SEND_AUDIO,
+          payload: { jid: chatJid, buffer, mimetype: 'audio/mp4', ptt, options: { quoted: rawMsg } },
+          source: 'serializer:sendAudio',
+        }).catch(() => {}),
 
       sendSticker: async (buffer) =>
-        sock.sendMessage(chatJid, { sticker: buffer }, { quoted: rawMsg }),
+        executor.execute({
+          type: ACTION_TYPES.SEND_MESSAGE,
+          payload: { jid: chatJid, sticker: buffer, options: { quoted: rawMsg } },
+          source: 'serializer:sendSticker',
+        }).catch(() => {}),
 
       sendDocument: async (buffer, mimetype, filename) =>
-        sock.sendMessage(chatJid, { document: buffer, mimetype, fileName: filename }, { quoted: rawMsg }),
+        executor.execute({
+          type: ACTION_TYPES.SEND_DOCUMENT,
+          payload: { jid: chatJid, buffer, mimetype, fileName: filename, options: { quoted: rawMsg } },
+          source: 'serializer:sendDocument',
+        }).catch(() => {}),
 
       sendContact: async (name, number) => {
         const vcard = `BEGIN:VCARD\nVERSION:3.0\nN:;${name};;;\nFN:${name}\nTEL;type=CELL;type=VOICE;waid=${number}:+${number}\nEND:VCARD`;
-        return sock.sendMessage(chatJid, { contacts: { displayName: name, contacts: [{ vcard }] } }, { quoted: rawMsg });
+        return executor.execute({
+          type: ACTION_TYPES.SEND_MESSAGE,
+          payload: { jid: chatJid, contacts: { displayName: name, contacts: [{ vcard }] }, options: { quoted: rawMsg } },
+          source: 'serializer:sendContact',
+        }).catch(() => {});
       },
 
-      read: async () => { try { await sock.readMessages([rawMsg.key]); } catch {} },
+      read: async () => {
+        try {
+          const sock = typeof executor._sockProvider === 'function' ? executor._sockProvider() : null;
+          if (sock?.readMessages) await sock.readMessages([rawMsg.key]);
+        } catch {}
+      },
 
-      delete: async () => sock.sendMessage(chatJid, { delete: rawMsg.key }),
+      delete: async () => executor.execute({
+        type: ACTION_TYPES.DELETE_MESSAGE,
+        payload: { jid: chatJid, messageKey: rawMsg.key },
+        source: 'serializer:delete',
+      }).catch(() => {}),
     };
 
     return m;

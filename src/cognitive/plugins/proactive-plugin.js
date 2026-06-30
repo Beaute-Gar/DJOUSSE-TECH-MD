@@ -1,5 +1,6 @@
 import { createLogger } from '../../core/logger.js';
 import { bus, EVENTS } from '../event-bus.js';
+import { executor, ACTION_TYPES } from '../action-executor.js';
 import { reasoner } from '../reasoning-engine.js';
 import { policy, POLICY_EFFECTS } from '../governance/policy-engine.js';
 import { safety } from '../governance/safety-engine.js';
@@ -67,20 +68,21 @@ function _wasRecentlySuggested(jid, action) {
   return false;
 }
 
-export function registerSuggestionHandler(pipeline, sockProvider) {
+export function registerSuggestionHandler(pipeline) {
   pipeline.on('proactive:suggestion', async (data) => {
     const { jid, senderJid, text, trace, ws, suggestion, confidence } = data;
     const autonomy = data.autonomy || 'assisted';
 
     try {
-      const sock = typeof sockProvider === 'function' ? await sockProvider() : sockProvider;
-      if (!sock) return;
-
       const pct = confidence ? Math.round(confidence * 100) : 50;
 
       if (autonomy === 'suggestion' || autonomy === 'assisted') {
         const msg = _buildSuggestion(text.slice(0, 100), suggestion, pct, trace);
-        await sock.sendMessage(ws.ownerJid, { text: msg });
+        await executor.execute({
+          type: ACTION_TYPES.SEND_MESSAGE,
+          payload: { jid: ws.ownerJid, text: msg },
+          source: 'proactive-plugin:suggestion',
+        });
         audit.log({
           agent: 'proactive-plugin', action: 'suggest', resource: 'proactive',
           details: { suggestion, confidence: pct, jid }, result: 'sent',
@@ -88,7 +90,7 @@ export function registerSuggestionHandler(pipeline, sockProvider) {
       }
 
       if (autonomy === 'autonomous') {
-        await _executeAutonomous(sock, suggestion, jid, senderJid, ws);
+        await _executeAutonomous(suggestion, jid, senderJid, ws);
         audit.log({
           agent: 'proactive-plugin', action: 'autonomous', resource: jid,
           details: { suggestion }, result: 'executed',
@@ -114,16 +116,20 @@ function _buildSuggestion(text, action, confidence, trace) {
   return msg;
 }
 
-async function _executeAutonomous(sock, action, jid, senderJid, ws) {
+async function _executeAutonomous(action, jid, senderJid, ws) {
   if (action.includes('suivi') || action.includes('Contacter')) {
     if (senderJid !== ws.ownerJid) {
-      await sock.sendMessage(senderJid, {
-        text: `👋 *Cognitive OS* — J'ai remarqué que tu avais besoin d'aide. Comment puis-je t'assister ?`,
+      await executor.execute({
+        type: ACTION_TYPES.SEND_MESSAGE,
+        payload: { jid: senderJid, text: `👋 *Cognitive OS* — J'ai remarqué que tu avais besoin d'aide. Comment puis-je t'assister ?` },
+        source: 'proactive-plugin:autonomous-contact',
       });
     }
   }
-  await sock.sendMessage(ws.ownerJid, {
-    text: `🤖 *Action autonome effectuée*\n\nAction : ${action}\nContexte : ${jid}`,
+  await executor.execute({
+    type: ACTION_TYPES.SEND_MESSAGE,
+    payload: { jid: ws.ownerJid, text: `🤖 *Action autonome effectuée*\n\nAction : ${action}\nContexte : ${jid}` },
+    source: 'proactive-plugin:autonomous-report',
   });
 }
 

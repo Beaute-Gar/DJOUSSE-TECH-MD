@@ -245,9 +245,12 @@ async function connect() {
           try {
             await sock.rejectCall(call.id, call.from);
             if (count <= 2) {
-              await sock.sendMessage(call.from, {
-                text: `☎️ Je ne peux pas répondre aux appels. Envoie-moi un message, je te répondrai dès que possible. — *${config.BOT_NAME}*`,
-              });
+              const { executor, ACTION_TYPES } = await import('../cognitive/action-executor.js');
+              executor.execute({
+                type: ACTION_TYPES.SEND_MESSAGE,
+                payload: { jid: call.from, text: `☎️ Je ne peux pas répondre aux appels. Envoie-moi un message, je te répondrai dès que possible. — *${config.BOT_NAME}*` },
+                source: 'bot:call_reject',
+              }).catch(() => {});
             }
           } catch {}
         }
@@ -303,8 +306,10 @@ async function _notifyOwnerOnline() {
   try {
     const ownerJid = config.OWNER_NUMBER.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
     const now = new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Douala' });
-    const name = await sock.sendMessage(ownerJid, {
-      text: `╔═══════════════════════════════════╗
+    const { executor, ACTION_TYPES } = await import('../cognitive/action-executor.js');
+    await executor.execute({
+      type: ACTION_TYPES.SEND_MESSAGE,
+      payload: { jid: ownerJid, text: `╔═══════════════════════════════════╗
 ║    *DJOUSSE-TECH MD*              ║
 ║    Intelligence Artificielle      ║
 ║    au service de votre succès     ║
@@ -349,7 +354,8 @@ async function _notifyOwnerOnline() {
 
 ━━━━━━━━━━━━━━━━━━━━━
 *${config.COMPANY_NAME}*
-*Technologie au service de l'humain*`,
+*Technologie au service de l'humain*` },
+      source: 'bot:owner_notify',
     });
   } catch {}
 }

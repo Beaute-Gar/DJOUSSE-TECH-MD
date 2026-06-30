@@ -2,6 +2,7 @@ import { createRequire } from 'module';
 import { createLogger } from './logger.js';
 import { Groups } from '../lib/database.js';
 import { detectGroupProfile } from '../modules/groups/group-profiles.js';
+import { executor, ACTION_TYPES } from '../cognitive/action-executor.js';
 
 const require = createRequire(import.meta.url);
 const config  = require('../../config.cjs');
@@ -114,7 +115,7 @@ _Je suis maintenant votre assistant de groupe intelligent. Je m'adapte automatiq
 
 _Ravi de vous rejoindre !_ 🙌`;
   try {
-    await sock.sendMessage(groupJid, { text: msg });
+    await executor.execute({ type: ACTION_TYPES.SEND_MESSAGE, payload: { jid: groupJid, text: msg }, source: 'group-handler:bot-welcome' });
     log.info(`Message de bienvenue bot envoyé dans : ${meta.subject}`);
   } catch (e) {
     log.error(`sendBotWelcome: ${e.message}`);
@@ -168,11 +169,9 @@ ${rules}`;
 
   try {
     if (ppBuffer && ppBuffer.length > 1000) {
-      await sock.sendMessage(groupJid, {
-        image: ppBuffer, caption: welcomeMsg, mentions: [memberJid],
-      });
+      await executor.execute({ type: ACTION_TYPES.SEND_IMAGE, payload: { jid: groupJid, buffer: ppBuffer, caption: welcomeMsg, options: { mentions: [memberJid] } }, source: 'group-handler:member-welcome-img' });
     } else {
-      await sock.sendMessage(groupJid, { text: welcomeMsg, mentions: [memberJid] });
+      await executor.execute({ type: ACTION_TYPES.SEND_MESSAGE, payload: { jid: groupJid, text: welcomeMsg, options: { mentions: [memberJid] } }, source: 'group-handler:member-welcome' });
     }
     log.info(`Welcome membre : ${phone} → ${meta.subject} (${memberOrdinal} membre)`);
   } catch (e) {
@@ -193,7 +192,7 @@ async function sendMemberGoodbye(sock, groupJid, memberJid, meta) {
 └──────────────────────
 _a quitté *${meta.subject}*. On te souhaite bonne route ! 🙏_`;
   try {
-    await sock.sendMessage(groupJid, { text: msg, mentions: [memberJid] });
+    await executor.execute({ type: ACTION_TYPES.SEND_MESSAGE, payload: { jid: groupJid, text: msg, options: { mentions: [memberJid] } }, source: 'group-handler:member-goodbye' });
   } catch (e) {
     log.error(`sendMemberGoodbye: ${e.message}`);
   }
@@ -234,10 +233,7 @@ export async function handleGroupEvent(sock, update) {
         if (!isBotItself) {
           await sleep(1000);
           try {
-            await sock.sendMessage(groupJid, {
-              text: `🎖️ Félicitations @${participantJid.split('@')[0]} ! Tu viens d'être promu *Admin* de *${meta.subject}*. Utilise ce pouvoir avec sagesse. 👑`,
-              mentions: [participantJid],
-            });
+            await executor.execute({ type: ACTION_TYPES.SEND_MESSAGE, payload: { jid: groupJid, text: `🎖️ Félicitations @${participantJid.split('@')[0]} ! Tu viens d'être promu *Admin* de *${meta.subject}*. Utilise ce pouvoir avec sagesse. 👑`, options: { mentions: [participantJid] } }, source: 'group-handler:promote' });
           } catch {}
         }
         break;
@@ -246,10 +242,7 @@ export async function handleGroupEvent(sock, update) {
         if (!isBotItself) {
           await sleep(1000);
           try {
-            await sock.sendMessage(groupJid, {
-              text: `ℹ️ @${participantJid.split('@')[0]} n'est plus admin de *${meta.subject}*.`,
-              mentions: [participantJid],
-            });
+            await executor.execute({ type: ACTION_TYPES.SEND_MESSAGE, payload: { jid: groupJid, text: `ℹ️ @${participantJid.split('@')[0]} n'est plus admin de *${meta.subject}*.`, options: { mentions: [participantJid] } }, source: 'group-handler:demote' });
           } catch {}
         }
         break;
