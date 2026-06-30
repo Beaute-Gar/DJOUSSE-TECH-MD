@@ -87,7 +87,7 @@ async function cmdHelp(ctx, sock) {
     '  .OS missions       — Missions actives',
     '',
     '🧠 *Connaissances*',
-    '  .OS recherche <q>  — Recherche cognitive',
+    '  .OS recherche <q>  — Recherche intelligente',
     '  .OS mémoire        — Mémoire récente',
     '',
     '🤖 *Agents*',
@@ -180,7 +180,7 @@ async function cmdStats(ctx, sock, ws) {
   const missionStats = planner.getStats();
 
   const lines = [
-    '📊 *Cognitive OS — Statistiques*\n',
+    '📊 *Djousse-Tech MD — Statistiques*\n',
     `🧠 *Workspace*`,
     `  ID: ${wsStats.groupsTotal}g / ${wsStats.contactsTotal}c`,
     `  Mode: ${wsStats.autonomy}`,
@@ -286,9 +286,9 @@ async function cmdHealth(ctx, sock, ws) {
   const totalExec = agents.reduce((s, a) => s + a.executions, 0);
   const failedAgents = agents.filter(a => a.state === 'error');
   const lines = [
-    '🩺 *Santé du Cognitive OS*\n',
+    '🩺 *Santé du Djousse-Tech MD*\n',
     `🟢 Runtime: actif`,
-    `🧠 Moteurs: 14 cognitifs`,
+    `🧠 Analyseurs: 14 actifs`,
     `🤖 Agents: ${agents.length} (${failedAgents.length} en erreur)`,
     `📊 Exécutions: ${totalExec} | Erreurs: ${errors}`,
     `💾 Audit: ${audit.size} entrées`,
