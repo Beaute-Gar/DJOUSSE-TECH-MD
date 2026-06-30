@@ -264,6 +264,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 /* ── Constants ── */
 const API = '';
@@ -362,19 +363,28 @@ function initTabs(){
   }));
 }
 
-/* ── QR Polling ── */
-let qrTimer;
+/* ── QR Polling (client-side QR generation) ── */
+let qrTimer=null,qrInstance=null;
+function renderQR(text){
+  const box=qs('qr-box'),spin=qs('qr-spin'),img=qs('qr-img');
+  spin.style.display='none';img.style.display='none';
+  // Remove old canvas if exists
+  const old=box.querySelector('canvas');if(old)old.remove();
+  if(qrInstance)try{qrInstance.clear()}catch{}
+  qrInstance=new QRCode(box,{text,width:220,height:220,colorDark:'#00c8ff',colorLight:'#0a0d1a',correctLevel:QRCode.CorrectLevel.H});
+}
 function pollQR(){
   qrTimer=setInterval(async()=>{
     try{
-      const d=await api('/qr');const img=qs('qr-img'),spin=qs('qr-spin');
+      const d=await api('/qr');
       if(d.qr){
-        spin.style.display='none';img.style.display='block';
-        img.src='data:image/png;base64,'+d.qr;
+        renderQR(d.qr);
       }else{
+        const box=qs('qr-box'),spin=qs('qr-spin'),img=qs('qr-img');
         spin.style.display='block';img.style.display='none';
+        const old=box.querySelector('canvas');if(old)old.remove();
       }
-      if(d.message&&d.message.includes('connect')){clearInterval(qrTimer);showStatus('qr-status','success','✅ Connecté à WhatsApp');setObserver('green','ACTIVE')}
+      if(d.message&&d.message.includes('connect')){clearInterval(qrTimer);setObserver('green','ACTIVE')}
     }catch(e){}
   },3000);
 }
@@ -402,6 +412,10 @@ async function checkConn(){
   const pairBtn=qs('pair-btn'),inp=qs('phone-inp'),logoutBtn=qs('logout-btn');
   if(d.connected){
     qs('connector').style.display='none';qs('post-connect').classList.add('show');
+    // Clean QR canvas
+    if(qrTimer)clearInterval(qrTimer);
+    const box=qs('qr-box');const old=box.querySelector('canvas');if(old)old.remove();
+    if(qrInstance)try{qrInstance.clear()}catch{}
     qs('conn-user').textContent=d.user?.name||d.user?.id||'WhatsApp Authentifié';
     setObserver('green','ACTIVE');setWorkspace('green','READY');setAI('green','ONLINE');setSCG('green','ACTIVE');
     if(qrTimer)clearInterval(qrTimer);
@@ -441,7 +455,17 @@ function initPair(){
   qs('logout-btn').addEventListener('click',async()=>{
     if(!confirm('Déconnecter le bot ?'))return;
     const d=await api('/logout',{method:'POST'});
-    if(d.success){conLog('Session déconnectée','ok');setAI('yellow','WAITING');setObserver('gray','INIT');setWorkspace('gray','INIT');setSCG('cyan','STANDBY');qs('post-connect').classList.remove('show');qs('connector').style.display='flex';qs('pair-btn').disabled=false;qs('pair-btn').textContent='Obtenir le code';qs('phone-inp').disabled=false;qs('logout-btn').classList.add('hidden');qs('init-lines').innerHTML='';qs('qr-img').style.display='none';qs('qr-spin').style.display='block';showStatus('pair-status','info','✅ Déconnecté. QR disponible...');setTimeout(()=>location.reload(),1500)}
+    if(d.success){
+      conLog('Session déconnectée','ok');setAI('yellow','WAITING');setObserver('gray','INIT');setWorkspace('gray','INIT');setSCG('cyan','STANDBY');
+      qs('post-connect').classList.remove('show');qs('connector').style.display='flex';
+      qs('pair-btn').disabled=false;qs('pair-btn').textContent='Obtenir le code';qs('phone-inp').disabled=false;
+      qs('logout-btn').classList.add('hidden');qs('init-lines').innerHTML='';
+      const box=qs('qr-box');const old=box.querySelector('canvas');if(old)old.remove();
+      if(qrInstance)try{qrInstance.clear()}catch{}
+      qs('qr-spin').style.display='block';
+      showStatus('pair-status','info','✅ Déconnecté. QR disponible...');
+      setTimeout(()=>location.reload(),1500);
+    }
   });
 }
 
