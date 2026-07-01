@@ -334,6 +334,20 @@ Commandes : .menu  |  .OS aide`;
     }
   });
 
+  app.post('/api/send-test', async (req, res) => {
+    try {
+      const { getSocket } = await import('./bot.js');
+      const sock = getSocket();
+      if (!sock?.user) throw new Error('Bot pas connecte');
+      const ownerJid = config.OWNER_NUMBER?.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+      const text = req.body?.text || '*Test OK*\n\nLe bot repond correctement. Commande detectee et executee.';
+      await sock.sendMessage(ownerJid, { text });
+      res.json({ success: true, message: 'Test envoye a l\'owner' });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
+
   app.use((err, req, res, next) => {
     log.error({ err }, 'Erreur serveur web');
     res.status(500).json({ success: false, message: 'Erreur interne du serveur.' });
