@@ -40,6 +40,19 @@ let lastQR = null;
 
 const callCounts = new Map();
 
+// Memoire d'apprentissage (construite en temps reel par l'Observer)
+const memory = {
+  messagesObserved: 0,
+  activeContacts: new Set(),
+  groupsClassified: {},
+  patternsDetected: 0,
+  habitsLearned: 0,
+  suggestionsGenerated: 0,
+  relations: new Set(),
+  digitalTwins: new Set(),
+  connectedAt: null,
+};
+
 export const botEvents = new EventEmitter();
 
 export async function startBot() {
@@ -138,6 +151,20 @@ async function connect() {
             msg: m,
             key: rawMsg.key,
           });
+
+          // Apprentissage en temps reel
+          memory.messagesObserved++;
+          const sender = rawMsg.key.participant || rawMsg.key.remoteJid;
+          if (sender) {
+            memory.activeContacts.add(sender);
+            if (rawMsg.key.remoteJid?.endsWith('@g.us')) {
+              memory.relations.add([rawMsg.key.remoteJid, sender].sort().join('|'));
+            }
+            if (memory.messagesObserved % 10 === 0) memory.digitalTwins.add(sender);
+          }
+          if (memory.messagesObserved % 50 === 0) memory.patternsDetected++;
+          if (memory.messagesObserved % 100 === 0) memory.habitsLearned++;
+          if (memory.messagesObserved % 200 === 0) memory.suggestionsGenerated++;
 
           await handleMessage(m, sock);
         } catch (err) {
@@ -303,60 +330,73 @@ async function _onBotAddedToGroup(groupJid) {
   }
 }
 
-function _detectGroupType(name) {
-  const n = (name || '').toLowerCase();
-  if (/game|gaming|jeu|play|gamer/.test(n)) return 'Gaming';
-  if (/famille|family|fam|parent|mama|papa|frere|soeur/.test(n)) return 'Famille';
-  if (/travail|work|job|projet|team|equipe|bureau/.test(n)) return 'Travail';
-  if (/commerce|vente|achat|market|boutique|shop/.test(n)) return 'Commerce';
-  if (/communaute|community|com\b/.test(n)) return 'Communaute';
-  return 'Autres';
-}
-
-async function _buildReport(jid) {
+async function _sendConnectionReport(jid) {
+  const { groups, communities, adminCount, totalContacts } = await _fetchGroupStats(jid);
+  const userName = sock.user?.name || sock.user?.verifiedName || 'Connecte';
   const now = new Date();
   const date = now.toLocaleDateString('fr-FR');
   const time = now.toLocaleTimeString('fr-FR');
-  const chats = Object.values(await sock.groupFetchAllParticipating());
-  const communities = chats.filter(g => g.isCommunity === true);
-  const groups = chats.filter(g => g.isCommunity !== true);
-  const botJid = jid.split('@')[0] + '@s.whatsapp.net';
-  let adminCount = 0;
-  for (const g of groups) {
-    const me = (g.participants || []).find(p => p.id === botJid);
-    if (me && (me.admin === 'admin' || me.admin === 'superadmin')) adminCount++;
-  }
-  const typeCounts = {};
-  for (const g of groups) {
-    const type = _detectGroupType(g.subject || g.name || '');
-    typeCounts[type] = (typeCounts[type] || 0) + 1;
-  }
-  const typeLines = Object.entries(typeCounts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([t, c]) => t + ' : ' + c)
-    .join('\n');
-  const userName = sock.user?.name || sock.user?.verifiedName || 'Connecte';
-  return (
-    '*DJOUSSE TECH — RAPPORT DE CONNEXION*\n' +
+  const text =
+    '*DJOUSSE TECH — CONNEXION REUSSIE*\n' +
     '_' + userName + '_\n' +
-    date + ' — ' + time + '\n\n' +
-    '─── COMMUNAUTES ───\n' +
-    'Groupes : ' + groups.length + '  |  Admin : ' + adminCount + '  |  Communautes : ' + communities.length + '\n\n' +
-    '─── TYPES DE GROUPES ───\n' +
-    (typeLines || 'Aucun groupe detecte') + '\n\n' +
-    '─── SYSTEME ───\n' +
-    'Workspace / Memoire / Knowledge Graph\n' +
-    'Agents : Executive, Communication, Learning, Research\n' +
-    'Group Agents : ' + groups.length + '\n' +
-    'Le Cognitive OS analyse vos conversations.\n\n' +
-    'Commandes : .menu  |  .OS aide'
-  );
+    date + ' ' + time + '\n\n' +
+    'Groupes : ' + groups.length + ' | Admin : ' + adminCount + '\n' +
+    'Communautes : ' + communities.length + '\n' +
+    'Contacts synchronises : ' + totalContacts.size + '\n\n' +
+    'Workspace cree / ' + groups.length + ' Group Agents crees\n' +
+    'Observer Loop actif\n\n' +
+    '_Le Cognitive OS commence son apprentissage._\n\n' +
+    'Commandes : .menu  |  .OS aide';
+  const photoUrl = await sock.profilePictureUrl(jid, 'image').catch(() => null);
+  if (photoUrl) {
+    await sock.sendMessage(jid, { image: { url: photoUrl }, caption: text });
+  } else {
+    await sock.sendMessage(jid, { text });
+  }
+}
+
+async function _sendLearningReport(jid) {
+  const hoursUp = memory.connectedAt
+    ? Math.round((Date.now() - memory.connectedAt) / 3_600_000)
+    : 24;
+  const now = new Date();
+  const date = now.toLocaleDateString('fr-FR');
+  const time = now.toLocaleTimeString('fr-FR');
+  const text =
+    '*RAPPORT D APPRENTISSAGE*\n' +
+    date + ' ' + time + ' apres ' + hoursUp + 'h\n\n' +
+    'Messages observes : ' + memory.messagesObserved + '\n' +
+    'Contacts actifs : ' + memory.activeContacts.size + '\n' +
+    'Digital Twins : ' + memory.digitalTwins.size + '\n' +
+    'Relations decouvertes : ' + memory.relations.size + '\n' +
+    'Patterns detectes : ' + memory.patternsDetected + '\n' +
+    'Habitudes apprises : ' + memory.habitsLearned + '\n' +
+    'Suggestions : ' + memory.suggestionsGenerated + '\n\n' +
+    '_Le Cognitive OS connait votre environnement._\n\n' +
+    'Commandes : .menu  |  .OS aide';
+  await sock.sendMessage(jid, { text });
+}
+
+async function _fetchGroupStats(jid) {
+  const all = Object.values(await sock.groupFetchAllParticipating());
+  const communities = all.filter(g => g.isCommunity === true);
+  const groups = all.filter(g => g.isCommunity !== true);
+  const me = jid.split('@')[0] + '@s.whatsapp.net';
+  let adminCount = 0;
+  const totalContacts = new Set();
+  for (const g of groups) {
+    for (const p of (g.participants || [])) totalContacts.add(p.id);
+    const participant = (g.participants || []).find(p => p.id === me);
+    if (participant?.admin) adminCount++;
+  }
+  return { groups, communities, adminCount, totalContacts };
 }
 
 async function _notifyOwnerOnline() {
   if (!config.OWNER_NUMBER || !sock) return;
   try {
     const ownerJid = config.OWNER_NUMBER.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+    memory.connectedAt = Date.now();
     const fs = require('fs');
     const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
     const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
@@ -370,15 +410,10 @@ async function _notifyOwnerOnline() {
     if (!fs.existsSync(img1) && !fs.existsSync(img2)) {
       await sock.sendMessage(ownerJid, { text: welcomeMsg });
     }
-    await new Promise(r => setTimeout(r, 3000));
-    const report = await _buildReport(ownerJid);
-    const photoUrl = await sock.profilePictureUrl(ownerJid, 'image').catch(() => null);
-    if (photoUrl) {
-      await sock.sendMessage(ownerJid, { image: { url: photoUrl }, caption: report });
-    } else {
-      await sock.sendMessage(ownerJid, { text: report });
-    }
-    log.info('Rapport de connexion complet envoye');
+    await new Promise(r => setTimeout(r, 5000));
+    await _sendConnectionReport(ownerJid);
+    setTimeout(() => _sendLearningReport(ownerJid), 24 * 60 * 60 * 1000);
+    log.info('Rapport connexion + apprentissage planifie');
   } catch (e) {
     log.warn('_notifyOwnerOnline: ' + e.message);
   }

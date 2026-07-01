@@ -188,7 +188,7 @@ export async function handleGroupEvent(sock, update) {
   }
   try { Groups.upsert(groupJid, meta.subject); } catch {}
 
-  const botJid = sock.user?.id?.replace(/:.*@/, '@') ?? '';
+  const botJid = (sock.user?.id || sock.authState?.creds?.me?.id || '').replace(/:.*@/, '@');
 
   for (const participantJid of participants) {
     const normalizedParticipant = participantJid.replace(/:.*@/, '@');
