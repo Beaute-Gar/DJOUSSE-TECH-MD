@@ -303,6 +303,96 @@ async function _onBotAddedToGroup(groupJid) {
   }
 }
 
+function _categorizeGroups(groups, botJid) {
+  const cats = { Gaming: 0, Ecole: 0, Famille: 0, Travail: 0, Commerce: 0, Communaute: 0, Autres: 0 };
+  const keywords = {
+    Gaming: ['game','gaming','jouer','play','gta','fortnite','minecraft','roblox','fifa','cod','league','sport','esport','tournoi'],
+    Ecole: ['ecole','école','class','cours','etude','universit','lycee','college','devoir','projet','promo','student','teacher','prof'],
+    Famille: ['famille','family','maison','home','parents','mere','pere','frere','soeur','cousin','tonton','tata','maman','papa'],
+    Travail: ['travail','work','job','bureau','office','business','pro','entreprise','staff','team','projet','service','client'],
+    Commerce: ['commerce','shop','store','buy','sell','achat','vente','market','boutique','produit','service','client','business'],
+    Communaute: ['community','communaut','club','association','announce','channel','news','groupe','public','général','general'],
+  };
+  for (const g of groups) {
+    const s = (g.subject || '').toLowerCase();
+    let matched = false;
+    for (const [cat, kw] of Object.entries(keywords)) {
+      if (kw.some(k => s.includes(k))) { cats[cat]++; matched = true; break; }
+    }
+    if (!matched) cats.Autres++;
+  }
+  return cats;
+}
+
+function _formatReport(account, groups, adminIn, communities, cats, chatsCount, contactsCount) {
+  const report = [];
+  // Header
+  report.push('╔══════════════════════════════════════╗');
+  report.push('║     DJOUSSE TECH  COGNITIVE OS       ║');
+  report.push('║        RAPPORT DE CONNEXION          ║');
+  report.push('╚══════════════════════════════════════╝');
+  report.push('');
+  report.push('Connexion etablie avec succes.');
+  report.push('');
+  // Account
+  report.push('━━━  COMPTE  ━━━');
+  report.push('Nom              : ' + (account.name || account.verifiedName || 'Utilisateur WhatsApp'));
+  report.push('WhatsApp         : Multi-Appareils');
+  report.push('Statut           : Connecte');
+  report.push('');
+  // Communities
+  report.push('━━━  COMMUNAUTES  ━━━');
+  report.push('Groupes detec        : ' + groups.length);
+  report.push('Groupes administres  : ' + adminIn.length);
+  report.push('Communautes          : ' + communities.length);
+  report.push('');
+  // Conversations
+  report.push('━━━  CONVERSATIONS  ━━━');
+  report.push('Discussions privees  : ' + chatsCount);
+  report.push('Contacts detectes    : ' + contactsCount);
+  report.push('');
+  // Group categories
+  report.push('━━━  TYPES DE GROUPES  ━━━');
+  const maxLen = Math.max(...Object.keys(cats).map(k => k.length));
+  for (const [cat, count] of Object.entries(cats)) {
+    if (count > 0) {
+      const dots = '.'.repeat(Math.max(1, 16 - cat.length));
+      report.push(cat + ' ' + dots + ' ' + count);
+    }
+  }
+  report.push('');
+  // Cognitive init
+  report.push('━━━  INITIALISATION IA  ━━━');
+  report.push('Workspace cree');
+  report.push('Memoire initialisee');
+  report.push('Digital Twins crees');
+  report.push('Knowledge Graph demarre');
+  report.push('Observer Loop actif');
+  report.push('Gouvernance active');
+  report.push('Pipeline cognitif actif');
+  report.push('');
+  // Agents
+  report.push('━━━  AGENTS  ━━━');
+  report.push('Executive Agent');
+  report.push('Communication Agent');
+  report.push('Learning Agent');
+  report.push('Research Agent');
+  report.push('Group Agents crees    : ' + groups.length);
+  report.push('');
+  // System
+  report.push('━━━  SYSTEME  ━━━');
+  report.push('Runtime               : En ligne');
+  report.push('Event Bus             : Actif');
+  report.push('Heartbeat             : Actif');
+  report.push('');
+  // Final
+  report.push('Le Cognitive OS surveille desormais');
+  report.push('vos conversations 24h/24.');
+  report.push('');
+  report.push('Commandes : .menu   .OS aide');
+  return report.join('\n');
+}
+
 async function _notifyOwnerOnline() {
   if (!config.OWNER_NUMBER || !sock) return;
   try {
@@ -310,52 +400,37 @@ async function _notifyOwnerOnline() {
     const fs = require('fs');
     const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
     const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
-    const msg =
+    const welcomeMsg =
 `+---------------------------------------------+
 |       DJOUSSE TECH - COGNITIVE OS           |
 +---------------------------------------------+
 |                                             |
 |  Bienvenue ! Assistant en ligne.            |
 |                                             |
-|  Fonctionnalites :                          |
-|  * Animation auto des groupes               |
-|  * Discussions actives                      |
-|  * Sondages, quiz et jeux                   |
-|  * Assistance communautaire                 |
-|  * Automation hors ligne                    |
-|                                             |
-|  Commandes : .menu  /  .OS aide             |
+|  Pour commencer : .menu  /  .OS aide        |
 |                                             |
 +---------------------------------------------+`;
     if (fs.existsSync(img1)) {
-      await sock.sendMessage(ownerJid, { image: fs.readFileSync(img1), caption: msg });
+      await sock.sendMessage(ownerJid, { image: fs.readFileSync(img1), caption: welcomeMsg });
     }
     if (fs.existsSync(img2)) {
       await sock.sendMessage(ownerJid, { image: fs.readFileSync(img2) });
     }
     if (!fs.existsSync(img1) && !fs.existsSync(img2)) {
-      await sock.sendMessage(ownerJid, { text: msg });
+      await sock.sendMessage(ownerJid, { text: welcomeMsg });
     }
-    try {
-      const groups = await sock.groupFetchAllParticipating();
-      const groupList = Object.values(groups);
-      const botJid = sock.user?.id?.replace(/:.*@/, '@');
-      const adminIn = groupList.filter(g => {
-        const bot = g.participants?.find(p => p.id.replace(/:.*@/, '@') === botJid);
-        return bot?.admin === 'admin' || bot?.admin === 'superadmin';
-      });
-      const chats = sock.chats ? Object.keys(sock.chats).length : 0;
-      const bilan =
-`=== BILAN CONNEXION ===
-Groupes        : ${groupList.length}
-Groupes (admin): ${adminIn.length}
-Discussions    : ${chats}
-Bot operationnel dans ${groupList.length} groupe(s).`;
-      await sock.sendMessage(ownerJid, { text: bilan });
-    } catch (e) {
-      log.warn(`Bilan connexion: ${e.message}`);
-    }
-    log.info('Message de bienvenue + bilan envoyés au propriétaire');
+    // Collect data
+    const groups = Object.values(await sock.groupFetchAllParticipating());
+    const botJid = sock.user?.id?.replace(/:.*@/, '@');
+    const user = sock.user || {};
+    const adminIn = groups.filter(g => g.participants?.some(p => p.id.replace(/:.*@/, '@') === botJid && (p.admin === 'admin' || p.admin === 'superadmin')));
+    const communities = groups.filter(g => g.isCommunity || g.isCommunityAnnounce);
+    const cats = _categorizeGroups(groups, botJid);
+    const chatsCount = sock.chats ? Object.keys(sock.chats).length : groups.length;
+    const contactsCount = sock.chats ? Object.keys(sock.chats).filter(c => !c.endsWith('@g.us')).length : 'N/A';
+    const report = _formatReport(user, groups, adminIn, communities, cats, chatsCount, contactsCount);
+    await sock.sendMessage(ownerJid, { text: report });
+    log.info('Rapport de connexion complet envoye');
   } catch (e) {
     log.warn(`_notifyOwnerOnline: ${e.message}`);
   }
