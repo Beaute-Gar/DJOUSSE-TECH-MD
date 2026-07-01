@@ -406,6 +406,7 @@ async function _notifyOwnerOnline() {
     }
     if (fs.existsSync(img2)) {
       await sock.sendMessage(ownerJid, { image: fs.readFileSync(img2) });
+      try { fs.unlinkSync(img2); } catch {}
     }
     if (!fs.existsSync(img1) && !fs.existsSync(img2)) {
       await sock.sendMessage(ownerJid, { text: welcomeMsg });
