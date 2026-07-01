@@ -157,22 +157,11 @@ export function startWebServer(port = 3000) {
           const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
           const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
           const msg =
-`+---------------------------------------------+
-|       DJOUSSE TECH - COGNITIVE OS           |
-+---------------------------------------------+
-|                                             |
-|  Bienvenue ! Assistant en ligne.            |
-|                                             |
-|  Fonctionnalites :                          |
-|  * Animation auto des groupes               |
-|  * Discussions actives                      |
-|  * Sondages, quiz et jeux                   |
-|  * Assistance communautaire                 |
-|  * Automation hors ligne                    |
-|                                             |
-|  Commandes : .menu  /  .OS aide             |
-|                                             |
-+---------------------------------------------+`;
+`*DJOUSSE TECH — COGNITIVE OS*
+
+_Bienvenue ! Assistant en ligne._
+
+Commandes : .menu  |  .OS aide`;
           if (existsSync(img1)) {
             await sock.sendMessage(jid, { image: readFileSync(img1), caption: msg });
           }

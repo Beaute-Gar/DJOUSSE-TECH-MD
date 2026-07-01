@@ -94,26 +94,17 @@ async function sendBotWelcome(sock, groupJid, meta) {
   });
   const botSiteUrl = process.env.BOT_SITE_URL || 'https://djoussetech.com';
   const msg =
-`☘️ *WELCOME* ☘️
-┌──────────────────────
-│ 🏠 *GROUP* : ${meta.subject}
-│ 🤖 *BOT* : ${config.BOT_NAME}
-│ 👥 *ADMINS* : ${adminCount} admin(s)
-│ 👨‍👩‍👧 *MEMBERS* : ${memberCount} membres
-│ 📅 *DATE* : ${now}
-│ 🏢 *SOCIÉTÉ* : ${config.COMPANY_NAME}
-└─ 🔗 *BOT LINK* : ${botSiteUrl}
+`*WELCOME*
 
-_Je suis maintenant votre assistant de groupe intelligent. Je m'adapte automatiquement à l'identité de ce groupe pour vous offrir une animation personnalisée et une gestion proactive._
+Groupe : ${meta.subject}
+Bot : ${config.BOT_NAME}
+Admins : ${adminCount}  |  Membres : ${memberCount}
 
-✅ *Capacités activées :*
-› Animation automatique adaptée au groupe
-› Réponses intelligentes aux messages
-› Gestion des membres (bienvenue/au revoir)
-› Modération assistée si nécessaire
-› Publications de contenu thématique
+_Je suis votre assistant de groupe._
 
-_Ravi de vous rejoindre !_ 🙌`;
+Animation / Reponses / Gestion membres / Moderation
+
+_Ravi de vous rejoindre !_`;
   try {
     await executor.execute({ type: ACTION_TYPES.SEND_MESSAGE, payload: { jid: groupJid, text: msg }, source: 'group-handler:bot-welcome' });
     log.info(`Message de bienvenue bot envoyé dans : ${meta.subject}`);
@@ -152,20 +143,13 @@ async function sendMemberWelcome(sock, groupJid, memberJid, meta) {
   } catch { ppBuffer = null; }
 
   const welcomeMsg =
-`🎉 *BIENVENUE DANS ${meta.subject.toUpperCase()}* 🎉
-┌──────────────────────
-│ 👤 *MEMBRE* : @${memberJid.split('@')[0]}
-│ 📱 *NUMÉRO* : ${phone}
-│ 🏠 *GROUPE* : ${meta.subject}
-│ 🎖️ *RANG* : *${memberOrdinal} membre*
-│ 👥 *TOTAL MEMBRES* : ${memberCount}
-│ 👑 *ADMINS* : ${adminCount}
-│ 📅 *DATE D'ENTRÉE* : ${now}
-└──────────────────────
+`*Bienvenue dans ${meta.subject}*
 
-${profile?.identity?.emoji || '🎉'} *Bienvenue parmi nous !*
-_Tu rejoins une communauté de ${memberCount} membres. Présente-toi et plonge dans l'ambiance !_
-${rules}`;
+Membre : @${memberJid.split('@')[0]}
+Telephone : ${phone}
+Tu es le ${memberOrdinal} membre. Admins : ${adminCount}
+
+_Bienvenue parmi les ${memberCount} membres !_`;
 
   try {
     if (ppBuffer && ppBuffer.length > 1000) {
@@ -185,12 +169,7 @@ async function sendMemberGoodbye(sock, groupJid, memberJid, meta) {
   await sleep(1000);
   const phone = jidToPhone(memberJid);
   const msg =
-`👋 *AU REVOIR !*
-┌──────────────────────
-│ 👤 @${memberJid.split('@')[0]}
-│ 📱 ${phone}
-└──────────────────────
-_a quitté *${meta.subject}*. On te souhaite bonne route ! 🙏_`;
+`@${memberJid.split('@')[0]} (${phone}) a quitte ${meta.subject}.`;
   try {
     await executor.execute({ type: ACTION_TYPES.SEND_MESSAGE, payload: { jid: groupJid, text: msg, options: { mentions: [memberJid] } }, source: 'group-handler:member-goodbye' });
   } catch (e) {

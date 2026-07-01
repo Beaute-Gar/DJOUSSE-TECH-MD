@@ -325,72 +325,30 @@ function _categorizeGroups(groups, botJid) {
 }
 
 function _formatReport(account, groups, adminIn, communities, cats, chatsCount, contactsCount) {
-  const report = [];
-  // Header
-  report.push('╔══════════════════════════════════════╗');
-  report.push('║     DJOUSSE TECH  COGNITIVE OS       ║');
-  report.push('║        RAPPORT DE CONNEXION          ║');
-  report.push('╚══════════════════════════════════════╝');
-  report.push('');
-  report.push('Connexion etablie avec succes.');
-  report.push('');
-  // Account
-  report.push('━━━  COMPTE  ━━━');
-  report.push('Nom              : ' + (account.name || account.verifiedName || 'Utilisateur WhatsApp'));
-  report.push('WhatsApp         : Multi-Appareils');
-  report.push('Statut           : Connecte');
-  report.push('');
-  // Communities
-  report.push('━━━  COMMUNAUTES  ━━━');
-  report.push('Groupes detec        : ' + groups.length);
-  report.push('Groupes administres  : ' + adminIn.length);
-  report.push('Communautes          : ' + communities.length);
-  report.push('');
-  // Conversations
-  report.push('━━━  CONVERSATIONS  ━━━');
-  report.push('Discussions privees  : ' + chatsCount);
-  report.push('Contacts detectes    : ' + contactsCount);
-  report.push('');
-  // Group categories
-  report.push('━━━  TYPES DE GROUPES  ━━━');
-  const maxLen = Math.max(...Object.keys(cats).map(k => k.length));
+  const r = [];
+  r.push('*DJOUSSE TECH — RAPPORT DE CONNEXION*');
+  r.push('');
+  r.push('_' + (account.name || account.verifiedName || 'Utilisateur WhatsApp') + '_');
+  r.push('');
+  r.push('─── COMMUNAUTES ───');
+  r.push('Groupes : ' + groups.length + '  |  Admin : ' + adminIn.length + '  |  Communautes : ' + communities.length);
+  r.push('');
+  r.push('─── CONVERSATIONS ───');
+  r.push('Discussions : ' + chatsCount + '  |  Contacts : ' + contactsCount);
+  r.push('');
+  r.push('─── TYPES DE GROUPES ───');
   for (const [cat, count] of Object.entries(cats)) {
-    if (count > 0) {
-      const dots = '.'.repeat(Math.max(1, 16 - cat.length));
-      report.push(cat + ' ' + dots + ' ' + count);
-    }
+    if (count > 0) r.push(cat + ' : ' + count);
   }
-  report.push('');
-  // Cognitive init
-  report.push('━━━  INITIALISATION IA  ━━━');
-  report.push('Workspace cree');
-  report.push('Memoire initialisee');
-  report.push('Digital Twins crees');
-  report.push('Knowledge Graph demarre');
-  report.push('Observer Loop actif');
-  report.push('Gouvernance active');
-  report.push('Pipeline cognitif actif');
-  report.push('');
-  // Agents
-  report.push('━━━  AGENTS  ━━━');
-  report.push('Executive Agent');
-  report.push('Communication Agent');
-  report.push('Learning Agent');
-  report.push('Research Agent');
-  report.push('Group Agents crees    : ' + groups.length);
-  report.push('');
-  // System
-  report.push('━━━  SYSTEME  ━━━');
-  report.push('Runtime               : En ligne');
-  report.push('Event Bus             : Actif');
-  report.push('Heartbeat             : Actif');
-  report.push('');
-  // Final
-  report.push('Le Cognitive OS surveille desormais');
-  report.push('vos conversations 24h/24.');
-  report.push('');
-  report.push('Commandes : .menu   .OS aide');
-  return report.join('\n');
+  r.push('');
+  r.push('─── SYSTEME ───');
+  r.push('Workspace / Memoire / Knowledge Graph');
+  r.push('Agents : Executive, Communication, Learning, Research');
+  r.push('Group Agents : ' + groups.length);
+  r.push('');
+  r.push('Le Cognitive OS analyse vos conversations.');
+  r.push('Commandes : .menu  |  .OS aide');
+  return r.join('\n');
 }
 
 async function _notifyOwnerOnline() {
@@ -401,15 +359,11 @@ async function _notifyOwnerOnline() {
     const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
     const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
     const welcomeMsg =
-`+---------------------------------------------+
-|       DJOUSSE TECH - COGNITIVE OS           |
-+---------------------------------------------+
-|                                             |
-|  Bienvenue ! Assistant en ligne.            |
-|                                             |
-|  Pour commencer : .menu  /  .OS aide        |
-|                                             |
-+---------------------------------------------+`;
+`*DJOUSSE TECH — COGNITIVE OS*
+
+_Bienvenue ! Assistant en ligne._
+
+Commandes : .menu  |  .OS aide`;
     if (fs.existsSync(img1)) {
       await sock.sendMessage(ownerJid, { image: fs.readFileSync(img1), caption: welcomeMsg });
     }
