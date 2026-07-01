@@ -106,7 +106,7 @@ async function connect() {
         await _autoScanAdminGroups();
         await _notifyOwnerOnline();
         try {
-          const userJid = sock.user?.id?.replace(/:.*@/, '@');
+          const userJid = (sock.user?.id || sock.authState?.creds?.me?.id || '').replace(/:.*@/, '@');
           if (userJid) {
             const { discovery } = await import('../cognitive/workspace/auto-discovery.js');
             discovery.discoverAll(sock, userJid).catch(e => log.warn(`discovery: ${e.message}`));
@@ -270,7 +270,7 @@ async function connect() {
 async function _autoScanAdminGroups() {
   try {
     const groups = await sock.groupFetchAllParticipating();
-    const botJid = sock.user?.id?.replace(/:.*@/, '@');
+    const botJid = (sock.user?.id || sock.authState?.creds?.me?.id || '').replace(/:.*@/, '@');
     let adminCount = 0;
     for (const [jid, meta] of Object.entries(groups)) {
       const botParticipant = meta.participants?.find(p => {
@@ -303,52 +303,54 @@ async function _onBotAddedToGroup(groupJid) {
   }
 }
 
-function _categorizeGroups(groups, botJid) {
-  const cats = { Gaming: 0, Ecole: 0, Famille: 0, Travail: 0, Commerce: 0, Communaute: 0, Autres: 0 };
-  const keywords = {
-    Gaming: ['game','gaming','jouer','play','gta','fortnite','minecraft','roblox','fifa','cod','league','sport','esport','tournoi'],
-    Ecole: ['ecole','école','class','cours','etude','universit','lycee','college','devoir','projet','promo','student','teacher','prof'],
-    Famille: ['famille','family','maison','home','parents','mere','pere','frere','soeur','cousin','tonton','tata','maman','papa'],
-    Travail: ['travail','work','job','bureau','office','business','pro','entreprise','staff','team','projet','service','client'],
-    Commerce: ['commerce','shop','store','buy','sell','achat','vente','market','boutique','produit','service','client','business'],
-    Communaute: ['community','communaut','club','association','announce','channel','news','groupe','public','général','general'],
-  };
-  for (const g of groups) {
-    const s = (g.subject || '').toLowerCase();
-    let matched = false;
-    for (const [cat, kw] of Object.entries(keywords)) {
-      if (kw.some(k => s.includes(k))) { cats[cat]++; matched = true; break; }
-    }
-    if (!matched) cats.Autres++;
-  }
-  return cats;
+function _detectGroupType(name) {
+  const n = (name || '').toLowerCase();
+  if (/game|gaming|jeu|play|gamer/.test(n)) return 'Gaming';
+  if (/famille|family|fam|parent|mama|papa|frere|soeur/.test(n)) return 'Famille';
+  if (/travail|work|job|projet|team|equipe|bureau/.test(n)) return 'Travail';
+  if (/commerce|vente|achat|market|boutique|shop/.test(n)) return 'Commerce';
+  if (/communaute|community|com\b/.test(n)) return 'Communaute';
+  return 'Autres';
 }
 
-function _formatReport(account, groups, adminIn, communities, cats, chatsCount, contactsCount) {
-  const r = [];
-  r.push('*DJOUSSE TECH — RAPPORT DE CONNEXION*');
-  r.push('');
-  r.push('_' + (account.name || account.verifiedName || 'Utilisateur WhatsApp') + '_');
-  r.push('');
-  r.push('─── COMMUNAUTES ───');
-  r.push('Groupes : ' + groups.length + '  |  Admin : ' + adminIn.length + '  |  Communautes : ' + communities.length);
-  r.push('');
-  r.push('─── CONVERSATIONS ───');
-  r.push('Discussions : ' + chatsCount + '  |  Contacts : ' + contactsCount);
-  r.push('');
-  r.push('─── TYPES DE GROUPES ───');
-  for (const [cat, count] of Object.entries(cats)) {
-    if (count > 0) r.push(cat + ' : ' + count);
+async function _buildReport(jid) {
+  const now = new Date();
+  const date = now.toLocaleDateString('fr-FR');
+  const time = now.toLocaleTimeString('fr-FR');
+  const chats = Object.values(await sock.groupFetchAllParticipating());
+  const communities = chats.filter(g => g.isCommunity === true);
+  const groups = chats.filter(g => g.isCommunity !== true);
+  const botJid = jid.split('@')[0] + '@s.whatsapp.net';
+  let adminCount = 0;
+  for (const g of groups) {
+    const me = (g.participants || []).find(p => p.id === botJid);
+    if (me && (me.admin === 'admin' || me.admin === 'superadmin')) adminCount++;
   }
-  r.push('');
-  r.push('─── SYSTEME ───');
-  r.push('Workspace / Memoire / Knowledge Graph');
-  r.push('Agents : Executive, Communication, Learning, Research');
-  r.push('Group Agents : ' + groups.length);
-  r.push('');
-  r.push('Le Cognitive OS analyse vos conversations.');
-  r.push('Commandes : .menu  |  .OS aide');
-  return r.join('\n');
+  const typeCounts = {};
+  for (const g of groups) {
+    const type = _detectGroupType(g.subject || g.name || '');
+    typeCounts[type] = (typeCounts[type] || 0) + 1;
+  }
+  const typeLines = Object.entries(typeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([t, c]) => t + ' : ' + c)
+    .join('\n');
+  const userName = sock.user?.name || sock.user?.verifiedName || 'Connecte';
+  return (
+    '*DJOUSSE TECH — RAPPORT DE CONNEXION*\n' +
+    '_' + userName + '_\n' +
+    date + ' — ' + time + '\n\n' +
+    '─── COMMUNAUTES ───\n' +
+    'Groupes : ' + groups.length + '  |  Admin : ' + adminCount + '  |  Communautes : ' + communities.length + '\n\n' +
+    '─── TYPES DE GROUPES ───\n' +
+    (typeLines || 'Aucun groupe detecte') + '\n\n' +
+    '─── SYSTEME ───\n' +
+    'Workspace / Memoire / Knowledge Graph\n' +
+    'Agents : Executive, Communication, Learning, Research\n' +
+    'Group Agents : ' + groups.length + '\n' +
+    'Le Cognitive OS analyse vos conversations.\n\n' +
+    'Commandes : .menu  |  .OS aide'
+  );
 }
 
 async function _notifyOwnerOnline() {
@@ -358,12 +360,7 @@ async function _notifyOwnerOnline() {
     const fs = require('fs');
     const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
     const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
-    const welcomeMsg =
-`*DJOUSSE TECH — COGNITIVE OS*
-
-_Bienvenue ! Assistant en ligne._
-
-Commandes : .menu  |  .OS aide`;
+    const welcomeMsg = '*DJOUSSE TECH — COGNITIVE OS*\n\n_Bienvenue ! Assistant en ligne._\n\nCommandes : .menu  |  .OS aide';
     if (fs.existsSync(img1)) {
       await sock.sendMessage(ownerJid, { image: fs.readFileSync(img1), caption: welcomeMsg });
     }
@@ -373,20 +370,17 @@ Commandes : .menu  |  .OS aide`;
     if (!fs.existsSync(img1) && !fs.existsSync(img2)) {
       await sock.sendMessage(ownerJid, { text: welcomeMsg });
     }
-    // Collect data
-    const groups = Object.values(await sock.groupFetchAllParticipating());
-    const botJid = sock.user?.id?.replace(/:.*@/, '@');
-    const user = sock.user || {};
-    const adminIn = groups.filter(g => g.participants?.some(p => p.id.replace(/:.*@/, '@') === botJid && (p.admin === 'admin' || p.admin === 'superadmin')));
-    const communities = groups.filter(g => g.isCommunity || g.isCommunityAnnounce);
-    const cats = _categorizeGroups(groups, botJid);
-    const chatsCount = sock.chats ? Object.keys(sock.chats).length : groups.length;
-    const contactsCount = sock.chats ? Object.keys(sock.chats).filter(c => !c.endsWith('@g.us')).length : 'N/A';
-    const report = _formatReport(user, groups, adminIn, communities, cats, chatsCount, contactsCount);
-    await sock.sendMessage(ownerJid, { text: report });
+    await new Promise(r => setTimeout(r, 3000));
+    const report = await _buildReport(ownerJid);
+    const photoUrl = await sock.profilePictureUrl(ownerJid, 'image').catch(() => null);
+    if (photoUrl) {
+      await sock.sendMessage(ownerJid, { image: { url: photoUrl }, caption: report });
+    } else {
+      await sock.sendMessage(ownerJid, { text: report });
+    }
     log.info('Rapport de connexion complet envoye');
   } catch (e) {
-    log.warn(`_notifyOwnerOnline: ${e.message}`);
+    log.warn('_notifyOwnerOnline: ' + e.message);
   }
 }
 
