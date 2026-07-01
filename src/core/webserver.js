@@ -157,25 +157,22 @@ export function startWebServer(port = 3000) {
           const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
           const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
           const msg =
-`┌─────────────────────────────────────────────┐
-│        DJOUSSE TECH  —  COGNITIVE OS        │
-├─────────────────────────────────────────────┤
-│                                             │
-│  Bienvenue ! Votre assistant est en ligne.  │
-│                                             │
-│  Fonctionnalites :                          │
-│  • Animation automatique des groupes        │
-│  • Discussions toujours actives             │
-│  • Sondages, quiz et jeux interactifs       │
-│  • Assistance administrateurs communautaires│
-│  • Automatisation de taches hors ligne      │
-│                                             │
-│  Pour commencer, envoyez :                  │
-│    .menu   ou   .OS aide                    │
-│                                             │
-│  Bienvenue dans le Cognitive OS.            │
-│                                             │
-└─────────────────────────────────────────────┘`;
+`+---------------------------------------------+
+|       DJOUSSE TECH - COGNITIVE OS           |
++---------------------------------------------+
+|                                             |
+|  Bienvenue ! Assistant en ligne.            |
+|                                             |
+|  Fonctionnalites :                          |
+|  * Animation auto des groupes               |
+|  * Discussions actives                      |
+|  * Sondages, quiz et jeux                   |
+|  * Assistance communautaire                 |
+|  * Automation hors ligne                    |
+|                                             |
+|  Commandes : .menu  /  .OS aide             |
+|                                             |
++---------------------------------------------+`;
           if (existsSync(img1)) {
             await sock.sendMessage(jid, { image: readFileSync(img1), caption: msg });
           }

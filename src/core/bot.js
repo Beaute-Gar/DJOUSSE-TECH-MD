@@ -311,25 +311,22 @@ async function _notifyOwnerOnline() {
     const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
     const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
     const msg =
-`┌─────────────────────────────────────────────┐
-│        DJOUSSE TECH  —  COGNITIVE OS        │
-├─────────────────────────────────────────────┤
-│                                             │
-│  Bienvenue ! Votre assistant est en ligne.  │
-│                                             │
-│  Fonctionnalites :                          │
-│  • Animation automatique des groupes        │
-│  • Discussions toujours actives             │
-│  • Sondages, quiz et jeux interactifs       │
-│  • Assistance administrateurs communautaires│
-│  • Automatisation de taches hors ligne      │
-│                                             │
-│  Pour commencer, envoyez :                  │
-│    .menu   ou   .OS aide                    │
-│                                             │
-│  Bienvenue dans le Cognitive OS.            │
-│                                             │
-└─────────────────────────────────────────────┘`;
+`+---------------------------------------------+
+|       DJOUSSE TECH - COGNITIVE OS           |
++---------------------------------------------+
+|                                             |
+|  Bienvenue ! Assistant en ligne.            |
+|                                             |
+|  Fonctionnalites :                          |
+|  * Animation auto des groupes               |
+|  * Discussions actives                      |
+|  * Sondages, quiz et jeux                   |
+|  * Assistance communautaire                 |
+|  * Automation hors ligne                    |
+|                                             |
+|  Commandes : .menu  /  .OS aide             |
+|                                             |
++---------------------------------------------+`;
     if (fs.existsSync(img1)) {
       await sock.sendMessage(ownerJid, { image: fs.readFileSync(img1), caption: msg });
     }
@@ -349,18 +346,11 @@ async function _notifyOwnerOnline() {
       });
       const chats = sock.chats ? Object.keys(sock.chats).length : 0;
       const bilan =
-`┌─────────────────────────────────────────────┐
-│            BILAN DE CONNEXION                │
-├─────────────────────────────────────────────┤
-│                                             │
-│  Groupes                 : ${String(groupList.length).padStart(4)}              │
-│  Groupes (admin)         : ${String(adminIn.length).padStart(4)}              │
-│  Discussions totales     : ${String(chats).padStart(4)}              │
-│                                             │
-│  Votre bot est operationnel dans            │
-│  ${groupList.length} groupe(s).              │
-│                                             │
-└─────────────────────────────────────────────┘`;
+`=== BILAN CONNEXION ===
+Groupes        : ${groupList.length}
+Groupes (admin): ${adminIn.length}
+Discussions    : ${chats}
+Bot operationnel dans ${groupList.length} groupe(s).`;
       await sock.sendMessage(ownerJid, { text: bilan });
     } catch (e) {
       log.warn(`Bilan connexion: ${e.message}`);
