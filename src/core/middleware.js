@@ -39,7 +39,11 @@ export function buildCtx(m, sock) {
 }
 
 export const mwIgnoreSelf = async (ctx, next) => {
-  if (ctx.m.fromMe) { ctx.aborted = true; return; }
+  if (ctx.m.fromMe) {
+    const text = ctx.text || '';
+    const prefix = process.env.PREFIX || '.';
+    if (!text.startsWith(prefix) && !text.toUpperCase().startsWith('.OS')) { ctx.aborted = true; return; }
+  }
   await next();
 };
 

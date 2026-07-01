@@ -27,6 +27,7 @@ const config  = require('../../config.cjs');
 const log     = createLogger('BOT');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const PREFIX = process.env.PREFIX || '.';
 const SESSION_DIR = path.resolve(config.PATHS.SESSION);
 const RECONNECT_DELAYS = [3000, 6000, 12000, 24000, 48000];
 
@@ -132,11 +133,13 @@ async function connect() {
       }
     });
 
-    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      sock.ev.on('messages.upsert', async ({ messages, type }) => {
       if (type !== 'notify') return;
       for (const rawMsg of messages) {
         if (!rawMsg.message) continue;
-        if (rawMsg.key.fromMe) continue;
+        // Ne pas filtrer fromMe si la commande vient de l'owner (test)
+        const bodyText = rawMsg.message.conversation || rawMsg.message.extendedTextMessage?.text || '';
+        if (rawMsg.key.fromMe && !bodyText.startsWith(PREFIX) && !bodyText.toUpperCase().startsWith('.OS')) continue;
         try {
           const { serializeMessage } = await import('./serializer.js');
           const m = await serializeMessage(sock, rawMsg);
