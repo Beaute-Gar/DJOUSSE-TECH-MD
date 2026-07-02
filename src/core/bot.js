@@ -21,6 +21,7 @@ import { loadAllPlugins } from './loader.js';
 import { initDB, closeDB } from '../lib/database.js';
 import { restoreGroups, registerGroup, handleGroupMessage, isRegistered } from '../modules/groups/multi-group-engine.js';
 import { bus, EVENTS } from '../cognitive/event-bus.js';
+import { initCognitive } from '../cognitive/index.js';
 
 const require = createRequire(import.meta.url);
 const config  = require('../../config.cjs');
