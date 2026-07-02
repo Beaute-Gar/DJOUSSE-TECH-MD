@@ -406,16 +406,10 @@ async function _notifyOwnerOnline() {
     memory.connectedAt = Date.now();
     const fs = require('fs');
     const img1 = path.resolve(__dirname, '../../mydata/assets/welcome1.png');
-    const img2 = path.resolve(__dirname, '../../mydata/assets/welcome2.png');
     const welcomeMsg = '*DJOUSSE TECH — COGNITIVE OS*\n\n_Bienvenue ! Assistant en ligne._\n\nCommandes : .menu  |  .OS aide';
     if (fs.existsSync(img1)) {
       await sock.sendMessage(ownerJid, { image: fs.readFileSync(img1), caption: welcomeMsg });
-    }
-    if (fs.existsSync(img2)) {
-      await sock.sendMessage(ownerJid, { image: fs.readFileSync(img2) });
-      try { fs.unlinkSync(img2); } catch {}
-    }
-    if (!fs.existsSync(img1) && !fs.existsSync(img2)) {
+    } else {
       await sock.sendMessage(ownerJid, { text: welcomeMsg });
     }
     await new Promise(r => setTimeout(r, 5000));
