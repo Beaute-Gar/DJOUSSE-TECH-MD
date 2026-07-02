@@ -75,6 +75,22 @@ export class PermissionEngine {
     this.#defaultPermissions.grant('memory', 'read');
     this.#defaultPermissions.grant('concept', 'read');
     this.#defaultPermissions.grant('knowledge', 'read');
+    this.#defaultPermissions.grant('SEND_MESSAGE', 'read');
+    this.#defaultPermissions.grant('SEND_MESSAGE', 'send');
+    this.#defaultPermissions.grant('SEND_IMAGE', 'read');
+    this.#defaultPermissions.grant('SEND_IMAGE', 'send');
+    this.#defaultPermissions.grant('SEND_AUDIO', 'read');
+    this.#defaultPermissions.grant('SEND_AUDIO', 'send');
+    this.#defaultPermissions.grant('SEND_VIDEO', 'read');
+    this.#defaultPermissions.grant('SEND_VIDEO', 'send');
+    this.#defaultPermissions.grant('SEND_DOCUMENT', 'read');
+    this.#defaultPermissions.grant('SEND_DOCUMENT', 'send');
+    this.#defaultPermissions.grant('REACT', 'read');
+    this.#defaultPermissions.grant('REACT', 'write');
+    this.#defaultPermissions.grant('DELETE_MESSAGE', 'read');
+    this.#defaultPermissions.grant('DELETE_MESSAGE', 'delete');
+    this.#defaultPermissions.grant('CALL_API', 'read');
+    this.#defaultPermissions.grant('CALL_API', 'execute');
   }
 
   registerAgent(agentName, permissions = []) {

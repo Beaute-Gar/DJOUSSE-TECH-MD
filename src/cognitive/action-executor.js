@@ -120,7 +120,7 @@ export class ActionExecutor {
       return { allowed: false, pendingApproval: true, approvalRequest: req };
     }
 
-    const safetyResult = await safety.check(entry.source, actionForGov, { resource: entry.payload.jid || 'unknown' });
+    const safetyResult = await safety.check(entry.source, actionForGov, { resource: entry.type });
     if (!safetyResult.allowed) {
       audit.log({ agent: entry.source, action: entry.type, resource: entry.payload.jid || 'unknown', details: { safety: safetyResult.status }, result: 'denied_safety' });
       return { allowed: false, reason: `Safety blocked: ${safetyResult.status}` };

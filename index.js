@@ -3,6 +3,7 @@ import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import http from 'http';
+import https from 'https';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -26,12 +27,13 @@ log.info(`╚══════════════════════�
 function startKeepAlive() {
   const url = process.env.RENDER_EXTERNAL_URL || process.env.KEEP_ALIVE_URL;
   if (!url) return;
+  const mod = url.startsWith('https') ? https : http;
   log.info(`Keep-alive activé → ${url}`);
   setInterval(() => {
-    http.get(url, (res) => {
+    mod.get(url, (res) => {
       log.debug(`Keep-alive ping: ${res.statusCode}`);
     }).on('error', () => {});
-  }, 10 * 60 * 1000); // toutes les 10 minutes
+  }, 10 * 60 * 1000);
 }
 
 async function main() {
