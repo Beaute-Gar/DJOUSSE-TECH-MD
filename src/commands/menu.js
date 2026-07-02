@@ -1,7 +1,7 @@
 import { getAllCommandNames, getCommandsByCategory } from '../core/loader.js';
 
 export const name = 'menu';
-export const aliases = ['aide', 'help', 'cmds'];
+export const aliases = ['help', 'cmds'];
 export const description = 'Affiche le menu des commandes';
 export const category = 'info';
 export const level = 'user';

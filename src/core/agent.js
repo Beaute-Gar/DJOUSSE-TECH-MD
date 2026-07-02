@@ -6,6 +6,7 @@ import { getPlugin } from './loader.js';
 const log = createLogger('AGENT');
 const PREFIX = process.env.PREFIX || '.';
 const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
+const GROQ_KEY = process.env.GROQ_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.0-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
 
@@ -58,25 +59,40 @@ export async function detectIntent(ctx, prefix = PREFIX) {
     const parsed = parseCommand(ctx.cleanText, prefix);
     if (parsed) { ctx.intent = 'command'; ctx.command = parsed.command; ctx.args = parsed.args; ctx.body = parsed.text; return; }
   }
-  if (ctx.isGroup && !ctx.cleanText.startsWith(prefix)) { ctx.intent = 'ignore'; return; }
-  if (GEMINI_KEY && !ctx.isGroup) {
+  if (ctx.isGroup && !ctx.cleanText.startsWith(prefix)) {
+    if (GROQ_KEY) {
+      const botJid = (ctx.sock?.user?.id || '').replace(/:.*@/, '@');
+      const isMentioned = (ctx.mentionedJid || []).some(j => j.replace(/:.*@/, '@') === botJid);
+      if (isMentioned) { ctx.intent = 'question'; return; }
+    }
+    ctx.intent = 'ignore'; return;
+  }
+  if (!ctx.isGroup && (GEMINI_KEY || GROQ_KEY)) {
     try {
       const lower = ctx.cleanText.toLowerCase();
       if (/^(salut|bonjour|hey|coucou|merci|quoi|qui|comment|pourquoi|combien|peux-tu|aide)/.test(lower)) {
         ctx.intent = 'question'; return;
       }
     } catch {}
+    ctx.intent = 'question'; return;
   }
-  ctx.intent = ctx.isGroup ? 'ignore' : (GEMINI_KEY ? 'question' : 'ignore');
+  ctx.intent = ctx.isGroup ? 'ignore' : 'ignore';
 }
 
 export async function agentAnswer(ctx) {
   const { m } = ctx;
   try {
     await m.react('🤔');
-    const reply = await geminiChat(ctx.senderJid, ctx.cleanText);
-    await m.react('✅');
-    await m.reply(`🤖 *DTE AI*\n\n${reply}`);
+    if (GROQ_KEY) {
+      const { brainChat } = await import('../cognitive/brain.js');
+      const reply = await brainChat(ctx.senderJid, ctx.cleanText);
+      await m.react('✅');
+      await m.reply(`🧠 *Groq IA*\n\n${reply}`);
+    } else {
+      const reply = await geminiChat(ctx.senderJid, ctx.cleanText);
+      await m.react('✅');
+      await m.reply(`🤖 *DTE AI*\n\n${reply}`);
+    }
   } catch (err) {
     await m.react('❌');
     await m.reply(`❌ Erreur : ${err.message}`);

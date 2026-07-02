@@ -118,6 +118,10 @@ async function connect() {
         log.info('? WhatsApp connecte');
         try { await restoreGroups(sock); } catch (e) { log.warn(`restoreGroups: ${e.message}`); }
         await _autoScanAdminGroups();
+        try {
+          const { activateBrain } = await import('../cognitive/brain.js');
+          activateBrain(sock);
+        } catch (e) { log.warn('brain activation: ' + e.message); }
         await _notifyOwnerOnline();
         try {
           const userJid = (sock.user?.id || sock.authState?.creds?.me?.id || '').replace(/:.*@/, '@');
