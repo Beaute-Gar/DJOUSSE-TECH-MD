@@ -22,16 +22,10 @@ const {
 } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 const pino = require('pino');
-const { NodeIO } = require('@attentiontension/pdf-to-image');
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
-const http = require('http');
 const express = require('express');
 const qrcode = require('qrcode');
-const QRCode = require('qrcode-reader');
-const { PDFDocument } = require('pdfkit');
-const archiver = require('archiver');
 const NodeCache = require('node-cache');
 const { rateLimit } = require('express-rate-limit');
 
