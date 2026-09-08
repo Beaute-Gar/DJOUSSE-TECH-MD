@@ -1294,10 +1294,6 @@
                             </div>
                         </div>
                     </div>
-                    <div id="qrAccounts" class="qr-accounts-list" style="margin-top:18px;">
-                        <h4 style="color:var(--accent-cyan);margin:0 0 8px;">Comptes WhatsApp connectés</h4>
-                        <div id="qrAccountsList"></div>
-                    </div>
                 </div>
 
                 <!-- Tab Numéro (Pairing Code) -->
@@ -1474,17 +1470,10 @@
             statsObserver.observe(statsSection);
         }
 
-        // ── QR Code multi-comptes ──
-        let currentQrConnectionId = null;
-        let qrEvSource = null;
+        // ── QR Code ──
 
         function normalizePhone(val) {
             return String(val || '').replace(/[^0-9]/g, '');
-        }
-
-        function maskPhone(p) {
-            p = String(p || '');
-            return p.length > 4 ? p.slice(0, 4) + '****' + p.slice(-4) : p;
         }
 
         async function generateQr() {
@@ -1497,87 +1486,28 @@
             document.getElementById('qrSection').style.display = '';
 
             try {
-                const r = await fetch('/api/connection/create', {
+                const r = await fetch('/api/pair', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone, method: 'qr' })
+                    body: JSON.stringify({ number: phone, useCode: false })
                 });
                 const d = await r.json();
-                if (!d.success) throw new Error(d.error || 'Erreur');
-                currentQrConnectionId = d.connectionId;
+                if (!d.ok) throw new Error(d.error || 'Erreur');
 
-                // Poll le QR
                 const qrImg = document.getElementById('qrImage');
                 const qrOverlay = document.getElementById('qrOverlay');
                 const statusText = document.getElementById('statusText');
-                qrOverlay.classList.remove('hidden');
-                statusText.textContent = 'Génération du QR...';
-                qrImg.src = '';
 
-                let pollCount = 0;
-                const pollQr = async () => {
-                    if (!currentQrConnectionId) return;
-                    try {
-                        const r2 = await fetch(`/api/connection/${currentQrConnectionId}/qr`);
-                        const d2 = await r2.json();
-                        if (d2.qr) {
-                            qrImg.src = d2.qr;
-                            qrOverlay.classList.add('hidden');
-                            statusText.textContent = 'QR code prêt — scannez-le !';
-                        } else if (d2.status === 'connected') {
-                            qrOverlay.classList.add('hidden');
-                            statusText.textContent = '✅ WhatsApp connecté !';
-                            qrImg.src = '';
-                            showToast('Compte WhatsApp connecté !');
-                            loadAccountsList();
-                            setTimeout(() => {
-                                currentQrConnectionId = null;
-                                document.getElementById('qrSection').style.display = 'none';
-                                document.getElementById('qrGenerateBtn').disabled = false;
-                            }, 3000);
-                            return;
-                        } else {
-                            pollCount++;
-                            if (pollCount > 120) { // 6 min max
-                                statusText.textContent = '⏰ QR expiré, recliquez sur Générer';
-                                return;
-                            }
-                            setTimeout(pollQr, 3000);
-                        }
-                    } catch (_) { setTimeout(pollQr, 5000); }
-                };
-                pollQr();
+                if (d.qr) {
+                    qrImg.src = d.qr;
+                    qrOverlay.classList.add('hidden');
+                    statusText.textContent = 'QR code prêt — scannez-le !';
+                } else {
+                    statusText.textContent = 'QR généré — scannez le code sur WhatsApp';
+                    qrOverlay.classList.add('hidden');
+                }
 
-                // SSE pour mise à jour
-                if (qrEvSource) qrEvSource.close();
-                qrEvSource = new EventSource(`/api/connection/${currentQrConnectionId}/events`);
-                qrEvSource.addEventListener('qr.updated', (e) => {
-                    const data = JSON.parse(e.data);
-                    if (data.qr) {
-                        qrImg.src = data.qr;
-                        qrOverlay.classList.add('hidden');
-                        statusText.textContent = 'QR code prêt — scannez-le !';
-                    }
-                });
-                qrEvSource.addEventListener('status', (e) => {
-                    const data = JSON.parse(e.data);
-                    if (data.status === 'connected') {
-                        qrOverlay.classList.add('hidden');
-                        statusText.textContent = '✅ WhatsApp connecté !';
-                        qrImg.src = '';
-                        showToast('Compte WhatsApp connecté !');
-                        loadAccountsList();
-                        setTimeout(() => {
-                            currentQrConnectionId = null;
-                            document.getElementById('qrSection').style.display = 'none';
-                            document.getElementById('qrGenerateBtn').disabled = false;
-                        }, 3000);
-                    } else if (data.status === 'failed') {
-                        statusText.textContent = '❌ Échec de connexion';
-                        document.getElementById('qrGenerateBtn').disabled = false;
-                    }
-                });
-                qrEvSource.onerror = () => {};
+                showToast('QR code généré !');
 
             } catch (err) {
                 showToast(err.message || 'Impossible de générer le QR');
@@ -1585,32 +1515,10 @@
             }
         }
 
-        async function loadAccountsList() {
-            try {
-                const r = await fetch('/api/accounts');
-                const d = await r.json();
-                const list = document.getElementById('qrAccountsList');
-                if (!list) return;
-                if (!d.accounts || !d.accounts.length) {
-                    list.innerHTML = '<p style="color:var(--text-secondary);font-size:13px;">Aucun compte connecté.</p>';
-                    return;
-                }
-                list.innerHTML = d.accounts.map(a => `
-                    <div class="account-item">
-                        <span class="account-phone">${maskPhone(a.phone)}</span>
-                        <span class="account-status ${a.connected ? 'ok' : 'pending'}">${a.connected ? '🟢 Connecté' : '⏳ En attente'}</span>
-                    </div>
-                `).join('');
-            } catch (_) {}
-        }
-
         document.getElementById('qrGenerateBtn').addEventListener('click', generateQr);
         document.getElementById('qrPhone').addEventListener('keydown', e => {
             if (e.key === 'Enter') generateQr();
         });
-
-        // Charge la liste des comptes au démarrage
-        loadAccountsList();
 
         // ── Tabs ──
         const tabQr = document.getElementById('tabQr');
@@ -1690,62 +1598,25 @@
             stopPairPolling();
             errorResult.style.display = 'none';
 
-            // Créer une connexion via le nouveau système
-            const createRes = await fetch('/api/connection/create', {
+            const res = await fetch('/api/pair', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: number, method: 'pairing' })
+                body: JSON.stringify({ number })
             });
-            const createData = await createRes.json();
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erreur');
 
-            if (!createData.success) {
-                throw new Error(createData.error || 'Erreur de création');
+            if (data.ok && data.code) {
+                showPairingCode(data.code);
+                setPairStatus('', 'En attente de confirmation sur votre téléphone');
+                pairPollUntil = Date.now() + 180000;
+                pollPairStatus();
+            } else {
+                throw new Error(data.error || 'Code non disponible');
             }
-
-            if (createData.alreadyConnected) {
-                currentPairingCode = '';
-                setPairStatus('ok', 'Numéro déjà connecté');
-                resetConnectionForm();
-                return;
-            }
-
-            const connectionId = createData.connectionId;
-
-            // Écouter les événements SSE en temps réel
-            const evtSource = new EventSource(`/api/connection/${connectionId}/events`);
-            evtSource.addEventListener('pairing.code', (event) => {
-                const data = JSON.parse(event.data);
-                if (data.code) {
-                    showPairingCode(data.code);
-                    setPairStatus('', 'En attente de confirmation');
-                }
-            });
-            evtSource.addEventListener('status', (event) => {
-                const data = JSON.parse(event.data);
-                if (data.status === 'connected') {
-                    setPairStatus('ok', 'WhatsApp connecté !');
-                    pairingDisplay.innerHTML = '<div class="connected-icon"><i class="fas fa-check-circle"></i></div><h3 style="color:var(--accent-green);margin:12px 0 8px;">Bot connecté !</h3><p style="color:var(--text-secondary);font-size:14px;">Le bot WhatsApp est maintenant en ligne.</p>';
-                    evtSource.close();
-                    setTimeout(() => resetConnectionForm(), 8000);
-                } else if (data.status === 'failed') {
-                    setPairStatus('bad', 'Échec de la connexion');
-                    evtSource.close();
-                }
-            });
-            evtSource.onerror = () => {
-                // Fallback: poll le statut
-                setTimeout(() => {
-                    pairPollUntil = Date.now() + 180000;
-                    pollPairStatus(number, connectionId);
-                }, 2000);
-            };
-
-            // Aussi poller en fallback
-            pairPollUntil = Date.now() + 180000;
-            pollPairStatus(number, connectionId);
         }
 
-        async function pollPairStatus(number, connectionId) {
+        async function pollPairStatus() {
             stopPairPolling();
             const tick = async () => {
                 if (Date.now() >= pairPollUntil) {
@@ -1753,21 +1624,16 @@
                     return;
                 }
                 try {
-                    // Utiliser le nouveau endpoint si connectionId disponible
-                    const url = connectionId
-                        ? `/api/connection/${connectionId}/status`
-                        : '/api/status';
-                    const r = await fetch(url);
+                    const r = await fetch('/api/status');
                     const d = await r.json();
-                    const isConnected = connectionId ? d.status === 'connected' : d.connected;
-                    if (isConnected) {
+                    if (d.connected) {
                         setPairStatus('ok', 'WhatsApp connecté !');
                         pairingDisplay.innerHTML = '<div class="connected-icon"><i class="fas fa-check-circle"></i></div><h3 style="color:var(--accent-green);margin:12px 0 8px;">Bot connecté !</h3><p style="color:var(--text-secondary);font-size:14px;">Le bot WhatsApp est maintenant en ligne.</p>';
                         setTimeout(() => resetConnectionForm(), 8000);
                         return;
                     }
                 } catch (_) {}
-                pairPollTimer = setTimeout(tick, 3000);
+                pairPollTimer = setTimeout(tick, 5000);
             };
             tick();
         }
