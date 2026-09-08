@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DJOUSSE-TECH-MD - WhatsApp Bot Intelligence Artificielle">
+    <meta name="keywords" content="WhatsApp Bot, AI, DJOUSSE TECH">
+    <meta name="author" content="DJOUSSE TECH">
+    <title>DJOUSSE-TECH-MD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0071e3;
+            --primary-hover: #0077ed;
+            --bg-dark: #000000;
+            --bg-card: #1d1d1f;
+            --text-primary: #f5f5f7;
+            --text-secondary: #86868b;
+            --accent-blue: #2997ff;
+            --accent-purple: #bf5af2;
+            --accent-green: #30d158;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Preloader */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .preloader-logo {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .nav-brand i {
+            font-size: 16px;
+            color: var(--accent-blue);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 24px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(41, 151, 255, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(191, 90, 242, 0.06) 0%, transparent 50%);
+            animation: heroGlow 15s ease-in-out infinite;
+        }
+
+        @keyframes heroGlow {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(41, 151, 255, 0.1);
+            border: 1px solid rgba(41, 151, 255, 0.2);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent-blue);
+            margin-bottom: 32px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease forwards 0.5s;
+        }
+
+        .hero-badge i {
+            font-size: 10px;
+        }
+
+        .hero-title {
+            font-size: clamp(48px, 10vw, 96px);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards 0.7s;
+        }
+
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero-subtitle {
+            font-size: clamp(18px, 3vw, 24px);
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.5;
+            font-weight: 400;
+            margin-bottom: 48px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards 0.9s;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards 1.1s;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 100px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(0, 113, 227, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.02);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 120px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: clamp(32px, 6vw, 56px);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 64px;
+            line-height: 1.6;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 40px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        .feature-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: white;
+        }
+
+        .feature-icon.blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .feature-icon.purple { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .feature-icon.pink { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .feature-icon.green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .feature-icon.orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .feature-icon.teal { background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%); }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: -0.01em;
+        }
+
+        .feature-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* QR Code Section */
+        .qr-section {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .qr-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            padding: 16px;
+            box-shadow: 0 0 40px rgba(0, 200, 255, 0.1);
+        }
+        .qr-image {
+            display: block;
+            width: 260px;
+            height: 260px;
+            border-radius: 8px;
+        }
+        .qr-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            color: #86868b;
+            font-size: 14px;
+            transition: opacity 0.4s;
+        }
+        .qr-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .qr-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #333;
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .qr-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff9500;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        .status-dot.connected {
+            background: var(--accent-green);
+        }
+        .qr-steps {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: left;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .connected-result {
+            text-align: center;
+            padding: 30px 0;
+        }
+        .connected-icon {
+            font-size: 64px;
+            color: var(--accent-green);
+            margin-bottom: 16px;
+        }
+        .connected-result h3 {
+            font-size: 22px;
+            color: var(--accent-green);
+            margin-bottom: 8px;
+        }
+        .connected-result p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* QR Code Section */
+        .qr-section {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .qr-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            padding: 16px;
+            box-shadow: 0 0 40px rgba(0, 200, 255, 0.1);
+        }
+        .qr-image {
+            display: block;
+            width: 260px;
+            height: 260px;
+            border-radius: 8px;
+        }
+        .qr-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            color: #86868b;
+            font-size: 14px;
+            transition: opacity 0.4s;
+        }
+        .qr-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .qr-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #333;
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: qrspin 0.8s linear infinite;
+        }
+        @keyframes qrspin { to { transform: rotate(360deg); } }
+        .account-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .account-phone { color: var(--text-primary); font-family: monospace; }
+        .account-status.ok { color: var(--accent-green); }
+        .account-status.pending { color: var(--text-secondary); }
+        .qr-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff9500;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        .status-dot.connected {
+            background: var(--accent-green);
+        }
+        .connected-result {
+            text-align: center;
+            padding: 30px 0;
+        }
+        .connected-icon {
+            font-size: 64px;
+            color: var(--accent-green);
+            margin-bottom: 16px;
+        }
+        .connected-result h3 {
+            font-size: 22px;
+            color: var(--accent-green);
+            margin-bottom: 8px;
+        }
+        .connected-result p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Pairing Tabs */
+        .pairing-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+        }
+        .pairing-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+        .pairing-tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 16px rgba(0, 113, 227, 0.3);
+        }
+        .pairing-tab:not(.active):hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        /* Pairing Code Section */
+        .pairing-code-form {
+            margin-bottom: 0;
+        }
+        .pairing-code-form .form-group {
+            margin-bottom: 16px;
+        }
+        .pairing-code-form .form-input {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            letter-spacing: 1px;
+        }
+        .pairing-code-display {
+            display: none;
+            text-align: center;
+            padding: 24px 0;
+        }
+        .pairing-code-display.show {
+            display: block;
+        }
+        .pairing-code-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        .pairing-code-value {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 6px;
+            color: var(--accent-green);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            text-shadow: 0 0 20px rgba(48, 209, 88, 0.3);
+            margin-bottom: 16px;
+        }
+        .pairing-code-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--amber);
+        }
+        .pairing-code-status.ok {
+            color: var(--accent-green);
+        }
+        .pairing-code-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .pairing-code-actions .btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        /* Pairing Section */
+        .pairing {
+            padding: 120px 24px;
+            background: linear-gradient(180deg, transparent 0%, rgba(41, 151, 255, 0.03) 50%, transparent 100%);
+        }
+
+        .pairing-container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .pairing-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 48px 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pairing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+        }
+
+        .pairing-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .pairing-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            margin: 0 auto 24px;
+            box-shadow: 0 16px 48px rgba(79, 172, 254, 0.3);
+        }
+
+        .pairing-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .pairing-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(41, 151, 255, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-hint i {
+            color: var(--accent-blue);
+            font-size: 10px;
+        }
+
+        .pair-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .pair-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 113, 227, 0.3);
+        }
+
+        .pair-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pair-btn .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .pair-btn.loading .spinner {
+            display: block;
+        }
+
+        .pair-btn.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .code-result {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: rgba(48, 209, 88, 0.08);
+            border: 1px solid rgba(48, 209, 88, 0.2);
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .code-result.show {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .code-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .code-value {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--accent-green);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            word-break: break-all;
+        }
+
+        .code-copy {
+            margin-top: 16px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .code-copy:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .error-result {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: rgba(255, 69, 58, 0.08);
+            border: 1px solid rgba(255, 69, 58, 0.2);
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .error-result.show {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .error-value {
+            color: #ff453a;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 80px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .stats-grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat-item {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .stat-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.6s ease;
+        }
+
+        .stat-value {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 48px 24px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .footer-brand {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .social-icon:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .footer-copyright {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast i {
+            color: var(--accent-green);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 32px;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pairing-card {
+                padding: 32px 24px;
+            }
+
+            .code-value {
+                font-size: 24px;
+                letter-spacing: 2px;
+            }
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-logo">DJOUSSE</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="#" class="nav-brand">
+            <i class="fas fa-bolt"></i>
+            DJOUSSE-TECH-MD
+        </a>
+        <ul class="nav-links">
+            <li><a href="#features">Fonctionnalités</a></li>
+            <li><a href="#pairing">Connexion</a></li>
+            <li><a href="#stats">Stats</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge">
+            <i class="fas fa-circle"></i>
+            Intelligence Artificielle Intégrée
+        </div>
+        <h1 class="hero-title">
+            <span class="gradient-text">DJOUSSE-TECH</span><br>
+            WhatsApp Bot
+        </h1>
+        <p class="hero-subtitle">
+            Le bot WhatsApp le plus avancé. Propulsé par l'IA, conçu pour l'efficacité. 
+            Connectez-vous en quelques secondes.
+        </p>
+        <div class="hero-cta">
+            <a href="#pairing" class="btn btn-primary">
+                <i class="fas fa-link"></i>
+                Connecter WhatsApp
+            </a>
+            <a href="https://github.com/DJOUSSE-TECH/DJOUSSE-TECH-MD" target="_blank" class="btn btn-secondary">
+                <i class="fab fa-github"></i>
+                GitHub
+            </a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <p class="section-label">Fonctionnalités</p>
+        <h2 class="section-title">Tout ce dont vous avez besoin</h2>
+        <p class="section-subtitle">
+            Un écosystème complet pour automatiser, protéger et enrichir votre expérience WhatsApp.
+        </p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon blue">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3 class="feature-title">Intelligence Artificielle</h3>
+                <p class="feature-desc">
+                    GPT-4, Gemini, Claude — Le bot comprend et répond intelligemment à chaque message.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon purple">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h3 class="feature-title">Anti-Spam & Protection</h3>
+                <p class="feature-desc">
+                    Détection automatique des spams, flood et comportements suspects. Groupe sécurisé.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon pink">
+                    <i class="fas fa-download"></i>
+                </div>
+                <h3 class="feature-title">Téléchargement Universel</h3>
+                <p class="feature-desc">
+                    TikTok, Instagram, YouTube, Spotify — Téléchargez tout en un clic.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon green">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                </div>
+                <h3 class="feature-title">Génération d'Images</h3>
+                <p class="feature-desc">
+                    Créez des images uniques avec DALL-E, Midjourney et Stable Diffusion.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon orange">
+                    <i class="fas fa-users-gear"></i>
+                </div>
+                <h3 class="feature-title">Gestion de Groupe</h3>
+                <p class="feature-desc">
+                    Modération automatique, bienvenue personnalisée, anti-delete et bien plus.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon teal">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <h3 class="feature-title">Jeux & Divertissement</h3>
+                <p class="feature-desc">
+                    Quiz, jeux de société, mèmes, tts, traduction — L'amusement sans limite.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pairing Section -->
+    <section class="pairing" id="pairing">
+        <div class="pairing-container">
+            <div class="pairing-card">
+                <div class="pairing-header">
+                    <div class="pairing-icon">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <h2 class="pairing-title">Connexion WhatsApp</h2>
+                    <p class="pairing-desc">
+                        Choisissez votre méthode de connexion au bot.
+                    </p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="pairing-tabs">
+                    <button class="pairing-tab active" data-tab="qr" id="tabQr">
+                        <i class="fas fa-qrcode"></i> QR Code
+                    </button>
+                    <button class="pairing-tab" data-tab="code" id="tabCode">
+                        <i class="fas fa-keyboard"></i> Numéro
+                    </button>
+                </div>
+
+                <!-- Tab QR Code -->
+                <div class="tab-content active" id="contentQr">
+                    <div class="qr-phone-input" style="margin-bottom:14px;">
+                        <input type="tel" id="qrPhone" class="phone-input" placeholder="Numéro WhatsApp (ex: 237693978044)" maxlength="15" />
+                        <button id="qrGenerateBtn" class="btn-primary"><i class="fas fa-qrcode"></i> Générer QR</button>
+                    </div>
+                    <div class="qr-section" id="qrSection" style="display:none;">
+                        <div class="qr-wrapper">
+                            <img id="qrImage" class="qr-image" src="" alt="QR Code WhatsApp" />
+                            <div class="qr-overlay" id="qrOverlay">
+                                <div class="qr-spinner"></div>
+                                <p>Génération du QR code...</p>
+                            </div>
+                        </div>
+                        <div class="qr-status" id="qrStatus">
+                            <span class="status-dot" id="statusDot"></span>
+                            <span id="statusText">En attente du QR code...</span>
+                        </div>
+                        <div class="qr-steps">
+                            <div class="step">
+                                <span class="step-num">1</span>
+                                <span>Ouvrez WhatsApp sur votre téléphone</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-num">2</span>
+                                <span>Paramètres → Appareils liés → Lier un appareil</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-num">3</span>
+                                <span>Scannez le QR code ci-dessus</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="qrAccounts" class="qr-accounts-list" style="margin-top:18px;">
+                        <h4 style="color:var(--accent-cyan);margin:0 0 8px;">Comptes WhatsApp connectés</h4>
+                        <div id="qrAccountsList"></div>
+                    </div>
+                </div>
+
+                <!-- Tab Numéro (Pairing Code) -->
+                <div class="tab-content" id="contentCode">
+                    <div class="pairing-code-form" id="pairingForm">
+                        <div class="form-group">
+                            <label class="form-label">Numéro WhatsApp avec indicatif</label>
+                            <div class="form-input" style="display:flex;align-items:center;gap:8px;padding:0 16px;">
+                                <span style="color:var(--text-secondary);font-size:16px;">+</span>
+                                <input type="tel" id="pairPhone" inputmode="numeric" autocomplete="tel"
+                                       placeholder="2376XXXXXXXX" maxlength="15"
+                                       style="flex:1;border:0;outline:0;background:transparent;color:var(--text-primary);font-size:16px;font-family:inherit;">
+                            </div>
+                            <div class="form-hint">
+                                <i class="fas fa-info-circle"></i>
+                                Entrez votre numéro WhatsApp avec l'indicatif pays
+                            </div>
+                        </div>
+                        <button class="pair-btn" id="pairBtn" type="button">
+                            <span class="btn-text"><i class="fas fa-code"></i> Obtenir le code</span>
+                            <div class="spinner"></div>
+                        </button>
+                    </div>
+
+                    <div class="pairing-code-display" id="pairingDisplay">
+                        <div class="pairing-code-label">Votre code d'appairage</div>
+                        <div class="pairing-code-value" id="pairingCodeValue">— — — —</div>
+                        <div class="pairing-code-status" id="pairingStatus">
+                            <span class="status-dot"></span>
+                            <span>En attente de confirmation</span>
+                        </div>
+                        <div class="form-hint" style="justify-content:center;margin-top:12px;">
+                            <i class="fas fa-info-circle"></i>
+                            WhatsApp → Paramètres → Appareils liés → Lier un appareil → "Lier avec un numéro de téléphone"
+                        </div>
+                        <div class="pairing-code-actions">
+                            <button class="btn btn-secondary" id="copyCodeBtn" type="button">
+                                <i class="fas fa-copy"></i> Copier
+                            </button>
+                            <button class="btn btn-secondary" id="newCodeBtn" type="button">
+                                <i class="fas fa-refresh"></i> Nouveau code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="connected-result" id="connectedResult" style="display:none;">
+                    <div class="connected-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>Bot connecté !</h3>
+                    <p>Le bot WhatsApp est maintenant en ligne.</p>
+                </div>
+
+                <div class="error-result" id="errorResult">
+                    <p class="error-value" id="errorValue"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats" id="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" data-target="300">0</div>
+                <div class="stat-label">Commandes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" data-target="50">0</div>
+                <div class="stat-label">Plugins IA</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" data-target="99">0</div>
+                <div class="stat-label">% Uptime</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" data-target="24">0</div>
+                <div class="stat-label">/7 Actif</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-brand">DJOUSSE-TECH-MD</div>
+        <div class="footer-links">
+            <a href="#features">Fonctionnalités</a>
+            <a href="#pairing">Connexion</a>
+            <a href="https://github.com/DJOUSSE-TECH/DJOUSSE-TECH-MD" target="_blank">GitHub</a>
+            <a href="https://whatsapp.com/channel/0029VbC6It7K0IBkQwaKYd2J" target="_blank">WhatsApp</a>
+        </div>
+        <div class="footer-social">
+            <a href="https://github.com/DJOUSSE-TECH/DJOUSSE-TECH-MD" target="_blank" class="social-icon">
+                <i class="fab fa-github"></i>
+            </a>
+            <a href="https://whatsapp.com/channel/0029VbC6It7K0IBkQwaKYd2J" target="_blank" class="social-icon">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+        </div>
+        <p class="footer-copyright">
+            © 2026 DJOUSSE TECH. Tous droits réservés.
+        </p>
+    </footer>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastText">Code copié !</span>
+    </div>
+
+    <script>
+        // Preloader
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('preloader').classList.add('hidden');
+            }, 1500);
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, index * 100);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .stat-item').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Counter animation
+        function animateCounters() {
+            document.querySelectorAll('.stat-value').forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const updateCounter = () => {
+                    current += step;
+                    if (current < target) {
+                        counter.textContent = Math.floor(current);
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target;
+                    }
+                };
+
+                updateCounter();
+            });
+        }
+
+        // Trigger counter animation when stats section is visible
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    statsObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        const statsSection = document.getElementById('stats');
+        if (statsSection) {
+            statsObserver.observe(statsSection);
+        }
+
+        // ── QR Code multi-comptes ──
+        let currentQrConnectionId = null;
+        let qrEvSource = null;
+
+        function normalizePhone(val) {
+            return String(val || '').replace(/[^0-9]/g, '');
+        }
+
+        function maskPhone(p) {
+            p = String(p || '');
+            return p.length > 4 ? p.slice(0, 4) + '****' + p.slice(-4) : p;
+        }
+
+        async function generateQr() {
+            const phone = normalizePhone(document.getElementById('qrPhone').value);
+            if (!/^\d{8,15}$/.test(phone)) {
+                showToast('Numéro invalide — 8 à 15 chiffres requis');
+                return;
+            }
+            document.getElementById('qrGenerateBtn').disabled = true;
+            document.getElementById('qrSection').style.display = '';
+
+            try {
+                const r = await fetch('/api/connection/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, method: 'qr' })
+                });
+                const d = await r.json();
+                if (!d.success) throw new Error(d.error || 'Erreur');
+                currentQrConnectionId = d.connectionId;
+
+                // Poll le QR
+                const qrImg = document.getElementById('qrImage');
+                const qrOverlay = document.getElementById('qrOverlay');
+                const statusText = document.getElementById('statusText');
+                qrOverlay.classList.remove('hidden');
+                statusText.textContent = 'Génération du QR...';
+                qrImg.src = '';
+
+                let pollCount = 0;
+                const pollQr = async () => {
+                    if (!currentQrConnectionId) return;
+                    try {
+                        const r2 = await fetch(`/api/connection/${currentQrConnectionId}/qr`);
+                        const d2 = await r2.json();
+                        if (d2.qr) {
+                            qrImg.src = d2.qr;
+                            qrOverlay.classList.add('hidden');
+                            statusText.textContent = 'QR code prêt — scannez-le !';
+                        } else if (d2.status === 'connected') {
+                            qrOverlay.classList.add('hidden');
+                            statusText.textContent = '✅ WhatsApp connecté !';
+                            qrImg.src = '';
+                            showToast('Compte WhatsApp connecté !');
+                            loadAccountsList();
+                            setTimeout(() => {
+                                currentQrConnectionId = null;
+                                document.getElementById('qrSection').style.display = 'none';
+                                document.getElementById('qrGenerateBtn').disabled = false;
+                            }, 3000);
+                            return;
+                        } else {
+                            pollCount++;
+                            if (pollCount > 120) { // 6 min max
+                                statusText.textContent = '⏰ QR expiré, recliquez sur Générer';
+                                return;
+                            }
+                            setTimeout(pollQr, 3000);
+                        }
+                    } catch (_) { setTimeout(pollQr, 5000); }
+                };
+                pollQr();
+
+                // SSE pour mise à jour
+                if (qrEvSource) qrEvSource.close();
+                qrEvSource = new EventSource(`/api/connection/${currentQrConnectionId}/events`);
+                qrEvSource.addEventListener('qr.updated', (e) => {
+                    const data = JSON.parse(e.data);
+                    if (data.qr) {
+                        qrImg.src = data.qr;
+                        qrOverlay.classList.add('hidden');
+                        statusText.textContent = 'QR code prêt — scannez-le !';
+                    }
+                });
+                qrEvSource.addEventListener('status', (e) => {
+                    const data = JSON.parse(e.data);
+                    if (data.status === 'connected') {
+                        qrOverlay.classList.add('hidden');
+                        statusText.textContent = '✅ WhatsApp connecté !';
+                        qrImg.src = '';
+                        showToast('Compte WhatsApp connecté !');
+                        loadAccountsList();
+                        setTimeout(() => {
+                            currentQrConnectionId = null;
+                            document.getElementById('qrSection').style.display = 'none';
+                            document.getElementById('qrGenerateBtn').disabled = false;
+                        }, 3000);
+                    } else if (data.status === 'failed') {
+                        statusText.textContent = '❌ Échec de connexion';
+                        document.getElementById('qrGenerateBtn').disabled = false;
+                    }
+                });
+                qrEvSource.onerror = () => {};
+
+            } catch (err) {
+                showToast(err.message || 'Impossible de générer le QR');
+                document.getElementById('qrGenerateBtn').disabled = false;
+            }
+        }
+
+        async function loadAccountsList() {
+            try {
+                const r = await fetch('/api/accounts');
+                const d = await r.json();
+                const list = document.getElementById('qrAccountsList');
+                if (!list) return;
+                if (!d.accounts || !d.accounts.length) {
+                    list.innerHTML = '<p style="color:var(--text-secondary);font-size:13px;">Aucun compte connecté.</p>';
+                    return;
+                }
+                list.innerHTML = d.accounts.map(a => `
+                    <div class="account-item">
+                        <span class="account-phone">${maskPhone(a.phone)}</span>
+                        <span class="account-status ${a.connected ? 'ok' : 'pending'}">${a.connected ? '🟢 Connecté' : '⏳ En attente'}</span>
+                    </div>
+                `).join('');
+            } catch (_) {}
+        }
+
+        document.getElementById('qrGenerateBtn').addEventListener('click', generateQr);
+        document.getElementById('qrPhone').addEventListener('keydown', e => {
+            if (e.key === 'Enter') generateQr();
+        });
+
+        // Charge la liste des comptes au démarrage
+        loadAccountsList();
+
+        // ── Tabs ──
+        const tabQr = document.getElementById('tabQr');
+        const tabCode = document.getElementById('tabCode');
+        const contentQr = document.getElementById('contentQr');
+        const contentCode = document.getElementById('contentCode');
+
+        tabQr.addEventListener('click', () => {
+            tabQr.classList.add('active');
+            tabCode.classList.remove('active');
+            contentQr.classList.add('active');
+            contentCode.classList.remove('active');
+        });
+        tabCode.addEventListener('click', () => {
+            tabCode.classList.add('active');
+            tabQr.classList.remove('active');
+            contentCode.classList.add('active');
+            contentQr.classList.remove('active');
+        });
+
+        // ── Pairing Code ──
+        const pairPhone = document.getElementById('pairPhone');
+        const pairBtn = document.getElementById('pairBtn');
+        const pairingDisplay = document.getElementById('pairingDisplay');
+        const pairingForm = document.getElementById('pairingForm');
+        const pairingCodeValue = document.getElementById('pairingCodeValue');
+        const pairingStatus = document.getElementById('pairingStatus');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const newCodeBtn = document.getElementById('newCodeBtn');
+        let currentPairingCode = '';
+        let pairPollTimer = null;
+        let pairPollUntil = 0;
+
+        pairPhone.addEventListener('input', () => {
+            pairPhone.value = pairPhone.value.replace(/[^0-9]/g, '');
+        });
+
+        function normalizePhone(v) {
+            return String(v || '').replace(/[^0-9]/g, '').replace(/^00/, '');
+        }
+
+        function setPairBusy(busy) {
+            pairBtn.disabled = busy;
+            pairBtn.classList.toggle('loading', busy);
+        }
+
+        function setPairStatus(type, text) {
+            pairingStatus.className = 'pairing-code-status' + (type === 'ok' ? ' ok' : '');
+            pairingStatus.querySelector('span:last-child').textContent = text;
+        }
+
+        function showPairingCode(code) {
+            currentPairingCode = String(code || '');
+            pairingCodeValue.textContent = currentPairingCode
+                ? (currentPairingCode.match(/.{1,4}/g) || [currentPairingCode]).join(' ')
+                : '— — — —';
+            pairingForm.style.display = 'none';
+            pairingDisplay.classList.add('show');
+        }
+
+        function stopPairPolling() {
+            if (pairPollTimer) clearTimeout(pairPollTimer);
+            pairPollTimer = null;
+        }
+
+        function resetConnectionForm() {
+            stopPairPolling();
+            pairingDisplay.classList.remove('show');
+            pairingDisplay.innerHTML = '';
+            pairingForm.style.display = '';
+            currentPairingCode = '';
+            pairingCodeValue.textContent = '— — — —';
+            setPairStatus('', '');
+        }
+
+        async function requestPairingCode(number) {
+            stopPairPolling();
+            errorResult.style.display = 'none';
+
+            // Créer une connexion via le nouveau système
+            const createRes = await fetch('/api/connection/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: number, method: 'pairing' })
+            });
+            const createData = await createRes.json();
+
+            if (!createData.success) {
+                throw new Error(createData.error || 'Erreur de création');
+            }
+
+            if (createData.alreadyConnected) {
+                currentPairingCode = '';
+                setPairStatus('ok', 'Numéro déjà connecté');
+                resetConnectionForm();
+                return;
+            }
+
+            const connectionId = createData.connectionId;
+
+            // Écouter les événements SSE en temps réel
+            const evtSource = new EventSource(`/api/connection/${connectionId}/events`);
+            evtSource.addEventListener('pairing.code', (event) => {
+                const data = JSON.parse(event.data);
+                if (data.code) {
+                    showPairingCode(data.code);
+                    setPairStatus('', 'En attente de confirmation');
+                }
+            });
+            evtSource.addEventListener('status', (event) => {
+                const data = JSON.parse(event.data);
+                if (data.status === 'connected') {
+                    setPairStatus('ok', 'WhatsApp connecté !');
+                    pairingDisplay.innerHTML = '<div class="connected-icon"><i class="fas fa-check-circle"></i></div><h3 style="color:var(--accent-green);margin:12px 0 8px;">Bot connecté !</h3><p style="color:var(--text-secondary);font-size:14px;">Le bot WhatsApp est maintenant en ligne.</p>';
+                    evtSource.close();
+                    setTimeout(() => resetConnectionForm(), 8000);
+                } else if (data.status === 'failed') {
+                    setPairStatus('bad', 'Échec de la connexion');
+                    evtSource.close();
+                }
+            });
+            evtSource.onerror = () => {
+                // Fallback: poll le statut
+                setTimeout(() => {
+                    pairPollUntil = Date.now() + 180000;
+                    pollPairStatus(number, connectionId);
+                }, 2000);
+            };
+
+            // Aussi poller en fallback
+            pairPollUntil = Date.now() + 180000;
+            pollPairStatus(number, connectionId);
+        }
+
+        async function pollPairStatus(number, connectionId) {
+            stopPairPolling();
+            const tick = async () => {
+                if (Date.now() >= pairPollUntil) {
+                    setPairStatus('', 'Code expiré — demandez un nouveau');
+                    return;
+                }
+                try {
+                    // Utiliser le nouveau endpoint si connectionId disponible
+                    const url = connectionId
+                        ? `/api/connection/${connectionId}/status`
+                        : '/api/status';
+                    const r = await fetch(url);
+                    const d = await r.json();
+                    const isConnected = connectionId ? d.status === 'connected' : d.connected;
+                    if (isConnected) {
+                        setPairStatus('ok', 'WhatsApp connecté !');
+                        pairingDisplay.innerHTML = '<div class="connected-icon"><i class="fas fa-check-circle"></i></div><h3 style="color:var(--accent-green);margin:12px 0 8px;">Bot connecté !</h3><p style="color:var(--text-secondary);font-size:14px;">Le bot WhatsApp est maintenant en ligne.</p>';
+                        setTimeout(() => resetConnectionForm(), 8000);
+                        return;
+                    }
+                } catch (_) {}
+                pairPollTimer = setTimeout(tick, 3000);
+            };
+            tick();
+        }
+
+        async function doPairing() {
+            const digits = normalizePhone(pairPhone.value);
+            if (!/^\d{8,15}$/.test(digits)) {
+                errorValue.textContent = 'Numéro invalide — entrez 8 à 15 chiffres avec indicatif.';
+                errorResult.style.display = 'block';
+                return;
+            }
+            errorResult.style.display = 'none';
+            setPairBusy(true);
+            try {
+                await requestPairingCode(digits);
+            } catch (err) {
+                errorValue.textContent = err.message || 'Impossible de générer le code.';
+                errorResult.style.display = 'block';
+            } finally {
+                setPairBusy(false);
+            }
+        }
+
+        pairBtn.addEventListener('click', doPairing);
+
+        newCodeBtn.addEventListener('click', async () => {
+            const digits = normalizePhone(pairPhone.value);
+            if (!digits) return;
+            newCodeBtn.disabled = true;
+            try {
+                await requestPairingCode(digits);
+            } catch (err) {
+                errorValue.textContent = err.message;
+                errorResult.style.display = 'block';
+            } finally {
+                newCodeBtn.disabled = false;
+            }
+        });
+
+        copyCodeBtn.addEventListener('click', async () => {
+            if (!currentPairingCode) return;
+            try {
+                await navigator.clipboard.writeText(currentPairingCode);
+                copyCodeBtn.innerHTML = '<i class="fas fa-check"></i> Copié !';
+                setTimeout(() => copyCodeBtn.innerHTML = '<i class="fas fa-copy"></i> Copier', 1500);
+            } catch (_) {
+                errorValue.textContent = 'Copie bloquée par le navigateur.';
+                errorResult.style.display = 'block';
+            }
+        });
+
+        window.addEventListener('beforeunload', stopPairPolling);
+
+        function showToast(msg) {
+            toastText.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

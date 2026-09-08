@@ -1,0 +1,31 @@
+node_modules/
+session/
+session-*/
+session-backup/
+sessions/
+data/
+database/
+*.db
+*.db-shm
+*.db-wal
+*.log
+.env
+.env.*
+!.env.example
+.wwebjs_cache/
+temp/
+*.apk
+*.keystore
+*.jks
+android.zip
+
+# Backups & extracted
+plugins-backup-*/
+plugins-extracted/
+plugins.zip
+packages/
+
+# Android build
+android/app/build/
+android/.gradle/
+android/build/

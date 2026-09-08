@@ -1,0 +1,8 @@
+{
+  "appId": "com.djoussetechnology.md",
+  "appName": "DJOUSSE TECH",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

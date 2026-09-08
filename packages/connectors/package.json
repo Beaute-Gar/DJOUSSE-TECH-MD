@@ -1,0 +1,10 @@
+{
+  "name": "djousse-connectors",
+  "version": "1.0.0",
+  "description": "DJOUSSE TECH Connectors — WhatsApp, Google, and more",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
