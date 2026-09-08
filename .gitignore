@@ -14,10 +14,13 @@ database/
 !.env.example
 .wwebjs_cache/
 temp/
+tmp/
 *.apk
 *.keystore
 *.jks
 android.zip
+bot.lock
+pino.log
 
 # Backups & extracted
 plugins-backup-*/
@@ -29,3 +32,6 @@ packages/
 android/app/build/
 android/.gradle/
 android/build/
+
+# Core server (old)
+core-server/
