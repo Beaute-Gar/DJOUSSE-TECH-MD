@@ -165,6 +165,7 @@ let sseClients = [];
 
 // ─── Express App ───────────────────────────────────────────────────────────
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -383,7 +384,7 @@ app.get('/sse', (req, res) => {
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
     });
-    res.write('data: {"type":"connected"}\n\n');
+    res.write('data: {"type":"listening"}\n\n');
     sseClients.push(res);
     req.on('close', () => { sseClients = sseClients.filter(c => c !== res); });
 });

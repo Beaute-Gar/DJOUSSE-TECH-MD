@@ -116,24 +116,34 @@
         margin-top: 28px; text-align: center; font-family: var(--mono);
         font-size: 10px; letter-spacing: 0.1em; color: #3a4048; text-transform: uppercase;
     }
+    .connected { text-align: center; margin-top: 24px; display: none; }
+    .connected.visible { display: block; }
+    .connected i { font-size: 48px; color: var(--accent); }
+    .connected h3 { color: var(--accent); margin: 12px 0 8px; }
+    .connected p { color: var(--muted); font-size: 13px; }
 </style>
 </head>
 <body>
 <div class="card">
     <p class="eyebrow">WhatsApp Connection</p>
     <h1>DJOUSSE-TECH-MD</h1>
-    <p class="subtitle">Enter your WhatsApp number with country code to receive a pairing code.</p>
-    <label for="phone">Phone number</label>
+    <p class="subtitle">Entrez votre numéro WhatsApp avec indicatif pays pour recevoir un code d'appairage.</p>
+    <label for="phone">Numéro de téléphone</label>
     <input type="text" id="phone" placeholder="+237XXXXXXXXX" inputmode="tel" />
-    <button id="submitBtn">Get Pairing Code</button>
+    <button id="submitBtn">Obtenir le code</button>
     <div class="error" id="errorBox"></div>
     <div class="result" id="resultBox">
-        <p class="result-label">Pairing Code</p>
+        <p class="result-label">Code d'appairage</p>
         <div class="code-wrapper">
             <div class="code" id="codeValue">— — — — — — — —</div>
             <button class="copy-btn" id="copyBtn" title="Copier le code">📋</button>
         </div>
         <div class="copy-feedback" id="copyFeedback">Copié !</div>
+    </div>
+    <div class="connected" id="connectedBox">
+        <i class="fas fa-check-circle"></i>
+        <h3>Bot connecté !</h3>
+        <p>Le bot WhatsApp est maintenant en ligne.</p>
     </div>
     <p class="footer">DJOUSSE TECH EVOLUTION</p>
 </div>
@@ -145,33 +155,13 @@
     const errorBox = document.getElementById("errorBox");
     const copyBtn = document.getElementById("copyBtn");
     const copyFeedback = document.getElementById("copyFeedback");
-    let evtSource = null;
-
-    function startSSEFallback() {
-        try {
-            evtSource = new EventSource("/sse");
-            evtSource.onmessage = function(ev) {
-                try {
-                    const d = JSON.parse(ev.data);
-                    if (d.type === "pairing_code" && d.code) {
-                        codeValue.textContent = d.code;
-                        resultBox.classList.add("visible");
-                        errorBox.classList.remove("visible");
-                    }
-                    if (d.type === "connected") {
-                        resultBox.innerHTML = '<div style="text-align:center"><i class="fas fa-check-circle" style="color:#30d158;font-size:48px"></i><h3 style="color:#30d158;margin:12px 0 8px;">Bot connecté !</h3></div>';
-                        if (evtSource) evtSource.close();
-                    }
-                } catch(_) {}
-            };
-            evtSource.onerror = function() {};
-        } catch(_) {}
-    }
+    const connectedBox = document.getElementById("connectedBox");
 
     btn.addEventListener("click", async () => {
         const number = phoneInput.value.trim();
         errorBox.classList.remove("visible");
         resultBox.classList.remove("visible");
+        connectedBox.classList.remove("visible");
         copyFeedback.classList.remove("visible");
         if (!number) {
             errorBox.textContent = "Veuillez entrer un numéro.";
@@ -180,8 +170,6 @@
         }
         btn.disabled = true;
         btn.textContent = "Demande en cours...";
-
-        startSSEFallback();
 
         try {
             const res = await fetch("/api/pair", {
