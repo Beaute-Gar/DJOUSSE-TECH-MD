@@ -31,7 +31,7 @@ const { commands, replyHandlers } = require('./command.cjs');
 const {
     connectdb, saveSessionToMongoDB,
     deleteSessionFromMongoDB, getUserConfigFromMongoDB,
-    addNumberToMongoDB, getAllNumbersFromMongoDB,
+    addNumberToMongoDB, getAllNumbersFromMongoDB, removeNumberFromMongoDB,
     incrementStats,
 } = require('./lib/database.cjs');
 const { sms } = require('./lib/msg-djousse.cjs');
@@ -948,10 +948,24 @@ async function startServer() {
 async function autoReconnectFromMongoDB() {
     try {
         if (!MONGODB_URI) return;
-        const numbers = await getAllNumbersFromMongoDB();
+        let numbers = await getAllNumbersFromMongoDB();
         if (numbers.length === 0) {
             console.log('[AUTO] No saved sessions found');
             return;
+        }
+        // Keep only the most recent session if multiple exist
+        if (numbers.length > 1) {
+            console.log(`[AUTO] ${numbers.length} sessions found, keeping only the most recent: ${numbers[numbers.length - 1]}`);
+            const keep = numbers[numbers.length - 1];
+            for (const num of numbers) {
+                if (num !== keep) {
+                    await removeNumberFromMongoDB(num).catch(() => {});
+                    // Also clean local session folder
+                    const sDir = path.join(__dirname, 'sessions', num);
+                    if (fs.existsSync(sDir)) fs.rmSync(sDir, { recursive: true, force: true });
+                }
+            }
+            numbers = [keep];
         }
         console.log(`[AUTO] Found ${numbers.length} saved session(s). Auto-connecting all...`);
         await sleep(3000);
