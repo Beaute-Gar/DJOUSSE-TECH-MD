@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,37 +17,29 @@
     }
     * { box-sizing: border-box; }
     body {
-        margin: 0;
-        min-height: 100vh;
+        margin: 0; min-height: 100vh;
         background: var(--bg);
         background-image:
             radial-gradient(circle at 20% 10%, rgba(61,220,132,0.06), transparent 40%),
             radial-gradient(circle at 80% 90%, rgba(61,220,132,0.04), transparent 40%);
         color: var(--text);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         padding: 24px;
     }
     .card {
-        width: 100%;
-        max-width: 380px;
+        width: 100%; max-width: 400px;
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 14px;
         padding: 32px 28px;
     }
     .eyebrow {
-        font-family: var(--mono);
-        font-size: 11px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin: 0 0 6px;
+        font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--accent); margin: 0 0 6px;
     }
     h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
-    .subtitle { color: var(--muted); font-size: 13px; margin: 0 0 28px; line-height: 1.5; }
+    .subtitle { color: var(--muted); font-size: 13px; margin: 0 0 24px; line-height: 1.5; }
     label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
     input[type="text"] {
         width: 100%;
@@ -64,17 +56,22 @@
     }
     input[type="text"]:focus { border-color: var(--accent); }
     input[type="text"]::placeholder { color: #4a5058; }
+    .method-switch { display: flex; gap: 8px; margin-bottom: 16px; }
+    .method-btn {
+        flex: 1; margin-top: 0; padding: 11px;
+        background: #0d0f13; color: var(--muted);
+        border: 1px solid var(--border);
+        font-weight: 600; font-size: 13px;
+    }
+    .method-btn.active {
+        background: var(--accent-dim); color: var(--accent);
+        border-color: rgba(61,220,132,0.35);
+    }
     button {
-        width: 100%;
-        margin-top: 18px;
-        padding: 13px;
-        border-radius: 8px;
-        border: none;
-        background: var(--accent);
-        color: #06130a;
-        font-weight: 700;
-        font-size: 14px;
-        letter-spacing: 0.02em;
+        width: 100%; margin-top: 18px; padding: 13px;
+        border-radius: 8px; border: none;
+        background: var(--accent); color: #06130a;
+        font-weight: 700; font-size: 14px;
         cursor: pointer;
         transition: filter 0.15s ease, transform 0.1s ease;
     }
@@ -94,22 +91,27 @@
         border-radius: 8px; padding: 6px 6px 6px 16px;
     }
     .code {
-        font-family: var(--mono); font-size: 28px; font-weight: 700;
+        font-family: var(--mono); font-size: 26px; font-weight: 700;
         letter-spacing: 0.12em; color: var(--accent); flex: 1; text-align: center;
     }
     .copy-btn {
         flex-shrink: 0; width: 44px; height: 44px; border-radius: 6px;
         border: none; background: rgba(61, 220, 132, 0.2); color: var(--accent);
-        font-size: 20px; cursor: pointer; transition: background 0.15s ease;
+        font-size: 20px; cursor: pointer;
         display: flex; align-items: center; justify-content: center; padding: 0;
     }
     .copy-btn:hover { background: rgba(61, 220, 132, 0.35); }
-    .copy-btn:active { transform: scale(0.92); }
     .copy-feedback {
         font-size: 12px; color: var(--accent); text-align: right;
         margin-top: 6px; height: 20px; opacity: 0; transition: opacity 0.2s ease;
     }
     .copy-feedback.visible { opacity: 1; }
+    .qr-box { margin-top: 24px; display: none; text-align: center; }
+    .qr-box.visible { display: block; }
+    .qr-box img {
+        width: 100%; max-width: 280px; border-radius: 8px;
+        border: 1px solid var(--border); background: #fff; padding: 10px;
+    }
     .waiting {
         margin-top: 18px; font-size: 13px; color: var(--muted);
         text-align: center; display: none;
@@ -123,9 +125,10 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .instructions {
-        margin-top: 18px; padding: 14px; background: rgba(61,220,132,0.05);
+        margin-top: 18px; padding: 14px;
+        background: rgba(61,220,132,0.05);
         border: 1px solid var(--border); border-radius: 8px;
-        font-size: 12px; color: var(--muted); line-height: 1.6; display: none;
+        font-size: 12px; color: var(--muted); line-height: 1.7; display: none;
     }
     .instructions.visible { display: block; }
     .instructions b { color: var(--text); }
@@ -151,12 +154,17 @@
 <div class="card">
     <p class="eyebrow">WhatsApp Connection</p>
     <h1>DJOUSSE-TECH-MD</h1>
-    <p class="subtitle">Entrez votre numéro WhatsApp avec indicatif pays pour recevoir un code d'appairage.</p>
+    <p class="subtitle">Connecte ton numéro WhatsApp — par code d'appairage ou QR code.</p>
 
     <div id="formSection">
+        <label>Méthode de connexion</label>
+        <div class="method-switch">
+            <button type="button" class="method-btn active" id="btnCode" onclick="setMethod('code')">🔑 Code</button>
+            <button type="button" class="method-btn" id="btnQr" onclick="setMethod('qr')">📷 QR Code</button>
+        </div>
         <label for="phone">Numéro de téléphone</label>
         <input type="text" id="phone" placeholder="+237XXXXXXXXX" inputmode="tel" />
-        <button id="submitBtn">Obtenir le code</button>
+        <button id="submitBtn">Connexion</button>
     </div>
 
     <div class="error" id="errorBox"></div>
@@ -170,22 +178,29 @@
         <div class="copy-feedback" id="copyFeedback">Copié !</div>
     </div>
 
+    <div class="qr-box" id="qrBox">
+        <p class="result-label">Scanne ce QR Code</p>
+        <img id="qrImg" alt="QR Code" style="display:none">
+        <div class="waiting visible" id="qrLoading"><span class="spinner"></span>Génération du QR...</div>
+    </div>
+
     <div class="waiting" id="waitingBox">
-        <span class="spinner"></span>En attente de liaison avec votre téléphone...
+        <span class="spinner"></span>En attente de liaison avec ton téléphone...
     </div>
 
     <div class="instructions" id="instructionsBox">
-        <b>Sur votre téléphone :</b><br>
-        1. Ouvrez WhatsApp → <b>Paramètres</b><br>
+        <b>Sur ton téléphone :</b><br>
+        1. Ouvre WhatsApp → <b>Paramètres</b><br>
         2. <b>Appareils connectés</b> → <b>Associer un appareil</b><br>
-        3. Touchez <b>« Associer avec le numéro de téléphone »</b><br>
-        4. Saisissez le code ci-dessus (valable ~2 minutes)
+        3. Méthode Code : touche <b>« Associer avec le numéro de téléphone »</b> puis saisis le code<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;Méthode QR : <b>« Connecter un appareil »</b> puis scanne le QR<br>
+        ⏱ Valable ~2 minutes (QR ~40 s, il se régénère)
     </div>
 
     <div class="connected" id="connectedBox">
         <div class="check">✓</div>
         <h3>Bot connecté !</h3>
-        <p id="connectedText">Votre bot WhatsApp est maintenant en ligne.</p>
+        <p id="connectedText">Ton bot WhatsApp est maintenant en ligne.</p>
     </div>
 
     <p class="footer">DJOUSSE TECH EVOLUTION</p>
@@ -204,51 +219,79 @@
     const connectedText = document.getElementById("connectedText");
     const waitingBox = document.getElementById("waitingBox");
     const instructionsBox = document.getElementById("instructionsBox");
+    const qrBox = document.getElementById("qrBox");
+    const qrImg = document.getElementById("qrImg");
+    const qrLoading = document.getElementById("qrLoading");
 
-    let myNumber = ""; // numéro saisi — sert à filtrer les événements SSE multi-compte
+    let myNumber = "";
+    let method = "code";
+    let qrInterval = null;
 
-    // ─── SSE : écoute en direct des événements du serveur ───────────────
+    function setMethod(m) {
+        method = m;
+        document.getElementById("btnCode").classList.toggle("active", m === "code");
+        document.getElementById("btnQr").classList.toggle("active", m === "qr");
+    }
+
+    function stopQrRefresh() {
+        if (qrInterval) { clearInterval(qrInterval); qrInterval = null; }
+    }
+
+    // ─── SSE : événements en direct (filtrés par numéro) ────────────────
     function listenSSE() {
         const es = new EventSource("/sse");
         es.onmessage = (ev) => {
             let data;
             try { data = JSON.parse(ev.data); } catch (_) { return; }
-
-            // Filtre par numéro : n'affiche que les événements concernant CET utilisateur
             const isMine = !data.number || !myNumber ||
                 String(data.number).replace(/[^0-9]/g, "") === myNumber;
             if (!isMine) return;
 
-            if (data.type === "pairing_code") {
+            if (data.type === "pairing_code" && method === "code") {
                 codeValue.textContent = data.code;
                 resultBox.classList.add("visible");
                 instructionsBox.classList.add("visible");
                 waitingBox.classList.add("visible");
-                btn.disabled = false;
-                btn.textContent = "Obtenir le code";
+            }
+
+            if (data.type === "qr_ready" && method === "qr") {
+                loadQr();
             }
 
             if (data.type === "connected") {
-                connectedText.textContent = "Le bot " + myNumber + " est maintenant en ligne.";
-                connectedBox.classList.add("visible");
-                waitingBox.classList.remove("visible");
-                resultBox.classList.remove("visible");
-                instructionsBox.classList.remove("visible");
-                formSection.style.display = "none";
+                onConnected();
             }
 
-            if (data.type === "disconnected" || data.type === "reconnecting") {
+            if (data.type === "disconnected") {
                 connectedBox.classList.remove("visible");
+                formSection.style.display = "block";
             }
         };
         es.onerror = () => {
-            // Reconnexion automatique SSE après 3 s
             setTimeout(() => { try { es.close(); } catch(_){} listenSSE(); }, 3000);
         };
     }
     listenSSE();
 
-    // ─── Soumission du numéro ───────────────────────────────────────────
+    function loadQr() {
+        if (!myNumber) return;
+        qrLoading.classList.remove("visible");
+        qrImg.src = "/qr-image?number=" + myNumber + "&t=" + Date.now();
+        qrImg.style.display = "block";
+    }
+
+    function onConnected() {
+        stopQrRefresh();
+        connectedText.textContent = "Le bot " + (myNumber ? "+" + myNumber : "") + " est maintenant en ligne.";
+        connectedBox.classList.add("visible");
+        waitingBox.classList.remove("visible");
+        resultBox.classList.remove("visible");
+        instructionsBox.classList.remove("visible");
+        qrBox.classList.remove("visible");
+        formSection.style.display = "none";
+    }
+
+    // ─── Soumission ─────────────────────────────────────────────────────
     btn.addEventListener("click", async () => {
         const raw = phoneInput.value.trim();
         myNumber = raw.replace(/[^0-9]/g, "");
@@ -257,49 +300,61 @@
         connectedBox.classList.remove("visible");
         copyFeedback.classList.remove("visible");
         instructionsBox.classList.remove("visible");
+        qrBox.classList.remove("visible");
+        waitingBox.classList.remove("visible");
+        stopQrRefresh();
+
         if (!myNumber || myNumber.length < 8) {
             errorBox.textContent = "Veuillez entrer un numéro valide avec indicatif pays (ex: +2376XXXXXXXX).";
             errorBox.classList.add("visible");
             return;
         }
         btn.disabled = true;
-        btn.textContent = "Demande en cours...";
+        btn.textContent = "Connexion en cours...";
 
         try {
             const res = await fetch("/api/pair", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ number: myNumber, useCode: true })
+                body: JSON.stringify({ number: myNumber, useCode: method === "code" })
             });
             let data;
             try { data = await res.json(); } catch(_) { throw new Error("Réponse invalide du serveur"); }
             if (!res.ok) throw new Error(data.error || "Échec de la demande");
 
             if (data.connected) {
-                // Compte déjà connecté
-                connectedText.textContent = "Le bot " + myNumber + " est déjà en ligne.";
+                connectedText.textContent = "Le bot +" + myNumber + " est déjà en ligne.";
                 connectedBox.classList.add("visible");
                 formSection.style.display = "none";
-            } else if (data.code) {
-                // Code reçu directement dans la réponse
-                codeValue.textContent = data.code.match(/.{1,4}/g)?.join("-") || data.code;
-                resultBox.classList.add("visible");
-                instructionsBox.classList.add("visible");
-                waitingBox.classList.add("visible");
+                return;
+            }
+
+            instructionsBox.classList.add("visible");
+
+            if (method === "code") {
+                if (data.code) {
+                    codeValue.textContent = data.code.match(/.{1,4}/g)?.join("-") || data.code;
+                    resultBox.classList.add("visible");
+                    waitingBox.classList.add("visible");
+                } else {
+                    // Le code arrivera via SSE
+                    waitingBox.classList.add("visible");
+                }
             } else {
-                // Pas de code dans la réponse : il viendra via SSE
-                waitingBox.classList.add("visible");
+                // Méthode QR : affiche et rafraîchit toutes les 20 s
+                qrBox.classList.add("visible");
+                loadQr();
+                qrInterval = setInterval(loadQr, 20000);
             }
         } catch (err) {
             errorBox.textContent = err.message;
             errorBox.classList.add("visible");
         } finally {
             btn.disabled = false;
-            btn.textContent = "Obtenir le code";
+            btn.textContent = "Connexion";
         }
     });
 
-    // Entrée = soumettre
     phoneInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") btn.click();
     });

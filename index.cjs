@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   DJOUSSE-TECH-MD — index.cjs (multi-compte)
-   DJOUSSE-TECH-MD WhatsApp Bot — v3.0.1
+   DJOUSSE-TECH-MD — index.cjs v3.1.0
+   Multi-compte + QR Code + Pont Telegram
    ═══════════════════════════════════════════════════════════════════════════ */
 
 'use strict';
@@ -12,33 +12,27 @@ const {
     DisconnectReason,
     fetchLatestBaileysVersion,
     jidNormalizedUser,
-    isJidBroadcast,
-    isJidGroup,
-    proto,
-    getContentType,
     makeCacheableSignalKeyStore,
     Browsers,
-    delay,
 } = require('@whiskeysockets/baileys');
-const { Boom } = require('@hapi/boom');
 const pino = require('pino');
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const qrcode = require('qrcode');
 const NodeCache = require('node-cache');
+const http = require('http');
+const https = require('https');
 const { rateLimit } = require('express-rate-limit');
 
 // ─── DJOUSSE Modules ───────────────────────────────────────────────────────
 const config = require('./config-djousse.cjs');
 const { commands, replyHandlers } = require('./command.cjs');
 const {
-    connectdb, saveSessionToMongoDB, getSessionFromMongoDB,
+    connectdb, saveSessionToMongoDB,
     deleteSessionFromMongoDB, getUserConfigFromMongoDB,
-    updateUserConfigInMongoDB, addNumberToMongoDB,
-    removeNumberFromMongoDB, getAllNumbersFromMongoDB,
-    saveOTPToMongoDB, verifyOTPFromMongoDB,
-    incrementStats, getStatsForNumber,
+    addNumberToMongoDB, getAllNumbersFromMongoDB,
+    incrementStats,
 } = require('./lib/database.cjs');
 const { sms } = require('./lib/msg-djousse.cjs');
 const { isSudo } = require('./lib/sudo.cjs');
@@ -50,8 +44,6 @@ const {
     runtime, sleep, fetchJson,
 } = require('./lib/functions.cjs');
 const bridge = require('./android-bridge.cjs');
-const antiban = require('./lib/antiban.cjs');
-const { checkRateLimit, checkGlobalRateLimit } = require('./lib/ratelimit.cjs');
 const logger = require('./lib/logger.cjs');
 
 // ─── Configuration ─────────────────────────────────────────────────────────
@@ -66,14 +58,12 @@ const PREFIX = config.PREFIX || '.';
 const AUTO_LIKE_EMOJI = config.AUTO_LIKE_EMOJI || ['❤️', '🌹', '✨'];
 const AUTO_STATUS_MSG = config.AUTO_STATUS_MSG || 'SEEN YOUR STATUS BY DJOUSSE-TECH-MD 🤗';
 const REJECT_MSG = config.REJECT_MSG || '*CALL LATER PLEASE ☺️🌹*';
-const LIVE_MSG = config.LIVE_MSG || 'I am active and running';
 const MAX_RECONNECT = 3;
+const TELEGRAM_FORWARD_URL = (process.env.TELEGRAM_FORWARD_URL || 'http://localhost:3002/forward').trim();
 
 // ─── EPIPE Protection ──────────────────────────────────────────────────────
-const ignoreEPipe = (fn) => {
-    return (...args) => {
-        try { return fn(...args); } catch (e) { if (e.code !== 'EPIPE') throw e; }
-    };
+const ignoreEPipe = (fn) => (...args) => {
+    try { return fn(...args); } catch (e) { if (e.code !== 'EPIPE') throw e; }
 };
 process.stdout.write = ignoreEPipe(process.stdout.write.bind(process.stdout));
 process.stderr.write = ignoreEPipe(process.stderr.write.bind(process.stderr));
@@ -92,10 +82,7 @@ function saveCrash(err) {
 // ─── Memory Monitoring ─────────────────────────────────────────────────────
 const memInterval = setInterval(() => {
     const m = process.memoryUsage();
-    const rssMB = m.rss / 1048576;
-    const heapMB = m.heapUsed / 1048576;
-    const heapTotalMB = m.heapTotal / 1048576;
-    logger.memory(rssMB, heapMB, heapTotalMB);
+    logger.memory(m.rss / 1048576, m.heapUsed / 1048576, m.heapTotal / 1048576);
 }, 120_000);
 
 // ─── Cache & Cleanup ───────────────────────────────────────────────────────
@@ -105,24 +92,18 @@ function cleanUselessCacheAndLogs() {
     msgCache.flushAll();
     const logDir = path.join(__dirname, 'logs');
     if (fs.existsSync(logDir)) {
-        const files = fs.readdirSync(logDir).filter(f => f.endsWith('.log') && f !== 'djousse-tech.log');
-        files.forEach(f => { try { fs.unlinkSync(path.join(logDir, f)); } catch (_) {} });
+        fs.readdirSync(logDir).filter(f => f.endsWith('.log') && f !== 'djousse-tech.log')
+            .forEach(f => { try { fs.unlinkSync(path.join(logDir, f)); } catch (_) {} });
     }
     const cacheDir = path.join(__dirname, 'tmp');
     if (fs.existsSync(cacheDir)) {
-        fs.readdirSync(cacheDir).forEach(f => {
-            try { fs.unlinkSync(path.join(cacheDir, f)); } catch (_) {}
-        });
+        fs.readdirSync(cacheDir).forEach(f => { try { fs.unlinkSync(path.join(cacheDir, f)); } catch (_) {} });
     }
-    logger.info('Cleaned cache and old logs');
 }
 
 // ─── Console Log to File ───────────────────────────────────────────────────
-const botLiveLogPath = path.join(__dirname, 'bot-live.log');
-const logStream = fs.createWriteStream(botLiveLogPath, { flags: 'a' });
-const origLog = console.log;
-const origWarn = console.warn;
-const origError = console.error;
+const logStream = fs.createWriteStream(path.join(__dirname, 'bot-live.log'), { flags: 'a' });
+const origLog = console.log, origWarn = console.warn, origError = console.error;
 console.log = (...a) => { origLog(...a); logStream.write(`[${new Date().toISOString()}] ${a.join(' ')}\n`); };
 console.warn = (...a) => { origWarn(...a); logStream.write(`[${new Date().toISOString()}] WARN ${a.join(' ')}\n`); };
 console.error = (...a) => { origError(...a); logStream.write(`[${new Date().toISOString()}] ERROR ${a.join(' ')}\n`); };
@@ -133,8 +114,8 @@ function acquireLock() {
     try {
         if (fs.existsSync(lockPath)) {
             const pid = parseInt(fs.readFileSync(lockPath, 'utf8').trim(), 10);
-            if (pid && isNaN(pid) === false) {
-                try { process.kill(pid, 0); } catch (_) { /* dead */ return true; }
+            if (pid && !isNaN(pid)) {
+                try { process.kill(pid, 0); } catch (_) { return true; }
                 console.error(`[LOCK] Another instance running (PID ${pid}). Exiting.`);
                 process.exit(1);
             }
@@ -143,18 +124,17 @@ function acquireLock() {
         return true;
     } catch (_) { return true; }
 }
-function releaseLock() {
-    try { if (fs.existsSync(lockPath)) fs.unlinkSync(lockPath); } catch (_) {}
-}
+function releaseLock() { try { if (fs.existsSync(lockPath)) fs.unlinkSync(lockPath); } catch (_) {} }
 process.on('exit', releaseLock);
 process.on('SIGINT', () => { releaseLock(); process.exit(0); });
 process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
 
 // ─── Multi-Account State ───────────────────────────────────────────────────
-// Chaque numéro a son propre socket et son propre état de pairing
 const accounts = new Map();      // numéro -> { sock, ready }
 const pairingState = new Map();  // numéro -> { requested, timeout, code, qr, resolve }
-const reconnectMap = new Map();  // numéro -> tentatives de reconnexion
+const reconnectMap = new Map();  // numéro -> tentatives
+const telegramLinks = new Map(); // numéro WhatsApp -> chatId Telegram
+const replyCapture = new Map();  // numéro -> { chatId, expires }
 const sseClients = [];
 
 function getPairingState(num) {
@@ -166,17 +146,36 @@ function getPairingState(num) {
 function existingReconnects(num) { return reconnectMap.get(num) || 0; }
 function incrementReconnects(num) { reconnectMap.set(num, existingReconnects(num) + 1); }
 
+// ─── HTTP helper (pont Telegram) ───────────────────────────────────────────
+function httpPostJSON(urlStr, body) {
+    return new Promise((resolve, reject) => {
+        const data = JSON.stringify(body || {});
+        const u = new URL(urlStr);
+        const mod = u.protocol === 'https:' ? https : http;
+        const req = mod.request({
+            hostname: u.hostname, port: u.port, path: u.pathname, method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
+            timeout: 15000,
+        }, (res) => {
+            let buf = '';
+            res.on('data', c => buf += c);
+            res.on('end', () => { try { resolve(JSON.parse(buf)); } catch { resolve({ raw: buf }); } });
+        });
+        req.on('error', reject);
+        req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+        req.write(data); req.end();
+    });
+}
+
 // ─── Express App ───────────────────────────────────────────────────────────
 const app = express();
 app.set('trust proxy', 1);
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 const apiLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 30,
-    standardHeaders: true,
-    legacyHeaders: false,
+    windowMs: 60 * 1000, max: 60,
+    standardHeaders: true, legacyHeaders: false,
     message: { error: 'Too many requests' },
 });
 app.use('/api', apiLimiter);
@@ -249,33 +248,13 @@ async function executePlugin(command, conn, m, body, args, ctx) {
         }
 
         const pluginCtx = {
-            conn: conn,
-            sock: conn,
-            mek: m,
-            m: m,
-            args: args,
-            body: body,
-            prefix: PREFIX,
-            command: cmdStr,
-            isOwner: isOwner(m.sender),
-            isSudo: isSudo(m.sender),
-            isGroup: m.isGroup,
-            isAdmin: false,
-            isBotAdmin: false,
-            groupMetadata: null,
-            participants: [],
-            groupAdmins: [],
-            config: config,
-            runtime: runtime,
-            sleep: sleep,
-            getBuffer: getBuffer,
-            getRandom: getRandom,
-            h2k: h2k,
-            isUrl: isUrl,
-            fetchJson: fetchJson,
-            style: style,
-            randomImage: randomImage,
-            fakevCard: fakevCard,
+            conn, sock: conn, mek: m, m, args, body,
+            prefix: PREFIX, command: cmdStr,
+            isOwner: isOwner(m.sender), isSudo: isSudo(m.sender),
+            isGroup: m.isGroup, isAdmin: false, isBotAdmin: false,
+            groupMetadata: null, participants: [], groupAdmins: [],
+            config, runtime, sleep, getBuffer, getRandom, h2k, isUrl, fetchJson,
+            style, randomImage, fakevCard,
             reply: (text) => m.reply(text),
             sendMessage: (jid, content, opts) => conn.sendMessage(jid, content, opts),
         };
@@ -299,7 +278,6 @@ async function executePlugin(command, conn, m, body, args, ctx) {
     }
 }
 
-// ─── Owner Check (par numéro de bot actif) ─────────────────────────────────
 function isOwner(jid, botNum) {
     const n = (jid || '').replace(/[^0-9]/g, '');
     const ownerNum = (config.OWNER_NUMBER || config.BOT_OWNER || '').replace(/[^0-9]/g, '');
@@ -307,25 +285,21 @@ function isOwner(jid, botNum) {
 }
 
 // ─── Auto-Features (par numéro) ────────────────────────────────────────────
-
 async function autoStatusReact(conn, statusJid, statusKey, num) {
     try {
         const userConfig = await getUserConfigFromMongoDB(num);
         if (userConfig.AUTO_LIKE_STATUS === 'true' || userConfig.AUTO_VIEW_STATUS === 'true') {
             const emoji = AUTO_LIKE_EMOJI[Math.floor(Math.random() * AUTO_LIKE_EMOJI.length)];
-            await conn.sendMessage(statusJid, {
-                react: { text: emoji, key: statusKey },
-            });
+            await conn.sendMessage(statusJid, { react: { text: emoji, key: statusKey } });
         }
     } catch (_) {}
 }
 
 function startAutoTyping(conn, chatJid) {
     stopAutoTyping(conn);
-    const interval = setInterval(async () => {
+    conn._autoTypingInterval = setInterval(async () => {
         try { await conn.sendPresenceUpdate('composing', chatJid); } catch (_) {}
     }, 3000);
-    conn._autoTypingInterval = interval;
 }
 function stopAutoTyping(conn) {
     if (conn._autoTypingInterval) { clearInterval(conn._autoTypingInterval); conn._autoTypingInterval = null; }
@@ -333,10 +307,9 @@ function stopAutoTyping(conn) {
 
 function startAutoRecording(conn, chatJid) {
     stopAutoRecording(conn);
-    const interval = setInterval(async () => {
+    conn._autoRecordingInterval = setInterval(async () => {
         try { await conn.sendPresenceUpdate('recording', chatJid); } catch (_) {}
     }, 3000);
-    conn._autoRecordingInterval = interval;
 }
 function stopAutoRecording(conn) {
     if (conn._autoRecordingInterval) { clearInterval(conn._autoRecordingInterval); conn._autoRecordingInterval = null; }
@@ -354,8 +327,7 @@ async function handleAntiCall(conn, call, num) {
 
 async function autoFollowNewsletter(conn) {
     try {
-        const channels = ['120363298048962083@newsletter'];
-        for (const ch of channels) {
+        for (const ch of ['120363298048962083@newsletter']) {
             try { await conn.newsletterFollow(ch); } catch (_) {}
         }
     } catch (_) {}
@@ -371,7 +343,7 @@ async function autoJoinGroup(conn) {
     } catch (_) {}
 }
 
-// ─── SSE for QR Push ───────────────────────────────────────────────────────
+// ─── SSE ───────────────────────────────────────────────────────────────────
 app.get('/sse', (req, res) => {
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
@@ -395,16 +367,11 @@ function pushSSE(data) {
 async function pairBot(number, usePairingCode = true) {
     const num = String(number).replace(/[^0-9]/g, '');
 
-    // Si ce compte est déjà connecté, ne rien refaire
     const existing = accounts.get(num);
     if (existing?.ready) return { ok: true, alreadyConnected: true };
 
-    // Ferme l'ancien socket de CE numéro uniquement
     if (existing?.sock) {
-        try {
-            existing.sock.ev.removeAllListeners('connection.update');
-            existing.sock.end();
-        } catch (_) {}
+        try { existing.sock.ev.removeAllListeners('connection.update'); existing.sock.end(); } catch (_) {}
         accounts.delete(num);
     }
 
@@ -413,8 +380,6 @@ async function pairBot(number, usePairingCode = true) {
     pState.requested = false;
     pState.code = null;
     pState.qr = null;
-
-    const codePromise = new Promise((resolve) => { pState.resolve = resolve; });
 
     try {
         const sessionDir = path.join(__dirname, 'sessions', num);
@@ -451,7 +416,7 @@ async function pairBot(number, usePairingCode = true) {
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
 
-            // ✅ Une SEULE demande de code par session, avec délai de stabilisation
+            // ✅ Une SEULE demande de code par session, avec délai de 3s
             if (qr && usePairingCode && !sock.authState.creds.registered && !pState.requested) {
                 pState.requested = true;
                 pState.timeout = setTimeout(async () => {
@@ -465,7 +430,7 @@ async function pairBot(number, usePairingCode = true) {
                         if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
                     } catch (e) {
                         console.error(`[PAIR][${num}] Error requesting code:`, e.message);
-                        pState.requested = false; // retry au prochain événement qr
+                        pState.requested = false;
                     }
                 }, 3000);
                 return;
@@ -474,9 +439,7 @@ async function pairBot(number, usePairingCode = true) {
             if (qr && !usePairingCode) {
                 pState.qr = qr;
                 pState.code = null;
-                const qrDataUrl = await qrcode.toDataURL(qr, { width: 300 });
-                pushSSE({ type: 'qr', qr: qrDataUrl, number: num });
-                bridge.sendStatus('qr', null, 'QR generated');
+                pushSSE({ type: 'qr_ready', number: num });
                 console.log(`[PAIR][${num}] QR generated`);
                 return;
             }
@@ -531,11 +494,12 @@ async function pairBot(number, usePairingCode = true) {
             }
         });
 
-        // ─── messages.upsert (Plugin Dispatch) ──────────────────────────
+   // ─── messages.upsert (Plugin Dispatch + Pont Telegram) ──────────
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
             if (type !== 'notify') return;
             for (const rawMsg of messages) {
                 try {
+                    // Statuts WhatsApp
                     if (rawMsg.key && rawMsg.key.remoteJid === 'status@broadcast') {
                         if (config.AUTO_STATUS_REACT) {
                             await autoStatusReact(sock, rawMsg.key.remoteJid, rawMsg.key, num);
@@ -554,9 +518,19 @@ async function pairBot(number, usePairingCode = true) {
 
                     const m = sms(sock, rawMsg);
                     if (!m || !m.message) continue;
-
-                    // Attache le numéro du bot pour le dispatch/owner check
                     m.botNumber = num;
+
+                    // ─── Pont Telegram : capture de la réponse WhatsApp ───
+                    if (m.fromMe && replyCapture.has(num)) {
+                        const cap = replyCapture.get(num);
+                        if (Date.now() < cap.expires && cap.chatId) {
+                            const text = m.body || '[réponse non textuelle]';
+                            replyCapture.delete(num);
+                            httpPostJSON(TELEGRAM_FORWARD_URL, { chatId: cap.chatId, text }).catch(() => {});
+                        } else {
+                            replyCapture.delete(num);
+                        }
+                    }
 
                     if (MODE === 'private' && !m.fromMe && !isOwner(m.sender, num) && !isSudo(m.sender)) continue;
 
@@ -658,25 +632,35 @@ async function pairBot(number, usePairingCode = true) {
     }
 }
 
-// ─── API Routes ────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// API Routes
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Pair page
+// ─── Pages ─────────────────────────────────────────────────────────────────
 app.get('/pair', (req, res) => {
     const pairPath = path.join(__dirname, 'public', 'pair.html');
-    if (fs.existsSync(pairPath)) {
-        res.sendFile(pairPath);
-    } else {
-        res.status(404).send('Pair page not found');
-    }
+    if (fs.existsSync(pairPath)) return res.sendFile(pairPath);
+    res.status(404).send('Pair page not found');
 });
 
-// Pair API — accepte plusieurs numéros simultanément
+app.get('/', (req, res) => {
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+    res.send(`<html><head><title>${BOT_NAME}</title></head><body>
+    <h1>${BOT_NAME}</h1><p>Bot is running. Uptime: ${runtime(process.uptime())}</p>
+    <p><a href="/pair">Pair Bot</a> | <a href="/api/status">API Status</a></p>
+    </body></html>`);
+});
+
+// ─── Pairing ───────────────────────────────────────────────────────────────
 app.post('/api/pair', async (req, res) => {
-    const { number, useCode } = req.body;
+    const { number, useCode, telegramUserId } = req.body;
     if (!number) return res.status(400).json({ error: 'Number required' });
     const num = String(number).replace(/[^0-9]/g, '');
 
     try {
+        if (telegramUserId) telegramLinks.set(num, String(telegramUserId));
+
         const result = await pairBot(num, useCode !== false);
         if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
         if (result.alreadyConnected) return res.json({ ok: true, message: 'Already connected', connected: true });
@@ -692,7 +676,38 @@ app.post('/api/pair', async (req, res) => {
     }
 });
 
-// Status API — liste TOUS les comptes
+// QR en image PNG (site web + bot Telegram)
+app.get('/qr-image', async (req, res) => {
+    const num = (req.query.number || '').replace(/[^0-9]/g, '');
+    const pState = num ? pairingState.get(num) : null;
+    const qr = pState?.qr;
+    if (!qr) return res.status(404).json({ error: 'QR not ready', ready: false });
+    try {
+        const buf = await qrcode.toBuffer(qr, { width: 512, margin: 2 });
+        res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+        res.end(buf);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Ready/QR par numéro
+app.get('/ready/qr', (req, res) => {
+    const num = (req.query.number || '').replace(/[^0-9]/g, '');
+    const pState = num ? pairingState.get(num) : null;
+    const acc = num ? accounts.get(num) : null;
+    if (acc?.ready) return res.json({ ready: true, connected: true, number: num });
+    if (pState?.code) return res.json({ ready: true, code: pState.code });
+    if (pState?.qr) {
+        return qrcode.toDataURL(pState.qr, { width: 300 }, (err, url) => {
+            if (err) return res.status(500).json({ error: 'QR generation failed' });
+            res.json({ ready: true, qr: url });
+        });
+    }
+    res.json({ ready: false });
+});
+
+// ─── Statuts ───────────────────────────────────────────────────────────────
 app.get('/api/status', async (req, res) => {
     try {
         const accountsList = [];
@@ -705,7 +720,7 @@ app.get('/api/status', async (req, res) => {
             ownerName: OWNER_NAME,
             accounts: accountsList,
             connectedAccounts: accountsList.filter(a => a.connected).length,
-            uptime: runtime(process.uptime()),
+            uptime: process.uptime(),
             memory: {
                 rss: (process.memoryUsage().rss / 1048576).toFixed(0) + ' MB',
                 heap: (process.memoryUsage().heapUsed / 1048576).toFixed(0) + ' MB',
@@ -718,7 +733,34 @@ app.get('/api/status', async (req, res) => {
     }
 });
 
-// Reset session d'UN numéro (ne touche pas les autres)
+// Statut par utilisateur Telegram
+app.get('/api/status/user/:chatId', (req, res) => {
+    const chatId = String(req.params.chatId);
+    const sessions = [];
+    for (const [num, acc] of accounts) {
+        if (telegramLinks.get(num) === chatId) {
+            sessions.push({ phone: num, connected: acc.ready, status: acc.ready ? 'connected' : 'pairing' });
+        }
+    }
+    res.json({
+        ok: true,
+        botName: BOT_NAME,
+        connected: sessions.some(s => s.connected),
+        sessions,
+        uptime: process.uptime(),
+    });
+});
+
+app.get('/api/accounts', async (req, res) => {
+    try {
+        const numbers = await getAllNumbersFromMongoDB();
+        res.json({ ok: true, accounts: numbers.map(n => ({ number: n })) });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
+// ─── Reset sessions ────────────────────────────────────────────────────────
 app.post('/api/reset-session', async (req, res) => {
     try {
         const { number } = req.body;
@@ -739,7 +781,6 @@ app.post('/api/reset-session', async (req, res) => {
     }
 });
 
-// Reset all sessions
 app.post('/api/reset-all-sessions', async (req, res) => {
     try {
         const numbers = await getAllNumbersFromMongoDB();
@@ -761,25 +802,85 @@ app.post('/api/reset-all-sessions', async (req, res) => {
     }
 });
 
-// Accounts list
-app.get('/api/accounts', async (req, res) => {
+// ─── Pont Telegram : liaison, connexion, commandes ─────────────────────────
+
+// Lier un chatId Telegram à un numéro WhatsApp
+app.post('/api/link', (req, res) => {
+    const { number, telegramUserId } = req.body;
+    const num = String(number || '').replace(/[^0-9]/g, '');
+    if (!num || !telegramUserId) return res.status(400).json({ ok: false, error: 'number et telegramUserId requis' });
+    telegramLinks.set(num, String(telegramUserId));
+    res.json({ ok: true });
+});
+
+app.post('/api/unlink', (req, res) => {
+    const num = String(req.body.number || '').replace(/[^0-9]/g, '');
+    telegramLinks.delete(num);
+    res.json({ ok: true });
+});
+
+// API "connexion" utilisée par le bot Telegram
+app.post('/api/connection/create', async (req, res) => {
+    const { phone, method, telegramUserId } = req.body;
+    const num = String(phone || '').replace(/[^0-9]/g, '');
+    if (!num) return res.json({ success: false, error: 'phone requis' });
+
+    if (telegramUserId) telegramLinks.set(num, String(telegramUserId));
+
+    const acc = accounts.get(num);
+    if (acc?.ready) return res.json({ success: true, alreadyConnected: true, connectionId: num });
+
+    const usePairingCode = method !== 'qr';
+    const result = await pairBot(num, usePairingCode);
+    if (!result.ok) return res.json({ success: false, error: result.error });
+    res.json({ success: true, connectionId: num, method: usePairingCode ? 'pairing' : 'qr' });
+});
+
+app.get('/api/connection/:id/status', (req, res) => {
+    const num = String(req.params.id).replace(/[^0-9]/g, '');
+    const acc = accounts.get(num);
+    const pState = pairingState.get(num);
+    if (acc?.ready) return res.json({ status: 'connected', phone: num });
+    if (pState?.code) return res.json({ status: 'pairing', pairingCode: pState.code, phone: num });
+    if (pState?.qr) return res.json({ status: 'pairing', qrReady: true, phone: num });
+    res.json({ status: accounts.has(num) ? 'waiting' : 'not_started' });
+});
+
+// Exécuter une commande WhatsApp depuis Telegram (avec capture de la réponse)
+app.post('/api/send-cmd', async (req, res) => {
+    const { number, cmd, telegramUserId } = req.body;
+    let num = String(number || '').replace(/[^0-9]/g, '');
+
+    if (!num && telegramUserId) {
+        for (const [n, chatId] of telegramLinks) {
+            if (chatId === String(telegramUserId)) { num = n; break; }
+        }
+    }
+    const acc = accounts.get(num);
+    if (!acc?.ready) {
+        return res.status(400).json({ ok: false, error: `Numéro ${num || '?'} non connecté. Utilise /pair ou /qr d'abord.` });
+    }
+
+    const chatIdForReply = String(telegramUserId || telegramLinks.get(num) || '');
+    if (chatIdForReply) {
+        replyCapture.set(num, { chatId: chatIdForReply, expires: Date.now() + 90000 });
+    }
+
     try {
-        const numbers = await getAllNumbersFromMongoDB();
-        res.json({ ok: true, accounts: numbers.map(n => ({ number: n })) });
+        const jid = num + '@s.whatsapp.net';
+        await acc.sock.sendMessage(jid, { text: cmd });
+        res.json({ ok: true });
     } catch (e) {
+        replyCapture.delete(num);
         res.status(500).json({ ok: false, error: e.message });
     }
 });
 
-// Count endpoint
+// ─── Utilitaires ───────────────────────────────────────────────────────────
 app.get('/count', (req, res) => {
-    res.json({
-        commands: commands.length,
-        uptime: runtime(process.uptime()),
-    });
+    res.json({ commands: commands.length, uptime: runtime(process.uptime()) });
 });
 
-// Health endpoint
 app.get('/health', (req, res) => {
     res.json({
         status: 'ok',
@@ -789,36 +890,9 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Ready/QR par numéro (?number=XXXX)
-app.get('/ready/qr', (req, res) => {
-    const num = (req.query.number || '').replace(/[^0-9]/g, '');
-    const pState = num ? pairingState.get(num) : null;
-    const acc = num ? accounts.get(num) : null;
-    if (acc?.ready) return res.json({ ready: true, connected: true, number: num });
-    if (pState?.code) return res.json({ ready: true, code: pState.code });
-    if (pState?.qr) {
-        return qrcode.toDataURL(pState.qr, { width: 300 }, (err, url) => {
-            if (err) return res.status(500).json({ error: 'QR generation failed' });
-            res.json({ ready: true, qr: url });
-        });
-    }
-    res.json({ ready: false });
-});
-
-// Main page
-app.get('/', (req, res) => {
-    const indexPath = path.join(__dirname, 'public', 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.send(`<html><head><title>${BOT_NAME}</title></head><body>
-        <h1>${BOT_NAME}</h1><p>Bot is running. Uptime: ${runtime(process.uptime())}</p>
-        <p><a href="/pair">Pair Bot</a> | <a href="/api/status">API Status</a></p>
-        </body></html>`);
-    }
-});
-
-// ─── Start Server ──────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Démarrage
+// ═══════════════════════════════════════════════════════════════════════════
 async function startServer() {
     if (!acquireLock()) return;
 
@@ -833,7 +907,7 @@ async function startServer() {
     app.listen(PORT, '0.0.0.0', () => {
         const _ln = (t) => '║  ' + t;
         console.log(`\n╔══════════════════════════════════════════╗`);
-        console.log(_ln(`${BOT_NAME} v3.0.1 (multi-account)`));
+        console.log(_ln(`${BOT_NAME} v3.1.0 (multi-account)`));
         console.log(_ln(`Owner: ${OWNER_NAME}`));
         console.log(_ln(`Port: ${PORT}`));
         console.log(`╚══════════════════════════════════════════╝\n`);
@@ -842,7 +916,6 @@ async function startServer() {
         console.log(`[SERVER] API: http://localhost:${PORT}/api/status`);
     });
 
-    // Auto-connect si SESSION_ID est défini (compte principal)
     if (SESSION_ID) {
         console.log('[AUTO] SESSION_ID found, auto-connecting...');
         await sleep(3000);
@@ -866,7 +939,7 @@ async function startServer() {
     });
 }
 
-// ─── Auto Reconnect ALL sessions from MongoDB on Startup ───────────────────
+// Restaure TOUS les comptes sauvegardés au démarrage
 async function autoReconnectFromMongoDB() {
     try {
         if (!MONGODB_URI) return;
@@ -877,9 +950,8 @@ async function autoReconnectFromMongoDB() {
         }
         console.log(`[AUTO] Found ${numbers.length} saved session(s). Auto-connecting all...`);
         await sleep(3000);
-        // Connexion séquentielle pour éviter un pic mémoire au démarrage
         for (const num of numbers) {
-            await pairBot(num, false);
+            await pairBot(num, false);   // pas de pairing code : session existante ou QR silencieux
             await sleep(2000);
         }
     } catch (e) {
@@ -887,7 +959,6 @@ async function autoReconnectFromMongoDB() {
     }
 }
 
-// ─── Main Entry ────────────────────────────────────────────────────────────
 (async () => {
     try {
         await startServer();
