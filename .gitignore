@@ -3,7 +3,9 @@ session/
 session-*/
 session-backup/
 sessions/
-data/
+data/*.db
+data/*.db-shm
+data/*.db-wal
 database/
 *.db
 *.db-shm
