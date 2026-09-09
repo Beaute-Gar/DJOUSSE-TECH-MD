@@ -1,6 +1,6 @@
-﻿/* ═══════════════════════════════════════════════════════════════════════════
-   DJOUSSE-TECH-MD — Clean index.cjs (~800 lines)
-   DJOUSSE-TECH-MD WhatsApp Bot
+/* ═══════════════════════════════════════════════════════════════════════════
+   DJOUSSE-TECH-MD — index.cjs (multi-compte)
+   DJOUSSE-TECH-MD WhatsApp Bot — v3.0.1
    ═══════════════════════════════════════════════════════════════════════════ */
 
 'use strict';
@@ -67,6 +67,7 @@ const AUTO_LIKE_EMOJI = config.AUTO_LIKE_EMOJI || ['❤️', '🌹', '✨'];
 const AUTO_STATUS_MSG = config.AUTO_STATUS_MSG || 'SEEN YOUR STATUS BY DJOUSSE-TECH-MD 🤗';
 const REJECT_MSG = config.REJECT_MSG || '*CALL LATER PLEASE ☺️🌹*';
 const LIVE_MSG = config.LIVE_MSG || 'I am active and running';
+const MAX_RECONNECT = 3;
 
 // ─── EPIPE Protection ──────────────────────────────────────────────────────
 const ignoreEPipe = (fn) => {
@@ -149,19 +150,21 @@ process.on('exit', releaseLock);
 process.on('SIGINT', () => { releaseLock(); process.exit(0); });
 process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
 
-// ─── Globals ───────────────────────────────────────────────────────────────
-let sock = null;
-let conn = null;
-let isConnecting = false;
-let reconnectAttempts = 0;
-const MAX_RECONNECT = 3;
-let currentNumber = '';
-let pairingQR = null;
-let pairingCode = null;
-let pairBotResolve = null;
-let pairBotCodePromise = null;
-let sockReady = false;
-let sseClients = [];
+// ─── Multi-Account State ───────────────────────────────────────────────────
+// Chaque numéro a son propre socket et son propre état de pairing
+const accounts = new Map();      // numéro -> { sock, ready }
+const pairingState = new Map();  // numéro -> { requested, timeout, code, qr, resolve }
+const reconnectMap = new Map();  // numéro -> tentatives de reconnexion
+const sseClients = [];
+
+function getPairingState(num) {
+    if (!pairingState.has(num)) {
+        pairingState.set(num, { requested: false, timeout: null, code: null, qr: null, resolve: null });
+    }
+    return pairingState.get(num);
+}
+function existingReconnects(num) { return reconnectMap.get(num) || 0; }
+function incrementReconnects(num) { reconnectMap.set(num, existingReconnects(num) + 1); }
 
 // ─── Express App ───────────────────────────────────────────────────────────
 const app = express();
@@ -219,7 +222,6 @@ function dispatchCommand(conn, m, cmdName, body, args, ctx) {
             return true;
         }
     }
-    // Try prefix match
     const withoutPrefix = body.startsWith(PREFIX) ? body.slice(PREFIX.length) : body;
     const parts = withoutPrefix.trim().split(/\s+/);
     const cmdFromBody = (parts[0] || '').toLowerCase();
@@ -246,7 +248,6 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             return m.reply('❌ Owner only command.');
         }
 
-        // Build context object for plugins
         const pluginCtx = {
             conn: conn,
             sock: conn,
@@ -279,7 +280,6 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             sendMessage: (jid, content, opts) => conn.sendMessage(jid, content, opts),
         };
 
-        // Group context
         if (m.isGroup) {
             try {
                 const metadata = await conn.groupMetadata(m.chat);
@@ -292,25 +292,25 @@ async function executePlugin(command, conn, m, body, args, ctx) {
         }
 
         await command.function(pluginCtx);
-        incrementStats(currentNumber, 'commandsUsed').catch(() => {});
+        incrementStats(m.botNumber || '', 'commandsUsed').catch(() => {});
     } catch (e) {
         console.error(`[CMD] Error executing ${command.pattern}:`, e.message);
         try { await m.reply('❌ Command error: ' + e.message); } catch (_) {}
     }
 }
 
-function isOwner(jid) {
-    const num = jid.replace(/[^0-9]/g, '');
+// ─── Owner Check (par numéro de bot actif) ─────────────────────────────────
+function isOwner(jid, botNum) {
+    const n = (jid || '').replace(/[^0-9]/g, '');
     const ownerNum = (config.OWNER_NUMBER || config.BOT_OWNER || '').replace(/[^0-9]/g, '');
-    return num === ownerNum || num === (sock?.user?.id || '').replace(/[^0-9]/g, '');
+    return n === ownerNum || (!!botNum && n === botNum);
 }
 
-// ─── Auto-Features ─────────────────────────────────────────────────────────
+// ─── Auto-Features (par numéro) ────────────────────────────────────────────
 
-// Auto Status React
-async function autoStatusReact(conn, statusJid, statusKey) {
+async function autoStatusReact(conn, statusJid, statusKey, num) {
     try {
-        const userConfig = await getUserConfigFromMongoDB(currentNumber);
+        const userConfig = await getUserConfigFromMongoDB(num);
         if (userConfig.AUTO_LIKE_STATUS === 'true' || userConfig.AUTO_VIEW_STATUS === 'true') {
             const emoji = AUTO_LIKE_EMOJI[Math.floor(Math.random() * AUTO_LIKE_EMOJI.length)];
             await conn.sendMessage(statusJid, {
@@ -320,34 +320,31 @@ async function autoStatusReact(conn, statusJid, statusKey) {
     } catch (_) {}
 }
 
-// Auto Typing
-let autoTypingInterval = null;
 function startAutoTyping(conn, chatJid) {
     stopAutoTyping(conn);
-    autoTypingInterval = setInterval(async () => {
+    const interval = setInterval(async () => {
         try { await conn.sendPresenceUpdate('composing', chatJid); } catch (_) {}
     }, 3000);
+    conn._autoTypingInterval = interval;
 }
 function stopAutoTyping(conn) {
-    if (autoTypingInterval) { clearInterval(autoTypingInterval); autoTypingInterval = null; }
+    if (conn._autoTypingInterval) { clearInterval(conn._autoTypingInterval); conn._autoTypingInterval = null; }
 }
 
-// Auto Recording
-let autoRecordingInterval = null;
 function startAutoRecording(conn, chatJid) {
     stopAutoRecording(conn);
-    autoRecordingInterval = setInterval(async () => {
+    const interval = setInterval(async () => {
         try { await conn.sendPresenceUpdate('recording', chatJid); } catch (_) {}
     }, 3000);
+    conn._autoRecordingInterval = interval;
 }
 function stopAutoRecording(conn) {
-    if (autoRecordingInterval) { clearInterval(autoRecordingInterval); autoRecordingInterval = null; }
+    if (conn._autoRecordingInterval) { clearInterval(conn._autoRecordingInterval); conn._autoRecordingInterval = null; }
 }
 
-// Anti-Call
-async function handleAntiCall(conn, call) {
+async function handleAntiCall(conn, call, num) {
     try {
-        const userConfig = await getUserConfigFromMongoDB(currentNumber);
+        const userConfig = await getUserConfigFromMongoDB(num);
         if (userConfig.ANTI_CALL === 'true') {
             await conn.sendMessage(call.from, { text: REJECT_MSG });
             await conn.rejectCall(call.id, call.from);
@@ -355,7 +352,6 @@ async function handleAntiCall(conn, call) {
     } catch (_) {}
 }
 
-// Auto Follow Newsletter
 async function autoFollowNewsletter(conn) {
     try {
         const channels = ['120363298048962083@newsletter'];
@@ -365,7 +361,6 @@ async function autoFollowNewsletter(conn) {
     } catch (_) {}
 }
 
-// Auto Join Group
 async function autoJoinGroup(conn) {
     try {
         if (config.GROUP_INVITE_CODE) {
@@ -386,35 +381,49 @@ app.get('/sse', (req, res) => {
     });
     res.write('data: {"type":"listening"}\n\n');
     sseClients.push(res);
-    req.on('close', () => { sseClients = sseClients.filter(c => c !== res); });
+    req.on('close', () => { const i = sseClients.indexOf(res); if (i !== -1) sseClients.splice(i, 1); });
 });
 
 function pushSSE(data) {
     const payload = `data: ${JSON.stringify(data)}\n\n`;
-    sseClients = sseClients.filter(c => {
-        try { c.write(payload); return true; } catch (_) { return false; }
-    });
+    for (let i = sseClients.length - 1; i >= 0; i--) {
+        try { sseClients[i].write(payload); } catch (_) { sseClients.splice(i, 1); }
+    }
 }
 
-// ─── Pairing Logic ─────────────────────────────────────────────────────────
+// ─── Pairing Logic (multi-compte) ──────────────────────────────────────────
 async function pairBot(number, usePairingCode = true) {
-    if (isConnecting) return { ok: false, error: 'Already connecting' };
-    isConnecting = true;
-    currentNumber = number.replace(/[^0-9]/g, '');
+    const num = String(number).replace(/[^0-9]/g, '');
 
-    const codePromise = new Promise((resolve) => {
-        pairBotResolve = resolve;
-    });
-    pairBotCodePromise = codePromise;
+    // Si ce compte est déjà connecté, ne rien refaire
+    const existing = accounts.get(num);
+    if (existing?.ready) return { ok: true, alreadyConnected: true };
+
+    // Ferme l'ancien socket de CE numéro uniquement
+    if (existing?.sock) {
+        try {
+            existing.sock.ev.removeAllListeners('connection.update');
+            existing.sock.end();
+        } catch (_) {}
+        accounts.delete(num);
+    }
+
+    const pState = getPairingState(num);
+    if (pState.timeout) clearTimeout(pState.timeout);
+    pState.requested = false;
+    pState.code = null;
+    pState.qr = null;
+
+    const codePromise = new Promise((resolve) => { pState.resolve = resolve; });
 
     try {
-        const sessionDir = path.join(__dirname, 'sessions', currentNumber);
+        const sessionDir = path.join(__dirname, 'sessions', num);
         if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
 
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
         const { version } = await fetchLatestBaileysVersion();
 
-        sock = makeWASocket({
+        const sock = makeWASocket({
             version,
             logger: pino({ level: 'silent' }),
             auth: {
@@ -422,7 +431,7 @@ async function pairBot(number, usePairingCode = true) {
                 keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' })),
             },
             printQRInTerminal: false,
-            browser: Browsers.windows(BOT_NAME),
+            browser: Browsers.ubuntu('Chrome'),   // ✅ signature desktop fiable pour le pairing code
             markOnlineOnConnect: true,
             generateHighQualityLinkPreview: false,
             syncFullHistory: false,
@@ -434,86 +443,90 @@ async function pairBot(number, usePairingCode = true) {
             qrTimeout: 60_000,
         });
 
-        // ─── creds.update ───────────────────────────────────────────────
+        accounts.set(num, { sock, ready: false });
+
         sock.ev.on('creds.update', saveCreds);
 
         // ─── connection.update ──────────────────────────────────────────
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
 
-            if (qr && usePairingCode) {
-                try {
-                    pairingCode = await sock.requestPairingCode(currentNumber);
-                    pairingQR = null;
-                    pushSSE({ type: 'pairing_code', code: pairingCode });
-                    bridge.sendStatus('pairing_code', pairingCode);
-                    console.log(`[PAIR] Code: ${pairingCode}`);
-                    if (pairBotResolve) { pairBotResolve({ ok: true, code: pairingCode }); pairBotResolve = null; }
-                } catch (e) {
-                    console.error('[PAIR] Error requesting code:', e.message);
-                }
+            // ✅ Une SEULE demande de code par session, avec délai de stabilisation
+            if (qr && usePairingCode && !sock.authState.creds.registered && !pState.requested) {
+                pState.requested = true;
+                pState.timeout = setTimeout(async () => {
+                    try {
+                        const code = await sock.requestPairingCode(num);
+                        pState.code = code;
+                        const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
+                        pushSSE({ type: 'pairing_code', code: formatted, number: num });
+                        bridge.sendStatus('pairing_code', formatted);
+                        console.log(`[PAIR][${num}] Code: ${formatted}`);
+                        if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
+                    } catch (e) {
+                        console.error(`[PAIR][${num}] Error requesting code:`, e.message);
+                        pState.requested = false; // retry au prochain événement qr
+                    }
+                }, 3000);
                 return;
             }
 
             if (qr && !usePairingCode) {
-                pairingQR = qr;
-                pairingCode = null;
+                pState.qr = qr;
+                pState.code = null;
                 const qrDataUrl = await qrcode.toDataURL(qr, { width: 300 });
-                pushSSE({ type: 'qr', qr: qrDataUrl });
+                pushSSE({ type: 'qr', qr: qrDataUrl, number: num });
                 bridge.sendStatus('qr', null, 'QR generated');
-                console.log('[PAIR] QR generated');
+                console.log(`[PAIR][${num}] QR generated`);
                 return;
             }
 
             if (connection === 'open') {
-                console.log(`[CONN] ${BOT_NAME} connected!`);
-                sockReady = true;
-                isConnecting = false;
-                reconnectAttempts = 0;
-                pairingQR = null;
-                pairingCode = null;
-                conn = sock;
+                console.log(`[CONN][${num}] ${BOT_NAME} connected!`);
+                accounts.set(num, { sock, ready: true });
+                reconnectMap.delete(num);
+                if (pState.timeout) clearTimeout(pState.timeout);
 
-                pushSSE({ type: 'connected', number: currentNumber });
+                pushSSE({ type: 'connected', number: num });
                 bridge.sendStatus('connected');
 
-                // Post-connect actions
                 await sleep(2000);
-                await addNumberToMongoDB(currentNumber);
+                await addNumberToMongoDB(num).catch(() => {});
                 await autoFollowNewsletter(sock);
                 await autoJoinGroup(sock);
 
-                // Set profile picture if needed
-                try {
-                    await sock.sendPresenceUpdate('available');
-                } catch (_) {}
+                try { await sock.sendPresenceUpdate('available'); } catch (_) {}
             }
 
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+                const loggedOut = statusCode === DisconnectReason.loggedOut;
+                console.log(`[CONN][${num}] Connection closed. Status: ${statusCode}`);
+                if (pState.timeout) clearTimeout(pState.timeout);
 
-                console.log(`[CONN] Connection closed. Status: ${statusCode}. Reconnect: ${shouldReconnect}`);
-                sockReady = false;
-
-                if (pairBotResolve) {
-                    pairBotResolve({ ok: false, error: 'Connection closed before code generated' });
-                    pairBotResolve = null;
+                if (pState.resolve) {
+                    pState.resolve({ ok: false, error: 'Connection closed' });
+                    pState.resolve = null;
                 }
 
-                if (shouldReconnect && reconnectAttempts < MAX_RECONNECT) {
-                    reconnectAttempts++;
-                    console.log(`[RECONNECT] Attempt ${reconnectAttempts}/${MAX_RECONNECT}...`);
-                    pushSSE({ type: 'reconnecting', attempt: reconnectAttempts });
-                    bridge.sendStatus('reconnecting', null, `Attempt ${reconnectAttempts}`);
-
-                    await sleep(3000 * reconnectAttempts);
-                    await pairBot(currentNumber, usePairingCode);
+                if (loggedOut) {
+                    console.log(`❌ [${num}] Session logged out — purge`);
+                    accounts.delete(num);
+                    pairingState.delete(num);
+                    reconnectMap.delete(num);
+                    await deleteSessionFromMongoDB(num).catch(() => {});
+                    pushSSE({ type: 'disconnected', number: num });
+                } else if (existingReconnects(num) < MAX_RECONNECT) {
+                    incrementReconnects(num);
+                    console.log(`[RECONNECT][${num}] Attempt ${existingReconnects(num)}/${MAX_RECONNECT}...`);
+                    pushSSE({ type: 'reconnecting', number: num, attempt: existingReconnects(num) });
+                    await sleep(3000 * existingReconnects(num));
+                    pairBot(num, false).catch(() => {});
                 } else {
-                    console.log('[CONN] Max reconnect attempts reached or logged out.');
-                    isConnecting = false;
-                    pushSSE({ type: 'disconnected' });
-                    bridge.sendStatus('disconnected');
+                    console.log(`[CONN][${num}] Max reconnect attempts reached.`);
+                    accounts.delete(num);
+                    pairingState.delete(num);
+                    reconnectMap.delete(num);
                 }
             }
         });
@@ -524,16 +537,13 @@ async function pairBot(number, usePairingCode = true) {
             for (const rawMsg of messages) {
                 try {
                     if (rawMsg.key && rawMsg.key.remoteJid === 'status@broadcast') {
-                        // Auto status react
                         if (config.AUTO_STATUS_REACT) {
-                            await autoStatusReact(sock, rawMsg.key.remoteJid, rawMsg.key);
+                            await autoStatusReact(sock, rawMsg.key.remoteJid, rawMsg.key, num);
                         }
-                        // Auto view status
-                        const userConfig = await getUserConfigFromMongoDB(currentNumber);
+                        const userConfig = await getUserConfigFromMongoDB(num);
                         if (userConfig.AUTO_VIEW_STATUS === 'true') {
                             try { await sock.readMessages([rawMsg.key]); } catch (_) {}
                         }
-                        // Auto status reply
                         if (userConfig.AUTO_STATUS_REPLY === 'true' && !rawMsg.key.fromMe) {
                             await sock.sendMessage(rawMsg.key.remoteJid, {
                                 text: userConfig.AUTO_STATUS_MSG || AUTO_STATUS_MSG,
@@ -545,10 +555,11 @@ async function pairBot(number, usePairingCode = true) {
                     const m = sms(sock, rawMsg);
                     if (!m || !m.message) continue;
 
-                    // Skip own messages in private mode
-                    if (MODE === 'private' && !m.fromMe && !isOwner(m.sender) && !isSudo(m.sender)) continue;
+                    // Attache le numéro du bot pour le dispatch/owner check
+                    m.botNumber = num;
 
-                    // Dedup
+                    if (MODE === 'private' && !m.fromMe && !isOwner(m.sender, num) && !isSudo(m.sender)) continue;
+
                     if (msgCache.has(m.id)) continue;
                     msgCache.set(m.id, true);
 
@@ -559,8 +570,7 @@ async function pairBot(number, usePairingCode = true) {
                     const cmdName = (parts[0] || '').toLowerCase();
                     const args = parts.slice(1);
 
-                    // Auto typing/recording per user config
-                    const userConfig = await getUserConfigFromMongoDB(currentNumber);
+                    const userConfig = await getUserConfigFromMongoDB(num);
                     if (userConfig.AUTO_TYPING === 'true' && !m.fromMe) {
                         startAutoTyping(sock, m.chat);
                         setTimeout(() => stopAutoTyping(sock), 5000);
@@ -569,21 +579,17 @@ async function pairBot(number, usePairingCode = true) {
                         startAutoRecording(sock, m.chat);
                         setTimeout(() => stopAutoRecording(sock), 5000);
                     }
-
-                    // Read message
                     if (userConfig.READ_MESSAGE === 'true') {
                         try { await sock.readMessages([m.key]); } catch (_) {}
                     }
 
-                    // Dispatch command
                     if (isCmd) {
-                        incrementStats(currentNumber, 'messagesReceived').catch(() => {});
-                        const handled = dispatchCommand(sock, m, cmdName, body, args, {
+                        incrementStats(num, 'messagesReceived').catch(() => {});
+                        dispatchCommand(sock, m, cmdName, body, args, {
                             conn: sock, mek: m, m, args, body, prefix: PREFIX, command: cmdName,
                         });
                     }
 
-                    // Reply handlers (for non-command messages)
                     if (!isCmd) {
                         for (const handler of replyHandlers) {
                             try {
@@ -598,12 +604,8 @@ async function pairBot(number, usePairingCode = true) {
                         }
                     }
 
-                    // Stats
-                    if (!m.fromMe) {
-                        incrementStats(currentNumber, 'messagesReceived').catch(() => {});
-                    } else {
-                        incrementStats(currentNumber, 'messagesSent').catch(() => {});
-                    }
+                    if (!m.fromMe) incrementStats(num, 'messagesReceived').catch(() => {});
+                    else incrementStats(num, 'messagesSent').catch(() => {});
                 } catch (e) {
                     console.error('[MSG] Error processing message:', e.message);
                 }
@@ -613,21 +615,15 @@ async function pairBot(number, usePairingCode = true) {
         // ─── Call Events ────────────────────────────────────────────────
         sock.ev.on('call', async (calls) => {
             for (const call of calls) {
-                if (call.status === 'offer') {
-                    await handleAntiCall(sock, call);
-                }
+                if (call.status === 'offer') await handleAntiCall(sock, call, num);
             }
         });
 
         // ─── Groups Update ──────────────────────────────────────────────
         sock.ev.on('groups.update', async (updates) => {
             for (const update of updates) {
-                if (update.id) {
-                    try {
-                        if (update.subject) {
-                            console.log(`[GROUP] ${update.id} renamed to ${update.subject}`);
-                        }
-                    } catch (_) {}
+                if (update.id && update.subject) {
+                    console.log(`[GROUP][${num}] ${update.id} renamed to ${update.subject}`);
                 }
             }
         });
@@ -638,29 +634,26 @@ async function pairBot(number, usePairingCode = true) {
                 const metadata = await sock.groupMetadata(update.id);
                 for (const participant of update.participants) {
                     if (update.action === 'add') {
-                        const welcome = `👋 Welcome to *${metadata.subject}*!\n\n> ${FOOTER}`;
-                        await sock.sendMessage(update.id, { text: welcome });
+                        await sock.sendMessage(update.id, { text: `👋 Welcome to *${metadata.subject}*!\n\n> ${FOOTER}` });
                     }
                     if (update.action === 'remove') {
-                        const goodbye = `👋 Goodbye from *${metadata.subject}*.\n\n> ${FOOTER}`;
-                        await sock.sendMessage(update.id, { text: goodbye });
+                        await sock.sendMessage(update.id, { text: `👋 Goodbye from *${metadata.subject}*.\n\n> ${FOOTER}` });
                     }
                 }
             } catch (_) {}
         });
 
-        // Save session
-        sock.ev.on('creds.update', async (creds) => {
-            try {
-                await saveSessionToMongoDB(currentNumber, state.creds);
-            } catch (_) {}
+        // ─── Save session to MongoDB ────────────────────────────────────
+        sock.ev.on('creds.update', async () => {
+            try { await saveSessionToMongoDB(num, state.creds); } catch (_) {}
         });
 
         return { ok: true };
     } catch (e) {
-        isConnecting = false;
-        console.error('[PAIR] Fatal error:', e.message);
+        console.error(`[PAIR][${num}] Fatal error:`, e.message);
         saveCrash(e);
+        accounts.delete(num);
+        pairingState.delete(num);
         return { ok: false, error: e.message };
     }
 }
@@ -677,38 +670,41 @@ app.get('/pair', (req, res) => {
     }
 });
 
-// Pair API
+// Pair API — accepte plusieurs numéros simultanément
 app.post('/api/pair', async (req, res) => {
     const { number, useCode } = req.body;
     if (!number) return res.status(400).json({ error: 'Number required' });
+    const num = String(number).replace(/[^0-9]/g, '');
 
     try {
-        const result = await pairBot(String(number), useCode !== false);
-        if (!result.ok) {
-            return res.status(400).json({ ok: false, error: result.error });
-        }
-        // Wait for the code to actually be generated (up to 30s)
+        const result = await pairBot(num, useCode !== false);
+        if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+        if (result.alreadyConnected) return res.json({ ok: true, message: 'Already connected', connected: true });
+
+        const pState = getPairingState(num);
         const codeResult = await Promise.race([
-            pairBotCodePromise,
+            new Promise((r) => { if (pState.code) r({ ok: true, code: pState.code }); else pState.resolve = r; }),
             new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout waiting for pairing code')), 30000)),
         ]);
-        res.json({ ok: true, message: 'Pairing started', code: codeResult.code || pairingCode });
+        res.json({ ok: true, message: 'Pairing started', code: codeResult.code });
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
     }
 });
 
-// Status API
+// Status API — liste TOUS les comptes
 app.get('/api/status', async (req, res) => {
     try {
-        const stats = await getStatsForNumber(currentNumber);
-        const userConfig = await getUserConfigFromMongoDB(currentNumber);
+        const accountsList = [];
+        for (const [num, acc] of accounts) {
+            accountsList.push({ number: num, connected: acc.ready });
+        }
         res.json({
             ok: true,
             botName: BOT_NAME,
             ownerName: OWNER_NAME,
-            number: currentNumber || 'Not connected',
-            connected: sockReady,
+            accounts: accountsList,
+            connectedAccounts: accountsList.filter(a => a.connected).length,
             uptime: runtime(process.uptime()),
             memory: {
                 rss: (process.memoryUsage().rss / 1048576).toFixed(0) + ' MB',
@@ -716,30 +712,28 @@ app.get('/api/status', async (req, res) => {
             },
             commands: commands.length,
             plugins: commands.length,
-            config: userConfig,
-            stats: stats.slice(0, 7),
         });
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
     }
 });
 
-// Reset session
+// Reset session d'UN numéro (ne touche pas les autres)
 app.post('/api/reset-session', async (req, res) => {
     try {
         const { number } = req.body;
-        const target = number || currentNumber;
+        const target = String(number).replace(/[^0-9]/g, '');
         await deleteSessionFromMongoDB(target);
-        const sessionDir = path.join(__dirname, 'sessions', target.replace(/[^0-9]/g, ''));
-        if (fs.existsSync(sessionDir)) {
-            fs.rmSync(sessionDir, { recursive: true, force: true });
+        const sessionDir = path.join(__dirname, 'sessions', target);
+        if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
+        const acc = accounts.get(target);
+        if (acc?.sock) {
+            try { acc.sock.ev.removeAllListeners('connection.update'); acc.sock.end(); } catch (_) {}
         }
-        if (target === currentNumber) {
-            if (sock) { try { sock.end(); } catch (_) {} }
-            sockReady = false;
-            currentNumber = '';
-        }
-        res.json({ ok: true, message: 'Session reset' });
+        accounts.delete(target);
+        pairingState.delete(target);
+        reconnectMap.delete(target);
+        res.json({ ok: true, message: `Session ${target} reset` });
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
     }
@@ -752,13 +746,15 @@ app.post('/api/reset-all-sessions', async (req, res) => {
         for (const num of numbers) {
             await deleteSessionFromMongoDB(num);
             const sessionDir = path.join(__dirname, 'sessions', num);
-            if (fs.existsSync(sessionDir)) {
-                fs.rmSync(sessionDir, { recursive: true, force: true });
+            if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
+            const acc = accounts.get(num);
+            if (acc?.sock) {
+                try { acc.sock.ev.removeAllListeners('connection.update'); acc.sock.end(); } catch (_) {}
             }
+            accounts.delete(num);
+            pairingState.delete(num);
+            reconnectMap.delete(num);
         }
-        if (sock) { try { sock.end(); } catch (_) {} }
-        sockReady = false;
-        currentNumber = '';
         res.json({ ok: true, message: 'All sessions reset' });
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -789,23 +785,24 @@ app.get('/health', (req, res) => {
         status: 'ok',
         uptime: process.uptime(),
         memory: (process.memoryUsage().rss / 1048576).toFixed(0) + ' MB',
+        connectedAccounts: [...accounts.values()].filter(a => a.ready).length,
     });
 });
 
-// Ready/QR endpoint
+// Ready/QR par numéro (?number=XXXX)
 app.get('/ready/qr', (req, res) => {
-    if (pairingQR) {
-        qrcode.toDataURL(pairingQR, { width: 300 }, (err, url) => {
+    const num = (req.query.number || '').replace(/[^0-9]/g, '');
+    const pState = num ? pairingState.get(num) : null;
+    const acc = num ? accounts.get(num) : null;
+    if (acc?.ready) return res.json({ ready: true, connected: true, number: num });
+    if (pState?.code) return res.json({ ready: true, code: pState.code });
+    if (pState?.qr) {
+        return qrcode.toDataURL(pState.qr, { width: 300 }, (err, url) => {
             if (err) return res.status(500).json({ error: 'QR generation failed' });
             res.json({ ready: true, qr: url });
         });
-    } else if (pairingCode) {
-        res.json({ ready: true, code: pairingCode });
-    } else if (sockReady) {
-        res.json({ ready: true, connected: true, number: currentNumber });
-    } else {
-        res.json({ ready: false });
     }
+    res.json({ ready: false });
 });
 
 // Main page
@@ -823,24 +820,20 @@ app.get('/', (req, res) => {
 
 // ─── Start Server ──────────────────────────────────────────────────────────
 async function startServer() {
-    // Acquire lock
     if (!acquireLock()) return;
 
-    // Connect database
     if (MONGODB_URI) {
         await connectdb();
     } else {
         console.warn('[DB] No MongoDB URI, database features disabled');
     }
 
-    // Load plugins
     loadPlugins();
 
-    // Start Express
     app.listen(PORT, '0.0.0.0', () => {
         const _ln = (t) => '║  ' + t;
         console.log(`\n╔══════════════════════════════════════════╗`);
-        console.log(_ln(`${BOT_NAME} v3.0.0`));
+        console.log(_ln(`${BOT_NAME} v3.0.1 (multi-account)`));
         console.log(_ln(`Owner: ${OWNER_NAME}`));
         console.log(_ln(`Port: ${PORT}`));
         console.log(`╚══════════════════════════════════════════╝\n`);
@@ -849,17 +842,15 @@ async function startServer() {
         console.log(`[SERVER] API: http://localhost:${PORT}/api/status`);
     });
 
-    // Auto-connect if SESSION_ID is set
+    // Auto-connect si SESSION_ID est défini (compte principal)
     if (SESSION_ID) {
         console.log('[AUTO] SESSION_ID found, auto-connecting...');
-        currentNumber = SESSION_ID;
         await sleep(3000);
         await pairBot(SESSION_ID, true);
     } else {
         console.log('[AUTO] No SESSION_ID. Visit /pair to connect.');
     }
 
-    // Cleanup on exit
     process.on('exit', () => {
         clearInterval(memInterval);
         cleanUselessCacheAndLogs();
@@ -875,7 +866,7 @@ async function startServer() {
     });
 }
 
-// ─── Auto Reconnect from MongoDB on Startup ────────────────────────────────
+// ─── Auto Reconnect ALL sessions from MongoDB on Startup ───────────────────
 async function autoReconnectFromMongoDB() {
     try {
         if (!MONGODB_URI) return;
@@ -884,9 +875,13 @@ async function autoReconnectFromMongoDB() {
             console.log('[AUTO] No saved sessions found');
             return;
         }
-        console.log(`[AUTO] Found ${numbers.length} saved session(s). Auto-connecting...`);
+        console.log(`[AUTO] Found ${numbers.length} saved session(s). Auto-connecting all...`);
         await sleep(3000);
-        await pairBot(numbers[0], true);
+        // Connexion séquentielle pour éviter un pic mémoire au démarrage
+        for (const num of numbers) {
+            await pairBot(num, false);
+            await sleep(2000);
+        }
     } catch (e) {
         console.error('[AUTO] Auto-reconnect failed:', e.message);
     }

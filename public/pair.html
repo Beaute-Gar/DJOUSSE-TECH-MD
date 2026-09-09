@@ -110,6 +110,25 @@
         margin-top: 6px; height: 20px; opacity: 0; transition: opacity 0.2s ease;
     }
     .copy-feedback.visible { opacity: 1; }
+    .waiting {
+        margin-top: 18px; font-size: 13px; color: var(--muted);
+        text-align: center; display: none;
+    }
+    .waiting.visible { display: block; }
+    .waiting .spinner {
+        display: inline-block; width: 14px; height: 14px;
+        border: 2px solid var(--accent); border-top-color: transparent;
+        border-radius: 50%; animation: spin 0.8s linear infinite;
+        vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .instructions {
+        margin-top: 18px; padding: 14px; background: rgba(61,220,132,0.05);
+        border: 1px solid var(--border); border-radius: 8px;
+        font-size: 12px; color: var(--muted); line-height: 1.6; display: none;
+    }
+    .instructions.visible { display: block; }
+    .instructions b { color: var(--text); }
     .error { margin-top: 16px; font-size: 13px; color: #ff6b6b; display: none; }
     .error.visible { display: block; }
     .footer {
@@ -118,7 +137,12 @@
     }
     .connected { text-align: center; margin-top: 24px; display: none; }
     .connected.visible { display: block; }
-    .connected i { font-size: 48px; color: var(--accent); }
+    .connected .check {
+        width: 56px; height: 56px; margin: 0 auto 12px;
+        background: var(--accent-dim); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--accent); font-size: 28px;
+    }
     .connected h3 { color: var(--accent); margin: 12px 0 8px; }
     .connected p { color: var(--muted); font-size: 13px; }
 </style>
@@ -128,10 +152,15 @@
     <p class="eyebrow">WhatsApp Connection</p>
     <h1>DJOUSSE-TECH-MD</h1>
     <p class="subtitle">Entrez votre numéro WhatsApp avec indicatif pays pour recevoir un code d'appairage.</p>
-    <label for="phone">Numéro de téléphone</label>
-    <input type="text" id="phone" placeholder="+237XXXXXXXXX" inputmode="tel" />
-    <button id="submitBtn">Obtenir le code</button>
+
+    <div id="formSection">
+        <label for="phone">Numéro de téléphone</label>
+        <input type="text" id="phone" placeholder="+237XXXXXXXXX" inputmode="tel" />
+        <button id="submitBtn">Obtenir le code</button>
+    </div>
+
     <div class="error" id="errorBox"></div>
+
     <div class="result" id="resultBox">
         <p class="result-label">Code d'appairage</p>
         <div class="code-wrapper">
@@ -140,31 +169,96 @@
         </div>
         <div class="copy-feedback" id="copyFeedback">Copié !</div>
     </div>
-    <div class="connected" id="connectedBox">
-        <i class="fas fa-check-circle"></i>
-        <h3>Bot connecté !</h3>
-        <p>Le bot WhatsApp est maintenant en ligne.</p>
+
+    <div class="waiting" id="waitingBox">
+        <span class="spinner"></span>En attente de liaison avec votre téléphone...
     </div>
+
+    <div class="instructions" id="instructionsBox">
+        <b>Sur votre téléphone :</b><br>
+        1. Ouvrez WhatsApp → <b>Paramètres</b><br>
+        2. <b>Appareils connectés</b> → <b>Associer un appareil</b><br>
+        3. Touchez <b>« Associer avec le numéro de téléphone »</b><br>
+        4. Saisissez le code ci-dessus (valable ~2 minutes)
+    </div>
+
+    <div class="connected" id="connectedBox">
+        <div class="check">✓</div>
+        <h3>Bot connecté !</h3>
+        <p id="connectedText">Votre bot WhatsApp est maintenant en ligne.</p>
+    </div>
+
     <p class="footer">DJOUSSE TECH EVOLUTION</p>
 </div>
+
 <script>
     const btn = document.getElementById("submitBtn");
     const phoneInput = document.getElementById("phone");
+    const formSection = document.getElementById("formSection");
     const resultBox = document.getElementById("resultBox");
     const codeValue = document.getElementById("codeValue");
     const errorBox = document.getElementById("errorBox");
     const copyBtn = document.getElementById("copyBtn");
     const copyFeedback = document.getElementById("copyFeedback");
     const connectedBox = document.getElementById("connectedBox");
+    const connectedText = document.getElementById("connectedText");
+    const waitingBox = document.getElementById("waitingBox");
+    const instructionsBox = document.getElementById("instructionsBox");
 
+    let myNumber = ""; // numéro saisi — sert à filtrer les événements SSE multi-compte
+
+    // ─── SSE : écoute en direct des événements du serveur ───────────────
+    function listenSSE() {
+        const es = new EventSource("/sse");
+        es.onmessage = (ev) => {
+            let data;
+            try { data = JSON.parse(ev.data); } catch (_) { return; }
+
+            // Filtre par numéro : n'affiche que les événements concernant CET utilisateur
+            const isMine = !data.number || !myNumber ||
+                String(data.number).replace(/[^0-9]/g, "") === myNumber;
+            if (!isMine) return;
+
+            if (data.type === "pairing_code") {
+                codeValue.textContent = data.code;
+                resultBox.classList.add("visible");
+                instructionsBox.classList.add("visible");
+                waitingBox.classList.add("visible");
+                btn.disabled = false;
+                btn.textContent = "Obtenir le code";
+            }
+
+            if (data.type === "connected") {
+                connectedText.textContent = "Le bot " + myNumber + " est maintenant en ligne.";
+                connectedBox.classList.add("visible");
+                waitingBox.classList.remove("visible");
+                resultBox.classList.remove("visible");
+                instructionsBox.classList.remove("visible");
+                formSection.style.display = "none";
+            }
+
+            if (data.type === "disconnected" || data.type === "reconnecting") {
+                connectedBox.classList.remove("visible");
+            }
+        };
+        es.onerror = () => {
+            // Reconnexion automatique SSE après 3 s
+            setTimeout(() => { try { es.close(); } catch(_){} listenSSE(); }, 3000);
+        };
+    }
+    listenSSE();
+
+    // ─── Soumission du numéro ───────────────────────────────────────────
     btn.addEventListener("click", async () => {
-        const number = phoneInput.value.trim();
+        const raw = phoneInput.value.trim();
+        myNumber = raw.replace(/[^0-9]/g, "");
         errorBox.classList.remove("visible");
         resultBox.classList.remove("visible");
         connectedBox.classList.remove("visible");
         copyFeedback.classList.remove("visible");
-        if (!number) {
-            errorBox.textContent = "Veuillez entrer un numéro.";
+        instructionsBox.classList.remove("visible");
+        if (!myNumber || myNumber.length < 8) {
+            errorBox.textContent = "Veuillez entrer un numéro valide avec indicatif pays (ex: +2376XXXXXXXX).";
             errorBox.classList.add("visible");
             return;
         }
@@ -175,18 +269,26 @@
             const res = await fetch("/api/pair", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ number })
+                body: JSON.stringify({ number: myNumber, useCode: true })
             });
             let data;
-            try {
-                data = await res.json();
-            } catch(_) {
-                throw new Error("Réponse invalide du serveur");
-            }
+            try { data = await res.json(); } catch(_) { throw new Error("Réponse invalide du serveur"); }
             if (!res.ok) throw new Error(data.error || "Échec de la demande");
-            if (data.code) {
-                codeValue.textContent = data.code;
+
+            if (data.connected) {
+                // Compte déjà connecté
+                connectedText.textContent = "Le bot " + myNumber + " est déjà en ligne.";
+                connectedBox.classList.add("visible");
+                formSection.style.display = "none";
+            } else if (data.code) {
+                // Code reçu directement dans la réponse
+                codeValue.textContent = data.code.match(/.{1,4}/g)?.join("-") || data.code;
                 resultBox.classList.add("visible");
+                instructionsBox.classList.add("visible");
+                waitingBox.classList.add("visible");
+            } else {
+                // Pas de code dans la réponse : il viendra via SSE
+                waitingBox.classList.add("visible");
             }
         } catch (err) {
             errorBox.textContent = err.message;
@@ -197,22 +299,26 @@
         }
     });
 
+    // Entrée = soumettre
+    phoneInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") btn.click();
+    });
+
+    // ─── Copie du code ──────────────────────────────────────────────────
     copyBtn.addEventListener("click", async () => {
         const code = codeValue.textContent;
-        if (!code || code === "— — — — — — — —") return;
+        if (!code || code.startsWith("—")) return;
         try {
-            await navigator.clipboard.writeText(code);
-            copyFeedback.classList.add("visible");
-            setTimeout(() => copyFeedback.classList.remove("visible"), 2000);
+            await navigator.clipboard.writeText(code.replace(/-/g, ""));
         } catch (err) {
             const range = document.createRange();
             range.selectNode(codeValue);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
             document.execCommand("copy");
-            copyFeedback.classList.add("visible");
-            setTimeout(() => copyFeedback.classList.remove("visible"), 2000);
         }
+        copyFeedback.classList.add("visible");
+        setTimeout(() => copyFeedback.classList.remove("visible"), 2000);
     });
 </script>
 </body>
