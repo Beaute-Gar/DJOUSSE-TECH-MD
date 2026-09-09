@@ -249,6 +249,7 @@ async function executePlugin(command, conn, m, body, args, ctx) {
 
         const pluginCtx = {
             conn, sock: conn, mek: m, m, args, body,
+            from: m.chat, sender: m.sender,
             prefix: PREFIX, command: cmdStr,
             isOwner: isOwner(m.sender, ctx.botNum), isSudo: isSudo(m.sender),
             isGroup: m.isGroup, isAdmin: false, isBotAdmin: false,
