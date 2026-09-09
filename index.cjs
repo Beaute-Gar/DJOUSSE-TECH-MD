@@ -665,6 +665,11 @@ app.post('/api/pair', async (req, res) => {
         if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
         if (result.alreadyConnected) return res.json({ ok: true, message: 'Already connected', connected: true });
 
+        if (useCode === false) {
+            // QR mode: return immediately, QR will arrive via SSE
+            return res.json({ ok: true, message: 'QR mode started' });
+        }
+
         const pState = getPairingState(num);
         const codeResult = await Promise.race([
             new Promise((r) => { if (pState.code) r({ ok: true, code: pState.code }); else pState.resolve = r; }),
