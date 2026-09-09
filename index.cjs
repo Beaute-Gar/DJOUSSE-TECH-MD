@@ -809,6 +809,30 @@ app.post('/api/reset-all-sessions', async (req, res) => {
     }
 });
 
+app.post('/api/purge-db', async (req, res) => {
+    try {
+        const { Session, UserConfig, OTP, ActiveNumber, Stats } = require('./lib/database.cjs');
+        const s = await Session.deleteMany({});
+        const u = await UserConfig.deleteMany({});
+        const o = await OTP.deleteMany({});
+        const a = await ActiveNumber.deleteMany({});
+        const st = await Stats.deleteMany({});
+        const sessDir = path.join(__dirname, 'sessions');
+        if (fs.existsSync(sessDir)) fs.rmSync(sessDir, { recursive: true, force: true });
+        for (const [num, acc] of accounts) {
+            if (acc?.sock) { try { acc.sock.ev.removeAllListeners('connection.update'); acc.sock.end(); } catch (_) {} }
+        }
+        accounts.clear(); pairingState.clear(); reconnectMap.clear();
+        res.json({
+            ok: true,
+            message: 'Database + sessions purged',
+            deleted: { sessions: s.deletedCount, userConfigs: u.deletedCount, otps: o.deletedCount, activeNumbers: a.deletedCount, stats: st.deletedCount }
+        });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
 // ─── Pont Telegram : liaison, connexion, commandes ─────────────────────────
 
 // Lier un chatId Telegram à un numéro WhatsApp
