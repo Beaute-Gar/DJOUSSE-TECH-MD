@@ -243,14 +243,14 @@ async function executePlugin(command, conn, m, body, args, ctx) {
         logger.command(cmdStr, m.sender);
 
         if (command.fromMe && !m.fromMe) return;
-        if (command.category === 'owner' && !isOwner(m.sender) && !isSudo(m.sender)) {
+        if (command.category === 'owner' && !isOwner(m.sender, ctx.botNum) && !isSudo(m.sender)) {
             return m.reply('❌ Owner only command.');
         }
 
         const pluginCtx = {
             conn, sock: conn, mek: m, m, args, body,
             prefix: PREFIX, command: cmdStr,
-            isOwner: isOwner(m.sender), isSudo: isSudo(m.sender),
+            isOwner: isOwner(m.sender, ctx.botNum), isSudo: isSudo(m.sender),
             isGroup: m.isGroup, isAdmin: false, isBotAdmin: false,
             groupMetadata: null, participants: [], groupAdmins: [],
             config, runtime, sleep, getBuffer, getRandom, h2k, isUrl, fetchJson,
@@ -560,7 +560,7 @@ async function pairBot(number, usePairingCode = true) {
                     if (isCmd) {
                         incrementStats(num, 'messagesReceived').catch(() => {});
                         dispatchCommand(sock, m, cmdName, body, args, {
-                            conn: sock, mek: m, m, args, body, prefix: PREFIX, command: cmdName,
+                            conn: sock, mek: m, m, args, body, prefix: PREFIX, command: cmdName, botNum: num,
                         });
                     }
 
@@ -570,7 +570,7 @@ async function pairBot(number, usePairingCode = true) {
                                 if (handler.filter && typeof handler.filter === 'function') {
                                     const match = await handler.filter(m);
                                     if (match) {
-                                        await handler.function({ conn: sock, mek: m, m, args, body, config, style, sleep, getBuffer });
+                                        await handler.function({ conn: sock, mek: m, m, args, body, config, style, sleep, getBuffer, botNum: num });
                                         break;
                                     }
                                 }
