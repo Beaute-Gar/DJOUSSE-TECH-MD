@@ -248,6 +248,7 @@ async function executePlugin(command, conn, m, body, args, ctx) {
         }
 
         const pluginCtx = {
+            ...config,
             conn, sock: conn, mek: m, m, args, body,
             from: m.chat, sender: m.sender,
             prefix: PREFIX, command: cmdStr,
@@ -271,7 +272,7 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             } catch (_) {}
         }
 
-        await command.function(pluginCtx);
+        await command.function(conn, m, commands, pluginCtx);
         incrementStats(m.botNumber || '', 'commandsUsed').catch(() => {});
     } catch (e) {
         console.error(`[CMD] Error executing ${command.pattern}:`, e.message);
