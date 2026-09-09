@@ -158,6 +158,8 @@ const MAX_RECONNECT = 3;
 let currentNumber = '';
 let pairingQR = null;
 let pairingCode = null;
+let pairBotResolve = null;
+let pairBotCodePromise = null;
 let sockReady = false;
 let sseClients = [];
 
@@ -399,6 +401,11 @@ async function pairBot(number, usePairingCode = true) {
     isConnecting = true;
     currentNumber = number.replace(/[^0-9]/g, '');
 
+    const codePromise = new Promise((resolve) => {
+        pairBotResolve = resolve;
+    });
+    pairBotCodePromise = codePromise;
+
     try {
         const sessionDir = path.join(__dirname, 'sessions', currentNumber);
         if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
@@ -440,6 +447,7 @@ async function pairBot(number, usePairingCode = true) {
                     pushSSE({ type: 'pairing_code', code: pairingCode });
                     bridge.sendStatus('pairing_code', pairingCode);
                     console.log(`[PAIR] Code: ${pairingCode}`);
+                    if (pairBotResolve) { pairBotResolve({ ok: true, code: pairingCode }); pairBotResolve = null; }
                 } catch (e) {
                     console.error('[PAIR] Error requesting code:', e.message);
                 }
@@ -486,6 +494,11 @@ async function pairBot(number, usePairingCode = true) {
 
                 console.log(`[CONN] Connection closed. Status: ${statusCode}. Reconnect: ${shouldReconnect}`);
                 sockReady = false;
+
+                if (pairBotResolve) {
+                    pairBotResolve({ ok: false, error: 'Connection closed before code generated' });
+                    pairBotResolve = null;
+                }
 
                 if (shouldReconnect && reconnectAttempts < MAX_RECONNECT) {
                     reconnectAttempts++;
@@ -670,11 +683,15 @@ app.post('/api/pair', async (req, res) => {
 
     try {
         const result = await pairBot(String(number), useCode !== false);
-        if (result.ok) {
-            res.json({ ok: true, message: 'Pairing started', code: pairingCode });
-        } else {
-            res.status(400).json({ ok: false, error: result.error });
+        if (!result.ok) {
+            return res.status(400).json({ ok: false, error: result.error });
         }
+        // Wait for the code to actually be generated (up to 30s)
+        const codeResult = await Promise.race([
+            pairBotCodePromise,
+            new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout waiting for pairing code')), 30000)),
+        ]);
+        res.json({ ok: true, message: 'Pairing started', code: codeResult.code || pairingCode });
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
     }
