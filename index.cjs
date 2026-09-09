@@ -200,6 +200,7 @@ function loadPlugins() {
         }
     }
     console.log(`[PLUGINS] Loaded: ${loaded} | Errors: ${errors}`);
+    console.log(`📚 ${commands.length} commandes chargées`);
     logger.pluginSummary();
 }
 
@@ -819,10 +820,11 @@ async function startServer() {
 
     // Start Express
     app.listen(PORT, '0.0.0.0', () => {
+        const _ln = (t) => '║  ' + t;
         console.log(`\n╔══════════════════════════════════════════╗`);
-        console.log(`║   ${BOT_NAME} v3.0.0                    ║`);
-        console.log(`║   Owner: ${OWNER_NAME}                    ║`);
-        console.log(`║   Port: ${PORT}                          ║`);
+        console.log(_ln(`${BOT_NAME} v3.0.0`));
+        console.log(_ln(`Owner: ${OWNER_NAME}`));
+        console.log(_ln(`Port: ${PORT}`));
         console.log(`╚══════════════════════════════════════════╝\n`);
         console.log(`[SERVER] Dashboard: http://localhost:${PORT}`);
         console.log(`[SERVER] Pair page: http://localhost:${PORT}/pair`);
