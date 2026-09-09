@@ -32,6 +32,7 @@ packages/
 android/app/build/
 android/.gradle/
 android/build/
+android/app/src/main/jniLibs/
 
 # Core server (old)
 core-server/
