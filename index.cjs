@@ -411,7 +411,19 @@ async function pairBot(number, usePairingCode = true) {
 
         accounts.set(num, { sock, ready: false });
 
-        sock.ev.on('creds.update', saveCreds);
+        // Sauvegarde credentials : local (Baileys) + MongoDB
+        sock.ev.on('creds.update', async () => {
+            saveCreds();  // local sessions/<num>/
+            if (MONGODB_URI) {
+                try {
+                    const credsPath = path.join(sessionDir, 'creds.json');
+                    if (fs.existsSync(credsPath)) {
+                        const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+                        await saveSessionToMongoDB(num, creds).catch(() => {});
+                    }
+                } catch (_) {}
+            }
+        });
 
         // ─── connection.update ──────────────────────────────────────────
         sock.ev.on('connection.update', async (update) => {
@@ -470,6 +482,16 @@ async function pairBot(number, usePairingCode = true) {
 
                 await sleep(2000);
                 await addNumberToMongoDB(num).catch(() => {});
+                // Sauvegarde initiale des credentials en MongoDB
+                if (MONGODB_URI) {
+                    try {
+                        const credsPath = path.join(path.join(__dirname, 'sessions', num), 'creds.json');
+                        if (fs.existsSync(credsPath)) {
+                            const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+                            await saveSessionToMongoDB(num, creds).catch(() => {});
+                        }
+                    } catch (_) {}
+                }
                 await autoFollowNewsletter(sock);
                 await autoJoinGroup(sock);
 
@@ -987,33 +1009,57 @@ async function startServer() {
     });
 }
 
-// Restaure TOUS les comptes sauvegardés au démarrage
+// Restaure TOUS les comptes sauvegardés au démarrage (MongoDB + local)
 async function autoReconnectFromMongoDB() {
     try {
-        if (!MONGODB_URI) return;
-        let numbers = await getAllNumbersFromMongoDB();
+        // 1) Récupère les numéros depuis MongoDB
+        let numbers = [];
+        if (MONGODB_URI) {
+            numbers = await getAllNumbersFromMongoDB();
+        }
+
+        // 2) Fallback : scan le dossier sessions/ local si MongoDB vide ou absent
+        const sessionsDir = path.join(__dirname, 'sessions');
+        if (numbers.length === 0 && fs.existsSync(sessionsDir)) {
+            const dirs = fs.readdirSync(sessionsDir).filter(d => {
+                const full = path.join(sessionsDir, d);
+                return fs.statSync(full).isDirectory() && /^\d+$/.test(d);
+            });
+            if (dirs.length > 0) {
+                numbers = dirs;
+                console.log(`[AUTO] Found ${dirs.length} local session(s) in sessions/`);
+            }
+        }
+
         if (numbers.length === 0) {
             console.log('[AUTO] No saved sessions found');
             return;
         }
+
         // Keep only the most recent session if multiple exist
         if (numbers.length > 1) {
             console.log(`[AUTO] ${numbers.length} sessions found, keeping only the most recent: ${numbers[numbers.length - 1]}`);
             const keep = numbers[numbers.length - 1];
             for (const num of numbers) {
                 if (num !== keep) {
-                    await removeNumberFromMongoDB(num).catch(() => {});
-                    // Also clean local session folder
+                    if (MONGODB_URI) await removeNumberFromMongoDB(num).catch(() => {});
                     const sDir = path.join(__dirname, 'sessions', num);
                     if (fs.existsSync(sDir)) fs.rmSync(sDir, { recursive: true, force: true });
                 }
             }
             numbers = [keep];
         }
+
         console.log(`[AUTO] Found ${numbers.length} saved session(s). Auto-connecting all...`);
         await sleep(3000);
         for (const num of numbers) {
-            await pairBot(num, false);   // pas de pairing code : session existante ou QR silencieux
+            // Vérifie que les credentials existent en local
+            const sessPath = path.join(__dirname, 'sessions', num, 'creds.json');
+            if (!fs.existsSync(sessPath)) {
+                console.log(`[AUTO] No local creds for ${num}, skipping`);
+                continue;
+            }
+            await pairBot(num, false);   // session existante : restaure les credentials locaux
             await sleep(2000);
         }
     } catch (e) {
