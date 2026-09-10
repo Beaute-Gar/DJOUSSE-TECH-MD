@@ -511,12 +511,19 @@ async function pairBot(number, usePairingCode = true) {
                 }
 
                 if (loggedOut) {
-                    console.log(`❌ [${num}] Session logged out — purge`);
+                    console.log(`❌ [${num}] Session logged out — purge + auto-repair`);
                     accounts.delete(num);
                     pairingState.delete(num);
                     reconnectMap.delete(num);
                     await deleteSessionFromMongoDB(num).catch(() => {});
+                    // Supprime les credentials locaux corrompus
+                    const sDir = path.join(__dirname, 'sessions', num);
+                    if (fs.existsSync(sDir)) fs.rmSync(sDir, { recursive: true, force: true });
                     pushSSE({ type: 'disconnected', number: num });
+                    // Auto-relance le pairing avec code après 3s
+                    await sleep(3000);
+                    console.log(`[PAIR][${num}] Auto-relance du pairing...`);
+                    pairBot(num, true).catch(() => {});
                 } else if (existingReconnects(num) < MAX_RECONNECT) {
                     incrementReconnects(num);
                     console.log(`[RECONNECT][${num}] Attempt ${existingReconnects(num)}/${MAX_RECONNECT}...`);
