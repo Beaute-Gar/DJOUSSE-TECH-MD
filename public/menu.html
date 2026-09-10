@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DJOUSSE-TECH-MD // COMMAND MODULE</title>
+<style>
+:root {
+    --bg: #050805;
+    --panel: rgba(0, 20, 0, 0.75);
+    --green: #00ff41;
+    --green-dim: #00b32d;
+    --green-dark: #003b0f;
+    --cyan: #00fff2;
+    --red: #ff3b3b;
+    --amber: #ffb000;
+    --mono: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    background: var(--bg);
+    color: var(--green);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+canvas#matrix {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; opacity: 0.13;
+    pointer-events: none;
+}
+body::after {
+    content: ""; position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0, 0, 0, 0.15) 2px, rgba(0, 0, 0, 0.15) 4px);
+    pointer-events: none; z-index: 50;
+}
+body::before {
+    content: ""; position: fixed; inset: 0;
+    background: rgba(0, 255, 65, 0.02);
+    animation: flicker 4s infinite;
+    pointer-events: none; z-index: 40;
+}
+@keyframes flicker {
+    0%, 100% { opacity: 0; } 92% { opacity: 0; }
+    93% { opacity: 1; } 94% { opacity: 0; } 97% { opacity: 0.5; } 98% { opacity: 0; }
+}
+.container { position: relative; z-index: 10; max-width: 1100px; margin: 0 auto; padding: 30px 20px 60px; }
+
+.terminal-head {
+    border: 1px solid var(--green-dark);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.06), inset 0 0 60px rgba(0, 255, 65, 0.02);
+}
+.title-bar {
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--green-dark);
+    padding-bottom: 12px; margin-bottom: 14px;
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.dot.r { background: #ff5f56; } .dot.y { background: #ffbd2e; } .dot.g { background: #27c93f; }
+.title-text { flex: 1; text-align: center; font-size: 12px; color: var(--green-dim); letter-spacing: 2px; }
+
+.ascii-art {
+    font-size: 11px; line-height: 1.15;
+    color: var(--green);
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+    white-space: pre; overflow-x: auto;
+    margin-bottom: 14px;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+@keyframes glow {
+    from { text-shadow: 0 0 5px rgba(0,255,65,0.3); }
+    to   { text-shadow: 0 0 15px rgba(0,255,65,0.7); }
+}
+
+.sys-line { font-size: 12px; color: var(--green-dim); line-height: 1.8; }
+.sys-line .k { color: var(--cyan); }
+.sys-line .v { color: var(--green); }
+.cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: var(--green); vertical-align: middle;
+    animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.stats-bar {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px; margin-bottom: 24px;
+}
+.stat-box {
+    border: 1px solid var(--green-dark);
+    background: var(--panel);
+    border-radius: 6px; padding: 12px 14px;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.stat-box:hover { border-color: var(--green); box-shadow: 0 0 15px rgba(0,255,65,0.15); }
+.stat-val { font-size: 22px; font-weight: 700; color: var(--green); text-shadow: 0 0 10px rgba(0,255,65,0.4); }
+.stat-lbl { font-size: 10px; letter-spacing: 2px; color: var(--green-dim); text-transform: uppercase; margin-top: 4px; }
+
+.search-box { position: relative; margin-bottom: 24px; }
+.search-box input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--green-dark);
+    border-radius: 6px;
+    padding: 14px 16px 14px 42px;
+    color: var(--green);
+    font-family: var(--mono); font-size: 14px;
+    outline: none; letter-spacing: 1px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-box input:focus { border-color: var(--green); box-shadow: 0 0 20px rgba(0,255,65,0.12); }
+.search-box input::placeholder { color: #0a4d1e; }
+.search-box::before {
+    content: ">_"; position: absolute; left: 16px; top: 50%;
+    transform: translateY(-50%); color: var(--green-dim); font-size: 14px;
+}
+
+.cat-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.cat-btn {
+    background: transparent;
+    border: 1px solid var(--green-dark);
+    color: var(--green-dim);
+    font-family: var(--mono); font-size: 11px;
+    padding: 6px 12px; border-radius: 4px;
+    cursor: pointer; letter-spacing: 1px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+}
+.cat-btn:hover { border-color: var(--green); color: var(--green); }
+.cat-btn.active {
+    background: var(--green-dark); color: var(--green);
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(0,255,65,0.2);
+}
+
+.cmd-section {
+    border: 1px solid var(--green-dark);
+    background: var(--panel);
+    border-radius: 8px;
+    margin-bottom: 18px;
+    overflow: hidden;
+}
+.cmd-section-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--green-dark);
+    background: rgba(0, 255, 65, 0.04);
+}
+.cmd-section-title { font-size: 13px; letter-spacing: 2px; color: var(--cyan); text-transform: uppercase; }
+.cmd-section-count { font-size: 11px; color: var(--green-dim); }
+.cmd-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px; padding: 14px 18px;
+}
+.cmd-item {
+    font-size: 12px; color: var(--green);
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.12s, text-shadow 0.12s;
+    display: flex; gap: 8px;
+}
+.cmd-item:hover { background: rgba(0,255,65,0.1); text-shadow: 0 0 8px var(--green); }
+.cmd-item .idx { color: var(--green-dark); min-width: 28px; text-align: right; }
+.cmd-item .name { color: var(--green); }
+.no-result {
+    text-align: center; padding: 40px;
+    color: var(--red); font-size: 14px; display: none;
+}
+
+.footer {
+    margin-top: 40px; text-align: center;
+    font-size: 11px; color: var(--green-dark);
+    letter-spacing: 2px; line-height: 2;
+}
+.footer .top { color: var(--green-dim); }
+.boot-line { font-size: 11px; color: var(--green-dim); margin-top: 8px; }
+
+.toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--green-dark); color: var(--green);
+    border: 1px solid var(--green); border-radius: 6px;
+    padding: 10px 22px; font-family: var(--mono); font-size: 13px;
+    transition: transform 0.25s ease; z-index: 100;
+    box-shadow: 0 0 25px rgba(0,255,65,0.3);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 600px) {
+    .ascii-art { font-size: 7px; }
+    .cmd-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+
+<div class="container">
+    <div class="terminal-head">
+        <div class="title-bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title-text">root@djousse-tech:~/command-module</span>
+        </div>
+        <div class="ascii-art">
+ ██████╗      ██╗ ██████╗ ██╗   ██╗███████╗███████╗███████╗    ████████╗███████╗ ██████╗██╗  ██╗
+ ██╔══██╗    ██╔═██╔═══██╗██║   ██║██╔════╝██╔════╝██╔════╝    ╚══██╔══╝██╔════╝██╔════╝██║ ██╔╝
+ ██║  ██║  █████╗██║   ██║██║   ██║█████╗  █████╗  ███████╗       ██║   █████╗  ██║     █████╔╝
+ ██║  ██║  ╚══██║██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══╝  ╚════██║       ██║   ██╔══╝  ██║     ██╔═██╗
+ ██████╔╝      ██║╚██████╔╝ ╚████╔╝ ███████╗███████╗███████║       ██║   ███████╗╚██████╗██║  ██╗
+ ╚═════╝       ╚═╝ ╚═════╝   ╚═══╝  ╚══════╝╚══════╝╚══════╝       ╚═╝   ╚══════╝ ╚═════╝╚═╝  ╚═╝
+        </div>
+        <div class="sys-line">
+            <span class="k">[SYS]</span> <span class="v" id="sysBot">DJOUSSE-TECH-MD</span> // engine: Baileys // kernel: node
+        </div>
+        <div class="sys-line">
+            <span class="k">[NET]</span> <span class="v" id="sysConn">initializing...</span> // <span class="k">OWNER:</span> <span class="v" id="sysOwner">—</span>
+        </div>
+        <div class="sys-line">
+            <span class="k">[RAM]</span> <span class="v" id="sysRam">—</span> // <span class="k">UPTIME:</span> <span class="v" id="sysUp">—</span><span class="cursor"></span>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-box"><div class="stat-val" id="stCmds">0</div><div class="stat-lbl">Commandes</div></div>
+        <div class="stat-box"><div class="stat-val" id="stCats">0</div><div class="stat-lbl">Modules</div></div>
+        <div class="stat-box"><div class="stat-val" id="stAccounts">0</div><div class="stat-lbl">Sessions</div></div>
+        <div class="stat-box"><div class="stat-val" id="stRam">—</div><div class="stat-lbl">RAM</div></div>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="grep -i 'rechercher une commande...'" autocomplete="off">
+    </div>
+
+    <div class="cat-filters" id="catFilters"></div>
+
+    <div id="cmdContainer"></div>
+    <div class="no-result" id="noResult">[!] AUCUN RÉSULTAT — commande introuvable dans le système</div>
+
+    <div class="footer">
+        <div class="top">╾───────── DJOUSSE TECH EVOLUTION ─────────╼</div>
+        <div>ALL SYSTEMS OPERATIONAL // ACCESS GRANTED</div>
+        <div class="boot-line" id="bootLine"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast">✓ Commande copiée</div>
+
+<script>
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+let cols, drops;
+const chars = 'アカサタナハマヤラワ0123456789ABCDEF<>{}[]/\\|=+*';
+function resizeMatrix() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.floor(canvas.width / 14);
+    drops = Array(cols).fill(0).map(() => Math.random() * -100);
+}
+resizeMatrix();
+window.addEventListener('resize', resizeMatrix);
+setInterval(() => {
+    ctx.fillStyle = 'rgba(5, 8, 5, 0.08)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '13px monospace';
+    for (let i = 0; i < cols; i++) {
+        const c = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(c, i * 14, drops[i] * 14);
+        if (drops[i] * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    }
+}, 50);
+
+function fmtUptime(s) {
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return h > 0 ? `${h}h ${m}m` : `${m}m ${Math.floor(s % 60)}s`;
+}
+
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+let MENU = null;
+let activeCat = 'all';
+
+async function loadMenu() {
+    try {
+        MENU = await (await fetch('/api/menu')).json();
+        renderStats();
+        renderFilters();
+        renderCommands();
+        document.getElementById('sysBot').textContent = MENU.botName;
+        document.getElementById('sysOwner').textContent = MENU.ownerName || '—';
+        document.getElementById('sysConn').textContent =
+            MENU.connectedAccounts > 0 ? `CONNECTED (${MENU.connectedAccounts} session${MENU.connectedAccounts > 1 ? 's' : ''})` : 'STANDBY — visit /pair';
+        document.getElementById('sysConn').style.color = MENU.connectedAccounts > 0 ? 'var(--green)' : 'var(--amber)';
+    } catch (e) {
+        document.getElementById('cmdContainer').innerHTML =
+            `<div class="no-result visible">[!] ERREUR: ${e.message}</div>`;
+    }
+}
+
+function renderStats() {
+    document.getElementById('stCmds').textContent = MENU.total;
+    document.getElementById('stCats').textContent = MENU.categories.length;
+    document.getElementById('stAccounts').textContent = MENU.connectedAccounts;
+    document.getElementById('stRam').textContent = MENU.memory;
+    document.getElementById('sysRam').textContent = MENU.memory;
+    document.getElementById('sysUp').textContent = fmtUptime(MENU.uptime);
+}
+
+function renderFilters() {
+    const box = document.getElementById('catFilters');
+    box.innerHTML = `<button class="cat-btn active" data-cat="all">[ ALL ]</button>` +
+        MENU.categories.map(c =>
+            `<button class="cat-btn" data-cat="${c}">[ ${c} ]</button>`).join('');
+    box.querySelectorAll('.cat-btn').forEach(b => {
+        b.addEventListener('click', () => {
+            box.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            activeCat = b.dataset.cat;
+            renderCommands();
+        });
+    });
+}
+
+function renderCommands() {
+    const query = document.getElementById('searchInput').value.toLowerCase().replace(/^\./, '');
+    const container = document.getElementById('cmdContainer');
+    let idx = 0, visible = 0;
+    let html = '';
+
+    for (const cat of MENU.categories) {
+        if (activeCat !== 'all' && cat !== activeCat) continue;
+        const list = MENU.commands[cat].filter(c => !query || c.includes(query));
+        if (list.length === 0) continue;
+        visible += list.length;
+        html += `<div class="cmd-section">
+            <div class="cmd-section-head">
+                <span class="cmd-section-title">◤ ${cat}</span>
+                <span class="cmd-section-count">${list.length} cmds</span>
+            </div>
+            <div class="cmd-grid">` +
+            list.map(c => {
+                idx++;
+                return `<div class="cmd-item" data-cmd=".${c}">
+                    <span class="idx">${String(idx).padStart(3, '0')}</span>
+                    <span class="name">.${c}</span>
+                </div>`;
+            }).join('') +
+            `</div></div>`;
+    }
+
+    container.innerHTML = html;
+    document.getElementById('noResult').style.display = visible === 0 ? 'block' : 'none';
+
+    container.querySelectorAll('.cmd-item').forEach(el => {
+        el.addEventListener('click', () => {
+            navigator.clipboard.writeText(el.dataset.cmd).catch(() => {});
+            toast('✓ ' + el.dataset.cmd + ' copié');
+        });
+    });
+}
+
+document.getElementById('searchInput').addEventListener('input', renderCommands);
+
+const bootMsgs = [
+    '> initializing command module...',
+    '> loading plugin registry... OK',
+    '> decrypting command index... OK',
+    '> access level: ROOT — granted',
+];
+let bi = 0;
+const bootLine = document.getElementById('bootLine');
+function nextBoot() {
+    if (bi < bootMsgs.length) {
+        bootLine.textContent = bootMsgs[bi++];
+        setTimeout(nextBoot, 1200);
+    } else {
+        bootLine.textContent = '> system ready. ' + new Date().toLocaleString('fr-FR');
+    }
+}
+nextBoot();
+
+loadMenu();
+setInterval(loadMenu, 30000);
+</script>
+</body>
+</html>

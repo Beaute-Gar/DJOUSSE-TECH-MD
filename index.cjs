@@ -1034,4 +1034,45 @@ async function autoReconnectFromMongoDB() {
     }
 })();
 
+// ─── Menu Hacker ───────────────────────────────────────────────────────────
+app.get('/api/menu', (req, res) => {
+    const cats = {};
+    let i = 0;
+    for (const cmd of commands) {
+        const cat = (cmd.category || 'other').toUpperCase();
+        if (!cats[cat]) cats[cat] = [];
+        if (cmd.pattern) {
+            cats[cat].push(cmd.pattern.toLowerCase());
+            i++;
+        }
+        if (cmd.alias) {
+            for (const a of cmd.alias) {
+                cats[cat].push(a.toLowerCase());
+                i++;
+            }
+        }
+    }
+    const result = {};
+    for (const [cat, list] of Object.entries(cats)) {
+        result[cat] = [...new Set(list)].sort();
+    }
+    res.json({
+        ok: true,
+        botName: BOT_NAME,
+        ownerName: OWNER_NAME,
+        total: i,
+        categories: Object.keys(result).sort(),
+        commands: result,
+        uptime: process.uptime(),
+        memory: (process.memoryUsage().rss / 1048576).toFixed(1) + ' MB',
+        connectedAccounts: [...accounts.values()].filter(a => a.ready).length,
+    });
+});
+
+app.get('/menu', (req, res) => {
+    const menuPath = path.join(__dirname, 'public', 'menu.html');
+    if (fs.existsSync(menuPath)) return res.sendFile(menuPath);
+    res.status(404).send('Menu page not found');
+});
+
 module.exports = app;
