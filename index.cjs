@@ -210,14 +210,14 @@ function loadPlugins() {
 }
 
 // ─── Plugin Dispatch ───────────────────────────────────────────────────────
-function dispatchCommand(conn, m, cmdName, body, args, ctx) {
+async function dispatchCommand(conn, m, cmdName, body, args, ctx) {
     for (const command of commands) {
         if (command.pattern && cmdName === command.pattern.toLowerCase()) {
-            executePlugin(command, conn, m, body, args, ctx);
+            await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
         if (command.alias && command.alias.some(a => a.toLowerCase() === cmdName)) {
-            executePlugin(command, conn, m, body, args, ctx);
+            await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
     }
@@ -226,11 +226,11 @@ function dispatchCommand(conn, m, cmdName, body, args, ctx) {
     const cmdFromBody = (parts[0] || '').toLowerCase();
     for (const command of commands) {
         if (command.pattern && cmdFromBody === command.pattern.toLowerCase()) {
-            executePlugin(command, conn, m, body, args, ctx);
+            await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
         if (command.alias && command.alias.some(a => a.toLowerCase() === cmdFromBody)) {
-            executePlugin(command, conn, m, body, args, ctx);
+            await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
     }
@@ -248,10 +248,9 @@ async function executePlugin(command, conn, m, body, args, ctx) {
         }
 
         const pluginCtx = {
-            ...config,
             conn, sock: conn, mek: m, m, args, body,
             from: m.chat, sender: m.sender,
-            prefix: PREFIX, command: cmdStr,
+            prefix: PREFIX, PREFIX, command: cmdStr,
             isOwner: isOwner(m.sender, ctx.botNum), isSudo: isSudo(m.sender),
             isGroup: m.isGroup, isAdmin: false, isBotAdmin: false,
             groupMetadata: null, participants: [], groupAdmins: [],
@@ -578,7 +577,8 @@ async function pairBot(number, usePairingCode = true) {
 
                     if (isCmd) {
                         incrementStats(num, 'messagesReceived').catch(() => {});
-                        dispatchCommand(sock, m, cmdName, body, args, {
+                        console.log(`[DISPATCH] cmd=${cmdName} from=${m.sender} chat=${m.chat} botNum=${num}`);
+                        await dispatchCommand(sock, m, cmdName, body, args, {
                             conn: sock, mek: m, m, args, body, prefix: PREFIX, command: cmdName, botNum: num,
                         });
                     }
