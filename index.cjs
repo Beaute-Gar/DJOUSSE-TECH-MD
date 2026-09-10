@@ -345,16 +345,26 @@ async function autoJoinGroup(conn) {
 }
 
 // ─── SSE ───────────────────────────────────────────────────────────────────
+const sseKeepalive = setInterval(() => {
+    const payload = `data: ${JSON.stringify({ type: 'ping' })}\n\n`;
+    for (let i = sseClients.length - 1; i >= 0; i--) {
+        try { sseClients[i].write(payload); } catch (_) { sseClients.splice(i, 1); }
+    }
+}, 15000);
+
 app.get('/sse', (req, res) => {
-    res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-    });
-    res.write('data: {"type":"listening"}\n\n');
-    sseClients.push(res);
-    req.on('close', () => { const i = sseClients.indexOf(res); if (i !== -1) sseClients.splice(i, 1); });
+    try {
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+        });
+        res.write('data: {"type":"listening"}\n\n');
+        sseClients.push(res);
+        req.on('close', () => { const i = sseClients.indexOf(res); if (i !== -1) sseClients.splice(i, 1); });
+        req.on('error', () => { const i = sseClients.indexOf(res); if (i !== -1) sseClients.splice(i, 1); });
+    } catch (_) {}
 });
 
 function pushSSE(data) {
@@ -733,7 +743,21 @@ app.post('/api/pair', async (req, res) => {
 app.get('/qr-image', async (req, res) => {
     const num = (req.query.number || '').replace(/[^0-9]/g, '');
     const pState = num ? pairingState.get(num) : null;
-    const qr = pState?.qr;
+    const acc = num ? accounts.get(num) : null;
+    let qr = pState?.qr;
+
+    // Si pas de QR en cache mais le bot tourne, retourne un placeholder
+    if (!qr && acc?.sock) {
+        try {
+            // Force une nouvelle génération de QR
+            const eventListeners = acc.sock.ev.listeners('connection.update');
+            if (eventListeners.length > 0) {
+                // Le QR sera disponible au prochain cycle
+                return res.status(202).json({ error: 'QR generating...', ready: false, retry: true });
+            }
+        } catch (_) {}
+    }
+
     if (!qr) return res.status(404).json({ error: 'QR not ready', ready: false });
     try {
         const buf = await qrcode.toBuffer(qr, { width: 512, margin: 2 });
