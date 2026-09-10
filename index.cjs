@@ -553,6 +553,7 @@ async function pairBot(number, usePairingCode = true) {
 
    // ─── messages.upsert (Plugin Dispatch + Pont Telegram) ──────────
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
+            console.log(`[MSG-EVT] type=${type} count=${messages?.length || 0}`);
             if (type !== 'notify') return;
             for (const rawMsg of messages) {
                 try {
