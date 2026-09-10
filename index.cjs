@@ -29,7 +29,7 @@ const { rateLimit } = require('express-rate-limit');
 const config = require('./config-djousse.cjs');
 const { commands, replyHandlers } = require('./command.cjs');
 const {
-    connectdb, saveSessionToMongoDB,
+    connectdb, saveSessionToMongoDB, getSessionFromMongoDB,
     deleteSessionFromMongoDB, getUserConfigFromMongoDB,
     addNumberToMongoDB, getAllNumbersFromMongoDB, removeNumberFromMongoDB,
     incrementStats,
@@ -1086,13 +1086,31 @@ async function autoReconnectFromMongoDB() {
         console.log(`[AUTO] Found ${numbers.length} saved session(s). Auto-connecting all...`);
         await sleep(3000);
         for (const num of numbers) {
-            // Vérifie que les credentials existent en local
             const sessPath = path.join(__dirname, 'sessions', num, 'creds.json');
+            // Si pas de creds locaux, restaure depuis MongoDB
+            if (!fs.existsSync(sessPath) && MONGODB_URI) {
+                console.log(`[AUTO] Restoring ${num} from MongoDB...`);
+                try {
+                    const creds = await getSessionFromMongoDB(num);
+                    if (creds) {
+                        const sessionDir = path.join(__dirname, 'sessions', num);
+                        if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
+                        fs.writeFileSync(path.join(sessionDir, 'creds.json'), JSON.stringify(creds, null, 2));
+                        console.log(`[AUTO] Restored creds for ${num} from MongoDB`);
+                    } else {
+                        console.log(`[AUTO] No session in MongoDB for ${num}, skipping`);
+                        continue;
+                    }
+                } catch (e) {
+                    console.error(`[AUTO] Failed to restore ${num} from MongoDB:`, e.message);
+                    continue;
+                }
+            }
             if (!fs.existsSync(sessPath)) {
                 console.log(`[AUTO] No local creds for ${num}, skipping`);
                 continue;
             }
-            await pairBot(num, false);   // session existante : restaure les credentials locaux
+            await pairBot(num, false);
             await sleep(2000);
         }
     } catch (e) {
