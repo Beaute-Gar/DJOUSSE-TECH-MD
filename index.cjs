@@ -556,6 +556,7 @@ async function pairBot(number, usePairingCode = true) {
             if (type !== 'notify') return;
             for (const rawMsg of messages) {
                 try {
+                    console.log(`[MSG] from=${rawMsg.key?.remoteJid} fromMe=${rawMsg.key?.fromMe} type=${rawMsg.message ? Object.keys(rawMsg.message)[0] : 'none'}`);
                     // Statuts WhatsApp
                     if (rawMsg.key && rawMsg.key.remoteJid === 'status@broadcast') {
                         if (config.AUTO_STATUS_REACT) {
