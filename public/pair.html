@@ -238,6 +238,34 @@
     }
 
     // ─── SSE : événements en direct (filtrés par numéro) ────────────────
+    let pollInterval = null;
+    function startPolling() {
+        if (pollInterval) return;
+        pollInterval = setInterval(async () => {
+            if (!myNumber) return;
+            try {
+                const r = await fetch("/ready/qr?number=" + myNumber);
+                const d = await r.json();
+                if (d.code && method === "code") {
+                    codeValue.textContent = d.code.match(/.{1,4}/g)?.join("-") || d.code;
+                    resultBox.classList.add("visible");
+                    instructionsBox.classList.add("visible");
+                    waitingBox.classList.add("visible");
+                }
+                if (d.connected) {
+                    onConnected();
+                    stopPolling();
+                }
+                if (d.qr && method === "qr") {
+                    loadQr();
+                }
+            } catch (_) {}
+        }, 3000);
+    }
+    function stopPolling() {
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    }
+
     function listenSSE() {
         const es = new EventSource("/sse");
         es.onmessage = (ev) => {
@@ -252,14 +280,17 @@
                 resultBox.classList.add("visible");
                 instructionsBox.classList.add("visible");
                 waitingBox.classList.add("visible");
+                stopPolling(); // SSE fonctionne, pas besoin du polling
             }
 
             if (data.type === "qr_ready" && method === "qr") {
                 loadQr();
+                stopPolling();
             }
 
             if (data.type === "connected") {
                 onConnected();
+                stopPolling();
             }
 
             if (data.type === "disconnected") {
@@ -268,7 +299,9 @@
             }
         };
         es.onerror = () => {
-            setTimeout(() => { try { es.close(); } catch(_){} listenSSE(); }, 3000);
+            // SSE échoue → active le polling de fallback
+            startPolling();
+            setTimeout(() => { try { es.close(); } catch(_){} listenSSE(); }, 5000);
         };
     }
     listenSSE();
@@ -337,8 +370,9 @@
                     resultBox.classList.add("visible");
                     waitingBox.classList.add("visible");
                 } else {
-                    // Le code arrivera via SSE
+                    // Le code arrivera via SSE ou polling
                     waitingBox.classList.add("visible");
+                    startPolling();
                 }
             } else {
                 // Méthode QR : affiche et rafraîchit toutes les 20 s
