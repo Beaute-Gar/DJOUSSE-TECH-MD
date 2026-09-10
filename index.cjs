@@ -418,23 +418,36 @@ async function pairBot(number, usePairingCode = true) {
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
 
-            // ✅ Une SEULE demande de code par session, avec délai de 3s
-            if (qr && usePairingCode && !sock.authState.creds.registered && !pState.requested) {
-                pState.requested = true;
-                pState.timeout = setTimeout(async () => {
-                    try {
-                        const code = await sock.requestPairingCode(num);
-                        pState.code = code;
-                        const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
-                        pushSSE({ type: 'pairing_code', code: formatted, number: num });
-                        bridge.sendStatus('pairing_code', formatted);
-                        console.log(`[PAIR][${num}] Code: ${formatted}`);
-                        if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
-                    } catch (e) {
-                        console.error(`[PAIR][${num}] Error requesting code:`, e.message);
-                        pState.requested = false;
-                    }
-                }, 3000);
+            // ✅ Code d'appairage : une demande + régénération auto toutes les 40s
+            if (qr && usePairingCode && !sock.authState.creds.registered) {
+                if (!pState.requested) {
+                    pState.requested = true;
+                    pState.timeout = setTimeout(async () => {
+                        const requestCode = async () => {
+                            try {
+                                const code = await sock.requestPairingCode(num);
+                                pState.code = code;
+                                const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
+                                pushSSE({ type: 'pairing_code', code: formatted, number: num });
+                                bridge.sendStatus('pairing_code', formatted);
+                                console.log(`[PAIR][${num}] Code: ${formatted}`);
+                                if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
+                                // Régénère tant que l'appareil n'est pas lié (le code expire ~2 min)
+                                pState.renewTimer = setTimeout(() => {
+                                    if (!sock.authState.creds.registered && accounts.get(num)?.sock === sock) {
+                                        console.log(`[PAIR][${num}] Régénération du code...`);
+                                        requestCode();
+                                    }
+                                }, 40000);
+                            } catch (e) {
+                                console.error(`[PAIR][${num}] Error requesting code:`, e.message);
+                                pState.requested = false;
+                            }
+                        };
+                        await sleep(3000); // laisse le handshake se stabiliser
+                        requestCode();
+                    }, 100);
+                }
                 return;
             }
 
@@ -451,6 +464,7 @@ async function pairBot(number, usePairingCode = true) {
                 accounts.set(num, { sock, ready: true });
                 reconnectMap.delete(num);
                 if (pState.timeout) clearTimeout(pState.timeout);
+                if (pState.renewTimer) clearTimeout(pState.renewTimer);
 
                 pushSSE({ type: 'connected', number: num });
                 bridge.sendStatus('connected');
@@ -468,6 +482,7 @@ async function pairBot(number, usePairingCode = true) {
                 const loggedOut = statusCode === DisconnectReason.loggedOut;
                 console.log(`[CONN][${num}] Connection closed. Status: ${statusCode}`);
                 if (pState.timeout) clearTimeout(pState.timeout);
+                if (pState.renewTimer) clearTimeout(pState.renewTimer);
 
                 if (pState.resolve) {
                     pState.resolve({ ok: false, error: 'Connection closed' });
@@ -486,7 +501,9 @@ async function pairBot(number, usePairingCode = true) {
                     console.log(`[RECONNECT][${num}] Attempt ${existingReconnects(num)}/${MAX_RECONNECT}...`);
                     pushSSE({ type: 'reconnecting', number: num, attempt: existingReconnects(num) });
                     await sleep(3000 * existingReconnects(num));
-                    pairBot(num, false).catch(() => {});
+                    // ✅ préserve le mode : si un code avait été demandé, on régénère au reconnect
+                    const keepCode = pState.code != null || usePairingCode;
+                    pairBot(num, keepCode).catch(() => {});
                 } else {
                     console.log(`[CONN][${num}] Max reconnect attempts reached.`);
                     accounts.delete(num);
