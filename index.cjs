@@ -469,18 +469,9 @@ async function pairBot(number, usePairingCode = true) {
 
         accounts.set(num, { sock, ready: false });
 
-        // Sauvegarde credentials : local (Baileys) + MongoDB
+        // Sauvegarde credentials : Baileys pur (useMultiFileAuthState)
         sock.ev.on('creds.update', async () => {
-            saveCreds();  // local sessions/<num>/
-            if (MONGODB_URI) {
-                try {
-                    const credsPath = path.join(sessionDir, 'creds.json');
-                    if (fs.existsSync(credsPath)) {
-                        const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
-                        await saveSessionToMongoDB(num, creds).catch(() => {});
-                    }
-                } catch (_) {}
-            }
+            await saveCreds();
         });
 
         // ─── connection.update ──────────────────────────────────────────
@@ -577,16 +568,6 @@ async function pairBot(number, usePairingCode = true) {
 
                 await sleep(2000);
                 await addNumberToMongoDB(num).catch(() => {});
-                // Sauvegarde initiale des credentials en MongoDB
-                if (MONGODB_URI) {
-                    try {
-                        const credsPath = path.join(path.join(__dirname, 'sessions', num), 'creds.json');
-                        if (fs.existsSync(credsPath)) {
-                            const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
-                            await saveSessionToMongoDB(num, creds).catch(() => {});
-                        }
-                    } catch (_) {}
-                }
                 await autoFollowNewsletter(sock);
                 await autoJoinGroup(sock);
 
@@ -1173,24 +1154,6 @@ async function startServer() {
         console.log('');
     });
 
-    // ─── Auto-connect toutes les sessions sauvegardées ──────────────
-    const sessionsDir = path.join(__dirname, 'sessions');
-    if (fs.existsSync(sessionsDir)) {
-        const savedNums = fs.readdirSync(sessionsDir).filter(d => {
-            const full = path.join(sessionsDir, d);
-            return fs.statSync(full).isDirectory() && /^\d+$/.test(d);
-        });
-        if (savedNums.length > 0) {
-            console.log(`┃ 🔄 Auto-connexion: ${savedNums.length} session(s) sauvegardée(s)...`);
-            for (const num of savedNums) {
-                console.log(`┃ 📱 → ${num}`);
-                await pairBot(num, false);
-                await sleep(1500);
-            }
-            console.log('');
-        }
-    }
-
     // ─── Mode Render : pas de menu ──────────────────────────────────
     if (isRender) {
         return;
@@ -1258,77 +1221,32 @@ async function startServer() {
     });
 }
 
-// Restaure TOUS les comptes sauvegardés au démarrage (MongoDB + local)
+// Restaure les comptes sauvegardés au démarrage (scan sessions/)
 async function autoReconnectFromMongoDB() {
     try {
-        // 1) Récupère les numéros : Render = MongoDB, Local = scan sessions/
-        const isRender = !!process.env.RENDER;
-        let numbers = [];
-        if (isRender && MONGODB_URI) {
-            numbers = await getAllNumbersFromMongoDB();
-        }
-
-        // 2) Fallback : scan le dossier sessions/ local
         const sessionsDir = path.join(__dirname, 'sessions');
-        if (numbers.length === 0 && fs.existsSync(sessionsDir)) {
-            const dirs = fs.readdirSync(sessionsDir).filter(d => {
-                const full = path.join(sessionsDir, d);
-                return fs.statSync(full).isDirectory() && /^\d+$/.test(d);
-            });
-            if (dirs.length > 0) {
-                numbers = dirs;
-                console.log(`┃ 📂 ${dirs.length} session(s) locale(s) trouvée(s)`);
-            }
-        }
+        if (!fs.existsSync(sessionsDir)) return;
+
+        const numbers = fs.readdirSync(sessionsDir).filter(d => {
+            const full = path.join(sessionsDir, d);
+            return fs.statSync(full).isDirectory() && /^\d+$/.test(d);
+        });
 
         if (numbers.length === 0) {
-            console.log('┃ ℹ️  Aucune session sauvegardée');
+            console.log('┃ ℹ️  Aucune session Baileys sauvegardée');
             return;
         }
 
-        // Keep only the most recent session if multiple exist
-        if (numbers.length > 1) {
-            console.log(`┃ 📋 ${numbers.length} sessions trouvées, garde la plus récente: ${numbers[numbers.length - 1]}`);
-            const keep = numbers[numbers.length - 1];
-            for (const num of numbers) {
-                if (num !== keep) {
-                    if (MONGODB_URI) await removeNumberFromMongoDB(num).catch(() => {});
-                    const sDir = path.join(__dirname, 'sessions', num);
-                    if (fs.existsSync(sDir)) fs.rmSync(sDir, { recursive: true, force: true });
-                }
-            }
-            numbers = [keep];
-        }
-
-        console.log(`┃ 📂 ${numbers.length} session(s) trouvée(s). Auto-connexion...`);
-        await sleep(3000);
+        console.log(`┃ 📂 ${numbers.length} session(s) Baileys trouvée(s). Auto-connexion...`);
         for (const num of numbers) {
-            const sessPath = path.join(__dirname, 'sessions', num, 'creds.json');
-            // Si pas de creds locaux, restaure depuis MongoDB (Render uniquement)
-            if (!fs.existsSync(sessPath) && isRender && MONGODB_URI) {
-                console.log(`[AUTO] Restoring ${num} from MongoDB...`);
-                try {
-                    const creds = await getSessionFromMongoDB(num);
-                    if (creds) {
-                        const sessionDir = path.join(__dirname, 'sessions', num);
-                        if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
-                        fs.writeFileSync(path.join(sessionDir, 'creds.json'), JSON.stringify(creds, null, 2));
-                        console.log(`[AUTO] Restored creds for ${num} from MongoDB`);
-                    } else {
-                        console.log(`[AUTO] No session in MongoDB for ${num}, skipping`);
-                        continue;
-                    }
-                } catch (e) {
-                    console.error(`[AUTO] Failed to restore ${num} from MongoDB:`, e.message);
-                    continue;
-                }
-            }
+            const sessPath = path.join(sessionsDir, num, 'creds.json');
             if (!fs.existsSync(sessPath)) {
-                console.log(`┃ ⚠️  Pas de credentials pour ${num}, skip`);
+                console.log(`┃ ⚠️  Pas de creds.json pour ${num}, skip`);
                 continue;
             }
+            console.log(`┃ 📱 → ${num}`);
             await pairBot(num, false);
-            await sleep(2000);
+            await sleep(1500);
         }
     } catch (e) {
         console.error('┃ ❌ Auto-reconnect échoué:', e.message);
@@ -1338,10 +1256,8 @@ async function autoReconnectFromMongoDB() {
 (async () => {
     try {
         await startServer();
-        // Sur Render : restaure les sessions depuis MongoDB (filesystem éphémère)
-        if (process.env.RENDER) {
-            await autoReconnectFromMongoDB();
-        }
+        // Restaure les sessions Baileys sauvegardées (scan sessions/)
+        await autoReconnectFromMongoDB();
     } catch (e) {
         console.error('[FATAL]', e.message);
         saveCrash(e);
