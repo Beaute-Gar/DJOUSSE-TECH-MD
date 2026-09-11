@@ -475,12 +475,13 @@ async function pairBot(number, method = 'pairing') {
         // 🔑 PAIRING CODE — demandé directement après la création du socket
         // ═══════════════════════════════════════════════════════════════
         if (method === 'pairing' && !state.creds.registered) {
-            // Laisse le handshake se stabiliser
             await sleep(3000);
 
             try {
+                pState.requested = true;
                 const code = await sock.requestPairingCode(num);
                 pState.code = code;
+                pState.requested = false;
                 const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
 
                 pushSSE({ type: 'pairing_code', code: formatted, number: num });
@@ -502,28 +503,9 @@ async function pairBot(number, method = 'pairing') {
                 console.log('');
 
                 if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
-
-                // Régénération après 90s si pas encore connecté
-                pState.renewTimer = setTimeout(async () => {
-                    if (!sock.authState.creds.registered && accounts.get(num)?.sock === sock && !pState.requested) {
-                        console.log(`[PAIR][${num}] Code expiré, demande un nouveau...`);
-                        pState.requested = true;
-                        try {
-                            const newCode = await sock.requestPairingCode(num);
-                            pState.code = newCode;
-                            pState.requested = false;
-                            const newFormatted = newCode?.match(/.{1,4}/g)?.join('-') || newCode;
-                            console.log(`[PAIR][${num}] Nouveau code: ${newFormatted}`);
-                            pushSSE({ type: 'pairing_code', code: newFormatted, number: num });
-                            bridge.sendStatus('pairing_code', newFormatted);
-                        } catch (e) {
-                            console.error(`[PAIR][${num}] Erreur renouvellement:`, e.message);
-                            pState.requested = false;
-                        }
-                    }
-                }, 90000);
             } catch (e) {
                 console.error(`[PAIR][${num}] Erreur pairing code:`, e.message);
+                pState.requested = false;
             }
         }
 
@@ -602,7 +584,7 @@ async function pairBot(number, method = 'pairing') {
                     console.log('┃');
                     console.log('┃ 🚪 Session déconnectée de WhatsApp.');
                     console.log(`┃ 🗑️  Supprime: sessions/${num}/`);
-                    console.log('┃ ▸ Ou relance le pairing.');
+                    console.log('┃ ▸ Nouveau pairing requis (via /pair ou le dashboard).');
                     console.log(hackerEnd());
                     console.log('');
                     accounts.delete(num);
@@ -610,10 +592,7 @@ async function pairBot(number, method = 'pairing') {
                     reconnectMap.delete(num);
                     const sDir = path.join(__dirname, 'sessions', num);
                     if (fs.existsSync(sDir)) fs.rmSync(sDir, { recursive: true, force: true });
-                    pushSSE({ type: 'disconnected', number: num });
-                    await sleep(3000);
-                    console.log(`[PAIR][${num}] Auto-relance du pairing...`);
-                    pairBot(num, 'pairing').catch(() => {});
+                    pushSSE({ type: 'logged_out', number: num });
                 } else if (existingReconnects(num) < MAX_RECONNECT) {
                     incrementReconnects(num);
                     console.log(`┃ 🔄 [${num}] Reconnexion ${existingReconnects(num)}/${MAX_RECONNECT}...`);
@@ -1239,21 +1218,40 @@ async function startServer() {
         return;
     }
 
-    // ─── Mode Local : TOUJOURS demander un nouveau numéro ───────────
+    // ─── Mode Local : restaurer sessions existantes, puis proposer un nouveau compte ──
     const { box } = require('./lib/boot-banner.cjs');
+
+    // 1) Restaure automatiquement les sessions sauvegardées
+    await autoReconnectFromSessions();
+
+    const activeCount = [...accounts.values()].filter(a => a.ready).length;
+
+    console.log('');
+    if (activeCount > 0) {
+        box('SESSIONS RESTAURÉES', [`${activeCount} compte(s) connecté(s) automatiquement`]);
+    } else {
+        box('AUCUNE SESSION', ['Aucune session sauvegardée trouvée']);
+    }
+
+    // 2) Demande si l'utilisateur veut connecter un nouveau compte
     console.log('');
     box('NOUVELLE CONNEXION', [
         `${'\x1b[92m'}[1]${'\x1b[0m'} QR Code`,
         `${'\x1b[92m'}[2]${'\x1b[0m'} Code de jumelage ${'\x1b[2m'}(8 caractères)${'\x1b[0m'}`,
+        `${'\x1b[90m'}[3]${'\x1b[0m'} Passer${'\x1b[2m'} (le serveur continue sans nouveau compte)${'\x1b[0m'}`,
     ]);
     console.log('');
 
-    const method = await promptChoice('Choisis (1 ou 2)');
+    const method = await promptChoice('Choisis (1, 2 ou 3)');
 
     let connectNumber = '';
     let usePairingCode = true;
 
-    if (method === '1') {
+    if (method === '3') {
+        console.log('');
+        console.log('┃ ℹ️  Pas de nouveau compte. Le serveur tourne avec les sessions existantes.');
+        console.log('');
+    } else if (method === '1') {
         usePairingCode = false;
         console.log('');
         connectNumber = await promptNumber('Numéro WhatsApp (ex: 237693978044)');
@@ -1339,7 +1337,8 @@ async function autoReconnectFromSessions() {
 (async () => {
     try {
         await startServer();
-        // Restaure les sessions Baileys sauvegardées (scan sessions/)
+        // Render : restaure les sessions Baileys (en local, c'est déjà fait dans startServer)
+        if (!isRender) return;
         await autoReconnectFromSessions();
     } catch (e) {
         console.error('[FATAL]', e.message);
