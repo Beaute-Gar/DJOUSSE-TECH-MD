@@ -63,6 +63,16 @@ function promptNumber(msg) {
     });
 }
 
+function promptChoice(msg) {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    return new Promise(resolve => {
+        rl.question(`┃ ▸ ${msg}: `, (answer) => {
+            rl.close();
+            resolve(answer.trim());
+        });
+    });
+}
+
 function saveNumberToEnv(num) {
     try {
         const envPath = path.join(__dirname, '.env');
@@ -494,15 +504,18 @@ async function pairBot(number, usePairingCode = true) {
                                 bridge.sendStatus('pairing_code', formatted);
                                 console.log(`[PAIR][${num}] Code: ${formatted}`);
                                 console.log('');
-                                console.log(hackerBanner(`${num} — PAIRING CODE`));
+                                console.log('┏━⍟「 ☣ PAIRING CODE ☣ 」⍟━┓');
                                 console.log('┃');
-                                console.log(`┃ 🔑 CODE: ${formatted}`);
+                                console.log(`┃  🔑  ${formatted}`);
                                 console.log('┃');
-                                console.log('┃ WhatsApp → Paramètres');
-                                console.log('┃ → Appareils connectés');
-                                console.log('┃ → Associer avec le numéro');
-                                console.log(`┃ → Saisis: ${formatted}`);
-                                console.log(hackerEnd());
+                                console.log('┃  📱 Sur ton téléphone :');
+                                console.log('┃  1. Ouvre WhatsApp');
+                                console.log('┃  2. Paramètres');
+                                console.log('┃  3. Appareils connectés');
+                                console.log('┃  4. Associer avec le numéro');
+                                console.log(`┃  5. Saisis: ${formatted}`);
+                                console.log('┃');
+                                console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟');
                                 console.log('');
                                 if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
                                 // Régénère tant que l'appareil n'est pas lié (le code expire ~2 min)
@@ -530,16 +543,18 @@ async function pairBot(number, usePairingCode = true) {
                 pushSSE({ type: 'qr_ready', number: num });
                 // QR dans le terminal — style hacker
                 console.log('');
-                console.log(hackerBanner(`${num} — QR CODE`));
+                console.log('┏━⍟「 ☣ QR CODE ☣ 」⍟━┓');
                 console.log('┃');
-                console.log('┃ 📱 SCANNE CE QR AVEC WHATSAPP :');
+                console.log('┃ 📱 Scanne ce QR avec WhatsApp :');
                 console.log('┃');
                 qrTerm.generate(qr, { small: true });
                 console.log('┃');
-                console.log('┃ WhatsApp → Paramètres');
-                console.log('┃ → Appareils connectés');
-                console.log('┃ → Connecter un appareil');
-                console.log(hackerEnd());
+                console.log('┃ 1. Ouvre WhatsApp');
+                console.log('┃ 2. Paramètres');
+                console.log('┃ 3. Appareils connectés');
+                console.log('┃ 4. Connecter un appareil');
+                console.log('┃');
+                console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟');
                 console.log('');
                 return;
             }
@@ -1110,34 +1125,62 @@ async function startServer() {
 
     loadPlugins();
 
-    // ─── Prompt numéro si pas configuré ──────────────────────────────
     const isRender = !!process.env.RENDER;
     let connectNumber = SESSION_ID || process.env.OWNER_NUMBER || '';
+    let usePairingCode = true;
 
-    if (!isRender && !connectNumber) {
+    // ─── Mode Render : auto-connect silencieux ──────────────────────
+    if (isRender) {
+        // Pas de prompt sur Render, auto-connect silencieux
+    }
+
+    // ─── Mode Local : menu choix QR / Pairing Code ──────────────────
+    else if (!connectNumber) {
+        const line = '━'.repeat(36);
         console.log('');
         console.log(hackerBanner('DJOUSSE-TECH-MD'));
         console.log('┃');
-        console.log(`┃ 📡 ${config.BOT_NAME || 'DJOUSSE-TECH-MD'}`);
-        console.log(`┃ 🔧 Version: 3.1.0`);
-        console.log(`┃ 📦 ${commands.length} commandes`);
+        console.log(`┃ 🤖 Bot      : ${BOT_NAME}`);
+        console.log(`┃ 📦 Commandes: ${commands.length}`);
+        console.log(`┃ 🔧 Version  : 3.1.0`);
         console.log('┃');
-        console.log('┃ ▸ Aucun numéro configuré.');
-        console.log('┃ ▸ Entres ton numéro WhatsApp pour connecter le bot.');
-        console.log('┃ ▸ Format: 237XXXXXXXXX (sans le +)');
+        console.log('┗' + line + '⍟');
+        console.log('');
+        console.log(hackerBanner('MÉTHODE DE CONNEXION'));
+        console.log('┃');
+        console.log('┃  [1] QR Code');
+        console.log('┃  [2] Code de jumelage (8 caractères)');
+        console.log('┃');
         console.log(hackerEnd());
         console.log('');
 
-        connectNumber = await promptNumber('Numéro WhatsApp');
+        const method = await promptChoice('Choisis (1 ou 2)');
 
-        if (connectNumber && connectNumber.length >= 8) {
-            saveNumberToEnv(connectNumber);
-            SESSION_ID = connectNumber;
+        if (method === '1') {
+            usePairingCode = false;
+            console.log('');
+            console.log('┃ 📷 Mode QR Code sélectionné.');
+            console.log('┃ ▸ Le QR apparaîtra dans le terminal et sur /pair');
+            console.log('');
+        } else if (method === '2') {
+            usePairingCode = true;
+            console.log('');
+            connectNumber = await promptNumber('Numéro WhatsApp (ex: 237693978044)');
+
+            if (!connectNumber || connectNumber.length < 8) {
+                console.log('');
+                console.log('┃ ❌ Numéro invalide. Relance le bot ou configure .env');
+                console.log('');
+                connectNumber = '';
+            } else {
+                saveNumberToEnv(connectNumber);
+                SESSION_ID = connectNumber;
+            }
         } else {
             console.log('');
-            console.log('┃ ❌ Numéro invalide. Tu peux le reconfigurer dans .env');
-            console.log('┃ ▸ Ou visiter http://localhost:' + PORT + '/pair');
+            console.log('┃ ❌ Choix invalide. Lance le bot de nouveau.');
             console.log('');
+            process.exit(1);
         }
     }
 
@@ -1145,15 +1188,15 @@ async function startServer() {
     app.listen(PORT, '0.0.0.0', () => {
         const line = '━'.repeat(36);
         console.log('');
-        console.log('┏━⍟「 ☣ BOOT SEQUENCE ☣ 」⍟━┓');
+        console.log(hackerBanner('BOOT SEQUENCE'));
         console.log('┃');
-        console.log(`┃ 🤖 Bot     : ${BOT_NAME}`);
-        console.log(`┃ 📡 Port    : ${PORT}`);
+        console.log(`┃ 🤖 Bot      : ${BOT_NAME}`);
+        console.log(`┃ 📡 Port     : ${PORT}`);
         console.log(`┃ 📦 Commandes: ${commands.length}`);
-        console.log(`┃ 🔧 SQLite  : ✅`);
+        console.log(`┃ 🔧 SQLite   : ✅`);
         console.log(`┃ 🌐 Dashboard: http://localhost:${PORT}`);
-        console.log(`┃ 🔗 Pair    : http://localhost:${PORT}/pair`);
-        console.log(`┃ 📊 API     : http://localhost:${PORT}/api/status`);
+        console.log(`┃ 🔗 Pair     : http://localhost:${PORT}/pair`);
+        console.log(`┃ 📊 API      : http://localhost:${PORT}/api/status`);
         console.log('┃');
         console.log('┗' + line + '⍟');
         console.log('');
@@ -1163,11 +1206,15 @@ async function startServer() {
     if (connectNumber) {
         console.log(`┃ 🔄 Auto-connexion: ${connectNumber}...`);
         await sleep(2000);
-        await pairBot(connectNumber, true);
-    } else if (!isRender) {
+        await pairBot(connectNumber, usePairingCode);
+    } else if (!isRender && !connectNumber) {
         console.log('');
-        console.log('┃ ▸ Aucun numéro. Lance le pairing depuis le web.');
-        console.log(`┃ ▸ http://localhost:${PORT}/pair`);
+        console.log(hackerBanner('EN ATTENTE'));
+        console.log('┃');
+        console.log('┃ ▸ Aucun numéro configuré.');
+        console.log(`┃ ▸ Lance le pairing depuis http://localhost:${PORT}/pair`);
+        console.log('┃ ▸ Ou relance le bot avec un numéro.');
+        console.log(hackerEnd());
         console.log('');
     }
 
