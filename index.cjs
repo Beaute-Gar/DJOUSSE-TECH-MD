@@ -46,6 +46,46 @@ const {
 } = require('./lib/functions.cjs');
 const bridge = require('./android-bridge.cjs');
 const logger = require('./lib/logger.cjs');
+const readline = require('readline');
+
+// ─── Terminal Hacker Style ─────────────────────────────────────────────────
+const LINE = '━'.repeat(36);
+const hackerBanner = (title) => `┏━⍟「 ☣ ${title} ☣ 」⍟━┓`;
+const hackerEnd = () => `┗${LINE}⍟`;
+
+function promptNumber(msg) {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    return new Promise(resolve => {
+        rl.question(`┃ ▸ ${msg}: `, (answer) => {
+            rl.close();
+            resolve(answer.trim().replace(/[^0-9]/g, ''));
+        });
+    });
+}
+
+function saveNumberToEnv(num) {
+    try {
+        const envPath = path.join(__dirname, '.env');
+        let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+        if (content.includes('OWNER_NUMBER=')) {
+            content = content.replace(/OWNER_NUMBER=.*/, `OWNER_NUMBER=${num}`);
+        } else {
+            content += `\nOWNER_NUMBER=${num}`;
+        }
+        if (content.includes('SESSION_ID=')) {
+            content = content.replace(/SESSION_ID=.*/, `SESSION_ID=${num}`);
+        } else {
+            content += `\nSESSION_ID=${num}`;
+        }
+        fs.writeFileSync(envPath, content, 'utf8');
+        // Mettre à jour process.env aussi
+        process.env.OWNER_NUMBER = num;
+        process.env.SESSION_ID = num;
+        console.log(`┃ ✅ Numéro ${num} sauvegardé dans .env`);
+    } catch (e) {
+        console.error(`┃ ❌ Erreur sauvegarde .env: ${e.message}`);
+    }
+}
 
 // ─── Configuration ─────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
@@ -454,13 +494,15 @@ async function pairBot(number, usePairingCode = true) {
                                 bridge.sendStatus('pairing_code', formatted);
                                 console.log(`[PAIR][${num}] Code: ${formatted}`);
                                 console.log('');
-                                console.log(`╔══════════════════════════════════╗`);
-                                console.log(`║  PAIRING CODE: ${formatted.padEnd(17)}║`);
-                                console.log(`╚══════════════════════════════════╝`);
-                                console.log('');
-                                console.log('WhatsApp → Paramètres → Appareils connectés');
-                                console.log('→ Associer avec le numéro de téléphone');
-                                console.log(`→ Saisis le code: ${formatted}`);
+                                console.log(hackerBanner(`${num} — PAIRING CODE`));
+                                console.log('┃');
+                                console.log(`┃ 🔑 CODE: ${formatted}`);
+                                console.log('┃');
+                                console.log('┃ WhatsApp → Paramètres');
+                                console.log('┃ → Appareils connectés');
+                                console.log('┃ → Associer avec le numéro');
+                                console.log(`┃ → Saisis: ${formatted}`);
+                                console.log(hackerEnd());
                                 console.log('');
                                 if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
                                 // Régénère tant que l'appareil n'est pas lié (le code expire ~2 min)
@@ -486,14 +528,18 @@ async function pairBot(number, usePairingCode = true) {
                 pState.qr = qr;
                 pState.code = null;
                 pushSSE({ type: 'qr_ready', number: num });
-                console.log(`[PAIR][${num}] QR generated`);
-                // QR dans le terminal
+                // QR dans le terminal — style hacker
                 console.log('');
-                console.log(`📱 [${num}] SCANNE CE QR CODE AVEC WHATSAPP :`);
-                console.log('');
+                console.log(hackerBanner(`${num} — QR CODE`));
+                console.log('┃');
+                console.log('┃ 📱 SCANNE CE QR AVEC WHATSAPP :');
+                console.log('┃');
                 qrTerm.generate(qr, { small: true });
-                console.log('');
-                console.log('WhatsApp → Paramètres → Appareils connectés → Connecter un appareil');
+                console.log('┃');
+                console.log('┃ WhatsApp → Paramètres');
+                console.log('┃ → Appareils connectés');
+                console.log('┃ → Connecter un appareil');
+                console.log(hackerEnd());
                 console.log('');
                 return;
             }
@@ -501,13 +547,13 @@ async function pairBot(number, usePairingCode = true) {
             if (connection === 'open') {
                 const botId = sock.user?.id || num;
                 console.log('');
-                console.log('╔══════════════════════════════════╗');
-                console.log(`║  ${BOT_NAME} ONLINE ✅`);
-                console.log('╚══════════════════════════════════╝');
-                console.log(`📱 Numéro : ${botId}`);
-                console.log(`🤖 Bot : ${BOT_NAME}`);
-                console.log(`💾 Session sauvegardée`);
-                console.log(`🔄 Reconnexion auto activée`);
+                console.log(hackerBanner(`${num} — CONNECTED ✅`));
+                console.log('┃');
+                console.log(`┃ 🤖 Bot      : ${BOT_NAME}`);
+                console.log(`┃ 📱 Numéro   : ${botId}`);
+                console.log(`┃ 💾 Session  : sauvegardée`);
+                console.log(`┃ 🔄 Reconnect: auto`);
+                console.log(hackerEnd());
                 console.log('');
                 accounts.set(num, { sock, ready: true });
                 reconnectMap.delete(num);
@@ -539,7 +585,7 @@ async function pairBot(number, usePairingCode = true) {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const loggedOut = statusCode === DisconnectReason.loggedOut;
                 console.log('');
-                console.log(`❌ [${num}] Connexion fermée (code: ${statusCode})`);
+                console.log(`┃ ❌ [${num}] Déconnecté (code: ${statusCode})`);
                 console.log('');
                 if (pState.timeout) clearTimeout(pState.timeout);
                 if (pState.renewTimer) clearTimeout(pState.renewTimer);
@@ -551,8 +597,12 @@ async function pairBot(number, usePairingCode = true) {
 
                 if (loggedOut) {
                     console.log('');
-                    console.log(`🚪 [${num}] Session déconnectée de WhatsApp.`);
-                    console.log(`🗑️ Supprime le dossier sessions/${num}`);
+                    console.log(hackerBanner(`${num} — LOGGED OUT`));
+                    console.log('┃');
+                    console.log('┃ 🚪 Session déconnectée de WhatsApp.');
+                    console.log(`┃ 🗑️  Supprime: sessions/${num}/`);
+                    console.log('┃ ▸ Ou relance le pairing.');
+                    console.log(hackerEnd());
                     console.log('');
                     accounts.delete(num);
                     pairingState.delete(num);
@@ -568,14 +618,14 @@ async function pairBot(number, usePairingCode = true) {
                     pairBot(num, true).catch(() => {});
                 } else if (existingReconnects(num) < MAX_RECONNECT) {
                     incrementReconnects(num);
-                    console.log(`🔄 [${num}] Reconnexion ${existingReconnects(num)}/${MAX_RECONNECT}...`);
+                    console.log(`┃ 🔄 [${num}] Reconnexion ${existingReconnects(num)}/${MAX_RECONNECT}...`);
                     pushSSE({ type: 'reconnecting', number: num, attempt: existingReconnects(num) });
                     await sleep(3000 * existingReconnects(num));
                     // ✅ préserve le mode : si un code avait été demandé, on régénère au reconnect
                     const keepCode = pState.code != null || usePairingCode;
                     pairBot(num, keepCode).catch(() => {});
                 } else {
-                    console.log(`❌ [${num}] Max reconnections atteint. Session perdue.`);
+                    console.log(`┃ ❌ [${num}] Max reconnections atteint. Session perdue.`);
                     accounts.delete(num);
                     pairingState.delete(num);
                     reconnectMap.delete(num);
@@ -1037,31 +1087,70 @@ async function startServer() {
     if (MONGODB_URI) {
         await connectdb();
     } else {
-        console.warn('[DB] No MongoDB URI, database features disabled');
+        console.warn('┃ ⚠️  Pas de MongoDB URI — mode SQLite local');
     }
 
     loadPlugins();
 
+    // ─── Prompt numéro si pas configuré ──────────────────────────────
+    const isRender = !!process.env.RENDER;
+    let connectNumber = SESSION_ID || process.env.OWNER_NUMBER || '';
+
+    if (!isRender && !connectNumber) {
+        console.log('');
+        console.log(hackerBanner('DJOUSSE-TECH-MD'));
+        console.log('┃');
+        console.log(`┃ 📡 ${config.BOT_NAME || 'DJOUSSE-TECH-MD'}`);
+        console.log(`┃ 🔧 Version: 3.1.0`);
+        console.log(`┃ 📦 ${commands.length} commandes`);
+        console.log('┃');
+        console.log('┃ ▸ Aucun numéro configuré.');
+        console.log('┃ ▸ Entres ton numéro WhatsApp pour connecter le bot.');
+        console.log('┃ ▸ Format: 237XXXXXXXXX (sans le +)');
+        console.log(hackerEnd());
+        console.log('');
+
+        connectNumber = await promptNumber('Numéro WhatsApp');
+
+        if (connectNumber && connectNumber.length >= 8) {
+            saveNumberToEnv(connectNumber);
+            SESSION_ID = connectNumber;
+        } else {
+            console.log('');
+            console.log('┃ ❌ Numéro invalide. Tu peux le reconfigurer dans .env');
+            console.log('┃ ▸ Ou visiter http://localhost:' + PORT + '/pair');
+            console.log('');
+        }
+    }
+
+    // ─── Démarrage serveur ───────────────────────────────────────────
     app.listen(PORT, '0.0.0.0', () => {
+        const line = '━'.repeat(36);
         console.log('');
-        console.log('======================================');
-        console.log(`        ${BOT_NAME}`);
-        console.log('======================================');
-        console.log('');
-        console.log(`🚀 Démarrage...`);
-        console.log(`📡 Port: ${PORT}`);
-        console.log(`🌐 Dashboard: http://localhost:${PORT}`);
-        console.log(`🔗 Pair page: http://localhost:${PORT}/pair`);
-        console.log(`📊 API: http://localhost:${PORT}/api/status`);
+        console.log('┏━⍟「 ☣ BOOT SEQUENCE ☣ 」⍟━┓');
+        console.log('┃');
+        console.log(`┃ 🤖 Bot     : ${BOT_NAME}`);
+        console.log(`┃ 📡 Port    : ${PORT}`);
+        console.log(`┃ 📦 Commandes: ${commands.length}`);
+        console.log(`┃ 🔧 SQLite  : ✅`);
+        console.log(`┃ 🌐 Dashboard: http://localhost:${PORT}`);
+        console.log(`┃ 🔗 Pair    : http://localhost:${PORT}/pair`);
+        console.log(`┃ 📊 API     : http://localhost:${PORT}/api/status`);
+        console.log('┃');
+        console.log('┗' + line + '⍟');
         console.log('');
     });
 
-    if (SESSION_ID) {
-        console.log('[AUTO] SESSION_ID found, auto-connecting...');
-        await sleep(3000);
-        await pairBot(SESSION_ID, true);
-    } else {
-        console.log('[AUTO] No SESSION_ID. Visit /pair to connect.');
+    // ─── Auto-connect ────────────────────────────────────────────────
+    if (connectNumber) {
+        console.log(`┃ 🔄 Auto-connexion: ${connectNumber}...`);
+        await sleep(2000);
+        await pairBot(connectNumber, true);
+    } else if (!isRender) {
+        console.log('');
+        console.log('┃ ▸ Aucun numéro. Lance le pairing depuis le web.');
+        console.log(`┃ ▸ http://localhost:${PORT}/pair`);
+        console.log('');
     }
 
     process.on('exit', () => {
@@ -1098,18 +1187,18 @@ async function autoReconnectFromMongoDB() {
             });
             if (dirs.length > 0) {
                 numbers = dirs;
-                console.log(`[AUTO] Found ${dirs.length} local session(s) in sessions/`);
+                console.log(`┃ 📂 ${dirs.length} session(s) locale(s) trouvée(s)`);
             }
         }
 
         if (numbers.length === 0) {
-            console.log('[AUTO] No saved sessions found');
+            console.log('┃ ℹ️  Aucune session sauvegardée');
             return;
         }
 
         // Keep only the most recent session if multiple exist
         if (numbers.length > 1) {
-            console.log(`[AUTO] ${numbers.length} sessions found, keeping only the most recent: ${numbers[numbers.length - 1]}`);
+            console.log(`┃ 📋 ${numbers.length} sessions trouvées, garde la plus récente: ${numbers[numbers.length - 1]}`);
             const keep = numbers[numbers.length - 1];
             for (const num of numbers) {
                 if (num !== keep) {
@@ -1121,7 +1210,7 @@ async function autoReconnectFromMongoDB() {
             numbers = [keep];
         }
 
-        console.log(`[AUTO] Found ${numbers.length} saved session(s). Auto-connecting all...`);
+        console.log(`┃ 📂 ${numbers.length} session(s) trouvée(s). Auto-connexion...`);
         await sleep(3000);
         for (const num of numbers) {
             const sessPath = path.join(__dirname, 'sessions', num, 'creds.json');
@@ -1145,14 +1234,14 @@ async function autoReconnectFromMongoDB() {
                 }
             }
             if (!fs.existsSync(sessPath)) {
-                console.log(`[AUTO] No local creds for ${num}, skipping`);
+                console.log(`┃ ⚠️  Pas de credentials pour ${num}, skip`);
                 continue;
             }
             await pairBot(num, false);
             await sleep(2000);
         }
     } catch (e) {
-        console.error('[AUTO] Auto-reconnect failed:', e.message);
+        console.error('┃ ❌ Auto-reconnect échoué:', e.message);
     }
 }
 
