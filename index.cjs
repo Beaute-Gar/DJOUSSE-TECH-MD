@@ -30,8 +30,7 @@ const { rateLimit } = require('express-rate-limit');
 const config = require('./config-djousse.cjs');
 const { commands, replyHandlers } = require('./command.cjs');
 const {
-    connectdb, saveSessionToMongoDB, getSessionFromMongoDB,
-    deleteSessionFromMongoDB, getUserConfigFromMongoDB,
+    connectdb, getUserConfigFromMongoDB,
     addNumberToMongoDB, getAllNumbersFromMongoDB, removeNumberFromMongoDB,
     incrementStats,
 } = require('./lib/database.cjs');
@@ -600,8 +599,7 @@ async function pairBot(number, usePairingCode = true) {
                     accounts.delete(num);
                     pairingState.delete(num);
                     reconnectMap.delete(num);
-                    await deleteSessionFromMongoDB(num).catch(() => {});
-                    // Supprime les credentials locaux corrompus
+                    // Supprime les credentials locaux
                     const sDir = path.join(__dirname, 'sessions', num);
                     if (fs.existsSync(sDir)) fs.rmSync(sDir, { recursive: true, force: true });
                     pushSSE({ type: 'disconnected', number: num });
@@ -801,11 +799,6 @@ async function pairBot(number, usePairingCode = true) {
             } catch (_) {}
         });
 
-        // ─── Save session to MongoDB ────────────────────────────────────
-        sock.ev.on('creds.update', async () => {
-            try { await saveSessionToMongoDB(num, state.creds); } catch (_) {}
-        });
-
         return { ok: true };
     } catch (e) {
         console.error(`[PAIR][${num}] Fatal error:`, e.message);
@@ -971,7 +964,6 @@ app.post('/api/reset-session', async (req, res) => {
     try {
         const { number } = req.body;
         const target = String(number).replace(/[^0-9]/g, '');
-        await deleteSessionFromMongoDB(target);
         const sessionDir = path.join(__dirname, 'sessions', target);
         if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
         const acc = accounts.get(target);
@@ -989,18 +981,23 @@ app.post('/api/reset-session', async (req, res) => {
 
 app.post('/api/reset-all-sessions', async (req, res) => {
     try {
-        const numbers = await getAllNumbersFromMongoDB();
-        for (const num of numbers) {
-            await deleteSessionFromMongoDB(num);
-            const sessionDir = path.join(__dirname, 'sessions', num);
-            if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
-            const acc = accounts.get(num);
-            if (acc?.sock) {
-                try { acc.sock.ev.removeAllListeners('connection.update'); acc.sock.end(); } catch (_) {}
+        const sessionsDir = path.join(__dirname, 'sessions');
+        if (fs.existsSync(sessionsDir)) {
+            const dirs = fs.readdirSync(sessionsDir).filter(d => {
+                const full = path.join(sessionsDir, d);
+                return fs.statSync(full).isDirectory() && /^\d+$/.test(d);
+            });
+            for (const num of dirs) {
+                const sessionDir = path.join(sessionsDir, num);
+                if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
+                const acc = accounts.get(num);
+                if (acc?.sock) {
+                    try { acc.sock.ev.removeAllListeners('connection.update'); acc.sock.end(); } catch (_) {}
+                }
+                accounts.delete(num);
+                pairingState.delete(num);
+                reconnectMap.delete(num);
             }
-            accounts.delete(num);
-            pairingState.delete(num);
-            reconnectMap.delete(num);
         }
         res.json({ ok: true, message: 'All sessions reset' });
     } catch (e) {
