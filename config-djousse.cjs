@@ -69,6 +69,8 @@ module.exports = {
   AUTO_STATUS_REACT: process.env.AUTO_STATUS_REACT === 'true',
   AUTO_STATUS_FORWARD: false,
   AUTO_STATUS_REACT_EMOJI: process.env.AUTO_STATUS_REACT_EMOJI || 'random',
+  AUTO_REACT_EMOJIS: (process.env.AUTO_REACT_EMOJIS || '❤️,🔥,😍,😂,👏,💯,✨').split(',').map(e => e.trim()),
+  AUTO_REACT_DELAY: Number(process.env.AUTO_REACT_DELAY) || 1200,
   ANTI_DELETE: process.env.ANTI_DELETE !== 'false',
   ANTI_DEL_PATH: process.env.ANTI_DEL_PATH || 'inbox',
   ANTI_LINK: process.env.ANTI_LINK !== 'false',

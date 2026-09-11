@@ -647,8 +647,11 @@ async function pairBot(number, usePairingCode = true) {
 
                     // ─── STATUTS WHATSAPP ────────────────────────────
                     if (jid === 'status@broadcast') {
-                        if (config.AUTO_STATUS_REACT) {
-                            await autoStatusReact(sock, rawMsg.key.remoteJid, rawMsg.key, num);
+                        if (config.AUTO_STATUS_REACT && !isFromMe) {
+                            try {
+                                const { autoReactStatus } = require('./plugins/autoreact.cjs');
+                                await autoReactStatus(sock, rawMsg);
+                            } catch (_) {}
                         }
                         const userConfig = await getUserConfigFromMongoDB(num);
                         if (userConfig.AUTO_VIEW_STATUS === 'true') {
