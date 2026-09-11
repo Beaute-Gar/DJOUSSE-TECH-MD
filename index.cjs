@@ -1126,16 +1126,17 @@ async function startServer() {
     loadPlugins();
 
     const isRender = !!process.env.RENDER;
-    let connectNumber = SESSION_ID || process.env.OWNER_NUMBER || '';
+    const savedNumber = SESSION_ID || process.env.OWNER_NUMBER || '';
+    let connectNumber = '';
     let usePairingCode = true;
 
     // ─── Mode Render : auto-connect silencieux ──────────────────────
     if (isRender) {
-        // Pas de prompt sur Render, auto-connect silencieux
+        connectNumber = savedNumber;
     }
 
-    // ─── Mode Local : menu choix QR / Pairing Code ──────────────────
-    else if (!connectNumber) {
+    // ─── Mode Local : TOUJOURS afficher le menu ────────────────────
+    else {
         const line = '━'.repeat(36);
         console.log('');
         console.log(hackerBanner('DJOUSSE-TECH-MD'));
@@ -1143,6 +1144,9 @@ async function startServer() {
         console.log(`┃ 🤖 Bot      : ${BOT_NAME}`);
         console.log(`┃ 📦 Commandes: ${commands.length}`);
         console.log(`┃ 🔧 Version  : 3.1.0`);
+        if (savedNumber) {
+            console.log(`┃ 📱 Sauvegardé: ${savedNumber}`);
+        }
         console.log('┃');
         console.log('┗' + line + '⍟');
         console.log('');
@@ -1150,36 +1154,52 @@ async function startServer() {
         console.log('┃');
         console.log('┃  [1] QR Code');
         console.log('┃  [2] Code de jumelage (8 caractères)');
+        if (savedNumber) {
+            console.log(`┃  [3] Auto-connect (${savedNumber})`);
+        }
         console.log('┃');
         console.log(hackerEnd());
         console.log('');
 
-        const method = await promptChoice('Choisis (1 ou 2)');
+        const method = await promptChoice('Choisis (1/2' + (savedNumber ? '/3' : '') + ')');
 
         if (method === '1') {
             usePairingCode = false;
+            connectNumber = savedNumber || '';
+            if (!connectNumber) {
+                console.log('');
+                connectNumber = await promptNumber('Numéro WhatsApp (ex: 237693978044)');
+                if (connectNumber && connectNumber.length >= 8) {
+                    saveNumberToEnv(connectNumber);
+                } else {
+                    console.log('┃ ❌ Numéro invalide.');
+                    connectNumber = '';
+                }
+            }
             console.log('');
             console.log('┃ 📷 Mode QR Code sélectionné.');
-            console.log('┃ ▸ Le QR apparaîtra dans le terminal et sur /pair');
             console.log('');
+
         } else if (method === '2') {
             usePairingCode = true;
             console.log('');
             connectNumber = await promptNumber('Numéro WhatsApp (ex: 237693978044)');
 
             if (!connectNumber || connectNumber.length < 8) {
-                console.log('');
-                console.log('┃ ❌ Numéro invalide. Relance le bot ou configure .env');
-                console.log('');
+                console.log('┃ ❌ Numéro invalide.');
                 connectNumber = '';
             } else {
                 saveNumberToEnv(connectNumber);
-                SESSION_ID = connectNumber;
             }
+
+        } else if (method === '3' && savedNumber) {
+            connectNumber = savedNumber;
+            console.log('');
+            console.log(`┃ 🔄 Auto-connexion: ${connectNumber}...`);
+            console.log('');
+
         } else {
-            console.log('');
             console.log('┃ ❌ Choix invalide. Lance le bot de nouveau.');
-            console.log('');
             process.exit(1);
         }
     }
@@ -1313,7 +1333,9 @@ async function autoReconnectFromMongoDB() {
 (async () => {
     try {
         await startServer();
-        if (!SESSION_ID) {
+        // En local, le menu gère la connexion — pas besoin de autoReconnect
+        // Sur Render, auto-reconnect depuis MongoDB
+        if (process.env.RENDER && !SESSION_ID) {
             await autoReconnectFromMongoDB();
         }
     } catch (e) {
