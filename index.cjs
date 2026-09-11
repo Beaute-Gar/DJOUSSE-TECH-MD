@@ -1212,21 +1212,20 @@ async function startServer() {
     const isRender = !!process.env.RENDER;
 
     // ─── Démarrage serveur ───────────────────────────────────────────
-    app.listen(PORT, '0.0.0.0', () => {
-        const line = '━'.repeat(36);
-        console.log('');
-        console.log(hackerBanner('BOOT SEQUENCE'));
-        console.log('┃');
-        console.log(`┃ 🤖 Bot      : ${BOT_NAME}`);
-        console.log(`┃ 📡 Port     : ${PORT}`);
-        console.log(`┃ 📦 Commandes: ${commands.length}`);
-        console.log(`┃ 🗄️  Database: ${MONGODB_URI ? 'MongoDB' : 'JSON local'}`);
-        console.log(`┃ 🌐 Dashboard: http://localhost:${PORT}`);
-        console.log(`┃ 🔗 Pair     : http://localhost:${PORT}/pair`);
-        console.log(`┃ 📊 API      : http://localhost:${PORT}/api/status`);
-        console.log('┃');
-        console.log('┗' + line + '⍟');
-        console.log('');
+    const { printBootSequence } = require('./lib/boot-banner.cjs');
+
+    app.listen(PORT, '0.0.0.0', async () => {
+        await printBootSequence({
+            botName: BOT_NAME,
+            folder: process.cwd(),
+            missingKeys: process.env.GEMINI_API_KEY ? [] : ['GEMINI_API_KEY'],
+            dbType: MONGODB_URI ? 'MongoDB' : 'Local JSON storage',
+            dbOk: true,
+            pluginsLoaded: commands.length,
+            pluginsErrors: 0,
+            commandsLoaded: commands.length,
+            port: PORT,
+        });
     });
 
     // ─── Mode Render : pas de menu ──────────────────────────────────
@@ -1235,13 +1234,12 @@ async function startServer() {
     }
 
     // ─── Mode Local : TOUJOURS demander un nouveau numéro ───────────
-    const line = '━'.repeat(36);
-    console.log(hackerBanner('NOUVELLE CONNEXION'));
-    console.log('┃');
-    console.log('┃  [1] QR Code');
-    console.log('┃  [2] Code de jumelage (8 caractères)');
-    console.log('┃');
-    console.log(hackerEnd());
+    const { box } = require('./lib/boot-banner.cjs');
+    console.log('');
+    box('NOUVELLE CONNEXION', [
+        `${'\x1b[92m'}[1]${'\x1b[0m'} QR Code`,
+        `${'\x1b[92m'}[2]${'\x1b[0m'} Code de jumelage ${'\x1b[2m'}(8 caractères)${'\x1b[0m'}`,
+    ]);
     console.log('');
 
     const method = await promptChoice('Choisis (1 ou 2)');
