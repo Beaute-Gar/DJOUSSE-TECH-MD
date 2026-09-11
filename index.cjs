@@ -74,27 +74,8 @@ function promptChoice(msg) {
 }
 
 function saveNumberToEnv(num) {
-    try {
-        const envPath = path.join(__dirname, '.env');
-        let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
-        if (content.includes('OWNER_NUMBER=')) {
-            content = content.replace(/OWNER_NUMBER=.*/, `OWNER_NUMBER=${num}`);
-        } else {
-            content += `\nOWNER_NUMBER=${num}`;
-        }
-        if (content.includes('SESSION_ID=')) {
-            content = content.replace(/SESSION_ID=.*/, `SESSION_ID=${num}`);
-        } else {
-            content += `\nSESSION_ID=${num}`;
-        }
-        fs.writeFileSync(envPath, content, 'utf8');
-        // Mettre à jour process.env aussi
-        process.env.OWNER_NUMBER = num;
-        process.env.SESSION_ID = num;
-        console.log(`┃ ✅ Numéro ${num} sauvegardé dans .env`);
-    } catch (e) {
-        console.error(`┃ ❌ Erreur sauvegarde .env: ${e.message}`);
-    }
+    // Ne sauvegarde PAS dans .env — c'est multi-bot
+    // La session est sauvegardée dans sessions/<num>/ par Baileys
 }
 
 // ─── Configuration ─────────────────────────────────────────────────────────
@@ -1126,83 +1107,109 @@ async function startServer() {
     loadPlugins();
 
     const isRender = !!process.env.RENDER;
-    const savedNumber = SESSION_ID || process.env.OWNER_NUMBER || '';
-    let connectNumber = '';
-    let usePairingCode = true;
 
-    // ─── Mode Render : auto-connect silencieux ──────────────────────
-    if (isRender) {
-        connectNumber = savedNumber;
-    }
-
-    // ─── Mode Local : TOUJOURS afficher le menu ────────────────────
-    else {
+    // ─── Démarrage serveur ───────────────────────────────────────────
+    app.listen(PORT, '0.0.0.0', () => {
         const line = '━'.repeat(36);
         console.log('');
-        console.log(hackerBanner('DJOUSSE-TECH-MD'));
+        console.log(hackerBanner('BOOT SEQUENCE'));
         console.log('┃');
         console.log(`┃ 🤖 Bot      : ${BOT_NAME}`);
+        console.log(`┃ 📡 Port     : ${PORT}`);
         console.log(`┃ 📦 Commandes: ${commands.length}`);
-        console.log(`┃ 🔧 Version  : 3.1.0`);
-        if (savedNumber) {
-            console.log(`┃ 📱 Sauvegardé: ${savedNumber}`);
-        }
+        console.log(`┃ 🔧 SQLite   : ✅`);
+        console.log(`┃ 🌐 Dashboard: http://localhost:${PORT}`);
+        console.log(`┃ 🔗 Pair     : http://localhost:${PORT}/pair`);
+        console.log(`┃ 📊 API      : http://localhost:${PORT}/api/status`);
         console.log('┃');
         console.log('┗' + line + '⍟');
         console.log('');
-        console.log(hackerBanner('MÉTHODE DE CONNEXION'));
-        console.log('┃');
-        console.log('┃  [1] QR Code');
-        console.log('┃  [2] Code de jumelage (8 caractères)');
-        if (savedNumber) {
-            console.log(`┃  [3] Auto-connect (${savedNumber})`);
-        }
-        console.log('┃');
-        console.log(hackerEnd());
-        console.log('');
+    });
 
-        const method = await promptChoice('Choisis (1/2' + (savedNumber ? '/3' : '') + ')');
-
-        if (method === '1') {
-            usePairingCode = false;
-            connectNumber = savedNumber || '';
-            if (!connectNumber) {
-                console.log('');
-                connectNumber = await promptNumber('Numéro WhatsApp (ex: 237693978044)');
-                if (connectNumber && connectNumber.length >= 8) {
-                    saveNumberToEnv(connectNumber);
-                } else {
-                    console.log('┃ ❌ Numéro invalide.');
-                    connectNumber = '';
-                }
+    // ─── Auto-connect toutes les sessions sauvegardées ──────────────
+    const sessionsDir = path.join(__dirname, 'sessions');
+    if (fs.existsSync(sessionsDir)) {
+        const savedNums = fs.readdirSync(sessionsDir).filter(d => {
+            const full = path.join(sessionsDir, d);
+            return fs.statSync(full).isDirectory() && /^\d+$/.test(d);
+        });
+        if (savedNums.length > 0) {
+            console.log(`┃ 🔄 Auto-connexion: ${savedNums.length} session(s) sauvegardée(s)...`);
+            for (const num of savedNums) {
+                console.log(`┃ 📱 → ${num}`);
+                await pairBot(num, false);
+                await sleep(1500);
             }
+            console.log('');
+        }
+    }
+
+    // ─── Mode Render : pas de menu ──────────────────────────────────
+    if (isRender) {
+        return;
+    }
+
+    // ─── Mode Local : TOUJOURS demander un nouveau numéro ───────────
+    const line = '━'.repeat(36);
+    console.log(hackerBanner('NOUVELLE CONNEXION'));
+    console.log('┃');
+    console.log('┃  [1] QR Code');
+    console.log('┃  [2] Code de jumelage (8 caractères)');
+    console.log('┃');
+    console.log(hackerEnd());
+    console.log('');
+
+    const method = await promptChoice('Choisis (1 ou 2)');
+
+    let connectNumber = '';
+    let usePairingCode = true;
+
+    if (method === '1') {
+        usePairingCode = false;
+        console.log('');
+        connectNumber = await promptNumber('Numéro WhatsApp (ex: 237693978044)');
+        if (!connectNumber || connectNumber.length < 8) {
+            console.log('┃ ❌ Numéro invalide.');
+            connectNumber = '';
+        } else {
             console.log('');
             console.log('┃ 📷 Mode QR Code sélectionné.');
             console.log('');
-
-        } else if (method === '2') {
-            usePairingCode = true;
-            console.log('');
-            connectNumber = await promptNumber('Numéro WhatsApp (ex: 237693978044)');
-
-            if (!connectNumber || connectNumber.length < 8) {
-                console.log('┃ ❌ Numéro invalide.');
-                connectNumber = '';
-            } else {
-                saveNumberToEnv(connectNumber);
-            }
-
-        } else if (method === '3' && savedNumber) {
-            connectNumber = savedNumber;
-            console.log('');
-            console.log(`┃ 🔄 Auto-connexion: ${connectNumber}...`);
-            console.log('');
-
-        } else {
-            console.log('┃ ❌ Choix invalide. Lance le bot de nouveau.');
-            process.exit(1);
         }
+
+    } else if (method === '2') {
+        usePairingCode = true;
+        console.log('');
+        connectNumber = await promptNumber('Numéro WhatsApp (ex: 237693978044)');
+        if (!connectNumber || connectNumber.length < 8) {
+            console.log('┃ ❌ Numéro invalide.');
+            connectNumber = '';
+        }
+
+    } else {
+        console.log('┃ ❌ Choix invalide.');
+        process.exit(1);
     }
+
+    if (connectNumber) {
+        await sleep(1000);
+        await pairBot(connectNumber, usePairingCode);
+    }
+
+    process.on('exit', () => {
+        clearInterval(memInterval);
+        cleanUselessCacheAndLogs();
+    });
+
+    process.on('uncaughtException', (err) => {
+        console.error('[CRASH] Uncaught Exception:', err.message);
+        saveCrash(err);
+    });
+
+    process.on('unhandledRejection', (reason) => {
+        console.error('[CRASH] Unhandled Rejection:', reason);
+    });
+}
 
     // ─── Démarrage serveur ───────────────────────────────────────────
     app.listen(PORT, '0.0.0.0', () => {
@@ -1333,11 +1340,7 @@ async function autoReconnectFromMongoDB() {
 (async () => {
     try {
         await startServer();
-        // En local, le menu gère la connexion — pas besoin de autoReconnect
-        // Sur Render, auto-reconnect depuis MongoDB
-        if (process.env.RENDER && !SESSION_ID) {
-            await autoReconnectFromMongoDB();
-        }
+        // autoReconnect géré par startServer (scan sessions/)
     } catch (e) {
         console.error('[FATAL]', e.message);
         saveCrash(e);
