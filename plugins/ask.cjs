@@ -2,6 +2,7 @@ const { cmd } = require('../command.cjs');
 const { box } = require('../lib/djousse-ui.cjs');
 const axios = require('axios');
 const { getAIMemory } = require('../src/services/ai-memory.cjs');
+const { getFacts } = require('../lib/ainoria-memory.cjs');
 const { buildSystemPrompt } = require('../lib/knowledge.cjs');
 
 const GEMINI_MODEL = 'gemini-3.6-flash';
@@ -39,7 +40,17 @@ cmd({
       }
     } catch {}
 
-    const systemPrompt = buildSystemPrompt();
+    // Injecter la mémoire persistante AINORIA dans le contexte
+    let ainoriaContext = '';
+    try {
+      const facts = getFacts(sender);
+      if (facts.length > 0) {
+        ainoriaContext = '\n\n[AINORIA MEMORY - informations connues sur cet utilisateur]:\n' +
+          facts.map(f => `- ${f.key}: ${f.value}`).join('\n');
+      }
+    } catch {}
+
+    const systemPrompt = buildSystemPrompt() + ainoriaContext;
     const contents = [
       { role: 'user', parts: [{ text: systemPrompt }] },
       { role: 'model', parts: [{ text: 'Je comprends. Je suis DJOUSSE TECH, prêt à répondre.' }] },

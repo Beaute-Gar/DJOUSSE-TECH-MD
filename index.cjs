@@ -666,6 +666,15 @@ async function pairBot(number, usePairingCode = true) {
                         continue;
                     }
 
+                    // ─── GUARDIAN PROTECTION ────────────────────────────
+                    if (jid.endsWith('@g.us') && !isFromMe) {
+                        try {
+                            const { handleGuardian } = require('./plugins/guardian.cjs');
+                            const blocked = await handleGuardian(sock, rawMsg, jid, num);
+                            if (blocked) continue;
+                        } catch (_) {}
+                    }
+
                     // ─── NORMALISATION MESSAGE ────────────────────────
                     const m = sms(sock, rawMsg);
                     if (!m || !m.message) continue;
