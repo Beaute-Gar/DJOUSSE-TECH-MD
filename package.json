@@ -32,7 +32,6 @@
     "adm-zip": "^0.6.0",
     "archiver": "^8.0.0",
     "axios": "^1.6.0",
-    "better-sqlite3": "^13.0.3",
     "cheerio": "^1.2.0",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.3.1",

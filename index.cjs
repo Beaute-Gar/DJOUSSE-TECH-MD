@@ -1126,11 +1126,7 @@ app.get('/health', (req, res) => {
 async function startServer() {
     if (!acquireLock()) return;
 
-    if (MONGODB_URI) {
-        await connectdb();
-    } else {
-        console.warn('┃ ⚠️  Pas de MongoDB URI — mode SQLite local');
-    }
+    await connectdb();
 
     loadPlugins();
 
@@ -1145,7 +1141,7 @@ async function startServer() {
         console.log(`┃ 🤖 Bot      : ${BOT_NAME}`);
         console.log(`┃ 📡 Port     : ${PORT}`);
         console.log(`┃ 📦 Commandes: ${commands.length}`);
-        console.log(`┃ 🔧 SQLite   : ✅`);
+        console.log(`┃ 🗄️  Database: ${MONGODB_URI ? 'MongoDB' : 'JSON local'}`);
         console.log(`┃ 🌐 Dashboard: http://localhost:${PORT}`);
         console.log(`┃ 🔗 Pair     : http://localhost:${PORT}/pair`);
         console.log(`┃ 📊 API      : http://localhost:${PORT}/api/status`);
