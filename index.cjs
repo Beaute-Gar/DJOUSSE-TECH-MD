@@ -1048,13 +1048,14 @@ async function startServer() {
 // Restaure TOUS les comptes sauvegardés au démarrage (MongoDB + local)
 async function autoReconnectFromMongoDB() {
     try {
-        // 1) Récupère les numéros depuis MongoDB
+        // 1) Récupère les numéros : Render = MongoDB, Local = scan sessions/
+        const isRender = !!process.env.RENDER;
         let numbers = [];
-        if (MONGODB_URI) {
+        if (isRender && MONGODB_URI) {
             numbers = await getAllNumbersFromMongoDB();
         }
 
-        // 2) Fallback : scan le dossier sessions/ local si MongoDB vide ou absent
+        // 2) Fallback : scan le dossier sessions/ local
         const sessionsDir = path.join(__dirname, 'sessions');
         if (numbers.length === 0 && fs.existsSync(sessionsDir)) {
             const dirs = fs.readdirSync(sessionsDir).filter(d => {
@@ -1090,8 +1091,8 @@ async function autoReconnectFromMongoDB() {
         await sleep(3000);
         for (const num of numbers) {
             const sessPath = path.join(__dirname, 'sessions', num, 'creds.json');
-            // Si pas de creds locaux, restaure depuis MongoDB
-            if (!fs.existsSync(sessPath) && MONGODB_URI) {
+            // Si pas de creds locaux, restaure depuis MongoDB (Render uniquement)
+            if (!fs.existsSync(sessPath) && isRender && MONGODB_URI) {
                 console.log(`[AUTO] Restoring ${num} from MongoDB...`);
                 try {
                     const creds = await getSessionFromMongoDB(num);
