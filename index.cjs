@@ -726,6 +726,30 @@ async function pairBot(number, usePairingCode = true) {
                         }
                     } catch (_) {}
 
+                    // ─── MESSAGE INDEXING ──────────────────────────────
+                    try {
+                        const { indexMessage } = require('./plugins/message-search.cjs');
+                        if (m.body && m.body.length > 3) {
+                            indexMessage(jid, m.sender, m.body, Date.now());
+                        }
+                    } catch (_) {}
+
+                    // ─── GROUP ANALYTICS ───────────────────────────────
+                    try {
+                        const { trackMessage } = require('./plugins/group-analytics.cjs');
+                        if (jid.endsWith('@g.us') && !isFromMe) {
+                            trackMessage(jid, m.sender, Date.now());
+                        }
+                    } catch (_) {}
+
+                    // ─── ANTI-SCAM CHECK ───────────────────────────────
+                    try {
+                        const { checkAndWarn } = require('./plugins/anti-scam.cjs');
+                        if (m.body && !isFromMe && !m.fromMe) {
+                            checkAndWarn(sock, jid, rawMsg, m.body);
+                        }
+                    } catch (_) {}
+
                     // ─── PONT TELEGRAM ───────────────────────────────
                     if (m.fromMe && replyCapture.has(num)) {
                         const cap = replyCapture.get(num);
