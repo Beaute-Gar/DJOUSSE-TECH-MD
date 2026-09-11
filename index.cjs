@@ -421,7 +421,8 @@ function pushSSE(data) {
 }
 
 // ─── Pairing Logic (multi-compte) ──────────────────────────────────────────
-async function pairBot(number, usePairingCode = true) {
+// method: 'pairing' | 'qr' | 'restore'
+async function pairBot(number, method = 'pairing') {
     const num = String(number).replace(/[^0-9]/g, '');
 
     const existing = accounts.get(num);
@@ -434,9 +435,12 @@ async function pairBot(number, usePairingCode = true) {
 
     const pState = getPairingState(num);
     if (pState.timeout) clearTimeout(pState.timeout);
+    if (pState.renewTimer) clearTimeout(pState.renewTimer);
     pState.requested = false;
     pState.code = null;
     pState.qr = null;
+
+    const usePairingCode = method === 'pairing';
 
     try {
         const sessionDir = path.join(__dirname, 'sessions', num);
@@ -453,7 +457,7 @@ async function pairBot(number, usePairingCode = true) {
                 keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' })),
             },
             printQRInTerminal: false,
-            browser: Browsers.ubuntu('Chrome'),   // ✅ signature desktop fiable pour le pairing code
+            browser: Browsers.ubuntu('Chrome'),
             markOnlineOnConnect: true,
             generateHighQualityLinkPreview: false,
             syncFullHistory: false,
@@ -467,67 +471,75 @@ async function pairBot(number, usePairingCode = true) {
 
         accounts.set(num, { sock, ready: false });
 
-        // Sauvegarde credentials : Baileys pur (useMultiFileAuthState)
+        // Sauvegarde credentials
         sock.ev.on('creds.update', async () => {
             await saveCreds();
         });
+
+        // ─── Fonction dédiée pour demander le pairing code ──────────────
+        const requestPairingCodeSafe = async () => {
+            try {
+                if (sock.authState.creds.registered) return null;
+                if (pState.requested) return null;
+                pState.requested = true;
+
+                await sleep(3000); // laisse le handshake se stabiliser
+
+                const code = await sock.requestPairingCode(num);
+                pState.code = code;
+                const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
+
+                pushSSE({ type: 'pairing_code', code: formatted, number: num });
+                bridge.sendStatus('pairing_code', formatted);
+                console.log(`[PAIR][${num}] Code: ${formatted}`);
+                console.log('');
+                console.log('┏━⍟「 ☣ PAIRING CODE ☣ 」⍟━┓');
+                console.log('┃');
+                console.log(`┃  🔑  ${formatted}`);
+                console.log('┃');
+                console.log('┃  📱 Sur ton téléphone :');
+                console.log('┃  1. Ouvre WhatsApp');
+                console.log('┃  2. Paramètres');
+                console.log('┃  3. Appareils connectés');
+                console.log('┃  4. Associer avec le numéro');
+                console.log(`┃  5. Saisis: ${formatted}`);
+                console.log('┃');
+                console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟');
+                console.log('');
+                if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
+                return code;
+            } catch (e) {
+                console.error(`[PAIR][${num}] Error requesting code:`, e.message);
+                pState.requested = false;
+                return null;
+            }
+        };
 
         // ─── connection.update ──────────────────────────────────────────
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
 
-            // ✅ Code d'appairage : une demande + régénération auto toutes les 40s
+            // ✅ Pairing code : demandé une fois, régénéré après 90s si pas connecté
             if (qr && usePairingCode && !sock.authState.creds.registered) {
                 if (!pState.requested) {
-                    pState.requested = true;
-                    pState.timeout = setTimeout(async () => {
-                        const requestCode = async () => {
-                            try {
-                                const code = await sock.requestPairingCode(num);
-                                pState.code = code;
-                                const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
-                                pushSSE({ type: 'pairing_code', code: formatted, number: num });
-                                bridge.sendStatus('pairing_code', formatted);
-                                console.log(`[PAIR][${num}] Code: ${formatted}`);
-                                console.log('');
-                                console.log('┏━⍟「 ☣ PAIRING CODE ☣ 」⍟━┓');
-                                console.log('┃');
-                                console.log(`┃  🔑  ${formatted}`);
-                                console.log('┃');
-                                console.log('┃  📱 Sur ton téléphone :');
-                                console.log('┃  1. Ouvre WhatsApp');
-                                console.log('┃  2. Paramètres');
-                                console.log('┃  3. Appareils connectés');
-                                console.log('┃  4. Associer avec le numéro');
-                                console.log(`┃  5. Saisis: ${formatted}`);
-                                console.log('┃');
-                                console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟');
-                                console.log('');
-                                if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
-                                // Régénère tant que l'appareil n'est pas lié (le code expire ~2 min)
-                                pState.renewTimer = setTimeout(() => {
-                                    if (!sock.authState.creds.registered && accounts.get(num)?.sock === sock) {
-                                        console.log(`[PAIR][${num}] Régénération du code...`);
-                                        requestCode();
-                                    }
-                                }, 40000);
-                            } catch (e) {
-                                console.error(`[PAIR][${num}] Error requesting code:`, e.message);
-                                pState.requested = false;
-                            }
-                        };
-                        await sleep(3000); // laisse le handshake se stabiliser
-                        requestCode();
-                    }, 100);
+                    requestPairingCodeSafe();
+                    // Régénération unique après 90s (au lieu de 40s automatique)
+                    pState.renewTimer = setTimeout(() => {
+                        if (!sock.authState.creds.registered && accounts.get(num)?.sock === sock) {
+                            console.log(`[PAIR][${num}] Code expiré, nouveau code disponible`);
+                            pState.requested = false;
+                            requestPairingCodeSafe();
+                        }
+                    }, 90000);
                 }
                 return;
             }
 
+            // ✅ QR mode
             if (qr && !usePairingCode) {
                 pState.qr = qr;
                 pState.code = null;
                 pushSSE({ type: 'qr_ready', number: num });
-                // QR dans le terminal — style hacker
                 console.log('');
                 console.log('┏━⍟「 ☣ QR CODE ☣ 」⍟━┓');
                 console.log('┃');
@@ -598,22 +610,21 @@ async function pairBot(number, usePairingCode = true) {
                     accounts.delete(num);
                     pairingState.delete(num);
                     reconnectMap.delete(num);
-                    // Supprime les credentials locaux
                     const sDir = path.join(__dirname, 'sessions', num);
                     if (fs.existsSync(sDir)) fs.rmSync(sDir, { recursive: true, force: true });
                     pushSSE({ type: 'disconnected', number: num });
-                    // Auto-relance le pairing avec code après 3s
                     await sleep(3000);
                     console.log(`[PAIR][${num}] Auto-relance du pairing...`);
-                    pairBot(num, true).catch(() => {});
+                    pairBot(num, 'pairing').catch(() => {});
                 } else if (existingReconnects(num) < MAX_RECONNECT) {
                     incrementReconnects(num);
                     console.log(`┃ 🔄 [${num}] Reconnexion ${existingReconnects(num)}/${MAX_RECONNECT}...`);
                     pushSSE({ type: 'reconnecting', number: num, attempt: existingReconnects(num) });
                     await sleep(3000 * existingReconnects(num));
-                    // ✅ préserve le mode : si un code avait été demandé, on régénère au reconnect
-                    const keepCode = pState.code != null || usePairingCode;
-                    pairBot(num, keepCode).catch(() => {});
+                    // ✅ préserve le mode : restore si session existe, sinon même mode
+                    const hasCreds = fs.existsSync(path.join(__dirname, 'sessions', num, 'creds.json'));
+                    const nextMethod = hasCreds ? 'restore' : method;
+                    pairBot(num, nextMethod).catch(() => {});
                 } else {
                     console.log(`┃ ❌ [${num}] Max reconnections atteint. Session perdue.`);
                     accounts.delete(num);
@@ -690,7 +701,7 @@ async function pairBot(number, usePairingCode = true) {
                                 case 'djousse:ainoria': await sendAinoriaMenu(sock, m.chat); break;
                                 case 'djousse:tools': await sendToolsMenu(sock, m.chat); break;
                                 case 'djousse:memory': {
-                                    const { getFacts } = require('../lib/ainoria-memory.cjs');
+                                    const { getFacts } = require('./lib/ainoria-memory.cjs');
                                     const facts = getFacts(m.sender);
                                     if (facts.length === 0) await m.reply('🧠 Aucune information mémorisée.\n💡 .remember <clé> = <valeur>');
                                     else await m.reply('🧠 *Ta mémoire :*\n\n' + facts.map((f, i) => `${i + 1}. 📌 ${f.key} → ${f.value}`).join('\n'));
@@ -919,7 +930,7 @@ app.post('/api/pair', async (req, res) => {
     try {
         if (telegramUserId) telegramLinks.set(num, String(telegramUserId));
 
-        const result = await pairBot(num, useCode !== false);
+        const result = await pairBot(num, useCode !== false ? 'pairing' : 'qr');
         if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
         if (result.alreadyConnected) return res.json({ ok: true, message: 'Already connected', connected: true });
 
@@ -1138,10 +1149,9 @@ app.post('/api/connection/create', async (req, res) => {
     const acc = accounts.get(num);
     if (acc?.ready) return res.json({ success: true, alreadyConnected: true, connectionId: num });
 
-    const usePairingCode = method !== 'qr';
-    const result = await pairBot(num, usePairingCode);
+    const result = await pairBot(num, method);
     if (!result.ok) return res.json({ success: false, error: result.error });
-    res.json({ success: true, connectionId: num, method: usePairingCode ? 'pairing' : 'qr' });
+    res.json({ success: true, connectionId: num, method: method || 'pairing' });
 });
 
 app.get('/api/connection/:id/status', (req, res) => {
@@ -1275,7 +1285,7 @@ async function startServer() {
 
     if (connectNumber) {
         await sleep(1000);
-        await pairBot(connectNumber, usePairingCode);
+        await pairBot(connectNumber, usePairingCode ? 'pairing' : 'qr');
     }
 
     process.on('exit', () => {
@@ -1311,13 +1321,17 @@ async function autoReconnectFromSessions() {
 
         console.log(`┃ 📂 ${numbers.length} session(s) Baileys trouvée(s). Auto-connexion...`);
         for (const num of numbers) {
+            if (accounts.has(num)) {
+                console.log(`┃ ⏭️ ${num} déjà chargé, skip`);
+                continue;
+            }
             const sessPath = path.join(sessionsDir, num, 'creds.json');
             if (!fs.existsSync(sessPath)) {
                 console.log(`┃ ⚠️  Pas de creds.json pour ${num}, skip`);
                 continue;
             }
             console.log(`┃ 📱 → ${num}`);
-            await pairBot(num, false);
+            await pairBot(num, 'restore');
             await sleep(1500);
         }
     } catch (e) {
