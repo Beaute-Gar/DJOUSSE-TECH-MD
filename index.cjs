@@ -20,6 +20,7 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const qrcode = require('qrcode');
+const qrTerm = require('qrcode-terminal');
 const NodeCache = require('node-cache');
 const http = require('http');
 const https = require('https');
@@ -452,6 +453,15 @@ async function pairBot(number, usePairingCode = true) {
                                 pushSSE({ type: 'pairing_code', code: formatted, number: num });
                                 bridge.sendStatus('pairing_code', formatted);
                                 console.log(`[PAIR][${num}] Code: ${formatted}`);
+                                console.log('');
+                                console.log(`╔══════════════════════════════════╗`);
+                                console.log(`║  PAIRING CODE: ${formatted.padEnd(17)}║`);
+                                console.log(`╚══════════════════════════════════╝`);
+                                console.log('');
+                                console.log('WhatsApp → Paramètres → Appareils connectés');
+                                console.log('→ Associer avec le numéro de téléphone');
+                                console.log(`→ Saisis le code: ${formatted}`);
+                                console.log('');
                                 if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
                                 // Régénère tant que l'appareil n'est pas lié (le code expire ~2 min)
                                 pState.renewTimer = setTimeout(() => {
@@ -477,11 +487,28 @@ async function pairBot(number, usePairingCode = true) {
                 pState.code = null;
                 pushSSE({ type: 'qr_ready', number: num });
                 console.log(`[PAIR][${num}] QR generated`);
+                // QR dans le terminal
+                console.log('');
+                console.log(`📱 [${num}] SCANNE CE QR CODE AVEC WHATSAPP :`);
+                console.log('');
+                qrTerm.generate(qr, { small: true });
+                console.log('');
+                console.log('WhatsApp → Paramètres → Appareils connectés → Connecter un appareil');
+                console.log('');
                 return;
             }
 
             if (connection === 'open') {
-                console.log(`[CONN][${num}] ${BOT_NAME} connected!`);
+                const botId = sock.user?.id || num;
+                console.log('');
+                console.log('╔══════════════════════════════════╗');
+                console.log(`║  ${BOT_NAME} ONLINE ✅`);
+                console.log('╚══════════════════════════════════╝');
+                console.log(`📱 Numéro : ${botId}`);
+                console.log(`🤖 Bot : ${BOT_NAME}`);
+                console.log(`💾 Session sauvegardée`);
+                console.log(`🔄 Reconnexion auto activée`);
+                console.log('');
                 accounts.set(num, { sock, ready: true });
                 reconnectMap.delete(num);
                 if (pState.timeout) clearTimeout(pState.timeout);
@@ -511,7 +538,9 @@ async function pairBot(number, usePairingCode = true) {
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const loggedOut = statusCode === DisconnectReason.loggedOut;
-                console.log(`[CONN][${num}] Connection closed. Status: ${statusCode}`);
+                console.log('');
+                console.log(`❌ [${num}] Connexion fermée (code: ${statusCode})`);
+                console.log('');
                 if (pState.timeout) clearTimeout(pState.timeout);
                 if (pState.renewTimer) clearTimeout(pState.renewTimer);
 
@@ -521,7 +550,10 @@ async function pairBot(number, usePairingCode = true) {
                 }
 
                 if (loggedOut) {
-                    console.log(`❌ [${num}] Session logged out — purge + auto-repair`);
+                    console.log('');
+                    console.log(`🚪 [${num}] Session déconnectée de WhatsApp.`);
+                    console.log(`🗑️ Supprime le dossier sessions/${num}`);
+                    console.log('');
                     accounts.delete(num);
                     pairingState.delete(num);
                     reconnectMap.delete(num);
@@ -536,14 +568,14 @@ async function pairBot(number, usePairingCode = true) {
                     pairBot(num, true).catch(() => {});
                 } else if (existingReconnects(num) < MAX_RECONNECT) {
                     incrementReconnects(num);
-                    console.log(`[RECONNECT][${num}] Attempt ${existingReconnects(num)}/${MAX_RECONNECT}...`);
+                    console.log(`🔄 [${num}] Reconnexion ${existingReconnects(num)}/${MAX_RECONNECT}...`);
                     pushSSE({ type: 'reconnecting', number: num, attempt: existingReconnects(num) });
                     await sleep(3000 * existingReconnects(num));
                     // ✅ préserve le mode : si un code avait été demandé, on régénère au reconnect
                     const keepCode = pState.code != null || usePairingCode;
                     pairBot(num, keepCode).catch(() => {});
                 } else {
-                    console.log(`[CONN][${num}] Max reconnect attempts reached.`);
+                    console.log(`❌ [${num}] Max reconnections atteint. Session perdue.`);
                     accounts.delete(num);
                     pairingState.delete(num);
                     reconnectMap.delete(num);
@@ -1011,15 +1043,17 @@ async function startServer() {
     loadPlugins();
 
     app.listen(PORT, '0.0.0.0', () => {
-        const _ln = (t) => '║  ' + t;
-        console.log(`\n╔══════════════════════════════════════════╗`);
-        console.log(_ln(`${BOT_NAME} v3.1.0 (multi-account)`));
-        console.log(_ln(`Owner: ${OWNER_NAME}`));
-        console.log(_ln(`Port: ${PORT}`));
-        console.log(`╚══════════════════════════════════════════╝\n`);
-        console.log(`[SERVER] Dashboard: http://localhost:${PORT}`);
-        console.log(`[SERVER] Pair page: http://localhost:${PORT}/pair`);
-        console.log(`[SERVER] API: http://localhost:${PORT}/api/status`);
+        console.log('');
+        console.log('======================================');
+        console.log(`        ${BOT_NAME}`);
+        console.log('======================================');
+        console.log('');
+        console.log(`🚀 Démarrage...`);
+        console.log(`📡 Port: ${PORT}`);
+        console.log(`🌐 Dashboard: http://localhost:${PORT}`);
+        console.log(`🔗 Pair page: http://localhost:${PORT}/pair`);
+        console.log(`📊 API: http://localhost:${PORT}/api/status`);
+        console.log('');
     });
 
     if (SESSION_ID) {
