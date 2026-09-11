@@ -169,6 +169,10 @@ const telegramLinks = new Map(); // numéro WhatsApp -> chatId Telegram
 const replyCapture = new Map();  // numéro -> { chatId, expires }
 const sseClients = [];
 
+// Messages envoyés automatiquement par DJOUSSE TECH.
+// Mémorisés pour éviter que le bot traite ses propres réponses.
+const botSentMessageIds = new NodeCache({ stdTTL: 120, checkperiod: 30, useClones: false });
+
 function getPairingState(num) {
     if (!pairingState.has(num)) {
         pairingState.set(num, { requested: false, timeout: null, code: null, qr: null, resolve: null });
@@ -289,8 +293,16 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             groupMetadata: null, participants: [], groupAdmins: [],
             config, runtime, sleep, getBuffer, getRandom, h2k, isUrl, fetchJson,
             style, randomImage, fakevCard,
-            reply: (text) => m.reply(text),
-            sendMessage: (jid, content, opts) => conn.sendMessage(jid, content, opts),
+            reply: async (text) => {
+                const sent = await m.reply(text);
+                if (sent?.key?.id) botSentMessageIds.set(sent.key.id, true);
+                return sent;
+            },
+            sendMessage: async (jid, content, opts) => {
+                const sent = await conn.sendMessage(jid, content, opts);
+                if (sent?.key?.id) botSentMessageIds.set(sent.key.id, true);
+                return sent;
+            },
         };
 
         if (m.isGroup) {
@@ -308,7 +320,10 @@ async function executePlugin(command, conn, m, body, args, ctx) {
         incrementStats(m.botNumber || '', 'commandsUsed').catch(() => {});
     } catch (e) {
         console.error(`[CMD] Error executing ${command.pattern}:`, e.message);
-        try { await m.reply('❌ Command error: ' + e.message); } catch (_) {}
+        try {
+            const errSent = await m.reply('❌ Command error: ' + e.message);
+            if (errSent?.key?.id) botSentMessageIds.set(errSent.key.id, true);
+        } catch (_) {}
     }
 }
 
@@ -633,21 +648,22 @@ async function pairBot(number, usePairingCode = true) {
    // ─── messages.upsert (Plugin Dispatch + Pont Telegram) ──────────
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
             if (type !== 'notify') return;
+
             for (const rawMsg of messages) {
                 try {
                     const jid = rawMsg.key?.remoteJid;
                     if (!jid || !rawMsg.message) continue;
 
-                    // Anti-boucle : ignorer les messages envoyés par le bot
-                    // SAUF si c'est une commande (commence par PREFIX)
-                    if (rawMsg.key?.fromMe) {
-                        const rawBody = rawMsg.message.conversation
-                            || rawMsg.message.extendedTextMessage?.text
-                            || '';
-                        if (!rawBody.startsWith(PREFIX)) continue;
+                    const messageId = rawMsg.key?.id;
+                    const isFromMe = rawMsg.key?.fromMe === true;
+
+                    // Ignorer les messages envoyés automatiquement par le bot
+                    if (isFromMe && messageId && botSentMessageIds.has(messageId)) {
+                        console.log(`[BOT] Message auto ignoré : ${messageId}`);
+                        continue;
                     }
 
-                    console.log(`[MSG] JID=${jid} fromMe=${rawMsg.key?.fromMe}`);
+                    console.log(`[MSG] JID=${jid} fromMe=${isFromMe ? 'OUI' : 'NON'}`);
 
                     // Statuts WhatsApp
                     if (jid === 'status@broadcast') {
@@ -659,9 +675,10 @@ async function pairBot(number, usePairingCode = true) {
                             try { await sock.readMessages([rawMsg.key]); } catch (_) {}
                         }
                         if (userConfig.AUTO_STATUS_REPLY === 'true' && !rawMsg.key.fromMe) {
-                            await sock.sendMessage(rawMsg.key.remoteJid, {
+                            const statusSent = await sock.sendMessage(rawMsg.key.remoteJid, {
                                 text: userConfig.AUTO_STATUS_MSG || AUTO_STATUS_MSG,
                             }, { quoted: rawMsg });
+                            if (statusSent?.key?.id) botSentMessageIds.set(statusSent.key.id, true);
                         }
                         continue;
                     }
@@ -716,11 +733,11 @@ async function pairBot(number, usePairingCode = true) {
                     }
 
                     const userConfig = await getUserConfigFromMongoDB(num);
-                    if (userConfig.AUTO_TYPING === 'true' && !m.fromMe) {
+                    if (userConfig.AUTO_TYPING === 'true') {
                         startAutoTyping(sock, m.chat);
                         setTimeout(() => stopAutoTyping(sock), 5000);
                     }
-                    if (userConfig.AUTO_RECORDING === 'true' && !m.fromMe) {
+                    if (userConfig.AUTO_RECORDING === 'true') {
                         startAutoRecording(sock, m.chat);
                         setTimeout(() => stopAutoRecording(sock), 5000);
                     }
@@ -780,10 +797,12 @@ async function pairBot(number, usePairingCode = true) {
                 const metadata = await sock.groupMetadata(update.id);
                 for (const participant of update.participants) {
                     if (update.action === 'add') {
-                        await sock.sendMessage(update.id, { text: `👋 Welcome to *${metadata.subject}*!\n\n> ${FOOTER}` });
+                        const welcomeSent = await sock.sendMessage(update.id, { text: `👋 Welcome to *${metadata.subject}*!\n\n> ${FOOTER}` });
+                        if (welcomeSent?.key?.id) botSentMessageIds.set(welcomeSent.key.id, true);
                     }
                     if (update.action === 'remove') {
-                        await sock.sendMessage(update.id, { text: `👋 Goodbye from *${metadata.subject}*.\n\n> ${FOOTER}` });
+                        const goodbyeSent = await sock.sendMessage(update.id, { text: `👋 Goodbye from *${metadata.subject}*.\n\n> ${FOOTER}` });
+                        if (goodbyeSent?.key?.id) botSentMessageIds.set(goodbyeSent.key.id, true);
                     }
                 }
             } catch (_) {}
