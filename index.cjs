@@ -473,50 +473,14 @@ async function pairBot(number, method = 'pairing') {
         });
 
         // ═══════════════════════════════════════════════════════════════
-        // 🔑 PAIRING CODE — demandé directement après la création du socket
-        // ═══════════════════════════════════════════════════════════════
-        if (method === 'pairing' && !state.creds.registered) {
-            await sleep(3000);
-
-            try {
-                pState.requested = true;
-                const code = await sock.requestPairingCode(num);
-                pState.code = code;
-                pState.requested = false;
-                const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
-
-                pushSSE({ type: 'pairing_code', code: formatted, number: num });
-                bridge.sendStatus('pairing_code', formatted);
-
-                console.log('');
-                console.log('┏━⍟「 ☣ PAIRING CODE ☣ 」⍟━┓');
-                console.log('┃');
-                console.log(`┃  📱 Numéro : +${num}`);
-                console.log(`┃  🔑 Code   : ${formatted}`);
-                console.log('┃');
-                console.log('┃  📲 WhatsApp :');
-                console.log('┃  → Appareils connectés');
-                console.log('┃  → Connecter un appareil');
-                console.log('┃  → Utiliser un numéro de téléphone');
-                console.log(`┃  → Entrer : ${formatted}`);
-                console.log('┃');
-                console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟');
-                console.log('');
-
-                if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
-            } catch (e) {
-                console.error(`[PAIR][${num}] Erreur pairing code:`, e.message);
-                pState.requested = false;
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════
         // 📡 ÉTAT DE CONNEXION
         // ═══════════════════════════════════════════════════════════════
+        let pairingCodeRequested = false;
+
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
 
-            // QR mode
+            // ═══ QR MODE ═══════════════════════════════════════════════
             if (qr && method === 'qr') {
                 pState.qr = qr;
                 pushSSE({ type: 'qr_ready', number: num });
@@ -536,7 +500,47 @@ async function pairBot(number, method = 'pairing') {
                 return;
             }
 
-            // ✅ Connecté
+            // ═══ PAIRING CODE — déclenché au moment du qr Baileys ══════
+            if (qr && method === 'pairing' && !state.creds.registered && !pairingCodeRequested) {
+                pairingCodeRequested = true;
+                pState.requested = true;
+
+                try {
+                    console.log(`[PAIR][${num}] Demande du code à Baileys...`);
+                    const code = await sock.requestPairingCode(num);
+                    pState.code = code;
+                    pState.requested = false;
+                    const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
+
+                    pushSSE({ type: 'pairing_code', code: formatted, number: num });
+                    bridge.sendStatus('pairing_code', formatted);
+
+                    console.log('');
+                    console.log('┏━⍟「 ☣ PAIRING CODE ☣ 」⍟━┓');
+                    console.log('┃');
+                    console.log(`┃  📱 Numéro : +${num}`);
+                    console.log(`┃  🔑 Code   : ${formatted}`);
+                    console.log('┃');
+                    console.log('┃  📲 WhatsApp :');
+                    console.log('┃  → Appareils connectés');
+                    console.log('┃  → Connecter un appareil');
+                    console.log('┃  → Utiliser un numéro de téléphone');
+                    console.log(`┃  → Entrer : ${formatted}`);
+                    console.log('┃');
+                    console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟');
+                    console.log('');
+
+                    if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
+                } catch (e) {
+                    console.error(`[PAIR][${num}] ❌ requestPairingCode():`, e.message);
+                    pState.requested = false;
+                    pairingCodeRequested = false;
+                    if (pState.resolve) { pState.resolve({ ok: false, error: e.message }); pState.resolve = null; }
+                }
+                return;
+            }
+
+            // ═══ CONNECTÉ ═══════════════════════════════════════════════
             if (connection === 'open') {
                 const botId = sock.user?.id || num;
                 console.log('');
@@ -564,7 +568,7 @@ async function pairBot(number, method = 'pairing') {
                 try { await sock.sendPresenceUpdate('available'); } catch (_) {}
             }
 
-            // ❌ Déconnecté
+            // ═══ DÉCONNECTÉ ═════════════════════════════════════════════
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const loggedOut = statusCode === DisconnectReason.loggedOut;
