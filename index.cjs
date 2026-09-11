@@ -637,9 +637,17 @@ async function pairBot(number, usePairingCode = true) {
                 try {
                     const jid = rawMsg.key?.remoteJid;
                     if (!jid || !rawMsg.message) continue;
-                    if (rawMsg.key?.fromMe) continue;
 
-                    console.log(`[MSG] JID=${jid} from=${rawMsg.key?.remoteJid}`);
+                    // Anti-boucle : ignorer les messages envoyés par le bot
+                    // SAUF si c'est une commande (commence par PREFIX)
+                    if (rawMsg.key?.fromMe) {
+                        const rawBody = rawMsg.message.conversation
+                            || rawMsg.message.extendedTextMessage?.text
+                            || '';
+                        if (!rawBody.startsWith(PREFIX)) continue;
+                    }
+
+                    console.log(`[MSG] JID=${jid} fromMe=${rawMsg.key?.fromMe}`);
 
                     // Statuts WhatsApp
                     if (jid === 'status@broadcast') {
@@ -687,13 +695,13 @@ async function pairBot(number, usePairingCode = true) {
                     const args = parts.slice(1);
 
                     // ─── Affichage terminal style hacker ─────────────
-                    if (!m.fromMe && body) {
+                    if (body) {
                         const grp = m.chat?.endsWith('@g.us');
                         const senderName = m.sender?.split('@')[0] || '?';
                         const line = '━'.repeat(28);
                         console.log('');
                         console.log(line);
-                        console.log('📩 NOUVEAU MESSAGE');
+                        console.log(m.fromMe ? '📤 COMMANDE (fromMe)' : '📩 NOUVEAU MESSAGE');
                         console.log(line);
                         console.log(`Discussion : ${m.chat || '?'}`);
                         console.log(`Expéditeur : ${m.sender || '?'}`);
