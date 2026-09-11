@@ -440,8 +440,6 @@ async function pairBot(number, method = 'pairing') {
     pState.code = null;
     pState.qr = null;
 
-    const usePairingCode = method === 'pairing';
-
     try {
         const sessionDir = path.join(__dirname, 'sessions', num);
         if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
@@ -461,9 +459,6 @@ async function pairBot(number, method = 'pairing') {
             markOnlineOnConnect: true,
             generateHighQualityLinkPreview: false,
             syncFullHistory: false,
-            retryRequestDelayMs: 500,
-            transactionOpts: { delayMs: 500 },
-            maxMsgRetryCount: 2,
             connectTimeoutMs: 60_000,
             keepAliveIntervalMs: 30_000,
             qrTimeout: 60_000,
@@ -476,69 +471,71 @@ async function pairBot(number, method = 'pairing') {
             await saveCreds();
         });
 
-        // ─── Fonction dédiée pour demander le pairing code ──────────────
-        const requestPairingCodeSafe = async () => {
+        // ═══════════════════════════════════════════════════════════════
+        // 🔑 PAIRING CODE — demandé directement après la création du socket
+        // ═══════════════════════════════════════════════════════════════
+        if (method === 'pairing' && !state.creds.registered) {
+            // Laisse le handshake se stabiliser
+            await sleep(3000);
+
             try {
-                if (sock.authState.creds.registered) return null;
-                if (pState.requested) return null;
-                pState.requested = true;
-
-                await sleep(3000); // laisse le handshake se stabiliser
-
                 const code = await sock.requestPairingCode(num);
                 pState.code = code;
                 const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
 
                 pushSSE({ type: 'pairing_code', code: formatted, number: num });
                 bridge.sendStatus('pairing_code', formatted);
-                console.log(`[PAIR][${num}] Code: ${formatted}`);
+
                 console.log('');
                 console.log('┏━⍟「 ☣ PAIRING CODE ☣ 」⍟━┓');
                 console.log('┃');
-                console.log(`┃  🔑  ${formatted}`);
+                console.log(`┃  📱 Numéro : +${num}`);
+                console.log(`┃  🔑 Code   : ${formatted}`);
                 console.log('┃');
-                console.log('┃  📱 Sur ton téléphone :');
-                console.log('┃  1. Ouvre WhatsApp');
-                console.log('┃  2. Paramètres');
-                console.log('┃  3. Appareils connectés');
-                console.log('┃  4. Associer avec le numéro');
-                console.log(`┃  5. Saisis: ${formatted}`);
+                console.log('┃  📲 WhatsApp :');
+                console.log('┃  → Appareils connectés');
+                console.log('┃  → Connecter un appareil');
+                console.log('┃  → Utiliser un numéro de téléphone');
+                console.log(`┃  → Entrer : ${formatted}`);
                 console.log('┃');
                 console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟');
                 console.log('');
-                if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
-                return code;
-            } catch (e) {
-                console.error(`[PAIR][${num}] Error requesting code:`, e.message);
-                pState.requested = false;
-                return null;
-            }
-        };
 
-        // ─── connection.update ──────────────────────────────────────────
+                if (pState.resolve) { pState.resolve({ ok: true, code }); pState.resolve = null; }
+
+                // Régénération après 90s si pas encore connecté
+                pState.renewTimer = setTimeout(async () => {
+                    if (!sock.authState.creds.registered && accounts.get(num)?.sock === sock && !pState.requested) {
+                        console.log(`[PAIR][${num}] Code expiré, demande un nouveau...`);
+                        pState.requested = true;
+                        try {
+                            const newCode = await sock.requestPairingCode(num);
+                            pState.code = newCode;
+                            pState.requested = false;
+                            const newFormatted = newCode?.match(/.{1,4}/g)?.join('-') || newCode;
+                            console.log(`[PAIR][${num}] Nouveau code: ${newFormatted}`);
+                            pushSSE({ type: 'pairing_code', code: newFormatted, number: num });
+                            bridge.sendStatus('pairing_code', newFormatted);
+                        } catch (e) {
+                            console.error(`[PAIR][${num}] Erreur renouvellement:`, e.message);
+                            pState.requested = false;
+                        }
+                    }
+                }, 90000);
+            } catch (e) {
+                console.error(`[PAIR][${num}] Erreur pairing code:`, e.message);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // 📡 ÉTAT DE CONNEXION
+        // ═══════════════════════════════════════════════════════════════
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
 
-            // ✅ Pairing code : demandé une fois, régénéré après 90s si pas connecté
-            if (qr && usePairingCode && !sock.authState.creds.registered) {
-                if (!pState.requested) {
-                    requestPairingCodeSafe();
-                    // Régénération unique après 90s (au lieu de 40s automatique)
-                    pState.renewTimer = setTimeout(() => {
-                        if (!sock.authState.creds.registered && accounts.get(num)?.sock === sock) {
-                            console.log(`[PAIR][${num}] Code expiré, nouveau code disponible`);
-                            pState.requested = false;
-                            requestPairingCodeSafe();
-                        }
-                    }, 90000);
-                }
-                return;
-            }
-
-            // ✅ QR mode
-            if (qr && !usePairingCode) {
+            // QR mode
+            if (qr && method === 'qr') {
                 pState.qr = qr;
-                pState.code = null;
                 pushSSE({ type: 'qr_ready', number: num });
                 console.log('');
                 console.log('┏━⍟「 ☣ QR CODE ☣ 」⍟━┓');
@@ -547,16 +544,16 @@ async function pairBot(number, method = 'pairing') {
                 console.log('┃');
                 qrTerm.generate(qr, { small: true });
                 console.log('┃');
-                console.log('┃ 1. Ouvre WhatsApp');
-                console.log('┃ 2. Paramètres');
-                console.log('┃ 3. Appareils connectés');
-                console.log('┃ 4. Connecter un appareil');
+                console.log('┃ 1. Ouvre WhatsApp → Paramètres');
+                console.log('┃ 2. Appareils connectés');
+                console.log('┃ 3. Connecter un appareil');
                 console.log('┃');
                 console.log('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟');
                 console.log('');
                 return;
             }
 
+            // ✅ Connecté
             if (connection === 'open') {
                 const botId = sock.user?.id || num;
                 console.log('');
@@ -584,6 +581,7 @@ async function pairBot(number, method = 'pairing') {
                 try { await sock.sendPresenceUpdate('available'); } catch (_) {}
             }
 
+            // ❌ Déconnecté
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const loggedOut = statusCode === DisconnectReason.loggedOut;
@@ -621,7 +619,6 @@ async function pairBot(number, method = 'pairing') {
                     console.log(`┃ 🔄 [${num}] Reconnexion ${existingReconnects(num)}/${MAX_RECONNECT}...`);
                     pushSSE({ type: 'reconnecting', number: num, attempt: existingReconnects(num) });
                     await sleep(3000 * existingReconnects(num));
-                    // ✅ préserve le mode : restore si session existe, sinon même mode
                     const hasCreds = fs.existsSync(path.join(__dirname, 'sessions', num, 'creds.json'));
                     const nextMethod = hasCreds ? 'restore' : method;
                     pairBot(num, nextMethod).catch(() => {});
