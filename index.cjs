@@ -635,11 +635,9 @@ async function pairBot(number, usePairingCode = true) {
 
    // ─── messages.upsert (Plugin Dispatch + Pont Telegram) ──────────
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
-            console.log(`[MSG-EVT] type=${type} count=${messages?.length || 0}`);
             if (type !== 'notify') return;
             for (const rawMsg of messages) {
                 try {
-                    console.log(`[MSG] from=${rawMsg.key?.remoteJid} fromMe=${rawMsg.key?.fromMe} type=${rawMsg.message ? Object.keys(rawMsg.message)[0] : 'none'}`);
                     // Statuts WhatsApp
                     if (rawMsg.key && rawMsg.key.remoteJid === 'status@broadcast') {
                         if (config.AUTO_STATUS_REACT) {
@@ -685,6 +683,27 @@ async function pairBot(number, usePairingCode = true) {
                     const cmdName = (parts[0] || '').toLowerCase();
                     const args = parts.slice(1);
 
+                    // ─── Affichage terminal style hacker ─────────────
+                    if (!m.fromMe && body) {
+                        const grp = m.chat?.endsWith('@g.us');
+                        const senderName = m.sender?.split('@')[0] || '?';
+                        const line = '━'.repeat(28);
+                        console.log('');
+                        console.log(line);
+                        console.log('📩 NOUVEAU MESSAGE');
+                        console.log(line);
+                        console.log(`Discussion : ${m.chat || '?'}`);
+                        console.log(`Expéditeur : ${m.sender || '?'}`);
+                        console.log(`Groupe     : ${grp ? 'OUI' : 'NON'}`);
+                        console.log(`Message    : ${body}`);
+                        console.log(line);
+                        if (isCmd) {
+                            console.log(`Commande : ${cmdName}`);
+                            console.log(`Arguments: ${JSON.stringify(args)}`);
+                        }
+                        console.log(line);
+                    }
+
                     const userConfig = await getUserConfigFromMongoDB(num);
                     if (userConfig.AUTO_TYPING === 'true' && !m.fromMe) {
                         startAutoTyping(sock, m.chat);
@@ -700,7 +719,6 @@ async function pairBot(number, usePairingCode = true) {
 
                     if (isCmd) {
                         incrementStats(num, 'messagesReceived').catch(() => {});
-                        console.log(`[DISPATCH] cmd=${cmdName} from=${m.sender} chat=${m.chat} botNum=${num}`);
                         await dispatchCommand(sock, m, cmdName, body, args, {
                             conn: sock, mek: m, m, args, body, prefix: PREFIX, command: cmdName, botNum: num,
                         });
@@ -723,7 +741,7 @@ async function pairBot(number, usePairingCode = true) {
                     if (!m.fromMe) incrementStats(num, 'messagesReceived').catch(() => {});
                     else incrementStats(num, 'messagesSent').catch(() => {});
                 } catch (e) {
-                    console.error('[MSG] Error processing message:', e.message);
+                    console.error(`┃ ❌ Erreur message: ${e.message}`);
                 }
             }
         });
