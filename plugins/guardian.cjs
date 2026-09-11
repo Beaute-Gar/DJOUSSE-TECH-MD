@@ -244,4 +244,4 @@ cmd({
     );
 });
 
-module.exports = { handleGuardian };
+module.exports = { handleGuardian, getGroupState };
