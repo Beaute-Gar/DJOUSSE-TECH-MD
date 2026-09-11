@@ -89,6 +89,7 @@ const AUTO_LIKE_EMOJI = config.AUTO_LIKE_EMOJI || ['❤️', '🌹', '✨'];
 const AUTO_STATUS_MSG = config.AUTO_STATUS_MSG || 'SEEN YOUR STATUS BY DJOUSSE-TECH-MD 🤗';
 const REJECT_MSG = config.REJECT_MSG || '*CALL LATER PLEASE ☺️🌹*';
 const MAX_RECONNECT = 3;
+const isRender = Boolean(process.env.RENDER || process.env.RENDER_EXTERNAL_URL || process.env.RENDER_SERVICE_ID);
 const TELEGRAM_FORWARD_URL = (process.env.TELEGRAM_FORWARD_URL || 'http://localhost:3002/forward').trim();
 
 // ─── EPIPE Protection ──────────────────────────────────────────────────────
@@ -1193,8 +1194,6 @@ async function startServer() {
     await connectdb();
 
     loadPlugins();
-
-    const isRender = !!process.env.RENDER;
 
     // ─── Démarrage serveur ───────────────────────────────────────────
     const { printBootSequence } = require('./lib/boot-banner.cjs');
