@@ -295,12 +295,12 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             style, randomImage, fakevCard,
             reply: async (text) => {
                 const sent = await m.reply(text);
-                if (sent?.key?.id) botSentMessageIds.set(sent.key.id, true);
+                if (sent?.key?.id) botSentMessageIds.set(`${ctx.botNum}:${sent.key.id}`, true);
                 return sent;
             },
             sendMessage: async (jid, content, opts) => {
                 const sent = await conn.sendMessage(jid, content, opts);
-                if (sent?.key?.id) botSentMessageIds.set(sent.key.id, true);
+                if (sent?.key?.id) botSentMessageIds.set(`${ctx.botNum}:${sent.key.id}`, true);
                 return sent;
             },
         };
@@ -322,7 +322,7 @@ async function executePlugin(command, conn, m, body, args, ctx) {
         console.error(`[CMD] Error executing ${command.pattern}:`, e.message);
         try {
             const errSent = await m.reply('❌ Command error: ' + e.message);
-            if (errSent?.key?.id) botSentMessageIds.set(errSent.key.id, true);
+            if (errSent?.key?.id) botSentMessageIds.set(`${ctx.botNum}:${errSent.key.id}`, true);
         } catch (_) {}
     }
 }
@@ -656,16 +656,17 @@ async function pairBot(number, usePairingCode = true) {
 
                     const messageId = rawMsg.key?.id;
                     const isFromMe = rawMsg.key?.fromMe === true;
+                    const botMessageKey = messageId ? `${num}:${messageId}` : null;
 
-                    // Ignorer les messages envoyés automatiquement par le bot
-                    if (isFromMe && messageId && botSentMessageIds.has(messageId)) {
-                        console.log(`[BOT] Message auto ignoré : ${messageId}`);
+                    // ─── PROTECTION ANTI-BOUCLE ──────────────────────
+                    if (isFromMe && botMessageKey && botSentMessageIds.has(botMessageKey)) {
+                        console.log(`[BOT][${num}] Message auto ignoré : ${messageId}`);
                         continue;
                     }
 
-                    console.log(`[MSG] JID=${jid} fromMe=${isFromMe ? 'OUI' : 'NON'}`);
+                    console.log(`[MSG][${num}] JID=${jid} fromMe=${isFromMe ? 'OUI' : 'NON'}`);
 
-                    // Statuts WhatsApp
+                    // ─── STATUTS WHATSAPP ────────────────────────────
                     if (jid === 'status@broadcast') {
                         if (config.AUTO_STATUS_REACT) {
                             await autoStatusReact(sock, rawMsg.key.remoteJid, rawMsg.key, num);
@@ -674,20 +675,21 @@ async function pairBot(number, usePairingCode = true) {
                         if (userConfig.AUTO_VIEW_STATUS === 'true') {
                             try { await sock.readMessages([rawMsg.key]); } catch (_) {}
                         }
-                        if (userConfig.AUTO_STATUS_REPLY === 'true' && !rawMsg.key.fromMe) {
+                        if (userConfig.AUTO_STATUS_REPLY === 'true' && !isFromMe) {
                             const statusSent = await sock.sendMessage(rawMsg.key.remoteJid, {
                                 text: userConfig.AUTO_STATUS_MSG || AUTO_STATUS_MSG,
                             }, { quoted: rawMsg });
-                            if (statusSent?.key?.id) botSentMessageIds.set(statusSent.key.id, true);
+                            if (statusSent?.key?.id) botSentMessageIds.set(`${num}:${statusSent.key.id}`, true);
                         }
                         continue;
                     }
 
+                    // ─── NORMALISATION MESSAGE ────────────────────────
                     const m = sms(sock, rawMsg);
                     if (!m || !m.message) continue;
                     m.botNumber = num;
 
-                    // ─── Pont Telegram : capture de la réponse WhatsApp ───
+                    // ─── PONT TELEGRAM ───────────────────────────────
                     if (m.fromMe && replyCapture.has(num)) {
                         const cap = replyCapture.get(num);
                         if (Date.now() < cap.expires && cap.chatId) {
@@ -699,39 +701,44 @@ async function pairBot(number, usePairingCode = true) {
                         }
                     }
 
+                    // ─── MODE PRIVATE ────────────────────────────────
                     if (MODE === 'private' && !m.fromMe && !isOwner(m.sender, num) && !isSudo(m.sender)) continue;
 
-                    if (msgCache.has(m.id)) continue;
-                    msgCache.set(m.id, true);
+                    // ─── ANTI-DUPLICATION PAR COMPTE ─────────────────
+                    const messageCacheKey = `${num}:${m.id}`;
+                    if (msgCache.has(messageCacheKey)) continue;
+                    msgCache.set(messageCacheKey, true);
 
-                    const body = m.body || '';
+                    // ─── BODY / COMMANDE ─────────────────────────────
+                    const body = String(m.body || '');
                     const isCmd = body.startsWith(PREFIX);
                     const commandBody = isCmd ? body.slice(PREFIX.length).trim() : body.trim();
-                    const parts = commandBody.split(/\s+/);
+                    const parts = commandBody ? commandBody.split(/\s+/) : [];
                     const cmdName = (parts[0] || '').toLowerCase();
                     const args = parts.slice(1);
 
-                    // ─── Affichage terminal style hacker ─────────────
+                    // ─── LOG TERMINAL ────────────────────────────────
                     if (body) {
                         const grp = m.chat?.endsWith('@g.us');
-                        const senderName = m.sender?.split('@')[0] || '?';
                         const line = '━'.repeat(28);
                         console.log('');
                         console.log(line);
-                        console.log(m.fromMe ? '📤 COMMANDE (fromMe)' : '📩 NOUVEAU MESSAGE');
+                        console.log(m.fromMe ? '📤 MESSAGE DU COMPTE' : '📩 NOUVEAU MESSAGE');
                         console.log(line);
-                        console.log(`Discussion : ${m.chat || '?'}`);
-                        console.log(`Expéditeur : ${m.sender || '?'}`);
-                        console.log(`Groupe     : ${grp ? 'OUI' : 'NON'}`);
-                        console.log(`Message    : ${body}`);
+                        console.log(`Compte    : ${num}`);
+                        console.log(`Discussion: ${m.chat || '?'}`);
+                        console.log(`Expéditeur: ${m.sender || '?'}`);
+                        console.log(`Groupe    : ${grp ? 'OUI' : 'NON'}`);
+                        console.log(`Message   : ${body}`);
                         console.log(line);
                         if (isCmd) {
-                            console.log(`Commande : ${cmdName}`);
-                            console.log(`Arguments: ${JSON.stringify(args)}`);
+                            console.log(`Commande  : ${cmdName}`);
+                            console.log(`Arguments : ${JSON.stringify(args)}`);
                         }
                         console.log(line);
                     }
 
+                    // ─── CONFIG UTILISATEUR ──────────────────────────
                     const userConfig = await getUserConfigFromMongoDB(num);
                     if (userConfig.AUTO_TYPING === 'true') {
                         startAutoTyping(sock, m.chat);
@@ -745,15 +752,18 @@ async function pairBot(number, usePairingCode = true) {
                         try { await sock.readMessages([m.key]); } catch (_) {}
                     }
 
+                    // ─── COMMAND DISPATCH ─────────────────────────────
                     if (isCmd) {
                         incrementStats(num, 'messagesReceived').catch(() => {});
-                        console.log(`[CMD] ${cmdName} args=${JSON.stringify(args)} from=${m.sender} jid=${m.chat}`);
-                        await dispatchCommand(sock, m, cmdName, body, args, {
+                        console.log(`[CMD][${num}] ${cmdName} args=${JSON.stringify(args)} from=${m.sender} jid=${m.chat} fromMe=${m.fromMe}`);
+                        const handled = await dispatchCommand(sock, m, cmdName, body, args, {
                             conn: sock, mek: m, m, args, body, prefix: PREFIX, command: cmdName, botNum: num,
                         });
-                    }
-
-                    if (!isCmd) {
+                        if (!handled) {
+                            console.log(`[CMD][${num}] Commande inconnue: ${cmdName}`);
+                        }
+                    } else {
+                        // ─── REPLY HANDLERS ───────────────────────────
                         for (const handler of replyHandlers) {
                             try {
                                 if (handler.filter && typeof handler.filter === 'function') {
@@ -767,10 +777,12 @@ async function pairBot(number, usePairingCode = true) {
                         }
                     }
 
+                    // ─── STATISTIQUES ────────────────────────────────
                     if (!m.fromMe) incrementStats(num, 'messagesReceived').catch(() => {});
                     else incrementStats(num, 'messagesSent').catch(() => {});
+
                 } catch (e) {
-                    console.error(`┃ ❌ Erreur message: ${e.message}`);
+                    console.error(`┃ ❌ [${num}] Erreur message: ${e.message}`);
                 }
             }
         });
@@ -798,11 +810,11 @@ async function pairBot(number, usePairingCode = true) {
                 for (const participant of update.participants) {
                     if (update.action === 'add') {
                         const welcomeSent = await sock.sendMessage(update.id, { text: `👋 Welcome to *${metadata.subject}*!\n\n> ${FOOTER}` });
-                        if (welcomeSent?.key?.id) botSentMessageIds.set(welcomeSent.key.id, true);
+                        if (welcomeSent?.key?.id) botSentMessageIds.set(`${num}:${welcomeSent.key.id}`, true);
                     }
                     if (update.action === 'remove') {
                         const goodbyeSent = await sock.sendMessage(update.id, { text: `👋 Goodbye from *${metadata.subject}*.\n\n> ${FOOTER}` });
-                        if (goodbyeSent?.key?.id) botSentMessageIds.set(goodbyeSent.key.id, true);
+                        if (goodbyeSent?.key?.id) botSentMessageIds.set(`${num}:${goodbyeSent.key.id}`, true);
                     }
                 }
             } catch (_) {}
@@ -1326,7 +1338,10 @@ async function autoReconnectFromMongoDB() {
 (async () => {
     try {
         await startServer();
-        // autoReconnect géré par startServer (scan sessions/)
+        // Sur Render : restaure les sessions depuis MongoDB (filesystem éphémère)
+        if (process.env.RENDER) {
+            await autoReconnectFromMongoDB();
+        }
     } catch (e) {
         console.error('[FATAL]', e.message);
         saveCrash(e);
