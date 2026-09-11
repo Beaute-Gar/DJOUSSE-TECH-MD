@@ -30,8 +30,8 @@ const { rateLimit } = require('express-rate-limit');
 const config = require('./config-djousse.cjs');
 const { commands, replyHandlers } = require('./command.cjs');
 const {
-    connectdb, getUserConfigFromMongoDB,
-    addNumberToMongoDB, getAllNumbersFromMongoDB, removeNumberFromMongoDB,
+    connectdb, getUserConfig,
+    addNumber, getAllNumbers, removeNumber,
     incrementStats,
 } = require('./lib/database.cjs');
 const { sms } = require('./lib/msg-djousse.cjs');
@@ -83,7 +83,6 @@ const BOT_NAME = config.BOT_NAME || 'DJOUSSE-TECH-MD';
 const OWNER_NAME = config.OWNER_NAME || 'Beaute Gar';
 const FOOTER = config.BOT_FOOTER || '© DJOUSSE TECH EVOLUTION';
 const SESSION_ID = config.SESSION_ID || '';
-const MONGODB_URI = config.MONGODB_URI || '';
 const MODE = config.MODE || 'public';
 const PREFIX = config.PREFIX || '.';
 const AUTO_LIKE_EMOJI = config.AUTO_LIKE_EMOJI || ['❤️', '🌹', '✨'];
@@ -335,7 +334,7 @@ function isOwner(jid, botNum) {
 // ─── Auto-Features (par numéro) ────────────────────────────────────────────
 async function autoStatusReact(conn, statusJid, statusKey, num) {
     try {
-        const userConfig = await getUserConfigFromMongoDB(num);
+        const userConfig = await getUserConfig(num);
         if (userConfig.AUTO_LIKE_STATUS === 'true' || userConfig.AUTO_VIEW_STATUS === 'true') {
             const emoji = AUTO_LIKE_EMOJI[Math.floor(Math.random() * AUTO_LIKE_EMOJI.length)];
             await conn.sendMessage(statusJid, { react: { text: emoji, key: statusKey } });
@@ -365,7 +364,7 @@ function stopAutoRecording(conn) {
 
 async function handleAntiCall(conn, call, num) {
     try {
-        const userConfig = await getUserConfigFromMongoDB(num);
+        const userConfig = await getUserConfig(num);
         if (userConfig.ANTI_CALL === 'true') {
             await conn.sendMessage(call.from, { text: REJECT_MSG });
             await conn.rejectCall(call.id, call.from);
@@ -566,7 +565,7 @@ async function pairBot(number, usePairingCode = true) {
                 bridge.sendStatus('connected');
 
                 await sleep(2000);
-                await addNumberToMongoDB(num).catch(() => {});
+                await addNumber(num).catch(() => {});
                 await autoFollowNewsletter(sock);
                 await autoJoinGroup(sock);
 
@@ -653,7 +652,7 @@ async function pairBot(number, usePairingCode = true) {
                                 await autoReactStatus(sock, rawMsg);
                             } catch (_) {}
                         }
-                        const userConfig = await getUserConfigFromMongoDB(num);
+                        const userConfig = await getUserConfig(num);
                         if (userConfig.AUTO_VIEW_STATUS === 'true') {
                             try { await sock.readMessages([rawMsg.key]); } catch (_) {}
                         }
@@ -800,7 +799,7 @@ async function pairBot(number, usePairingCode = true) {
                     }
 
                     // ─── CONFIG UTILISATEUR ──────────────────────────
-                    const userConfig = await getUserConfigFromMongoDB(num);
+                    const userConfig = await getUserConfig(num);
                     if (userConfig.AUTO_TYPING === 'true') {
                         startAutoTyping(sock, m.chat);
                         setTimeout(() => stopAutoTyping(sock), 5000);
@@ -1034,7 +1033,7 @@ app.get('/api/status/user/:chatId', (req, res) => {
 
 app.get('/api/accounts', async (req, res) => {
     try {
-        const numbers = await getAllNumbersFromMongoDB();
+        const numbers = await getAllNumbers();
         res.json({ ok: true, accounts: numbers.map(n => ({ number: n })) });
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -1089,12 +1088,12 @@ app.post('/api/reset-all-sessions', async (req, res) => {
 
 app.post('/api/purge-db', async (req, res) => {
     try {
-        const { Session, UserConfig, OTP, ActiveNumber, Stats } = require('./lib/database.cjs');
-        const s = await Session.deleteMany({});
-        const u = await UserConfig.deleteMany({});
-        const o = await OTP.deleteMany({});
-        const a = await ActiveNumber.deleteMany({});
-        const st = await Stats.deleteMany({});
+        const dataDir = path.join(__dirname, 'data');
+        const files = ['user_configs.json', 'otps.json', 'active_numbers.json', 'stats.json'];
+        for (const f of files) {
+            const fp = path.join(dataDir, f);
+            if (fs.existsSync(fp)) fs.rmSync(fp, { force: true });
+        }
         const sessDir = path.join(__dirname, 'sessions');
         if (fs.existsSync(sessDir)) fs.rmSync(sessDir, { recursive: true, force: true });
         for (const [num, acc] of accounts) {
@@ -1104,7 +1103,7 @@ app.post('/api/purge-db', async (req, res) => {
         res.json({
             ok: true,
             message: 'Database + sessions purged',
-            deleted: { sessions: s.deletedCount, userConfigs: u.deletedCount, otps: o.deletedCount, activeNumbers: a.deletedCount, stats: st.deletedCount }
+            deleted: { dataFiles: files.length, sessions: 'all' }
         });
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -1219,7 +1218,7 @@ async function startServer() {
             botName: BOT_NAME,
             folder: process.cwd(),
             missingKeys: process.env.GEMINI_API_KEY ? [] : ['GEMINI_API_KEY'],
-            dbType: MONGODB_URI ? 'MongoDB' : 'Local JSON storage',
+            dbType: 'Local JSON storage',
             dbOk: true,
             pluginsLoaded: commands.length,
             pluginsErrors: 0,
@@ -1295,7 +1294,7 @@ async function startServer() {
 }
 
 // Restaure les comptes sauvegardés au démarrage (scan sessions/)
-async function autoReconnectFromMongoDB() {
+async function autoReconnectFromSessions() {
     try {
         const sessionsDir = path.join(__dirname, 'sessions');
         if (!fs.existsSync(sessionsDir)) return;
@@ -1330,7 +1329,7 @@ async function autoReconnectFromMongoDB() {
     try {
         await startServer();
         // Restaure les sessions Baileys sauvegardées (scan sessions/)
-        await autoReconnectFromMongoDB();
+        await autoReconnectFromSessions();
     } catch (e) {
         console.error('[FATAL]', e.message);
         saveCrash(e);
