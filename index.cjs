@@ -1211,55 +1211,6 @@ async function startServer() {
     });
 }
 
-    // ─── Démarrage serveur ───────────────────────────────────────────
-    app.listen(PORT, '0.0.0.0', () => {
-        const line = '━'.repeat(36);
-        console.log('');
-        console.log(hackerBanner('BOOT SEQUENCE'));
-        console.log('┃');
-        console.log(`┃ 🤖 Bot      : ${BOT_NAME}`);
-        console.log(`┃ 📡 Port     : ${PORT}`);
-        console.log(`┃ 📦 Commandes: ${commands.length}`);
-        console.log(`┃ 🔧 SQLite   : ✅`);
-        console.log(`┃ 🌐 Dashboard: http://localhost:${PORT}`);
-        console.log(`┃ 🔗 Pair     : http://localhost:${PORT}/pair`);
-        console.log(`┃ 📊 API      : http://localhost:${PORT}/api/status`);
-        console.log('┃');
-        console.log('┗' + line + '⍟');
-        console.log('');
-    });
-
-    // ─── Auto-connect ────────────────────────────────────────────────
-    if (connectNumber) {
-        console.log(`┃ 🔄 Auto-connexion: ${connectNumber}...`);
-        await sleep(2000);
-        await pairBot(connectNumber, usePairingCode);
-    } else if (!isRender && !connectNumber) {
-        console.log('');
-        console.log(hackerBanner('EN ATTENTE'));
-        console.log('┃');
-        console.log('┃ ▸ Aucun numéro configuré.');
-        console.log(`┃ ▸ Lance le pairing depuis http://localhost:${PORT}/pair`);
-        console.log('┃ ▸ Ou relance le bot avec un numéro.');
-        console.log(hackerEnd());
-        console.log('');
-    }
-
-    process.on('exit', () => {
-        clearInterval(memInterval);
-        cleanUselessCacheAndLogs();
-    });
-
-    process.on('uncaughtException', (err) => {
-        console.error('[CRASH] Uncaught Exception:', err.message);
-        saveCrash(err);
-    });
-
-    process.on('unhandledRejection', (reason) => {
-        console.error('[CRASH] Unhandled Rejection:', reason);
-    });
-}
-
 // Restaure TOUS les comptes sauvegardés au démarrage (MongoDB + local)
 async function autoReconnectFromMongoDB() {
     try {
