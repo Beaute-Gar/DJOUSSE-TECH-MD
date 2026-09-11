@@ -273,6 +273,7 @@ async function executePlugin(command, conn, m, body, args, ctx) {
     try {
         const cmdStr = body.startsWith(PREFIX) ? body.slice(PREFIX.length).trim().split(/\s+/)[0] : body.trim().split(/\s+/)[0];
         logger.command(cmdStr, m.sender);
+        console.log(`[EXEC] pattern=${command.pattern} chat=${m.chat} sender=${m.sender}`);
 
         if (command.fromMe && !m.fromMe) return;
         if (command.category === 'owner' && !isOwner(m.sender, ctx.botNum) && !isSudo(m.sender)) {
@@ -634,8 +635,14 @@ async function pairBot(number, usePairingCode = true) {
             if (type !== 'notify') return;
             for (const rawMsg of messages) {
                 try {
+                    const jid = rawMsg.key?.remoteJid;
+                    if (!jid || !rawMsg.message) continue;
+                    if (rawMsg.key?.fromMe) continue;
+
+                    console.log(`[MSG] JID=${jid} from=${rawMsg.key?.remoteJid}`);
+
                     // Statuts WhatsApp
-                    if (rawMsg.key && rawMsg.key.remoteJid === 'status@broadcast') {
+                    if (jid === 'status@broadcast') {
                         if (config.AUTO_STATUS_REACT) {
                             await autoStatusReact(sock, rawMsg.key.remoteJid, rawMsg.key, num);
                         }
@@ -715,6 +722,7 @@ async function pairBot(number, usePairingCode = true) {
 
                     if (isCmd) {
                         incrementStats(num, 'messagesReceived').catch(() => {});
+                        console.log(`[CMD] ${cmdName} args=${JSON.stringify(args)} from=${m.sender} jid=${m.chat}`);
                         await dispatchCommand(sock, m, cmdName, body, args, {
                             conn: sock, mek: m, m, args, body, prefix: PREFIX, command: cmdName, botNum: num,
                         });
