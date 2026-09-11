@@ -308,9 +308,29 @@
 
     function loadQr() {
         if (!myNumber) return;
-        qrLoading.classList.remove("visible");
-        qrImg.src = "/qr-image?number=" + myNumber + "&t=" + Date.now();
-        qrImg.style.display = "block";
+        // D'abord vérifier si le QR est prêt via /ready/qr
+        fetch("/ready/qr?number=" + myNumber)
+            .then(r => r.json())
+            .then(d => {
+                if (d.qr) {
+                    // Le QR est prêt en dataURL, l'utiliser directement
+                    qrLoading.classList.remove("visible");
+                    qrImg.src = d.qr;
+                    qrImg.style.display = "block";
+                } else if (d.ready) {
+                    // Prêt mais pas de dataURL → charger l'image PNG
+                    qrLoading.classList.remove("visible");
+                    qrImg.src = "/qr-image?number=" + myNumber + "&t=" + Date.now();
+                    qrImg.style.display = "block";
+                }
+                // Sinon : QR pas encore prêt, garder le spinner
+            })
+            .catch(() => {
+                // Fallback: essayer directement l'image
+                qrLoading.classList.remove("visible");
+                qrImg.src = "/qr-image?number=" + myNumber + "&t=" + Date.now();
+                qrImg.style.display = "block";
+            });
     }
 
     function onConnected() {
@@ -375,10 +395,11 @@
                     startPolling();
                 }
             } else {
-                // Méthode QR : affiche et rafraîchit toutes les 20 s
+                // Méthode QR : affiche le spinner, le QR arrive via SSE ou polling
                 qrBox.classList.add("visible");
-                loadQr();
-                qrInterval = setInterval(loadQr, 20000);
+                qrLoading.classList.add("visible");
+                qrImg.style.display = "none";
+                qrInterval = setInterval(loadQr, 10000);
             }
         } catch (err) {
             errorBox.textContent = err.message;

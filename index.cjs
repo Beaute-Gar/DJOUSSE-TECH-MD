@@ -747,6 +747,7 @@ app.get('/qr-image', async (req, res) => {
     const pState = num ? pairingState.get(num) : null;
     const acc = num ? accounts.get(num) : null;
     let qr = pState?.qr;
+    console.log(`[QR-IMG] number=${num} qr=${qr ? 'YES' : 'NO'} acc=${acc ? 'YES' : 'NO'} ready=${acc?.ready}`);
 
     // Si pas de QR en cache mais le bot tourne, retourne un placeholder
     if (!qr && acc?.sock) {
@@ -755,6 +756,7 @@ app.get('/qr-image', async (req, res) => {
             const eventListeners = acc.sock.ev.listeners('connection.update');
             if (eventListeners.length > 0) {
                 // Le QR sera disponible au prochain cycle
+                console.log(`[QR-IMG] QR not ready yet, retrying...`);
                 return res.status(202).json({ error: 'QR generating...', ready: false, retry: true });
             }
         } catch (_) {}
@@ -763,6 +765,7 @@ app.get('/qr-image', async (req, res) => {
     if (!qr) return res.status(404).json({ error: 'QR not ready', ready: false });
     try {
         const buf = await qrcode.toBuffer(qr, { width: 512, margin: 2 });
+        console.log(`[QR-IMG] Sending QR image for ${num}`);
         res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
         res.end(buf);
     } catch (e) {
