@@ -104,10 +104,10 @@ cmd({
         out += `> root@${botName.toLowerCase()}:~$ _\n`;
         out += `> © DJOUSSE TECH EVOLUTION`;
 
-        await m.reply(out);
+        await ctx.reply(out);
     } catch (e) {
         console.error('[MENU-HACKER]', e.message);
-        return m.reply('❌ Erreur menu: ' + e.message);
+        return ctx.reply('❌ Erreur menu: ' + e.message);
     }
 });
 
@@ -131,8 +131,8 @@ cmd({
         });
         out += `╰────────────⍟\n`;
         out += `> \`.menu <module>\` pour ouvrir un module`;
-        await m.reply(out);
+        await ctx.reply(out);
     } catch (e) {
-        return m.reply('❌ ' + e.message);
+        return ctx.reply('❌ ' + e.message);
     }
 });

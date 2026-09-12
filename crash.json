@@ -1,6 +1,6 @@
 {
-  "message": "box is not a function",
-  "stack": "TypeError: box is not a function\n    at startServer (C:\\Users\\djous\\Documents\\DJOUSSE-TECH-MD\\index.cjs:1239:5)\n    at async C:\\Users\\djous\\Documents\\DJOUSSE-TECH-MD\\index.cjs:1331:9",
-  "timestamp": "2026-09-11T20:04:31.514Z",
-  "pid": 15372
+  "message": "isRender is not defined",
+  "stack": "ReferenceError: isRender is not defined\n    at C:\\Users\\djous\\Documents\\DJOUSSE-TECH-MD\\index.cjs:1341:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+  "timestamp": "2026-09-11T21:31:11.216Z",
+  "pid": 16240
 }

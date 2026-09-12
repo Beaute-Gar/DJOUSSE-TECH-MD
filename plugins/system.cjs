@@ -1,6 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { box, uptime } = require('../lib/djousse-ui.cjs');
-const config = require('../config.cjs');
+const config = require('../config-djousse.cjs');
 const os = require('os');
 const pkg = require('../package.json');
 

@@ -287,6 +287,7 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             conn, sock: conn, mek: m, m, args, body,
             from: m.chat, sender: m.sender,
             prefix: PREFIX, PREFIX, command: cmdStr,
+            q: args.join(' '),
             isOwner: isOwner(m.sender, ctx.botNum), isSudo: isSudo(m.sender),
             isGroup: m.isGroup, isAdmin: false, isBotAdmin: false,
             groupMetadata: null, participants: [], groupAdmins: [],
