@@ -624,10 +624,16 @@ async function pairBot(number, method = 'pairing') {
             for (const rawMsg of messages) {
                 try {
                     const jid = rawMsg.key?.remoteJid;
+
+                    if (typeof jid !== 'string') {
+                        console.warn(`[MSG-IN][${num}] remoteJid invalide:`, rawMsg.key?.remoteJid);
+                        continue;
+                    }
+
                     const hasMessage = !!rawMsg.message;
                     console.log(`[MSG-IN][${num}] type=${type} jid=${jid} hasMsg=${hasMessage} fromMe=${rawMsg.key?.fromMe}`);
 
-                    if (!jid || !hasMessage) continue;
+                    if (!hasMessage) continue;
 
                     const messageId = rawMsg.key?.id;
                     const isFromMe = rawMsg.key?.fromMe === true;
@@ -675,52 +681,6 @@ async function pairBot(number, method = 'pairing') {
                     const m = sms(sock, rawMsg);
                     if (!m || !m.message) continue;
                     m.botNumber = num;
-
-                    // ─── INTERACTIVE BUTTON HANDLER (Baileys 7) ────────
-                    try {
-                        const { getInteractiveId, sendInteractiveMenu, sendAinoriaMenu, sendToolsMenu } = require('./plugins/interactive-menu.cjs');
-                        const selectedId = getInteractiveId(m);
-                        if (selectedId) {
-                            console.log(`[INTERACTIVE][${num}] ${selectedId} | ${m.chat}`);
-                            switch (selectedId) {
-                                case 'djousse:menu': await sendInteractiveMenu(sock, m.chat); break;
-                                case 'djousse:ainoria': await sendAinoriaMenu(sock, m.chat); break;
-                                case 'djousse:tools': await sendToolsMenu(sock, m.chat); break;
-                                case 'djousse:memory': {
-                                    const { getFacts } = require('./lib/ainoria-memory.cjs');
-                                    const facts = getFacts(m.sender);
-                                    if (facts.length === 0) await m.reply('🧠 Aucune information mémorisée.\n💡 .remember <clé> = <valeur>');
-                                    else await m.reply('🧠 *Ta mémoire :*\n\n' + facts.map((f, i) => `${i + 1}. 📌 ${f.key} → ${f.value}`).join('\n'));
-                                    break;
-                                }
-                                case 'ainoria:ask': await m.reply('🧠 AINORIA est prête.\nPose directement ta question avec .ask <question>'); break;
-                                case 'ainoria:remember': await m.reply('🧠 Écris l\'info à mémoriser :\n.remember <clé> = <valeur>'); break;
-                                case 'ainoria:forget': await m.reply('🗑️ Indique l\'info à oublier :\n.forget <clé>'); break;
-                                case 'djousse:guardian': {
-                                    const { getGroupState } = require('./plugins/guardian.cjs');
-                                    if (m.isGroup) {
-                                        const gs = getGroupState(m.chat);
-                                        await m.reply(`🛡️ *GUARDIAN*\n\n🔗 Anti-Link: ${gs.antilink ? '🟢' : '🔴'}\n🚫 Anti-Spam: ${gs.antispam ? '🟢' : '🔴'}\n🌊 Anti-Flood: ${gs.antiflood ? '🟢' : '🔴'}\n🤖 Anti-Bot: ${gs.antibot ? '🟢' : '🔴'}\n⚠️ Warns: ${Object.values(gs.warns || {}).filter(v => v > 0).length} actifs`);
-                                    } else await m.reply('🛡️ Guardian est actif dans les groupes.');
-                                    break;
-                                }
-                                case 'djousse:groups': await m.reply('👥 Gestion des groupes\n\n.groupinfo | .gclink | .admins'); break;
-                                case 'djousse:status': await m.reply('📱 Statut\n\n.autoreact | .autolike | .autoview'); break;
-                                case 'djousse:settings': await m.reply('⚙️ Paramètres\n\n.autotyping | .autorecording | .autoreply'); break;
-                                case 'djousse:os': {
-                                    const os = require('os');
-                                    const mem = (process.memoryUsage().rss / 1048576).toFixed(1);
-                                    await m.reply(`┏━⍟「 ☣ DJOUSSE OS ☣ 」⍟━┓\n┃\n┃ 🧠 AINORIA  🟢\n┃ 🛡️ SECURITY 🟢\n┃ 💾 MEMORY   ${mem} MB\n┃ ⏱️ UPTIME   ${Math.floor(process.uptime() / 60)}m\n┃ 🖥️ ${os.platform()} ${os.cpus().length} cores\n┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟`);
-                                    break;
-                                }
-                                case 'tools:sticker': await m.reply('🎨 Envoie une image puis .sticker'); break;
-                                case 'tools:download': await m.reply('📥 Envoie le lien du média'); break;
-                                case 'tools:search': await m.reply('🔎 Envoie ta recherche'); break;
-                                default: console.log(`[INTERACTIVE][${num}] Unknown: ${selectedId}`);
-                            }
-                            continue;
-                        }
-                    } catch (_) {}
 
                     // ─── MESSAGE INDEXING ──────────────────────────────
                     try {
@@ -884,11 +844,39 @@ async function pairBot(number, method = 'pairing') {
         // ─── Group Participant Update (welcome/goodbye) ──────────────
         sock.ev.on('group-participants.update', async (update) => {
             try {
-                const { id: groupJid, participants, action } = update;
-                if (!participants || participants.length === 0) return;
+                // ─── NORMALISATION DU JID DU GROUPE ─────────────────────────
+                const groupJid =
+                    typeof update?.id === 'string'
+                        ? update.id
+                        : typeof update?.id?.id === 'string'
+                            ? update.id.id
+                            : '';
 
-                // Baileys 7: participants peut être des strings ou des objets { id: '...' }
-                const participantIds = participants.map(p => typeof p === 'string' ? p : (p.id || p));
+                const { participants, action } = update || {};
+
+                if (!groupJid || !groupJid.endsWith('@g.us')) {
+                    console.warn(`[WELCOME][${num}] JID groupe invalide:`, update?.id);
+                    return;
+                }
+
+                if (!Array.isArray(participants) || participants.length === 0) {
+                    return;
+                }
+
+                // ─── NORMALISATION DES PARTICIPANTS ────────────────────────
+                const participantIds = participants
+                    .map((p) => {
+                        if (typeof p === 'string') return p;
+                        if (p && typeof p.id === 'string') return p.id;
+                        if (p?.id?.id && typeof p.id.id === 'string') return p.id.id;
+                        return '';
+                    })
+                    .filter((jid) => typeof jid === 'string' && jid.length > 0);
+
+                if (participantIds.length === 0) {
+                    console.warn(`[WELCOME][${num}] Aucun participant valide`);
+                    return;
+                }
 
                 // Charger config welcome/goodbye du groupe
                 const DB_PATH = path.join(__dirname, 'database', 'welcome.json');
@@ -899,9 +887,30 @@ async function pairBot(number, method = 'pairing') {
                 // Toggle enabled (défaut: true)
                 if (cfg.enabled === false) return;
 
-                const metadata = await sock.groupMetadata(groupJid);
-                const mentions = participantIds.map(jid => String(jid).replace(/@s\.whatsapp\.net/, '') + '@s.whatsapp.net');
-                const names = participantIds.map(jid => '@' + String(jid).replace(/@s\.whatsapp\.net/, '').split(':')[0]);
+                // ─── MÉTADONNÉES DU GROUPE (sécurisé) ──────────────────────
+                let metadata;
+                try {
+                    metadata = await sock.groupMetadata(groupJid);
+                } catch (err) {
+                    console.error(`[WELCOME][${num}] groupMetadata error:`, err?.message || err);
+                    return;
+                }
+                if (!metadata || typeof metadata.subject !== 'string') {
+                    console.warn(`[WELCOME][${num}] Métadonnées du groupe invalides`);
+                    return;
+                }
+
+                // ─── MENTIONS ET NAMES (sécurisés) ──────────────────────────
+                const mentions = participantIds.map((jid) => {
+                    const cleanJid = String(jid).split(':')[0];
+                    if (cleanJid.endsWith('@s.whatsapp.net')) return cleanJid;
+                    return `${cleanJid}@s.whatsapp.net`;
+                });
+
+                const names = participantIds.map((jid) => {
+                    const number = String(jid).split('@')[0].split(':')[0];
+                    return `@${number}`;
+                });
 
                 let text;
                 if (action === 'add') {
