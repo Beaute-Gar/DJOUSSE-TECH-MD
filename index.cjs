@@ -857,16 +857,24 @@ async function pairBot(number, method = 'pairing') {
                                 if (isAction || isVerite) {
                                     const { __game } = require('./plugins/action-verite.cjs');
                                     const session = __game.get(m.chat);
-                                    if (session && session.phase === 'choosing') {
+                                    if (session) {
+                                        // Si phase 'open' → auto-start le tour
+                                        if (session.phase === 'open' && session.players.size > 0) {
+                                            console.log(`[AV][${num}] Auto-start tour depuis "${bodyLower}"`);
+                                            await __game.startTurn(sock, m, session);
+                                        }
+                                        // Si phase 'choosing' → choisir action/vérité
                                         const pl = session.players.get(m.sender);
-                                        if (pl && !pl.chosen) {
+                                        if (session.phase === 'choosing' && pl && !pl.chosen) {
                                             const type = isVerite ? 'V' : 'A';
                                             console.log(`[AV][${num}] Détection auto: ${m.sender} → ${type === 'V' ? 'VÉRITÉ' : 'ACTION'}`);
                                             await __game.choose(sock, m, session, type);
                                         }
                                     }
                                 }
-                            } catch (_) {}
+                            } catch (e) {
+                                console.error(`[AV] Error: ${e.message}`);
+                            }
                         }
                     }
 
