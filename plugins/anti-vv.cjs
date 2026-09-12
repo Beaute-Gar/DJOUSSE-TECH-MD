@@ -2,7 +2,7 @@ const { cmd } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
 
 cmd({
-    pattern: 'anticiponce|vv|antiVV',
+    pattern: 'anticiponce|antiVV',
     desc: 'Toggle anti-view-once (reenvoyer les messages view-once)',
     category: 'owner',
     filename: __filename,

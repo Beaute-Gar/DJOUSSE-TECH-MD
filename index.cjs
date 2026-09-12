@@ -690,6 +690,7 @@ async function pairBot(number, method = 'pairing') {
                     const m = sms(sock, rawMsg);
                     if (!m || !m.message) continue;
                     m.botNumber = num;
+                    m.isOwner = isOwner(m.sender, num);
 
                     // ─── INTERACTIVE BUTTON HANDLER (Baileys 7) ────────
                     try {
