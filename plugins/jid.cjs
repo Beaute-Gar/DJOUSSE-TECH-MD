@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const config = require('../config-djousse.cjs');
+const { randomImage } = require('../lib/images.cjs');
 
 cmd({
     pattern: 'jid',
@@ -26,9 +27,16 @@ cmd({
         jid = m.sender || from;
         label = '🧑 Votre JID';
     }
-    await conn.sendMessage(from, {
-        text: box('🆔 *JID INFO*', [
-            { label, value: jid },
-        ]),
-    }, { quoted: m });
+
+    const text = `╭───『 🆔 JID 』───●●►
+┃ ${label}
+┃ ${jid}
+╰─────────────❖●►
+> ᴘᴏᴡᴇʀᴇᴅ ʙʏ DJOUSSE TECH`;
+
+    try {
+        await conn.sendMessage(m.chat, { image: { url: randomImage() }, caption: text }, { quoted: m });
+    } catch (_) {
+        await m.reply(text);
+    }
 });
