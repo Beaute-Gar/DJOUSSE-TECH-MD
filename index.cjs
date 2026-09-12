@@ -828,6 +828,27 @@ async function pairBot(number, method = 'pairing') {
                                 }
                             } catch (_) {}
                         }
+
+                        // ─── ACTION/VERITE SANS PREFIX ──────────────
+                        if (m.isGroup && !isFromMe) {
+                            try {
+                                const bodyLower = body.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                                const isAction = /\baction\b/.test(bodyLower);
+                                const isVerite = /\bverite\b|\bverité\b|\btruth\b/.test(bodyLower);
+                                if (isAction || isVerite) {
+                                    const { __game } = require('./plugins/action-verite.cjs');
+                                    const session = __game.get(m.chat);
+                                    if (session && session.phase === 'choosing') {
+                                        const pl = session.players.get(m.sender);
+                                        if (pl && !pl.chosen) {
+                                            const type = isVerite ? 'V' : 'A';
+                                            console.log(`[AV][${num}] Détection auto: ${m.sender} → ${type === 'V' ? 'VÉRITÉ' : 'ACTION'}`);
+                                            await __game.choose(sock, m, session, type);
+                                        }
+                                    }
+                                }
+                            } catch (_) {}
+                        }
                     }
 
                     // ─── STATISTIQUES ────────────────────────────────
@@ -856,21 +877,52 @@ async function pairBot(number, method = 'pairing') {
             }
         });
 
-        // ─── Group Participant Update ───────────────────────────────────
+        // ─── Group Participant Update (welcome/goodbye) ──────────────
         sock.ev.on('group-participants.update', async (update) => {
             try {
-                const metadata = await sock.groupMetadata(update.id);
-                for (const participant of update.participants) {
-                    if (update.action === 'add') {
-                        const welcomeSent = await sock.sendMessage(update.id, { text: `👋 Welcome to *${metadata.subject}*!\n\n> ${FOOTER}` });
-                        if (welcomeSent?.key?.id) botSentMessageIds.set(`${num}:${welcomeSent.key.id}`, true);
+                const { id: groupJid, participants, action } = update;
+                if (!participants || participants.length === 0) return;
+
+                // Charger config welcome/goodbye du groupe
+                const DB_PATH = path.join(__dirname, 'database', 'welcome.json');
+                let db = {};
+                try { db = JSON.parse(fs.readFileSync(DB_PATH)); } catch (_) {}
+                const cfg = db[groupJid] || {};
+
+                // Toggle enabled (défaut: true)
+                if (cfg.enabled === false) return;
+
+                const metadata = await sock.groupMetadata(groupJid);
+                const mentions = participants.map(jid => jid.replace(/@s\.whatsapp\.net/, '') + '@s.whatsapp\.net');
+                const names = participants.map(jid => '@' + jid.replace(/@s\.whatsapp\.net/, ''));
+
+                let text;
+                if (action === 'add') {
+                    if (cfg.welcome) {
+                        text = cfg.welcome
+                            .replace(/@user/g, names.join(', '))
+                            .replace(/@group/g, metadata.subject)
+                            .replace(/@count/g, String(metadata.participants?.length || '?'));
+                    } else {
+                        text = `👋 Bienvenue ${names.join(', ')} dans *${metadata.subject}* !\n\n> ${FOOTER}`;
                     }
-                    if (update.action === 'remove') {
-                        const goodbyeSent = await sock.sendMessage(update.id, { text: `👋 Goodbye from *${metadata.subject}*.\n\n> ${FOOTER}` });
-                        if (goodbyeSent?.key?.id) botSentMessageIds.set(`${num}:${goodbyeSent.key.id}`, true);
+                    const sent = await sock.sendMessage(groupJid, { text, mentions });
+                    if (sent?.key?.id) botSentMessageIds.set(`${num}:${sent.key.id}`, true);
+                } else if (action === 'remove') {
+                    if (cfg.goodbye) {
+                        text = cfg.goodbye
+                            .replace(/@user/g, names.join(', '))
+                            .replace(/@group/g, metadata.subject)
+                            .replace(/@count/g, String(metadata.participants?.length || '?'));
+                    } else {
+                        text = `👋 ${names.join(', ')} a quitté *${metadata.subject}*.\n\n> ${FOOTER}`;
                     }
+                    const sent = await sock.sendMessage(groupJid, { text, mentions });
+                    if (sent?.key?.id) botSentMessageIds.set(`${num}:${sent.key.id}`, true);
                 }
-            } catch (_) {}
+            } catch (e) {
+                console.error(`[WELCOME] Error: ${e.message}`);
+            }
         });
 
         return { ok: true };
@@ -1227,6 +1279,18 @@ async function startServer() {
 
     // 1) Restaure automatiquement les sessions sauvegardées
     await autoReconnectFromSessions();
+
+    // Attendre que les sessions restaurées soient vraiment connectées (max 15s)
+    const sessionNumbers = [...accounts.keys()];
+    if (sessionNumbers.length > 0) {
+        console.log('┃ ⏳ Attente de la connexion des sessions...');
+        const waitStart = Date.now();
+        while (Date.now() - waitStart < 15000) {
+            const readyCount = [...accounts.values()].filter(a => a.ready).length;
+            if (readyCount >= sessionNumbers.length) break;
+            await sleep(500);
+        }
+    }
 
     const activeCount = [...accounts.values()].filter(a => a.ready).length;
 
