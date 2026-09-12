@@ -1,9 +1,60 @@
-const { cmd } = require('../command.cjs');
+const { cmd, replyHandlers } = require('../command.cjs');
 const { box } = require('../lib/djousse-ui.cjs');
 
 /* ═══════════════════════════════════════════════════════════════════════════
    GAMES MENU — Jeux complémentaires (RPS/Hangman/Quiz/WYR sont dans games.cjs)
    ═══════════════════════════════════════════════════════════════════════════ */
+
+// ─── MATH QUIZ REPLY HANDLER ─────────────────────────────────────────────
+replyHandlers.push({
+    filter: (m) => {
+        if (!m.body || m.fromMe) return false;
+        const quiz = global._mathQuiz?.[m.chat];
+        if (!quiz) return false;
+        const num = parseInt(m.body.trim(), 10);
+        if (isNaN(num)) return false;
+        if (Date.now() - quiz.timestamp > 60000) { delete global._mathQuiz[m.chat]; return false; }
+        return true;
+    },
+    function: async (ctx) => {
+        const { conn, m } = ctx;
+        const quiz = global._mathQuiz[m.chat];
+        if (!quiz) return;
+        const num = parseInt(m.body.trim(), 10);
+        delete global._mathQuiz[m.chat];
+        if (num === quiz.answer) {
+            await m.reply(`✅ Bonne réponse ! *${quiz.answer}*`);
+        } else {
+            await m.reply(`❌ Mauvaise réponse. La bonne était *${quiz.answer}*`);
+        }
+    }
+});
+
+// ─── TRIVIA REPLY HANDLER ────────────────────────────────────────────────
+const triviaAnswers = {};
+replyHandlers.push({
+    filter: (m) => {
+        if (!m.body || m.fromMe) return false;
+        const t = triviaAnswers[m.chat];
+        if (!t) return false;
+        const num = parseInt(m.body.trim(), 10);
+        if (isNaN(num) || num < 1 || num > 4) return false;
+        if (Date.now() - t.timestamp > 60000) { delete triviaAnswers[m.chat]; return false; }
+        return true;
+    },
+    function: async (ctx) => {
+        const { conn, m } = ctx;
+        const t = triviaAnswers[m.chat];
+        if (!t) return;
+        const num = parseInt(m.body.trim(), 10);
+        delete triviaAnswers[m.chat];
+        if (t.opts[num - 1] === t.a) {
+            await m.reply(`✅ Bonne réponse ! *${t.a}*`);
+        } else {
+            await m.reply(`❌ Mauvaise réponse. La bonne était *${t.a}*`);
+        }
+    }
+});
 
 // ─── MATH QUIZ ───────────────────────────────────────────────────────────
 cmd({
@@ -153,14 +204,16 @@ cmd({
   filename: __filename,
 }, async (conn, m, commands, { reply }) => {
   const t = triviaQuestions[Math.floor(Math.random() * triviaQuestions.length)];
-  const opts = t.opts.sort(() => Math.random() - 0.5).map((o, i) => (i + 1) + '. ' + o).join('\n');
+  const opts = t.opts.sort(() => Math.random() - 0.5);
+  const optsText = opts.map((o, i) => (i + 1) + '. ' + o).join('\n');
+  triviaAnswers[m.chat] = { a: t.a, opts, timestamp: Date.now() };
   await conn.sendMessage(m.chat, {
     text: box('🧠 *TRIVIA*', [
       { raw: '*Question:* ' + t.q },
       { blank: true },
-      { raw: opts },
+      { raw: optsText },
       { blank: true },
-      { raw: '_Réponds avec le numéro (1-4)_\nRéponse: *' + t.a + '*' },
+      { raw: '_Réponds avec le numéro (1-4)_' },
     ]),
   }, { quoted: m });
 });
