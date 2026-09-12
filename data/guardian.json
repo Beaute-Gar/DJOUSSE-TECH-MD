@@ -64,5 +64,27 @@
     "warns": {},
     "floodTracker": {},
     "spamTracker": {}
+  },
+  "120363426401262132@g.us": {
+    "antilink": false,
+    "antispam": false,
+    "antiflood": false,
+    "antibot": false,
+    "antitag": false,
+    "warnLimit": 3,
+    "warns": {},
+    "floodTracker": {},
+    "spamTracker": {}
+  },
+  "120363404762058600@g.us": {
+    "antilink": false,
+    "antispam": false,
+    "antiflood": false,
+    "antibot": false,
+    "antitag": false,
+    "warnLimit": 3,
+    "warns": {},
+    "floodTracker": {},
+    "spamTracker": {}
   }
 }

@@ -682,6 +682,52 @@ async function pairBot(number, method = 'pairing') {
                     if (!m || !m.message) continue;
                     m.botNumber = num;
 
+                    // ─── INTERACTIVE BUTTON HANDLER (Baileys 7) ────────
+                    try {
+                        const { getInteractiveId, sendInteractiveMenu, sendAinoriaMenu, sendToolsMenu } = require('./plugins/interactive-menu.cjs');
+                        const selectedId = getInteractiveId(m);
+                        if (selectedId) {
+                            console.log(`[INTERACTIVE][${num}] ${selectedId} | ${m.chat}`);
+                            switch (selectedId) {
+                                case 'djousse:menu': await sendInteractiveMenu(sock, m.chat); break;
+                                case 'djousse:ainoria': await sendAinoriaMenu(sock, m.chat); break;
+                                case 'djousse:tools': await sendToolsMenu(sock, m.chat); break;
+                                case 'djousse:memory': {
+                                    const { getFacts } = require('./lib/ainoria-memory.cjs');
+                                    const facts = getFacts(m.sender);
+                                    if (facts.length === 0) await m.reply('🧠 Aucune information mémorisée.\n💡 .remember <clé> = <valeur>');
+                                    else await m.reply('🧠 *Ta mémoire :*\n\n' + facts.map((f, i) => `${i + 1}. 📌 ${f.key} → ${f.value}`).join('\n'));
+                                    break;
+                                }
+                                case 'ainoria:ask': await m.reply('🧠 AINORIA est prête.\nPose directement ta question avec .ask <question>'); break;
+                                case 'ainoria:remember': await m.reply('🧠 Écris l\'info à mémoriser :\n.remember <clé> = <valeur>'); break;
+                                case 'ainoria:forget': await m.reply('🗑️ Indique l\'info à oublier :\n.forget <clé>'); break;
+                                case 'djousse:guardian': {
+                                    const { getGroupState } = require('./plugins/guardian.cjs');
+                                    if (m.isGroup) {
+                                        const gs = getGroupState(m.chat);
+                                        await m.reply(`🛡️ *GUARDIAN*\n\n🔗 Anti-Link: ${gs.antilink ? '🟢' : '🔴'}\n🚫 Anti-Spam: ${gs.antispam ? '🟢' : '🔴'}\n🌊 Anti-Flood: ${gs.antiflood ? '🟢' : '🔴'}\n🤖 Anti-Bot: ${gs.antibot ? '🟢' : '🔴'}\n⚠️ Warns: ${Object.values(gs.warns || {}).filter(v => v > 0).length} actifs`);
+                                    } else await m.reply('🛡️ Guardian est actif dans les groupes.');
+                                    break;
+                                }
+                                case 'djousse:groups': await m.reply('👥 Gestion des groupes\n\n.groupinfo | .gclink | .admins'); break;
+                                case 'djousse:status': await m.reply('📱 Statut\n\n.autoreact | .autolike | .autoview'); break;
+                                case 'djousse:settings': await m.reply('⚙️ Paramètres\n\n.autotyping | .autorecording | .autoreply'); break;
+                                case 'djousse:os': {
+                                    const os = require('os');
+                                    const mem = (process.memoryUsage().rss / 1048576).toFixed(1);
+                                    await m.reply(`┏━⍟「 ☣ DJOUSSE OS ☣ 」⍟━┓\n┃\n┃ 🧠 AINORIA  🟢\n┃ 🛡️ SECURITY 🟢\n┃ 💾 MEMORY   ${mem} MB\n┃ ⏱️ UPTIME   ${Math.floor(process.uptime() / 60)}m\n┃ 🖥️ ${os.platform()} ${os.cpus().length} cores\n┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟`);
+                                    break;
+                                }
+                                case 'tools:sticker': await m.reply('🎨 Envoie une image puis .sticker'); break;
+                                case 'tools:download': await m.reply('📥 Envoie le lien du média'); break;
+                                case 'tools:search': await m.reply('🔎 Envoie ta recherche'); break;
+                                default: console.log(`[INTERACTIVE][${num}] Unknown: ${selectedId}`);
+                            }
+                            continue;
+                        }
+                    } catch (_) {}
+
                     // ─── MESSAGE INDEXING ──────────────────────────────
                     try {
                         const { indexMessage } = require('./plugins/message-search.cjs');

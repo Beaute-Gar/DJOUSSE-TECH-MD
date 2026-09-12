@@ -10,9 +10,9 @@
   "237659809751:2026-09-12": {
     "number": "237659809751",
     "date": "2026-09-12",
-    "commandsUsed": 0,
-    "messagesReceived": 1,
-    "messagesSent": 0,
+    "commandsUsed": 5,
+    "messagesReceived": 28,
+    "messagesSent": 8,
     "groupsInteracted": 0
   }
 }
