@@ -825,6 +825,13 @@ async function pairBot(number, method = 'pairing') {
                         try { await sock.readMessages([m.key]); } catch (_) {}
                     }
 
+                    // ─── GAME INTERACTION (raw replies) ────────────────
+                    try {
+                        const { handleRawReply } = require('./plugins/games.cjs');
+                        const gameHandled = await handleRawReply(sock, m);
+                        if (gameHandled) continue;
+                    } catch (_) {}
+
                     // ─── COMMAND DISPATCH ─────────────────────────────
                     if (isCmd) {
                         incrementStats(num, 'messagesReceived').catch(() => {});
