@@ -16,8 +16,8 @@ function commandsGroup(cmds) {
     for (const c of cmds) {
         const cat = (c.category || 'OTHER').toUpperCase();
         if (!cats[cat]) cats[cat] = new Set();
-        if (c.pattern) cats[cat].add(c.pattern.toLowerCase());
-        if (c.alias) c.alias.forEach(a => cats[cat].add(a.toLowerCase()));
+        if (c.pattern && typeof c.pattern === 'string') cats[cat].add(c.pattern.toLowerCase());
+        if (c.alias && Array.isArray(c.alias)) c.alias.forEach(a => cats[cat].add(String(a).toLowerCase()));
     }
     _cachedGroup = cats;
     _cachedCount = cmds.length;

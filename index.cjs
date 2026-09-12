@@ -247,7 +247,7 @@ function loadPlugins() {
 // ─── Plugin Dispatch ───────────────────────────────────────────────────────
 async function dispatchCommand(conn, m, cmdName, body, args, ctx) {
     for (const command of commands) {
-        if (command.pattern && cmdName === command.pattern.toLowerCase()) {
+        if (command.pattern && typeof command.pattern === 'string' && cmdName === command.pattern.toLowerCase()) {
             await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
@@ -260,7 +260,7 @@ async function dispatchCommand(conn, m, cmdName, body, args, ctx) {
     const parts = withoutPrefix.trim().split(/\s+/);
     const cmdFromBody = (parts[0] || '').toLowerCase();
     for (const command of commands) {
-        if (command.pattern && cmdFromBody === command.pattern.toLowerCase()) {
+        if (command.pattern && typeof command.pattern === 'string' && cmdFromBody === command.pattern.toLowerCase()) {
             await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
@@ -1484,7 +1484,7 @@ app.get('/api/menu', (req, res) => {
     for (const cmd of commands) {
         const cat = (cmd.category || 'other').toUpperCase();
         if (!cats[cat]) cats[cat] = [];
-        if (cmd.pattern) {
+        if (cmd.pattern && typeof cmd.pattern === 'string') {
             cats[cat].push(cmd.pattern.toLowerCase());
             i++;
         }

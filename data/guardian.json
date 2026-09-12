@@ -86,5 +86,16 @@
     "warns": {},
     "floodTracker": {},
     "spamTracker": {}
+  },
+  "120363407880012348@g.us": {
+    "antilink": false,
+    "antispam": false,
+    "antiflood": false,
+    "antibot": false,
+    "antitag": false,
+    "warnLimit": 3,
+    "warns": {},
+    "floodTracker": {},
+    "spamTracker": {}
   }
 }
