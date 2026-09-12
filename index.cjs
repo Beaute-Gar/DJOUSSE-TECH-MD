@@ -849,7 +849,7 @@ async function pairBot(number, method = 'pairing') {
                         }
 
                         // ─── ACTION/VERITE SANS PREFIX ──────────────
-                        if (m.isGroup && !isFromMe) {
+                        if (!isFromMe) {
                             try {
                                 const bodyLower = body.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
                                 const isAction = /\baction\b/.test(bodyLower);
