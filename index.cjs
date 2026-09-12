@@ -619,11 +619,15 @@ async function pairBot(number, method = 'pairing') {
    // ─── messages.upsert (Plugin Dispatch + Pont Telegram) ──────────
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
             if (type !== 'notify') return;
+            if (!messages || messages.length === 0) return;
 
             for (const rawMsg of messages) {
                 try {
                     const jid = rawMsg.key?.remoteJid;
-                    if (!jid || !rawMsg.message) continue;
+                    const hasMessage = !!rawMsg.message;
+                    console.log(`[MSG-IN][${num}] type=${type} jid=${jid} hasMsg=${hasMessage} fromMe=${rawMsg.key?.fromMe}`);
+
+                    if (!jid || !hasMessage) continue;
 
                     const messageId = rawMsg.key?.id;
                     const isFromMe = rawMsg.key?.fromMe === true;
@@ -883,6 +887,9 @@ async function pairBot(number, method = 'pairing') {
                 const { id: groupJid, participants, action } = update;
                 if (!participants || participants.length === 0) return;
 
+                // Baileys 7: participants peut être des strings ou des objets { id: '...' }
+                const participantIds = participants.map(p => typeof p === 'string' ? p : (p.id || p));
+
                 // Charger config welcome/goodbye du groupe
                 const DB_PATH = path.join(__dirname, 'database', 'welcome.json');
                 let db = {};
@@ -893,8 +900,8 @@ async function pairBot(number, method = 'pairing') {
                 if (cfg.enabled === false) return;
 
                 const metadata = await sock.groupMetadata(groupJid);
-                const mentions = participants.map(jid => jid.replace(/@s\.whatsapp\.net/, '') + '@s.whatsapp\.net');
-                const names = participants.map(jid => '@' + jid.replace(/@s\.whatsapp\.net/, ''));
+                const mentions = participantIds.map(jid => String(jid).replace(/@s\.whatsapp\.net/, '') + '@s.whatsapp.net');
+                const names = participantIds.map(jid => '@' + String(jid).replace(/@s\.whatsapp\.net/, '').split(':')[0]);
 
                 let text;
                 if (action === 'add') {
