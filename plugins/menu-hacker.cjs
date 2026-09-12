@@ -1,17 +1,14 @@
 const { cmd, commands } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
 
-const CMD_PER_PAGE = 40;
+const CMDS_PER_MSG = 35;
 
 function fmtUptime(s) {
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
     return h > 0 ? `${h}h ${m}m` : `${m}m ${Math.floor(s % 60)}s`;
 }
 
-let _cachedGroup = null;
-let _cachedCount = 0;
 function commandsGroup(cmds) {
-    if (_cachedGroup && _cachedCount === cmds.length) return _cachedGroup;
     const cats = {};
     for (const c of cmds) {
         const cat = (c.category || 'OTHER').toUpperCase();
@@ -19,119 +16,140 @@ function commandsGroup(cmds) {
         if (c.pattern && typeof c.pattern === 'string') cats[cat].add(c.pattern.toLowerCase());
         if (c.alias && Array.isArray(c.alias)) c.alias.forEach(a => cats[cat].add(String(a).toLowerCase()));
     }
-    _cachedGroup = cats;
-    _cachedCount = cmds.length;
     return cats;
 }
 
-async function sendCategory(ctx, query, page) {
-    const { reply } = ctx;
-    const q = query.toUpperCase();
-    const grouped = commandsGroup(commands);
+function buildHeader(totalCmds) {
+    const mem = (process.memoryUsage().rss / 1048576).toFixed(1);
+    const up = fmtUptime(process.uptime());
+    const num = config.OWNER_NUMBER || '';
+    return [
+        `╭───『 DJOUSSE TECH 』───●●►`,
+        `┃ 📋 MENU — DJOUSSE TECH`,
+        `┃ ┃ 👋 Salut : ${num}`,
+        `┃ ┃ 📡 Uptime : ${up}`,
+        `┃ ┃ 💾 RAM : ${mem} MB`,
+        `┃ ┃ ⚡ Commandes : ${totalCmds}`,
+        `╰─────────────❖●►`,
+    ].join('\n');
+}
 
-    let cat = Object.keys(grouped).find(c => c === q)
-        || Object.keys(grouped).find(c => c.startsWith(q) || q.startsWith(c));
-
-    if (!cat) {
-        const available = Object.keys(grouped).sort().join(', ');
-        return reply(`❌ Module \`${query}\` introuvable.\n\n📂 Modules dispo:\n${available}`);
+function buildCategoryBlock(cat, cmds, page, totalPages) {
+    const slice = cmds.slice((page - 1) * CMDS_PER_MSG, page * CMDS_PER_MSG);
+    const lines = [`╭─「 ${cat} 」`];
+    for (const c of slice) {
+        lines.push(`┃✦ .${c}`);
     }
-
-    const cmds = [...grouped[cat]].sort();
-    const totalPages = Math.ceil(cmds.length / CMD_PER_PAGE);
-    const p = Math.min(page, totalPages);
-    const slice = cmds.slice((p - 1) * CMD_PER_PAGE, p * CMD_PER_PAGE);
-
-    const botName = (config.BOT_NAME || 'DJOUSSE-TECH-MD').toUpperCase();
-    const line = '━'.repeat(30);
-
-    let out = `╭──⍟『 ☣ ${cat} ☣ 』⍟─\n`;
-    out += `┃ ▸ MOD: ${cmds.length} cmds | PAGE: ${p}/${totalPages}\n`;
-    out += `┣${line}\n`;
-    out += slice.map((c, i) => `┃▸ ${String((p - 1) * CMD_PER_PAGE + i + 1).padStart(3, '0')} \`.${c}\``).join('\n');
-    out += `\n┣${line}\n`;
-    if (p < totalPages) out += `┃▸ SUIVANT: \`.menu ${query.toLowerCase()} ${p + 1}\`\n`;
-    if (p > 1) out += `┃▸ PRÉCÉDENT: \`.menu ${query.toLowerCase()} ${p - 1}\`\n`;
-    out += `╰────────────⍟\n`;
-    out += `> root@${botName.toLowerCase()}:~$ _`;
-
-    await reply(out);
+    if (totalPages > 1) {
+        lines.push(`┃ 📄 Page ${page}/${totalPages}`);
+        if (page < totalPages) lines.push(`┃ ➡ .menu ${cat.toLowerCase()} ${page + 1}`);
+        if (page > 1) lines.push(`┃ ⬅ .menu ${cat.toLowerCase()} ${page - 1}`);
+    }
+    lines.push(`╰─────────────◉•►`);
+    return lines.join('\n');
 }
 
 cmd({
     pattern: 'menu',
-    alias: ['menuhacker', 'hackermenu', 'commands', 'cmd', 'aide', 'help', 'h', 'm'],
-    desc: 'Menu hacker DJOUSSE-TECH-MD',
+    alias: ['menuhacker', 'hackermenu', 'commands', 'cmd', 'help', 'h', 'm'],
+    desc: 'Menu complet DJOUSSE TECH',
     category: 'main',
     filename: __filename,
 }, async (conn, m, cmdList, ctx) => {
-    const args = (ctx.args || []).map(a => a.toLowerCase());
-
-    if (args.length > 0) {
-        const query = args[0].replace(/^\./, '');
-        const page = Math.max(1, parseInt(args[1]) || 1);
-        return sendCategory(ctx, query, page);
-    }
-
     try {
+        const args = (ctx.args || []).map(a => a.toLowerCase());
         const grouped = commandsGroup(commands);
-        const catList = Object.keys(grouped).sort();
         const totalCmds = commands.length;
-        const mem = (process.memoryUsage().rss / 1048576).toFixed(1);
-        const up = fmtUptime(process.uptime());
-        const botName = (config.BOT_NAME || 'DJOUSSE-TECH-MD').toUpperCase();
 
-        const line = '━'.repeat(30);
-        let out = `┏━⍟「 ☣ ${botName} ☣ 」⍟━┓\n`;
-        out += `┃ ▸ STATUS : ONLINE 🟢\n`;
-        out += `┃ ▸ RAM    : ${mem} MB\n`;
-        out += `┃ ▸ UPTIME : ${up}\n`;
-        out += `┃ ▸ CMDS   : ${totalCmds}\n`;
-        out += `┣${line}\n`;
-        out += `┃ ▚▞ ACCESS GRANTED — MODULES:\n`;
-        out += `┣${line}\n`;
+        if (args.length > 0) {
+            const query = args[0].replace(/^\./, '').toUpperCase();
+            const page = Math.max(1, parseInt(args[1]) || 1);
 
-        let i = 0;
-        for (const cat of catList) {
-            i++;
-            out += `┃▸ [${String(i).padStart(2, '0')}] ${cat} (${grouped[cat].size})\n`;
+            let cat = Object.keys(grouped).find(c => c === query)
+                || Object.keys(grouped).find(c => c.startsWith(query) || query.startsWith(c));
+
+            if (!cat) {
+                const available = Object.keys(grouped).sort().join(', ');
+                return ctx.reply(`❌ Module \`${query}\` introuvable.\n\n📂 Modules:\n${available}`);
+            }
+
+            const cmds = [...grouped[cat]].sort();
+            const totalPages = Math.ceil(cmds.length / CMDS_PER_MSG);
+            const out = buildCategoryBlock(cat, cmds, page, totalPages);
+            return ctx.reply(out);
         }
 
-        out += `┣${line}\n`;
-        out += `┃▸ USAGE: \`.menu <module>\`\n`;
-        out += `┃▸ EX: \`.menu tools\` | \`.menu ai\` | \`.menu game\`\n`;
-        out += `┗${line}⍟\n`;
-        out += `> © DJOUSSE TECH EVOLUTION`;
+        const header = buildHeader(totalCmds);
+        const catList = Object.keys(grouped).sort();
+        const pages = [];
 
-        await ctx.reply(out);
+        for (const cat of catList) {
+            const cmds = [...grouped[cat]].sort();
+            pages.push(buildCategoryBlock(cat, cmds, 1, 1));
+        }
+
+        let currentMsg = header;
+        const messages = [];
+
+        for (const block of pages) {
+            if (currentMsg.length + block.length + 10 > 3800) {
+                messages.push(currentMsg);
+                currentMsg = block;
+            } else {
+                currentMsg += '\n' + block;
+            }
+        }
+        messages.push(currentMsg);
+
+        for (const msg of messages) {
+            await ctx.reply(msg);
+        }
     } catch (e) {
-        console.error('[MENU-HACKER]', e.message);
+        console.error('[MENU]', e.message);
         return ctx.reply('❌ Erreur menu: ' + e.message);
     }
 });
 
 cmd({
-    pattern: 'menulist',
-    alias: ['categories', 'mods'],
-    desc: 'Liste des modules',
+    pattern: 'allmenu',
+    alias: ['fullmenu', 'allcmd'],
+    desc: 'Affiche toutes les commandes par catégorie',
     category: 'main',
     filename: __filename,
 }, async (conn, m, cmdList, ctx) => {
     try {
-        const cats = {};
-        for (const c of commands) {
-            const cat = (c.category || 'OTHER').toUpperCase();
-            cats[cat] = (cats[cat] || 0) + 1;
+        const grouped = commandsGroup(commands);
+        const totalCmds = commands.length;
+        const header = buildHeader(totalCmds);
+        const catList = Object.keys(grouped).sort();
+        const pages = [];
+
+        for (const cat of catList) {
+            const cmds = [...grouped[cat]].sort();
+            const totalPages = Math.ceil(cmds.length / CMDS_PER_MSG);
+            for (let p = 1; p <= totalPages; p++) {
+                pages.push(buildCategoryBlock(cat, cmds, p, totalPages));
+            }
         }
-        const botName = (config.BOT_NAME || 'DJOUSSE-TECH-MD').toUpperCase();
-        let out = `╭──⍟『 📂 ${botName} MODULES 』\n`;
-        Object.keys(cats).sort().forEach((c, i) => {
-            out += `┃▸ ${String(i + 1).padStart(2, '0')}. ${c} — ${cats[c]}\n`;
-        });
-        out += `╰────────────⍟\n`;
-        out += `> \`.menu <module>\` pour ouvrir un module`;
-        await ctx.reply(out);
+
+        let currentMsg = header;
+        const messages = [];
+
+        for (const block of pages) {
+            if (currentMsg.length + block.length + 10 > 3800) {
+                messages.push(currentMsg);
+                currentMsg = block;
+            } else {
+                currentMsg += '\n' + block;
+            }
+        }
+        messages.push(currentMsg);
+
+        for (const msg of messages) {
+            await ctx.reply(msg);
+        }
     } catch (e) {
-        return ctx.reply('❌ ' + e.message);
+        console.error('[ALLMENU]', e.message);
+        return ctx.reply('❌ Erreur: ' + e.message);
     }
 });
