@@ -1,30 +1,30 @@
 const { cmd } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
 const { box } = require('../lib/djousse-ui.cjs');
-const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 
-async function downloadMedia(msgContent, type) {
-    const stream = await downloadContentFromMessage(msgContent, type);
-    let buffer = Buffer.from([]);
-    for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
-    return buffer;
-}
+const VV_CAPTION = `╭───『 DJOUSSE TECH 』───●●►
+┃ 🔓 *VUE UNIQUE INTERCEPTÉE*
+┃ ┃ ⚡ Média récupéré avec succès
+┃ ┃ 🛡️ Protection : activée
+┃ ┃ 💀 Accès : compromis
+╰─────────────❖●►
+> ᴘᴏᴡᴇʀᴇᴅ ʙʏ DJOUSSE TECH`;
 
 cmd({
     pattern: 'vv',
     alias: ['sendme', 'viewonce', 'vu', 'once'],
     react: '👻',
-    desc: 'Forward quoted view-once message to your DM',
+    desc: 'Récupérer un média vue-unique et le renvoyer dans la discussion',
     category: 'tools',
     filename: __filename
-}, async (conn, m, commands, { from, reply, isOwner }) => {
+}, async (conn, m, commands, { from, reply }) => {
     try {
         const quoted = m.quoted;
         if (!quoted) {
             return reply(box('VV', [
-                '❌ Reply to a view-once message with .vv',
+                '❌ Réponds à un message vue-unique avec .vv',
                 '',
-                '📌 Usage: .vv (reply to view-once)'
+                '📌 Usage: .vv (répondre à un view-once)'
             ]));
         }
 
@@ -34,26 +34,25 @@ cmd({
         try {
             mediaData = await quoted.download();
         } catch (err) {
-            return reply('❌ Download failed: ' + err.message);
+            return reply('❌ Échec du téléchargement: ' + err.message);
         }
 
         const messageType = quoted.mtype || 'textMessage';
-        const senderJid = m.sender;
-
+        const caption = VV_CAPTION;
         let forwardData = {};
 
         switch (messageType) {
             case 'imageMessage':
                 forwardData = {
                     image: mediaData,
-                    caption: quoted.text || '',
+                    caption,
                     mimetype: quoted.mimetype || 'image/jpeg'
                 };
                 break;
             case 'videoMessage':
                 forwardData = {
                     video: mediaData,
-                    caption: quoted.text || '',
+                    caption,
                     mimetype: quoted.mimetype || 'video/mp4'
                 };
                 break;
@@ -75,20 +74,15 @@ cmd({
                 };
                 break;
             default:
-                if (quoted.text || quoted.conversation) {
-                    forwardData = { text: quoted.text || quoted.conversation };
-                } else {
-                    return reply('❌ Unsupported message type');
-                }
+                return reply('❌ Type de média non supporté');
         }
 
-        await conn.sendMessage(senderJid, forwardData, { quoted: m });
+        await conn.sendMessage(from, forwardData, { quoted: m });
         await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
-        return reply(box('VV', ['✅ Sent to your DM!']));
 
     } catch (error) {
         console.error('VV ERROR:', error);
-        return reply('❌ Error: ' + error.message);
+        return reply('❌ Erreur: ' + error.message);
     }
 });
 
@@ -96,17 +90,17 @@ cmd({
     pattern: 'tovv',
     alias: ['toviewonce'],
     react: '📥',
-    desc: 'Convert quoted media to view-once',
+    desc: 'Convertir un média cité en vue-unique',
     category: 'tools',
     filename: __filename
-}, async (conn, m, commands, { from, reply, isOwner }) => {
+}, async (conn, m, commands, { from, reply }) => {
     try {
         const quoted = m.quoted;
         if (!quoted) {
             return reply(box('TOVV', [
-                '❌ Reply to a media message with .tovv',
+                '❌ Réponds à un média avec .tovv',
                 '',
-                '📌 Usage: .tovv (reply to image/video/audio)'
+                '📌 Usage: .tovv (image/vidéo/audio)'
             ]));
         }
 
@@ -116,12 +110,10 @@ cmd({
         try {
             mediaData = await quoted.download();
         } catch (err) {
-            return reply('❌ Download failed: ' + err.message);
+            return reply('❌ Échec du téléchargement: ' + err.message);
         }
 
         const messageType = quoted.mtype || 'textMessage';
-        const senderJid = m.sender;
-
         let forwardData = {};
 
         switch (messageType) {
@@ -150,15 +142,14 @@ cmd({
                 };
                 break;
             default:
-                return reply('❌ Only image, video, and audio can be converted to view-once.');
+                return reply('❌ Seuls image, vidéo et audio sont supportés.');
         }
 
-        await conn.sendMessage(senderJid, forwardData, { quoted: m });
+        await conn.sendMessage(from, forwardData, { quoted: m });
         await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
-        return reply(box('TOVV', ['✅ Sent as view-once to your DM!']));
 
     } catch (error) {
         console.error('TOVV ERROR:', error);
-        return reply('❌ Error: ' + error.message);
+        return reply('❌ Erreur: ' + error.message);
     }
 });
