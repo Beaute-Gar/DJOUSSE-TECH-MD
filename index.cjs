@@ -245,13 +245,22 @@ function loadPlugins() {
 }
 
 // ─── Plugin Dispatch ───────────────────────────────────────────────────────
+function matchPattern(command, name) {
+    try {
+        if (!command.pattern) return false;
+        if (typeof command.pattern === 'string') return name === command.pattern.toLowerCase();
+        if (command.pattern instanceof RegExp) return command.pattern.test(name);
+        return false;
+    } catch (_) { return false; }
+}
+
 async function dispatchCommand(conn, m, cmdName, body, args, ctx) {
     for (const command of commands) {
-        if (command.pattern && typeof command.pattern === 'string' && cmdName === command.pattern.toLowerCase()) {
+        if (matchPattern(command, cmdName)) {
             await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
-        if (command.alias && command.alias.some(a => a.toLowerCase() === cmdName)) {
+        if (command.alias && command.alias.some(a => String(a).toLowerCase() === cmdName)) {
             await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
@@ -260,11 +269,11 @@ async function dispatchCommand(conn, m, cmdName, body, args, ctx) {
     const parts = withoutPrefix.trim().split(/\s+/);
     const cmdFromBody = (parts[0] || '').toLowerCase();
     for (const command of commands) {
-        if (command.pattern && typeof command.pattern === 'string' && cmdFromBody === command.pattern.toLowerCase()) {
+        if (matchPattern(command, cmdFromBody)) {
             await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }
-        if (command.alias && command.alias.some(a => a.toLowerCase() === cmdFromBody)) {
+        if (command.alias && command.alias.some(a => String(a).toLowerCase() === cmdFromBody)) {
             await executePlugin(command, conn, m, body, args, ctx);
             return true;
         }

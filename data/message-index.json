@@ -139,6 +139,31 @@
       "sender": "140566427922478",
       "text": "Envoyez moi le liens de vos bot",
       "time": 1789208958622
+    },
+    {
+      "sender": "237659809751",
+      "text": ".del",
+      "time": 1789209118968
+    },
+    {
+      "sender": "237659809751",
+      "text": ".ping",
+      "time": 1789209135528
+    },
+    {
+      "sender": "108186703003720",
+      "text": "C'est quoi ça y'a maintenant des démon ici sérieux",
+      "time": 1789209179679
+    },
+    {
+      "sender": "237659809751",
+      "text": ".fb https://www.facebook.com/reel/1514345073426008",
+      "time": 1789209350681
+    },
+    {
+      "sender": "237659809751",
+      "text": ".avt",
+      "time": 1789209540925
     }
   ],
   "120363421078003626@g.us": [
@@ -213,6 +238,36 @@
       "sender": "237659809751",
       "text": ".ping",
       "time": 1789208955285
+    },
+    {
+      "sender": "237659809751",
+      "text": "https://youtu.be/6UUy_EnWQLA?list=RD8boy1e24Rwg",
+      "time": 1789209237208
+    },
+    {
+      "sender": "237659809751",
+      "text": ".fb https://www.facebook.com/reel/1514345073426008",
+      "time": 1789209332926
+    },
+    {
+      "sender": "237659809751",
+      "text": ".avt",
+      "time": 1789209422647
+    },
+    {
+      "sender": "237659809751",
+      "text": "action",
+      "time": 1789209427495
+    },
+    {
+      "sender": "237659809751",
+      "text": ".jouer",
+      "time": 1789209553246
+    },
+    {
+      "sender": "237659809751",
+      "text": "action",
+      "time": 1789209559786
     }
   ],
   "112588910280832@lid": [
@@ -328,6 +383,31 @@
       "sender": "237659809751",
       "text": ".ping",
       "time": 1789208963638
+    },
+    {
+      "sender": "237659809751",
+      "text": ".dare",
+      "time": 1789209050695
+    },
+    {
+      "sender": "237659809751",
+      "text": ".truth",
+      "time": 1789209060208
+    },
+    {
+      "sender": "237659809751",
+      "text": ".alive",
+      "time": 1789209076472
+    },
+    {
+      "sender": "237659809751",
+      "text": ".del",
+      "time": 1789209088412
+    },
+    {
+      "sender": "237659809751",
+      "text": ".delall",
+      "time": 1789209098655
     }
   ]
 }

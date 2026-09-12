@@ -88,21 +88,19 @@ cmd({
         out += `┃ ▸ UPTIME : ${up}\n`;
         out += `┃ ▸ CMDS   : ${totalCmds}\n`;
         out += `┣${line}\n`;
-        out += `┃ ▚▞ ACCESS GRANTED — TOUS LES COMMANDES:\n`;
+        out += `┃ ▚▞ ACCESS GRANTED — MODULES:\n`;
         out += `┣${line}\n`;
 
         let i = 0;
         for (const cat of catList) {
             i++;
-            const cmds = [...grouped[cat]].sort();
-            out += `\n┃▸ [${String(i).padStart(2, '0')}] ▸ ${cat} (${cmds.length})\n`;
-            out += `┃  ${cmds.map(c => '.' + c).join(' | ')}\n`;
+            out += `┃▸ [${String(i).padStart(2, '0')}] ${cat} (${grouped[cat].size})\n`;
         }
 
         out += `┣${line}\n`;
-        out += `┃▸ USAGE: \`.menu <module>\` pour détails\n`;
+        out += `┃▸ USAGE: \`.menu <module>\`\n`;
+        out += `┃▸ EX: \`.menu tools\` | \`.menu ai\` | \`.menu game\`\n`;
         out += `┗${line}⍟\n`;
-        out += `> root@${botName.toLowerCase()}:~$ _\n`;
         out += `> © DJOUSSE TECH EVOLUTION`;
 
         await ctx.reply(out);
