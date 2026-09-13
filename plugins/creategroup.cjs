@@ -1,16 +1,17 @@
 const { cmd } = require('../command.cjs');
 const { box } = require('../lib/djousse-ui.cjs');
+const { isLidUser } = require('@whiskeysockets/baileys');
 
 /*
- * DJOUSSE TECH — CREATEGROUP
+ * DJOUSSE TECH — CREATEGROUP v2
  *
- * 1. Analyse les groupes auxquels le compte participe.
- * 2. Récupère les membres uniques.
- * 3. Crée immédiatement le nouveau groupe.
- * 4. Lance l'ajout des membres en arrière-plan.
+ * 1. Analyse les groupes, extrait les membres uniques
+ * 2. Résout les LID → PN via le cache global.__lidToPn
+ * 3. Crée le groupe immédiatement
+ * 4. Ajoute les membres résolus en arrière-plan
  *
  * WhatsApp limite un groupe à 1024 membres.
- * Le compte créateur occupe déjà une place → max 1023 ajouts.
+ * Les membres en format @lid sans résolution sont exclus.
  */
 
 const MAX_GROUP_MEMBERS = 1024;
@@ -26,6 +27,17 @@ function sleep(ms) {
 function normalizeJid(jid) {
   if (!jid) return '';
   return String(jid).trim().toLowerCase();
+}
+
+function toPnJid(num) {
+  if (!num) return '';
+  const s = String(num);
+  return s.includes('@') ? s : s + '@s.whatsapp.net';
+}
+
+function cleanPn(v) {
+  if (!v) return null;
+  return String(v).replace(/@s\.whatsapp\.net$/, '').split(':')[0] || null;
 }
 
 function getOwnJids(conn) {
@@ -57,6 +69,39 @@ function isOwnParticipant(participantId, ownJids) {
   return false;
 }
 
+/**
+ * Résout un JID member en PN JID utilisable pour groupParticipantsUpdate.
+ * Utilise le cache global.__lidToPn construit par les messages reçus.
+ * Retourne null si le membre ne peut pas être résolu.
+ */
+function resolveMemberJid(memberJid, ownJids) {
+  const normalized = normalizeJid(memberJid);
+  if (!normalized) return null;
+
+  // Déjà un @s.whatsapp.net → directement utilisable
+  if (normalized.endsWith('@s.whatsapp.net')) {
+    // Vérifier que ce n'est pas le bot lui-même
+    if (isOwnParticipant(normalized, ownJids)) return null;
+    return normalized;
+  }
+
+  // @lid → essayer de résoudre via le cache
+  if (isLidUser && isLidUser(normalized)) {
+    const lidMap = global.__lidToPn || new Map();
+    const pn = lidMap.get(normalized);
+    if (pn) {
+      const resolved = toPnJid(pn);
+      if (isOwnParticipant(resolved, ownJids)) return null;
+      return resolved;
+    }
+    // Pas de résolution disponible
+    return null;
+  }
+
+  // @g.us ou autre → ignorer
+  return null;
+}
+
 function getErrorMessage(error) {
   if (!error) return 'Erreur inconnue';
   return error?.message || error?.data?.message || error?.output?.payload?.message || String(error);
@@ -83,7 +128,6 @@ async function processGroupCreation({ conn, chatJid, groupJid, groupName, member
   let successCount = 0;
   let failCount = 0;
   let alreadyMemberCount = 0;
-  const failedMembers = [];
 
   try {
     console.log('');
@@ -113,25 +157,21 @@ async function processGroupCreation({ conn, chatJid, groupJid, groupName, member
           console.log('[CREATEGROUP] ↪️ Déjà membre : ' + memberJid);
         } else {
           failCount++;
-          failedMembers.push({ jid: memberJid, error: 'Statut WhatsApp : ' + status });
           console.log('[CREATEGROUP] ⚠️ Refusé : ' + memberJid + ' (' + status + ')');
         }
       } catch (error) {
         failCount++;
-        const errorMessage = getErrorMessage(error);
-        failedMembers.push({ jid: memberJid, error: errorMessage });
-        console.error('[CREATEGROUP] ❌ Échec ' + memberJid + ': ' + errorMessage);
+        console.error('[CREATEGROUP] ❌ Échec ' + memberJid + ': ' + getErrorMessage(error));
 
         if (isRateLimitError(error)) {
-          console.warn('[CREATEGROUP] 🛑 Limitation WhatsApp détectée. Arrêt du processus.');
+          console.warn('[CREATEGROUP] 🛑 Limitation WhatsApp détectée. Arrêt.');
           try {
             await reply(
-              '⚠️ *Ajout interrompu temporairement*\n\n' +
-              'WhatsApp limite les ajouts de membres.\n\n' +
+              '⚠️ *Ajout interrompu*\n\n' +
+              'WhatsApp limite les ajouts.\n\n' +
               '✅ Ajoutés : ' + successCount + '\n' +
               '⚠️ Échecs : ' + failCount + '\n' +
-              '👥 Déjà présents : ' + alreadyMemberCount + '\n\n' +
-              'Le groupe reste disponible.'
+              '👥 Déjà présents : ' + alreadyMemberCount
             );
           } catch (_) {}
           break;
@@ -148,9 +188,7 @@ async function processGroupCreation({ conn, chatJid, groupJid, groupName, member
             '↪️ Déjà présents : ' + alreadyMemberCount + '\n' +
             '❌ Échecs : ' + failCount
           );
-        } catch (error) {
-          console.warn('[CREATEGROUP] Impossible d\'envoyer la progression:', getErrorMessage(error));
-        }
+        } catch (_) {}
       }
 
       if (index < members.length - 1) await sleep(ADD_DELAY_MS);
@@ -158,14 +196,11 @@ async function processGroupCreation({ conn, chatJid, groupJid, groupName, member
 
     const inviteCode = await conn.groupInviteCode(groupJid).catch(() => null);
     const link = inviteCode ? 'https://chat.whatsapp.com/' + inviteCode : '(lien indisponible)';
-    const processed = successCount + failCount + alreadyMemberCount;
 
     console.log('');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🏁 [CREATEGROUP] TERMINÉ');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Groupe :', groupJid);
-    console.log('Traités :', processed);
     console.log('Ajoutés :', successCount);
     console.log('Déjà présents :', alreadyMemberCount);
     console.log('Échecs :', failCount);
@@ -176,25 +211,18 @@ async function processGroupCreation({ conn, chatJid, groupJid, groupName, member
         { label: 'Nom', value: groupName },
         { label: 'ID', value: groupJid },
         { blank: true },
-        { label: 'Cible sélectionnée', value: String(members.length) },
+        { label: 'Cible', value: String(members.length) },
         { label: 'Ajoutés', value: String(successCount) },
         { label: 'Déjà présents', value: String(alreadyMemberCount) },
         { label: 'Échecs', value: String(failCount) },
-        { blank: true },
-        { raw: members.length < MAX_MEMBERS_TO_ADD ? 'ℹ️ Tous les membres traités.' : 'ℹ️ Limite atteinte : 1 024 membres max.' },
         { blank: true },
         { raw: '🔗 ' + link },
       ])
     );
   } catch (error) {
-    console.error('[CREATEGROUP] Erreur arrière-plan:', getErrorMessage(error));
+    console.error('[CREATEGROUP] Erreur:', getErrorMessage(error));
     try {
-      await reply(
-        '⚠️ *Ajout interrompu*\n\n' +
-        'Le groupe a été créé mais l\'ajout s\'est arrêté.\n\n' +
-        '✅ Ajoutés : ' + successCount + '\n' +
-        '❌ Échecs : ' + failCount
-      );
+      await reply('⚠️ *Ajout interrompu*\n\n✅ Ajoutés : ' + successCount + '\n❌ Échecs : ' + failCount);
     } catch (_) {}
   } finally {
     runningJobs.delete(jobKey);
@@ -204,7 +232,7 @@ async function processGroupCreation({ conn, chatJid, groupJid, groupName, member
 cmd({
   pattern: 'creategroup',
   react: '👥',
-  desc: 'Créer un groupe avec les membres uniques des groupes disponibles',
+  desc: 'Créer un groupe avec les membres uniques résolus',
   category: 'group',
   filename: __filename,
   fromMe: true,
@@ -214,7 +242,7 @@ cmd({
     const accountId = conn?.user?.id || 'default-account';
 
     if (runningJobs.has(accountId)) {
-      return reply('⏳ *Une création est déjà en cours.*\n\nAttends la fin de l\'opération actuelle.');
+      return reply('⏳ *Une création est déjà en cours.*');
     }
 
     runningJobs.set(accountId, { startedAt: Date.now() });
@@ -228,42 +256,65 @@ cmd({
       return reply('❌ Aucun groupe trouvé.');
     }
 
-    await reply('📊 *' + groupJids.length + ' groupes trouvés.*\nExtraction des membres uniques...');
+    await reply('📊 *' + groupJids.length + ' groupes trouvés.*\nExtraction des membres...');
 
     const ownJids = getOwnJids(conn);
+    const lidMap = global.__lidToPn || new Map();
+    console.log('[CREATEGROUP] Cache LID→PN:', lidMap.size, 'entrées');
     console.log('[CREATEGROUP] JID(s) du compte:', Array.from(ownJids).join(', '));
 
-    const uniqueMembersSet = new Set();
-
+    // Collecte brute de tous les JID membres
+    const rawMembersSet = new Set();
     for (const jid of groupJids) {
       const groupMeta = chats[jid];
       if (!groupMeta || !Array.isArray(groupMeta.participants)) continue;
-
       for (const participant of groupMeta.participants) {
         if (!participant?.id) continue;
-        const memberJid = normalizeJid(participant.id);
-        if (!memberJid) continue;
-        if (isOwnParticipant(memberJid, ownJids)) continue;
-        uniqueMembersSet.add(memberJid);
+        rawMembersSet.add(normalizeJid(participant.id));
       }
     }
 
-    const allUniqueMembers = Array.from(uniqueMembersSet);
+    const rawCount = rawMembersSet.size;
 
-    if (allUniqueMembers.length === 0) {
+    // Résolution LID → PN
+    const resolvedMembers = new Set();
+    let lidSkipped = 0;
+    let ownSkipped = 0;
+
+    for (const rawJid of rawMembersSet) {
+      const resolved = resolveMemberJid(rawJid, ownJids);
+      if (!resolved) {
+        if (isLidUser && isLidUser(rawJid)) lidSkipped++;
+        else ownSkipped++;
+        continue;
+      }
+      resolvedMembers.add(resolved);
+    }
+
+    const allResolved = Array.from(resolvedMembers);
+
+    if (allResolved.length === 0) {
       runningJobs.delete(accountId);
-      return reply('❌ Aucun autre membre unique à ajouter.');
+      return reply(
+        '❌ Aucun membre résolvable.\n\n' +
+        '🔍 Bruts récupérés : ' + rawCount + '\n' +
+        '🔒 @lid sans résolution : ' + lidSkipped + '\n' +
+        '👤 Propres JID exclus : ' + ownSkipped + '\n\n' +
+        '💡 Les @lid ne peuvent être résolus que si la personne a déjà envoyé un message au bot.'
+      );
     }
 
-    const membersToAdd = allUniqueMembers.slice(0, MAX_MEMBERS_TO_ADD);
-    const omittedCount = Math.max(0, allUniqueMembers.length - membersToAdd.length);
+    const membersToAdd = allResolved.slice(0, MAX_MEMBERS_TO_ADD);
+    const omittedCount = Math.max(0, allResolved.length - membersToAdd.length);
 
-    let selectionMessage = '👥 *' + allUniqueMembers.length + ' membres uniques récupérés.*\n\n🎯 Sélection : *' + membersToAdd.length + '*';
-    if (omittedCount > 0) {
-      selectionMessage += '\n⚠️ ' + omittedCount + ' membres exclus (limite 1 024).';
-    }
-    selectionMessage += '\n\nCréation du groupe « ' + groupName + ' »...';
-    await reply(selectionMessage);
+    let msg = '👥 *' + rawCount + ' membres bruts récupérés*\n\n';
+    msg += '📱 Résolus (PN) : *' + allResolved.length + '*\n';
+    if (lidSkipped > 0) msg += '🔒 @lid non résolus : ' + lidSkipped + '\n';
+    if (ownSkipped > 0) msg += '👤 JID propres exclus : ' + ownSkipped + '\n';
+    msg += '\n🎯 Sélection : *' + membersToAdd.length + '*';
+    if (omittedCount > 0) msg += '\n⚠️ ' + omittedCount + ' exclus (limite 1 024)';
+    msg += '\n\nCréation du groupe...';
+    await reply(msg);
 
     const createResponse = await conn.groupCreate(groupName, []);
     const newGroupJid = createResponse?.id || createResponse?.gid;
@@ -275,14 +326,14 @@ cmd({
 
     await reply(
       '✅ *Groupe créé !*\n\n' +
-      '🆔 ID : ' + newGroupJid + '\n' +
+      '🆔 ' + newGroupJid + '\n' +
       '👥 Membres : ' + membersToAdd.length + '\n' +
       '🚀 Ajout en arrière-plan.\n\n' +
-      '⏱️ Délai : ' + (ADD_DELAY_MS / 1000) + ' s entre les ajouts.'
+      '⏱️ Délai : ' + (ADD_DELAY_MS / 1000) + ' s'
     );
 
     runningJobs.delete(accountId);
-    runningJobs.set(newGroupJid, { startedAt: Date.now(), type: 'background-add-members' });
+    runningJobs.set(newGroupJid, { startedAt: Date.now() });
 
     processGroupCreation({
       conn,
@@ -299,6 +350,6 @@ cmd({
     return;
   } catch (error) {
     console.error('❌ creategroup:', getErrorMessage(error));
-    return reply('❌ *Erreur creategroup :*\n' + getErrorMessage(error));
+    return reply('❌ *Erreur :* ' + getErrorMessage(error));
   }
 });
