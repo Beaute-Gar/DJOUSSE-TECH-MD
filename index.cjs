@@ -978,10 +978,15 @@ async function pairBot(number, method = 'pairing') {
                     return `${cleanJid}@s.whatsapp.net`;
                 });
 
-                const names = participantIds.map((jid) => {
-                    const number = String(jid).split('@')[0].split(':')[0];
-                    return `@${number}`;
-                });
+                const names = [];
+                for (const jid of participantIds) {
+                    try {
+                        const displayName = await sock.getName(jid);
+                        names.push(displayName ? `@${displayName}` : `@${String(jid).split('@')[0].split(':')[0]}`);
+                    } catch {
+                        names.push(`@${String(jid).split('@')[0].split(':')[0]}`);
+                    }
+                }
 
                 let text;
                 if (action === 'add') {
