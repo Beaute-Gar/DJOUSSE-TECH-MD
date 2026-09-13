@@ -43,6 +43,7 @@ const {
     getBuffer, getGroupAdmins, getRandom, h2k, isUrl,
     runtime, sleep, fetchJson,
 } = require('./lib/functions.cjs');
+const { normalizeJid, extractNumber, isGroupJid, isStatusJid } = require('./lib/jid.cjs');
 const bridge = require('./android-bridge.cjs');
 const logger = require('./lib/logger.cjs');
 const readline = require('readline');
@@ -117,7 +118,33 @@ const memInterval = setInterval(() => {
 }, 120_000);
 
 // ─── Cache & Cleanup ───────────────────────────────────────────────────────
-const msgCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+const msgCache = new NodeCache({ stdTTL: 30, checkperiod: 10 });
+
+// ─── Cache groupMetadata (5 min) ──────────────────────────────────────────
+const groupMetadataCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+
+// ─── Anti-boucle : messages générés par le bot ─────────────────────────────
+// Clé : `${botNum}:${messageId}` → true si le bot l'a envoyé
+const botSentMessageIds = new NodeCache({ stdTTL: 120, checkperiod: 30, useClones: false });
+
+/**
+ * Vérifie si un message a été généré par le bot (anti-boucle propre).
+ * Distingue : fromMe (utilisateur envoie depuis son propre WhatsApp)
+ *             vs message généré par DJOUSSE TECH (réponse du bot).
+ */
+function isBotGeneratedMessage(rawMsg, botNum) {
+    const messageId = rawMsg.key?.id;
+    if (!messageId) return false;
+    const cacheKey = `${botNum}:${messageId}`;
+    return botSentMessageIds.has(cacheKey);
+}
+
+/**
+ * Enregistre un message envoyé par le bot (pour anti-boucle).
+ */
+function markBotSentMessage(botNum, messageId) {
+    if (messageId) botSentMessageIds.set(`${botNum}:${messageId}`, true);
+}
 
 function cleanUselessCacheAndLogs() {
     msgCache.flushAll();
@@ -130,6 +157,68 @@ function cleanUselessCacheAndLogs() {
     if (fs.existsSync(cacheDir)) {
         fs.readdirSync(cacheDir).forEach(f => { try { fs.unlinkSync(path.join(cacheDir, f)); } catch (_) {} });
     }
+}
+
+// ─── Command Timeout (30s) ────────────────────────────────────────────────
+const COMMAND_TIMEOUT_MS = 30_000;
+
+function withTimeout(promise, ms, label = 'command') {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`[TIMEOUT] ${label} dépassé (${ms}ms)`)), ms)
+        ),
+    ]);
+}
+
+// ─── Plugin Validation (audit au démarrage) ───────────────────────────────
+function validatePlugins() {
+    const patternMap = new Map();
+    let validCount = 0;
+    let errorCount = 0;
+    const warnings = [];
+
+    for (const cmd of commands) {
+        const p = cmd.pattern;
+        const fn = cmd.filename || 'unknown';
+
+        // Vérifications basiques
+        if (typeof p !== 'string' && !(p instanceof RegExp)) {
+            warnings.push(`⚠️ pattern invalide dans ${fn}: ${String(p)}`);
+            errorCount++;
+            continue;
+        }
+        if (typeof cmd.function !== 'function') {
+            warnings.push(`⚠️ function manquante dans ${fn} (pattern: ${String(p)})`);
+            errorCount++;
+            continue;
+        }
+        if (!cmd.category) {
+            warnings.push(`⚠️ category manquante dans ${fn} (pattern: ${String(p)})`);
+        }
+
+        // Détection de conflits
+        const patternKey = typeof p === 'string' ? p.toLowerCase() : String(p);
+        if (patternMap.has(patternKey)) {
+            const existing = patternMap.get(patternKey);
+            warnings.push(`⚠️ CONFLIT commande "${String(p)}": ${existing} ↔ ${fn}`);
+        } else {
+            patternMap.set(patternKey, fn);
+        }
+
+        validCount++;
+    }
+
+    console.log('');
+    console.log('┌─────────────────────────────────────────────┐');
+    console.log(`│  PLUGIN CHECK                               │`);
+    console.log(`│  Plugins chargés : ${commands.length}`.padEnd(46) + '│');
+    console.log(`│  Valides        : ${validCount}`.padEnd(46) + '│');
+    console.log(`│  Erreurs        : ${errorCount}`.padEnd(46) + '│');
+    console.log(`│  Conflits       : ${warnings.filter(w => w.includes('CONFLIT')).length}`.padEnd(46) + '│');
+    console.log('└─────────────────────────────────────────────┘');
+    for (const w of warnings) console.log(`  ${w}`);
+    console.log('');
 }
 
 // ─── Console Log to File ───────────────────────────────────────────────────
@@ -167,10 +256,6 @@ const reconnectMap = new Map();  // numéro -> tentatives
 const telegramLinks = new Map(); // numéro WhatsApp -> chatId Telegram
 const replyCapture = new Map();  // numéro -> { chatId, expires }
 const sseClients = [];
-
-// Messages envoyés automatiquement par DJOUSSE TECH.
-// Mémorisés pour éviter que le bot traite ses propres réponses.
-const botSentMessageIds = new NodeCache({ stdTTL: 120, checkperiod: 30, useClones: false });
 
 function getPairingState(num) {
     if (!pairingState.has(num)) {
@@ -242,6 +327,18 @@ function loadPlugins() {
     console.log(`[PLUGINS] Loaded: ${loaded} | Errors: ${errors}`);
     console.log(`📚 ${commands.length} commandes chargées`);
     logger.pluginSummary();
+    validatePlugins();
+}
+
+/**
+ * Récupère les métadonnées d'un groupe avec cache 5min.
+ */
+async function getCachedGroupMetadata(sock, groupJid) {
+    const cached = groupMetadataCache.get(groupJid);
+    if (cached) return cached;
+    const metadata = await sock.groupMetadata(groupJid);
+    groupMetadataCache.set(groupJid, metadata);
+    return metadata;
 }
 
 // ─── Plugin Dispatch ───────────────────────────────────────────────────────
@@ -304,19 +401,19 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             style, randomImage, fakevCard,
             reply: async (text) => {
                 const sent = await m.reply(text);
-                if (sent?.key?.id) botSentMessageIds.set(`${ctx.botNum}:${sent.key.id}`, true);
+                if (sent?.key?.id) markBotSentMessage(ctx.botNum, sent.key.id);
                 return sent;
             },
             sendMessage: async (jid, content, opts) => {
                 const sent = await conn.sendMessage(jid, content, opts);
-                if (sent?.key?.id) botSentMessageIds.set(`${ctx.botNum}:${sent.key.id}`, true);
+                if (sent?.key?.id) markBotSentMessage(ctx.botNum, sent.key.id);
                 return sent;
             },
         };
 
         if (m.isGroup) {
             try {
-                const metadata = await conn.groupMetadata(m.chat);
+                const metadata = await getCachedGroupMetadata(conn, m.chat);
                 pluginCtx.groupMetadata = metadata;
                 pluginCtx.participants = metadata.participants;
                 pluginCtx.groupAdmins = getGroupAdmins(metadata.participants)
@@ -338,16 +435,26 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             } catch (_) {}
         }
 
-        await command.function(conn, m, commands, pluginCtx);
+        await withTimeout(
+            command.function(conn, m, commands, pluginCtx),
+            COMMAND_TIMEOUT_MS,
+            `cmd:${command.pattern}`
+        );
         const statsNumber = m?.botNumber || ctx?.botNum || '';
         if (statsNumber) {
             incrementStats(statsNumber, 'commandsUsed').catch(() => {});
         }
     } catch (e) {
+        const isTimeout = e.message && e.message.includes('[TIMEOUT]');
         console.error(`[CMD] Error executing ${command.pattern}:`, e.message);
+        if (isTimeout) {
+            console.error(`[CMD] Commande "${command.pattern}" timeout après ${COMMAND_TIMEOUT_MS}ms`);
+        }
         try {
-            const errSent = await m.reply('❌ Command error: ' + e.message);
-            if (errSent?.key?.id) botSentMessageIds.set(`${ctx.botNum}:${errSent.key.id}`, true);
+            const errSent = await m.reply(isTimeout
+                ? '⏱️ Commande trop longue. Réessaie plus tard.'
+                : '❌ Command error: ' + e.message);
+            if (errSent?.key?.id) markBotSentMessage(ctx.botNum, errSent.key.id);
         } catch (_) {}
     }
 }
@@ -662,10 +769,9 @@ async function pairBot(number, method = 'pairing') {
 
                     const messageId = rawMsg.key?.id;
                     const isFromMe = rawMsg.key?.fromMe === true;
-                    const botMessageKey = messageId ? `${num}:${messageId}` : null;
 
-                    // ─── PROTECTION ANTI-BOUCLE ──────────────────────
-                    if (isFromMe && botMessageKey && botSentMessageIds.has(botMessageKey)) {
+                    // ─── PROTECTION ANTI-BOUCLE (via isBotGeneratedMessage) ──
+                    if (isBotGeneratedMessage(rawMsg, num)) {
                         console.log(`[BOT][${num}] Message auto ignoré : ${messageId}`);
                         continue;
                     }
@@ -688,7 +794,7 @@ async function pairBot(number, method = 'pairing') {
                             const statusSent = await sock.sendMessage(rawMsg.key.remoteJid, {
                                 text: userConfig.AUTO_STATUS_MSG || AUTO_STATUS_MSG,
                             }, { quoted: rawMsg });
-                            if (statusSent?.key?.id) botSentMessageIds.set(`${num}:${statusSent.key.id}`, true);
+                            if (statusSent?.key?.id) markBotSentMessage(num, statusSent.key.id);
                         }
                         continue;
                     }
@@ -973,10 +1079,10 @@ async function pairBot(number, method = 'pairing') {
                 // Toggle enabled (défaut: true)
                 if (cfg.enabled === false) return;
 
-                // ─── MÉTADONNÉES DU GROUPE (sécurisé) ──────────────────────
+                // ─── MÉTADONNÉES DU GROUPE (sécurisé + cache) ──────────────
                 let metadata;
                 try {
-                    metadata = await sock.groupMetadata(groupJid);
+                    metadata = await getCachedGroupMetadata(sock, groupJid);
                 } catch (err) {
                     console.error(`[WELCOME][${num}] groupMetadata error:`, err?.message || err);
                     return;
@@ -1014,7 +1120,7 @@ async function pairBot(number, method = 'pairing') {
                         text = `👋 Bienvenue ${names.join(', ')} dans *${metadata.subject}* !\n\n> ${FOOTER}`;
                     }
                     const sent = await sock.sendMessage(groupJid, { text, mentions });
-                    if (sent?.key?.id) botSentMessageIds.set(`${num}:${sent.key.id}`, true);
+                    if (sent?.key?.id) markBotSentMessage(num, sent.key.id);
                 } else if (action === 'remove') {
                     if (cfg.goodbye) {
                         text = cfg.goodbye
@@ -1025,7 +1131,7 @@ async function pairBot(number, method = 'pairing') {
                         text = `👋 ${names.join(', ')} a quitté *${metadata.subject}*.\n\n> ${FOOTER}`;
                     }
                     const sent = await sock.sendMessage(groupJid, { text, mentions });
-                    if (sent?.key?.id) botSentMessageIds.set(`${num}:${sent.key.id}`, true);
+                    if (sent?.key?.id) markBotSentMessage(num, sent.key.id);
                 }
             } catch (e) {
                 console.error(`[WELCOME] Error: ${e.message}`);
