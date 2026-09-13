@@ -1,6 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
-const axios = require('axios');
+const ainoria = require('../lib/ainoria.cjs');
 
 const LANG_MAP = {
   fr: 'Français', en: 'English', es: 'Español', de: 'Deutsch', pt: 'Português',
@@ -17,49 +16,6 @@ const LANG_FLAGS = {
   sw: '🇰🇪', ha: '🇳🇬', yo: '🇳🇬', ig: '🇳🇬'
 };
 
-async function detectLanguage(text) {
-  try {
-    const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-      model: 'openai/gpt-oss-20b',
-      messages: [
-        { role: 'system', content: 'Detect the language of the text. Reply ONLY with the ISO 639-1 code (fr, en, es, de, pt, it, etc). Nothing else.' },
-        { role: 'user', content: text }
-      ],
-      max_completion_tokens: 10,
-      temperature: 0
-    }, {
-      headers: { 'Authorization': 'Bearer ' + (process.env.GROQ_API_KEY || ''), 'Content-Type': 'application/json' },
-      timeout: 10000
-    });
-    const lang = res.data.choices[0].message.content.trim().toLowerCase().slice(0, 2);
-    return LANG_MAP[lang] ? lang : 'en';
-  } catch {
-    return 'en';
-  }
-}
-
-async function translateText(text, targetLang, sourceLang) {
-  const langName = LANG_MAP[targetLang] || targetLang;
-  const srcLabel = sourceLang ? ` from ${LANG_MAP[sourceLang] || sourceLang}` : '';
-  try {
-    const res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-      model: 'openai/gpt-oss-20b',
-      messages: [
-        { role: 'system', content: `You are a professional translator. Translate the following text to ${langName}${srcLabel}. Reply ONLY with the translation, nothing else. Keep the same tone and meaning. If the text is already in ${langName}, reply with the original text.` },
-        { role: 'user', content: text }
-      ],
-      max_completion_tokens: 2048,
-      temperature: 0.3
-    }, {
-      headers: { 'Authorization': 'Bearer ' + (process.env.GROQ_API_KEY || ''), 'Content-Type': 'application/json' },
-      timeout: 20000
-    });
-    return res.data.choices[0].message.content.trim();
-  } catch (e) {
-    throw new Error('Traduction impossible: ' + (e.response?.data?.error?.message || e.message));
-  }
-}
-
 cmd({
   pattern: 'tr',
   alias: ['translate', 'traduire', 'trad'],
@@ -67,15 +23,7 @@ cmd({
   category: 'tools',
   filename: __filename,
 }, async (conn, m, commands, { q, reply }) => {
-  if (!q) {
-    return reply(box('🌐 *TRADUCTION AUTO*', [
-      { label: 'Usage', value: '.tr <texte>' },
-      { label: 'Avec langue', value: '.tr en <texte>' },
-      { label: 'Exemple', value: '.tr es Bonjour le monde' },
-      { blank: true },
-      { raw: 'Langues supportées: fr, en, es, de, pt, it, nl, ru, ja, ko, zh, ar, hi, tr, pl, vi, th, id, sw, ha, yo, ig' },
-    ]));
-  }
+  if (!q) return reply('Usage: .tr <texte>\nOu: .tr en <texte>');
 
   const parts = q.trim().split(/\s+/);
   let targetLang = null;
@@ -88,26 +36,20 @@ cmd({
 
   try {
     await m.react('🌐');
+
     if (!targetLang) {
-      const detected = await detectLanguage(text);
+      const detected = await ainoria.detectLanguage(text);
       const autoTarget = detected === 'fr' ? 'en' : 'fr';
-      const translated = await translateText(text, autoTarget, detected);
+      const translated = await ainoria.translate(text, autoTarget, { sourceLang: detected });
       const flag = LANG_FLAGS[autoTarget] || '🌐';
-      return reply(box(`${flag} *TRADUCTION* (${LANG_MAP[detected] || detected} → ${LANG_MAP[autoTarget]})`, [
-        { label: 'Original', value: truncate(text, 100) },
-        { blank: true },
-        { raw: translated },
-      ]));
+      return reply(`${flag} *TRADUCTION* (${LANG_MAP[detected] || detected} → ${LANG_MAP[autoTarget]})\n\n${translated}`);
     }
-    const translated = await translateText(text, targetLang);
+
+    const translated = await ainoria.translate(text, targetLang);
     const flag = LANG_FLAGS[targetLang] || '🌐';
-    return reply(box(`${flag} *TRADUCTION → ${LANG_MAP[targetLang]}`, [
-      { label: 'Original', value: truncate(text, 100) },
-      { blank: true },
-      { raw: translated },
-    ]));
+    return reply(`${flag} *TRADUCTION → ${LANG_MAP[targetLang]}*\n\n${translated}`);
   } catch (e) {
-    return reply('❌ ' + e.message);
+    return reply('Erreur: ' + e.message);
   }
 });
 

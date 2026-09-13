@@ -105,7 +105,7 @@ class AIMemoryManager {
     }
 
     /**
-     * Résumer l'historique via LLM (GROQ) — fallback sur truncation si pas de clé API
+     * Résumer l'historique via AINORIA — fallback sur truncation si pas de clé API
      */
     async summarize(userId) {
         const conv = this.conversations.get(userId);
@@ -115,44 +115,23 @@ class AIMemoryManager {
         const recent = conv.messages.slice(-5);
         const old = conv.messages.slice(0, -5);
 
-        // Tenter un résumé via LLM
-        const apiKey = process.env.GROQ_API_KEY || process.env.AI_API_KEY;
-        if (apiKey && old.length >= 3) {
-            try {
-                const conversationText = old.map(m => `${m.role}: ${m.content}`).join('\n');
-                const prompt = `Résume cette conversation en 2-3 phrases clés. Sois concis et conserve les informations importantes:\n\n${conversationText.slice(0, 4000)}`;
-                
-                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`,
-                    },
-                    body: JSON.stringify({
-                        model: 'openai/gpt-oss-20b',
-                        messages: [
-                            { role: 'system', content: 'Tu résumes des conversations WhatsApp. Sois très concis.' },
-                            { role: 'user', content: prompt },
-                        ],
-                        max_tokens: 200,
-                        temperature: 0.3,
-                    }),
-                });
+        // Tenter un résumé via AINORIA (identité DJOUSSE TECH injectée automatiquement)
+        try {
+            const ainoria = require('../../lib/ainoria.cjs');
+            const conversationText = old.map(m => `${m.role}: ${m.content}`).join('\n');
+            const prompt = `Résume cette conversation en 2-3 phrases clés. Sois concis et conserve les informations importantes:\n\n${conversationText.slice(0, 4000)}`;
+            const sys = 'Tu résumes des conversations WhatsApp. Sois très concis.';
 
-                if (response.ok) {
-                    const data = await response.json();
-                    const llmSummary = data.choices?.[0]?.message?.content?.trim();
-                    if (llmSummary && llmSummary.length > 20) {
-                        conv.summary = llmSummary;
-                        conv.messages = recent;
-                        this.saveToFile(userId, conv);
-                        console.log(`[AI-MEMORY] Résumé LLM créé pour ${userId}`);
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.error('[AI-MEMORY] Erreur résumé LLM:', e.message);
+            const llmSummary = await ainoria.chat(prompt, { system: sys, temperature: 0.3 });
+            if (llmSummary && llmSummary.length > 20) {
+                conv.summary = llmSummary;
+                conv.messages = recent;
+                this.saveToFile(userId, conv);
+                console.log(`[AI-MEMORY] Résumé AINORIA créé pour ${userId}`);
+                return;
             }
+        } catch (e) {
+            console.error('[AI-MEMORY] Erreur résumé AINORIA:', e.message);
         }
 
         // Fallback: résumé par troncation

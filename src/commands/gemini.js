@@ -1,6 +1,6 @@
 export const name = 'gemini';
 export const aliases = ['vision', 'vois', 'image', 'ocr'];
-export const description = 'Analyser une image avec l\'IA (Gemini Vision)';
+export const description = 'Analyser une image avec AINORIA (Vision)';
 export const category = 'general';
 export const level = 'user';
 export const cooldown = 15;
@@ -40,27 +40,13 @@ export async function handler(sock, m, { text, prefix, reply, jid, isQuoted, quo
     }
 
     const b64 = buffer.toString('base64');
-    const mime = mediaMsg.message?.imageMessage?.mimetype || 'image/jpeg';
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return reply('❌ GEMINI_API_KEY non configurée');
-
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inline_data: { mime_type: mime, data: b64 } },
-            { text: question }
-          ]
-        }]
-      })
-    });
-
-    const data = await res.json();
-    const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Aucune analyse disponible';
-    return reply(`🖼️ *Analyse d'image*\n\n${answer}`);
+    // Utiliser AINORIA (identité DJOUSSE TECH injectée automatiquement)
+    const { createRequire } = await import('module');
+    const require = createRequire(import.meta.url);
+    const ainoria = require('../../lib/ainoria.cjs');
+    const answer = await ainoria.describeImage(b64, question);
+    return reply(`🖼️ *Analyse d'image*\n\n${answer || 'Aucune analyse disponible'}`);
   } catch (err) {
     return reply(`❌ Erreur: ${err.message}`);
   }

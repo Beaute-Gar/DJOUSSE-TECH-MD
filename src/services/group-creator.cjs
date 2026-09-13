@@ -188,19 +188,10 @@ class GroupCreator {
 
   async callAI(prompt) {
     try {
-      if (!CONFIG.aiApiKey) return null;
-      const url = 'https://api.groq.com/openai/v1/chat/completions';
-      const headers = { 'Authorization': 'Bearer ' + CONFIG.aiApiKey, 'Content-Type': 'application/json' };
-      const data = {
-        model: CONFIG.aiModel,
-        messages: [
-          { role: 'system', content: 'Tu es un animateur de débat WhatsApp. Réponds en français, concis et engageant.' },
-          { role: 'user', content: prompt },
-        ],
-        max_tokens: 400,
-      };
-      const result = await axios.post(url, data, { headers, timeout: 30000 });
-      return result.data?.choices?.[0]?.message?.content || null;
+      const ainoria = require('../../lib/ainoria.cjs');
+      const sys = 'Tu es un animateur de débat WhatsApp. Réponds en français, concis et engageant.';
+      const result = await ainoria.chat(prompt, { system: sys, temperature: 0.9 });
+      return result || null;
     } catch (e) {
       console.error('❌ callAI:', e.message);
       return null;
