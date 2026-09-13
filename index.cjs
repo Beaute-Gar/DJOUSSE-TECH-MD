@@ -44,6 +44,7 @@ const {
     runtime, sleep, fetchJson,
 } = require('./lib/functions.cjs');
 const { normalizeJid, extractNumber, isGroupJid, isStatusJid } = require('./lib/jid.cjs');
+const { natural, replyError, replySuccess, stripBotFormat } = require('./lib/natural-response.cjs');
 const bridge = require('./android-bridge.cjs');
 const logger = require('./lib/logger.cjs');
 const readline = require('readline');
@@ -399,8 +400,16 @@ async function executePlugin(command, conn, m, body, args, ctx) {
             groupMetadata: null, participants: [], groupAdmins: [],
             config, runtime, sleep, getBuffer, getRandom, h2k, isUrl, fetchJson,
             style, randomImage, fakevCard,
+            natural, replyError, replySuccess, stripBotFormat,
             reply: async (text) => {
                 const sent = await m.reply(text);
+                if (sent?.key?.id) markBotSentMessage(ctx.botNum, sent.key.id);
+                return sent;
+            },
+            replyNatural: async (text) => {
+                // Nettoie le formatage bot et envoie en texte naturel
+                const clean = stripBotFormat(String(text || ''));
+                const sent = await m.reply(clean);
                 if (sent?.key?.id) markBotSentMessage(ctx.botNum, sent.key.id);
                 return sent;
             },

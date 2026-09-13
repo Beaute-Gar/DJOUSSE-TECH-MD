@@ -1,7 +1,8 @@
 // plugins/add.cjs — .add : ajout automatique des membres avec rapport détaillé
 const { cmd } = require('../command.cjs');
+const { normalizeJid } = require('../lib/jid.cjs');
 
-const normJid = (jid) => String(jid || '').split(':')[0].replace(/@\w+\.\w+$/, '@s.whatsapp.net');
+const normJid = normalizeJid;
 const memberJid = (p) => String(p?.jid || p?.id || '').split(':')[0];
 const botJids = (sock) => {
     const list = new Set([normJid(sock.user?.id)]);
