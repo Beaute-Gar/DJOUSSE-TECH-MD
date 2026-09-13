@@ -1,86 +1,8 @@
 const { cmd } = require('../command.cjs');
 const { fetchJson, getBuffer } = require('../lib/functions.cjs');
-const { freeChat } = require('../lib/ai.cjs');
 const pz = require('../lib/prexzy.cjs');
 
 const txt = m => (m.body || '').split(' ').slice(1).join(' ').trim();
-
-async function chatOrFree(endpoint, prompt) {
-  try {
-    const ans = await pz.chat(prompt, endpoint);
-    if (ans && !/invalid request/i.test(ans)) return ans;
-  } catch { }
-  try {
-    const r = await freeChat(prompt);
-    if (r) return r;
-  } catch { }
-  throw new Error('Aucune IA disponible pour le moment.');
-}
-
-async function imagenFree(prompt) {
-  try {
-    const buf = await getBuffer(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologo=true&width=1024&model=flux`);
-    if (buf && buf.length) return buf;
-  } catch { }
-  try {
-    return await pz.aiImage(prompt);
-  } catch { return null; }
-}
-
-cmd({ pattern: 'aiwriter', alias: ['aiw', 'pzai'], desc: 'Chat IA (gpt-4o-mini via Prexzy)', category: 'ai', filename: __filename }, async (conn, m) => {
-  const q = txt(m) || m.quoted?.text || '';
-  if (!q) return m.reply('❌ Usage: .aiwriter <question>');
-  m.reply('⏳ Réflexion en cours...');
-  try {
-    const ans = await pz.chat(q, 'aiwriter-chat');
-    const senderJid = m.sender ? [m.sender] : [];
-    await conn.sendMessage(m.chat, { text: `🤖 *AI Writer*\n\n@${(m.pushName || '').replace(/[^A-Za-zÀ-ÿ0-9 ]/g, '')} ${ans}`, contextInfo: { mentionedJid: senderJid } }, { quoted: m });
-  } catch (e) { m.reply('❌ ' + e.message); }
-});
-
-cmd({ pattern: 'aiapp', alias: ['aiappchat'], desc: 'Chat IA AiApp (Prexzy)', category: 'ai', filename: __filename }, async (conn, m) => {
-  const q = txt(m) || m.quoted?.text || '';
-  if (!q) return m.reply('❌ Usage: .aiapp <question>');
-  m.reply('⏳ Réflexion en cours...');
-  try {
-    const ans = await chatOrFree('aiappchat', q);
-    const senderJid = m.sender ? [m.sender] : [];
-    await conn.sendMessage(m.chat, { text: `🤖 *AiApp Chat*\n\n@${(m.pushName || '').replace(/[^A-Za-zÀ-ÿ0-9 ]/g, '')} ${ans}`, contextInfo: { mentionedJid: senderJid } }, { quoted: m });
-  } catch (e) { m.reply('❌ ' + e.message); }
-});
-
-cmd({ pattern: 'ai4chat', desc: 'Chat IA AI4Chat (Prexzy)', category: 'ai', filename: __filename }, async (conn, m) => {
-  const q = txt(m) || m.quoted?.text || '';
-  if (!q) return m.reply('❌ Usage: .ai4chat <question>');
-  m.reply('⏳ Réflexion en cours...');
-  try {
-    const ans = await chatOrFree('ai4chat', q);
-    const senderJid = m.sender ? [m.sender] : [];
-    await conn.sendMessage(m.chat, { text: `🤖 *AI4Chat*\n\n@${(m.pushName || '').replace(/[^A-Za-zÀ-ÿ0-9 ]/g, '')} ${ans}`, contextInfo: { mentionedJid: senderJid } }, { quoted: m });
-  } catch (e) { m.reply('❌ ' + e.message); }
-});
-
-cmd({ pattern: 'aiart', alias: ['genimg'], desc: 'Générer une image IA (Prexzy)', category: 'ai', filename: __filename }, async (conn, m) => {
-  const q = txt(m);
-  if (!q) return m.reply('❌ Usage: .aiart <prompt>');
-  m.reply('🎨 Génération en cours...');
-  try {
-    const buf = await imagenFree(q);
-    if (!buf) return m.reply('❌ Impossible de générer l\'image actuellement.');
-    await conn.sendMessage(m.chat, { image: buf, caption: `🎨 *AI Art*\n${q}` }, { quoted: m });
-  } catch (e) { m.reply('❌ ' + e.message); }
-});
-
-cmd({ pattern: 'aiwimg', alias: ['aiwriter-image'], desc: 'Image IA AI Writer (Prexzy)', category: 'ai', filename: __filename }, async (conn, m) => {
-  const q = txt(m);
-  if (!q) return m.reply('❌ Usage: .aiwimg <prompt>');
-  m.reply('🎨 Génération en cours...');
-  try {
-    const buf = await imagenFree(q);
-    if (!buf) return m.reply('❌ Impossible de générer l\'image actuellement.');
-    await conn.sendMessage(m.chat, { image: buf, caption: `🎨 *AI Writer Image*\n${q}` }, { quoted: m });
-  } catch (e) { m.reply('❌ ' + e.message); }
-});
 
 cmd({ pattern: 'ttsv', desc: 'Lister les voix TTS Prexzy', category: 'convert', filename: __filename }, async (conn, m) => {
   try {
