@@ -29,7 +29,7 @@ cmd({
     category: 'util',
     filename: __filename,
 }, async (conn, m, commands, { reply }) => {
-    const me = global.sock?.user || global.sock?.me || '';
+    const me = conn?.user || '';
     const jid = String(me).split('@')[0] || 'Non disponible';
     reply(box('🆔 *TON JID*', [
         { label: 'JID', value: jid },
@@ -38,20 +38,4 @@ cmd({
     ]));
 });
 
-/* .owner — Affiche les informations du propriétaire */
-cmd({
-    pattern: 'owner',
-    alias: ['ownerinfo', 'admin'],
-    react: '👑',
-    desc: 'Infos du propriétaire du bot',
-    category: 'util',
-    filename: __filename,
-}, async (conn, m, commands, { reply }) => {
-    const config = require('../config-djousse.cjs');
-    const ownerNum = config.BOT_OWNER || config.OWNER_NUMBER || '237693978044';
-    reply(box('👑 *PROPRIÉTAIRE*', [
-        { label: 'Numéro', value: ownerNum },
-        { blank: true },
-        { raw: 'C\'est la personne qui a le contrôle total du bot.' },
-    ]));
-});
+/* .owner — DÉSACTIVÉ, conflit avec owner-v2.cjs */

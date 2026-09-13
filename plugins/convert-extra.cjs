@@ -3,7 +3,7 @@ const { fetchJson, getBuffer } = require('../lib/functions.cjs');
 const { box, truncate } = require('../lib/djousse-ui.cjs');
 const { mp3ToVoiceNote } = require('../lib/voice.cjs');
 
-cmd({ pattern: 'translate', desc: 'Traduire un texte', category: 'convert', filename: __filename }, async (conn, m) => {
+cmd({ pattern: 'tr2', alias: ['translate2'], desc: 'Traduire un texte (convert-extra)', category: 'convert', filename: __filename }, async (conn, m) => {
   const args = m.body.split(' ').slice(1);
   const lang = /^[a-z]{2}(-[a-z]{2})?$/i.test(args[0] || '') ? args.shift().toLowerCase() : 'fr';
   let text = args.join(' ');

@@ -2,7 +2,7 @@
 const { cmd } = require('../command.cjs');
 
 cmd({ pattern: 'invite', desc: 'Lien d\'invitation du groupe — .invite (ici) ou .invite all (dans tous les groupes)', category: 'group', filename: __filename, fromMe: true }, async (conn, m) => {
-    const sock = global.sock || conn;
+    const sock = conn;
     const from = m.chat;
     if (!from || !from.endsWith('@g.us')) return m.reply('⚠️ Cette commande ne fonctionne qu\'en groupe.');
 

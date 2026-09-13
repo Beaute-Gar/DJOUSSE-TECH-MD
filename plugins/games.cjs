@@ -1163,7 +1163,7 @@ cmd({
 });
 
 cmd({
-  pattern: 'stats', alias: ['classement', 'leaderboard'], react: '🏆',
+  pattern: 'leaderboard', alias: ['classement', 'score'], react: '🏆',
   desc: 'Afficher les stats de la partie en cours', category: 'game', filename: __filename,
 }, async (conn, m, commands, { reply }) => {
   const game = activeGames.get(m.chat);

@@ -21,8 +21,8 @@ cmd({
   if (!isOwner) return reply('❌ Commande réservée au propriétaire.');
 
   const status = global.androidConnect || { status: 'disconnected' };
-  const sockOk = global.sock && global.sock.user;
-  const botNumber = sockOk ? String(global.sock.user.id).split(':')[0].split('@')[0] : null;
+  const sockOk = conn && conn.user;
+  const botNumber = sockOk ? String(conn.user.id).split(':')[0].split('@')[0] : null;
 
   let text = '📱 *CONNEXION ANDROID*\n\n';
   text += '┌─────────────────────────────┐\n';

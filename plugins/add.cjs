@@ -80,7 +80,7 @@ async function addWithTimeout(sock, groupId, batch, timeoutMs) {
 }
 
 cmd({ pattern: 'add', desc: 'Ajouter tous les membres de vos groupes dans ce groupe (avec rapport)', category: 'group', filename: __filename, fromMe: true }, async (conn, m) => {
-    const sock = global.sock || conn;
+    const sock = conn;
     const from = m.chat;
     if (!from || !from.endsWith('@g.us')) {
         return m.reply('⚠️ Cette commande ne fonctionne qu\'en groupe.');
@@ -207,7 +207,7 @@ cmd({ pattern: 'add', desc: 'Ajouter tous les membres de vos groupes dans ce gro
 });
 
 cmd({ pattern: 'addtest', desc: 'Tester l\'ajout d\'un membre — .addtest (auto) ou .addtest <numéro>', category: 'admin', filename: __filename, fromMe: true }, async (conn, m) => {
-    const sock = global.sock || conn;
+    const sock = conn;
     const from = m.chat;
     if (!from || !from.endsWith('@g.us')) return m.reply('⚠️ Cette commande ne fonctionne qu\'en groupe.');
 

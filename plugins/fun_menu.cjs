@@ -209,23 +209,7 @@ const roastList = [
   'Tu es comme un téléphone sans signal — perdu et inutile.',
 ];
 
-cmd({
-  pattern: 'roast',
-  react: '🔥',
-  desc: 'Roast aléatoire',
-  category: 'fun',
-  filename: __filename,
-}, async (conn, m, commands, { reply }) => {
-  const target = m.quoted?.sender || m.sender;
-  const name = target.split('@')[0];
-  const roast = roastList[Math.floor(Math.random() * roastList.length)];
-  const text = box('🔥 *ROAST*', [
-    { label: 'Cible', value: '@' + name },
-    { blank: true },
-    { raw: roast },
-  ]);
-  await conn.sendMessage(m.chat, { text, mentions: [target] }, { quoted: m });
-});
+// .roast DÉSACTIVÉ — conflit avec memes.cjs
 
 // ─── TRUTH ───────────────────────────────────────────────────────────────
 const truths = [

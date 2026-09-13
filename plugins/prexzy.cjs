@@ -111,7 +111,7 @@ cmd({ pattern: 'tts2', alias: ['parlez', 'voix'], desc: 'Text-to-Speech via Prex
   } catch (e) { m.reply('❌ ' + e.message); }
 });
 
-cmd({ pattern: 'lyrics', alias: ['paroles'], desc: 'Paroles de chanson (Prexzy)', category: 'search', filename: __filename }, async (conn, m) => {
+cmd({ pattern: 'paroles', alias: ['lyricsprexzy'], desc: 'Paroles de chanson (Prexzy)', category: 'search', filename: __filename }, async (conn, m) => {
   const q = txt(m);
   if (!q) return m.reply('❌ Usage: .lyrics <titre>');
   m.reply('🔍 Recherche des paroles...');

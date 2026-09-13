@@ -17,24 +17,7 @@ async function convertWithFfmpeg(inputPath, outputPath, format) {
   });
 }
 
-cmd({ pattern: 'sticker', alias: ['s', 'st'], desc: 'Convert image/video to sticker', category: 'MATHTOOL', filename: __filename }, async (conn, m, commands, { reply }) => {
-  try {
-    /* La cible média est le message cité (réponse) sinon le message lui-même (envoi direct) */
-    const src = (m.quoted && m.quoted.msg) ? m.quoted : m;
-    if (src.type !== 'imageMessage' && src.type !== 'videoMessage') {
-      return reply(box('🎨 *STICKER*', [
-        { raw: '❌ *Utilisation :* envoie ou réponds à une image ou une courte vidéo avec .sticker' },
-        { raw: '✨ *Exemple :* .sticker' },
-      ]));
-    }
-    const media = await conn.downloadMediaMessage(src);
-    await conn.sendMessage(m.chat, { sticker: media }, { quoted: m });
-  } catch (err) {
-    reply(box('🎨 *STICKER*', [
-      { raw: '⚠️ *Failed to make sticker:* ' + err.message },
-    ]));
-  }
-});
+// .sticker DÉSACTIVÉ — conflit avec sticker-extended.cjs (plus complet)
 
 cmd({ pattern: 'toimg', desc: 'Convert sticker to image', category: 'MATHTOOL', filename: __filename }, async (conn, m, commands, { reply }) => {
   try {

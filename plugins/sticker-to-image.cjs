@@ -1,6 +1,8 @@
 const { cmd } = require('../command.cjs');
 const fs = require('fs');
-const { exec } = require('child_process');
+const path = require('path');
+const os = require('os');
+const { execFile } = require('child_process');
 
 cmd({
   pattern: 'toimage',
@@ -11,17 +13,23 @@ cmd({
   filename: __filename,
 }, async (conn, m, commands, { from, reply }) => {
   const quoted = m.quoted;
-  if (!quoted || quoted.mtype !== 'stickerMessage') return reply('❌ Réponds à un sticker avec .toimage');
+  if (!quoted || quoted.mtype !== 'stickerMessage') return reply('Réponds à un sticker avec .toimage');
   try {
     await m.react('⏳').catch(() => {});
     const media = await quoted.download();
     if (!media) throw new Error('Échec du téléchargement.');
-    const fileName = './' + Date.now() + '.webp';
-    const pngFile = fileName.replace('.webp', '.png');
-    fs.writeFileSync(fileName, media);
-    await new Promise((resolve, reject) => { exec('ffmpeg -i ' + fileName + ' ' + pngFile, (error) => { if (error) reject(error); else resolve(); }); });
-    await conn.sendMessage(from, { image: { url: pngFile }, caption: '✅ *Sticker converti avec succès !*' }, { quoted: m });
-    fs.unlinkSync(fileName); fs.unlinkSync(pngFile);
+    const tmpDir = os.tmpdir();
+    const webpFile = path.join(tmpDir, `sticker_${Date.now()}.webp`);
+    const pngFile = path.join(tmpDir, `sticker_${Date.now()}.png`);
+    fs.writeFileSync(webpFile, media);
+    await new Promise((resolve, reject) => {
+      execFile('ffmpeg', ['-i', webpFile, '-y', pngFile], { timeout: 15000 }, (error) => {
+        if (error) reject(error); else resolve();
+      });
+    });
+    await conn.sendMessage(from, { image: { url: pngFile }, caption: 'Sticker converti !' }, { quoted: m });
+    try { fs.unlinkSync(webpFile); } catch (_) {}
+    try { fs.unlinkSync(pngFile); } catch (_) {}
     await m.react('✅').catch(() => {});
-  } catch (error) { reply('❌ Erreur: ' + error.message); }
+  } catch (error) { reply('Erreur: ' + error.message); }
 });

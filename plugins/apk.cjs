@@ -38,7 +38,7 @@ cmd({
   // .apk status
   if (sub === 'status') {
     const status = global.androidConnect || { status: 'disconnected' };
-    const sockOk = global.sock && global.sock.user;
+    const sockOk = conn && conn.user;
     let text = '📱 *STATUT ANDROID*\n\n';
     text += '• Bot : ' + (sockOk ? '🟢 En ligne' : '🔴 Hors ligne') + '\n';
     text += '• Android : ' + (status.status === 'connected' ? '🟢 Connecté' : status.status === 'pairing' ? '🟡 En attente' : '🔴 Déconnecté') + '\n';

@@ -8,8 +8,8 @@ const { buildSystemPrompt } = require('../lib/knowledge.cjs');
 const GEMINI_MODEL = 'gemini-3.6-flash';
 
 cmd({
-  pattern: 'ask',
-  alias: ['gemini', 'askai'],
+  pattern: 'gemini',
+  alias: ['askai'],
   desc: 'Ask Gemini AI anything',
   category: 'ai',
   filename: __filename,

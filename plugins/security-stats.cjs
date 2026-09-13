@@ -7,8 +7,8 @@ const { box } = require('../lib/djousse-ui.cjs');
    Affiche les compteurs de sécurité et l'état du warm-up. */
 
 cmd({
-    pattern: 'security',
-    alias: ['securite', 'securidad', 'antiban', 'ban-status'],
+    pattern: 'securitestats',
+    alias: ['securitystats', 'antiban-stats'],
     desc: 'Afficher les stats de sécurité anti-ban',
     category: 'owner',
     filename: __filename,

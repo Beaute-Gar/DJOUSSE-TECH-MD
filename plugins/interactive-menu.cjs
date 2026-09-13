@@ -145,16 +145,6 @@ function getInteractiveId(m) {
     return null;
 }
 
-// ─── Commande .menu ──────────────────────────────────────────────
-cmd({
-    pattern: 'menu',
-    alias: ['start', 'help', 'interactive'],
-    react: '📋',
-    desc: 'Menu interactif DJOUSSE TECH',
-    category: 'general',
-    filename: __filename
-}, async (conn, m) => {
-    await sendInteractiveMenu(conn, m.chat);
-});
-
+// ─── Les fonctions sont exportées pour le handler interactif dans index.cjs ───
+// Pas de cmd() ici — le menu texte est géré par menu-hacker.cjs
 module.exports = { sendInteractiveMenu, sendAinoriaMenu, sendToolsMenu, getInteractiveId };
