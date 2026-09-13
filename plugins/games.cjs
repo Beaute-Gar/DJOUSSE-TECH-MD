@@ -852,7 +852,7 @@ async function drawHandleRaw(sock, m, state) {
 /* ═══════════════════════════════════════════════════════════════════════════
    JEU 10 : STATS (statistiques joueurs)
    ═══════════════════════════════════════════════════════════════════════════ */
-function buildStatsLines(state, sock) {
+async function buildStatsLines(state, sock) {
   const lines = [];
   const mlist = [];
   const sorted = [...state.scores.entries()].sort((a, b) => b[1] - a[1]);
@@ -862,7 +862,7 @@ function buildStatsLines(state, sock) {
     for (let i = 0; i < Math.min(sorted.length, 10); i++) {
       const [jid, pts] = sorted[i];
       const medal = ['🥇', '🥈', '🥉'][i] || `${i + 1}.`;
-      const name = getDisplayName(sock, jid);
+      const name = await getDisplayName(sock, jid);
       lines.push({ raw: `${medal} @${typeof name === 'string' ? name : jid} — ${pts} pt(s)` });
       mlist.push(jid);
     }
@@ -902,7 +902,7 @@ cmd({
   if (!activeGames.has(m.chat)) return reply('Aucun jeu en cours.');
   activeGames.delete(m.chat);
   saveGames();
-  reply('⏹️ Jeu terminé.');
+  await reply('⏹️ Jeu terminé.');
 });
 
 cmd({

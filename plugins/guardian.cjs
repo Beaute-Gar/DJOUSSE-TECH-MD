@@ -50,7 +50,8 @@ async function handleGuardian(conn, msg, jid, num) {
         const linkRegex = /(?:https?:\/\/)?(?:www\.)?(?:chat\.whatsapp\.com|whatsapp\.com\/channel|t\.me|instagram\.com|tiktok\.com|facebook\.com|x\.com|twitter\.com)/i;
         if (linkRegex.test(text)) {
             const ownerNumber = require('../config-djousse.cjs').OWNER_NUMBER;
-            if (sender && !sender.startsWith(ownerNumber)) {
+            const senderNum = sender ? sender.split(':')[0].split('@')[0] : '';
+            if (senderNum && senderNum !== ownerNumber) {
                 await warnUser(jid, sender, gs, 'Lien non autorisé', conn, msg);
                 return true;
             }

@@ -319,8 +319,8 @@ async function executePlugin(command, conn, m, body, args, ctx) {
                 const metadata = await conn.groupMetadata(m.chat);
                 pluginCtx.groupMetadata = metadata;
                 pluginCtx.participants = metadata.participants;
-                pluginCtx.groupAdmins = getGroupAdmins(metadata.participants);
-                pluginCtx.isAdmin = pluginCtx.groupAdmins.includes(m.sender);
+                pluginCtx.groupAdmins = getGroupAdmins(metadata.participants).map(jidNormalizedUser);
+                pluginCtx.isAdmin = pluginCtx.groupAdmins.includes(jidNormalizedUser(m.sender));
                 pluginCtx.isBotAdmin = pluginCtx.groupAdmins.includes(jidNormalizedUser(conn.user.id));
             } catch (_) {}
         }
@@ -834,7 +834,6 @@ async function pairBot(number, method = 'pairing') {
 
                     // ─── COMMAND DISPATCH ─────────────────────────────
                     if (isCmd) {
-                        incrementStats(num, 'messagesReceived').catch(() => {});
                         console.log(`[CMD][${num}] ${cmdName} args=${JSON.stringify(args)} from=${m.sender} jid=${m.chat} fromMe=${m.fromMe}`);
                         const handled = await dispatchCommand(sock, m, cmdName, body, args, {
                             conn: sock, mek: m, m, args, body, prefix: PREFIX, command: cmdName, botNum: num,

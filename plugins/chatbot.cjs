@@ -2,7 +2,7 @@ const { cmd } = require('../command.cjs');
 const fs = require('fs');
 const { box } = require('../lib/djousse-ui.cjs');
 
-const DB = './database/chatbot.json';
+const DB = require('path').join(__dirname, '..', 'database', 'chatbot.json');
 const load = () => { try { return JSON.parse(fs.readFileSync(DB)); } catch { return { enabled: false, api: 'gemini' }; }};
 const save = (d) => fs.writeFileSync(DB, JSON.stringify(d, null, 2));
 

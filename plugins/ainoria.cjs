@@ -87,25 +87,25 @@ cmd({ pattern: 'ainoria', alias: ['ainora', 'brain'], category: 'ai', filename: 
         if (!arg) return reply('❌ Usage: .ainoria search <sujet>');
         const r = await web.searchWeb(arg, 5);
         if (!r.length) return reply('❌ Aucun résultat pour: ' + arg);
-        reply('🔍 *Recherche: ' + arg + '*\n\n' + r.map((x, i) => `${i + 1}. *${x.titre}*\n${x.url}\n${x.extrait || ''} (${x.source})`).join('\n\n') + '\n\n' + elapsed());
+        await reply('🔍 *Recherche: ' + arg + '*\n\n' + r.map((x, i) => `${i + 1}. *${x.titre}*\n${x.url}\n${x.extrait || ''} (${x.source})`).join('\n\n') + '\n\n' + elapsed());
         break;
       }
       case 'task': {
         if (!arg) return reply('❌ Usage: .ainoria task <objectif>');
-        reply('🤖 AINORIA réfléchit à la tâche... (boucle autonome)');
+        await reply('🤖 AINORIA réfléchit à la tâche... (boucle autonome)');
         const r = await runTask(arg);
         const planText = (r.steps || []).map(p => '• ' + p.titre).join('\n');
-        reply('🎯 *Tâche: ' + arg + '*\n\n' + (r.report || 'Aucun résultat') + (planText ? '\n\n_Plan:_\n' + planText : '') + '\n\n' + elapsed());
+        await reply('🎯 *Tâche: ' + arg + '*\n\n' + (r.report || 'Aucun résultat') + (planText ? '\n\n_Plan:_\n' + planText : '') + '\n\n' + elapsed());
         break;
       }
       case 'team': {
         if (!arg) return reply('❌ Usage: .ainoria team <objectif>');
-        reply('👥 ' + (runTeamPedagogique(arg) ? '2 experts AINORIA (Enseignant + Correcteur)' : '5 experts AINORIA') + ' travaillent... (~1 min)');
+        await reply('👥 ' + (runTeamPedagogique(arg) ? '2 experts AINORIA (Enseignant + Correcteur)' : '5 experts AINORIA') + ' travaillent... (~1 min)');
         const r = await runTeam(arg);
         const membres = r.team.map(t => t.emoji + ' ' + t.titre).join('\n');
         const corps = '_' + membres + '_\n\n' + r.report + '\n\n' + elapsed();
         const msgBox = ui.box('🧠 *AINORIA — ÉQUIPE*', corps.split('\n'), { footer: ui.FOOTER });
-        reply(msgBox);
+        await reply(msgBox);
         if (arg.toLowerCase().includes('fiche') || arg.toLowerCase().includes('cours') || arg.toLowerCase().includes('chapitre') || arg.toLowerCase().includes('révision') || arg.toLowerCase().includes('revision')) {
           try {
             const { filePath } = await generatePdf('FICHE DE REVISION — ' + arg, r.report);
@@ -116,7 +116,7 @@ cmd({ pattern: 'ainoria', alias: ['ainora', 'brain'], category: 'ai', filename: 
               caption: '📚 *Fiche en PDF* — enregistrée aussi sur le Bureau (DJOUSSE-PDF)',
             }, { quoted: m });
           } catch (e) {
-            reply('⚠️ PDF non généré: ' + e.message);
+            await reply('⚠️ PDF non généré: ' + e.message);
           }
         }
         break;
@@ -129,46 +129,46 @@ cmd({ pattern: 'ainoria', alias: ['ainora', 'brain'], category: 'ai', filename: 
           const eq = s.indexOf('=');
           if (eq > 0) vars[s.slice(0, eq)] = s.slice(eq + 1);
         }
-        reply('⚙️ Exécution du workflow *' + name + '*...');
+        await reply('⚙️ Exécution du workflow *' + name + '*...');
         const r = await wf.runWorkflow(name, vars);
-        reply('⚙️ *Workflow: ' + name + '*\n\n' + r.output + '\n\n' + elapsed());
+        await reply('⚙️ *Workflow: ' + name + '*\n\n' + r.output + '\n\n' + elapsed());
         break;
       }
       case 'rag': {
         const url = /^https?:\/\//.test(arg) ? arg : (arg.startsWith('http') ? arg : '');
         if (!url) return reply('❌ Usage: .ainoria rag <https://lien-article>');
-        reply('📥 Ingestion de la page dans la mémoire...');
+        await reply('📥 Ingestion de la page dans la mémoire...');
         const r = await rag.ingestUrl(url, { maxChars: 20000 });
-        reply('📥 *Mémorisé:* ' + r.title.slice(0, 100) + '\n\n_Chunks:_ ' + r.chunks + '\n_Source:_ ' + r.source + '\n\n' + elapsed());
+        await reply('📥 *Mémorisé:* ' + r.title.slice(0, 100) + '\n\n_Chunks:_ ' + r.chunks + '\n_Source:_ ' + r.source + '\n\n' + elapsed());
         break;
       }
       case 'ask': {
         if (!arg) return reply('❌ Usage: .ainoria ask <question>');
-        reply('🧠 Interrogation de la mémoire RAG...');
+        await reply('🧠 Interrogation de la mémoire RAG...');
         const r = await rag.answer(arg);
         const sources = r.hits.length ? '\n\n_Sources:_\n' + r.hits.map(h => '• ' + h.title.slice(0, 60) + ' (' + h.source + ')').join('\n') : '';
-        reply('🧠 *Réponse RAG:*\n\n' + r.answer + sources + '\n\n' + elapsed());
+        await reply('🧠 *Réponse RAG:*\n\n' + r.answer + sources + '\n\n' + elapsed());
         break;
       }
       case 'stock': {
         if (!arg) return reply('❌ Usage: .ainoria stock <symbole>');
         const r = await finance.stockQuote(arg);
         if (!r.ok) return reply('❌ ' + r.error);
-        reply('📈 *' + r.name + ' (' + r.symbol + ')*\nPrix: ' + r.price + ' ' + r.currency + '\nVariation: ' + r.change + '\nÉtat: ' + (r.marketState || '—') + '\n\n' + elapsed());
+        await reply('📈 *' + r.name + ' (' + r.symbol + ')*\nPrix: ' + r.price + ' ' + r.currency + '\nVariation: ' + r.change + '\nÉtat: ' + (r.marketState || '—') + '\n\n' + elapsed());
         break;
       }
       case 'crypto': {
         const sym = arg || 'btc';
         const r = await finance.cryptoQuote(sym);
         if (!r.ok) return reply('❌ ' + r.error);
-        reply('🪙 *' + r.name + ' (' + r.symbol + ')*\nPrix: ' + r.price_usd + ' $' + (r.price_xof ? ' (' + r.price_xof + ' FCFA)' : '') + '\nVariation 24h: ' + r.change24h + '\nVariation 7j: ' + r.change7d + '\nCap: ' + r.market_cap + '\nVol 24h: ' + r.vol24h + '\n\n' + elapsed());
+        await reply('🪙 *' + r.name + ' (' + r.symbol + ')*\nPrix: ' + r.price_usd + ' $' + (r.price_xof ? ' (' + r.price_xof + ' FCFA)' : '') + '\nVariation 24h: ' + r.change24h + '\nVariation 7j: ' + r.change7d + '\nCap: ' + r.market_cap + '\nVol 24h: ' + r.vol24h + '\n\n' + elapsed());
         break;
       }
       case 'or':
       case 'gold': {
         const r = await finance.goldPrice();
         if (!r.ok) return reply('❌ ' + r.error);
-        reply('🪙 *' + r.name + '*\n' + r.usd_per_oz + ' USD/oz\n\n' + elapsed());
+        await reply('🪙 *' + r.name + '*\n' + r.usd_per_oz + ' USD/oz\n\n' + elapsed());
         break;
       }
       case 'fx':
@@ -177,12 +177,12 @@ cmd({ pattern: 'ainoria', alias: ['ainora', 'brain'], category: 'ai', filename: 
         if (!from || !to) return reply('❌ Usage: .ainoria fx USD-XOF');
         const r = await finance.forexRate(from, to);
         if (!r.ok) return reply('❌ ' + r.error);
-        reply('💱 1 ' + r.from + ' = ' + r.rate + ' ' + r.to + '\n\n' + elapsed());
+        await reply('💱 1 ' + r.from + ' = ' + r.rate + ' ' + r.to + '\n\n' + elapsed());
         break;
       }
       case 'workflows': {
         const list = wf.listWorkflows();
-        reply('⚙️ *Workflows disponibles:*\n\n' + (list.length ? list.map(w => '• *' + w.name + '* — ' + w.description).join('\n') : 'Aucun workflow.'));
+        await reply('⚙️ *Workflows disponibles:*\n\n' + (list.length ? list.map(w => '• *' + w.name + '* — ' + w.description).join('\n') : 'Aucun workflow.'));
         break;
       }
       default: {
