@@ -3,6 +3,8 @@ const ainoria = require('../lib/ainoria.cjs');
 const web = require('../lib/tools/web-search.cjs');
 const finance = require('../lib/tools/finance.cjs');
 const rag = require('../lib/tools/rag.cjs');
+const { downloadMediaMessage } = require('../lib/msg.cjs');
+const { getBuffer } = require('../lib/functions.cjs');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
@@ -50,14 +52,14 @@ cmd({ pattern: 'ainoria', alias: ['ainora', 'brain'], category: 'ai', filename: 
     const arg = rest.join(' ').trim();
     const lower = sub.toLowerCase();
 
-    // Recherche web
+    // ── Recherche web ──
     if (lower === 'search' && arg) {
       const r = await web.searchWeb(arg, 5);
       if (!r.length) return reply('Aucun résultat pour « ' + arg + ' ».');
       return reply('🔍 *' + arg + '*\n\n' + r.map((x, i) => `${i + 1}. ${x.titre}\n${x.url}\n${x.extrait || ''}`).join('\n\n') + '\n\n' + elapsed());
     }
 
-    // Finance
+    // ── Finance ──
     if (lower === 'stock' && arg) {
       const r = await finance.stockQuote(arg);
       if (!r.ok) return reply(r.error);
@@ -81,7 +83,7 @@ cmd({ pattern: 'ainoria', alias: ['ainora', 'brain'], category: 'ai', filename: 
       return reply(`💱 1 ${r.from} = ${r.rate} ${r.to}`);
     }
 
-    // RAG
+    // ── RAG ──
     if (lower === 'rag' && arg) {
       const url = /^https?:\/\//.test(arg) ? arg : '';
       if (!url) return reply('Usage: .ainoria rag <url>');
@@ -94,11 +96,54 @@ cmd({ pattern: 'ainoria', alias: ['ainora', 'brain'], category: 'ai', filename: 
       return reply(r.answer + sources);
     }
 
-    // Workflows
+    // ── Workflows ──
     if (lower === 'workflows') {
       const wf = require('../lib/tools/workflow-engine.cjs');
       const list = wf.listWorkflows();
       return reply('⚙️ Workflows: ' + (list.length ? list.map(w => w.name).join(', ') : 'aucun'));
+    }
+
+    // ── Vision : analyser une image ──
+    if (lower === 'image' || lower === 'vision' || lower === 'scan') {
+      const quoted = m.quoted || m;
+      const isImage = quoted?.msg?.imageMessage || quoted?.type === 'imageMessage';
+      if (!isImage) return reply('Réponds à une *image* avec .ainoria image\n\nExemple: .ainoria image Que contient cette image ?');
+      await m.react('👁️');
+      const buf = await downloadMediaMessage(quoted, 'scan_' + Date.now());
+      if (!buf) return reply('Impossible de télécharger l\'image.');
+      const prompt = arg || 'Décris cette image en français, en détail. Si tu vois du texte, transcris-le.';
+      const answer = await ainoria.describeImage(buf.toString('base64'), prompt);
+      return reply(answer + '\n\n' + elapsed());
+    }
+
+    // ── Transcription : transcrire un vocal ──
+    if (lower === 'vocal' || lower === 'transcribe' || lower === 'stt') {
+      const quoted = m.quoted || m;
+      const isAudio = quoted?.msg?.audioMessage || quoted?.type === 'audioMessage' || quoted?.type === 'videoMessage';
+      if (!isAudio) return reply('Réponds à un *message vocal* avec .ainoria vocal');
+      await m.react('🎙️');
+      const buf = await downloadMediaMessage(quoted, 'tts_' + Date.now());
+      if (!buf) return reply('Impossible de télécharger l\'audio.');
+      const result = await ainoria.transcribe(buf, { filename: 'audio.mp3' });
+      if (!result || !result.text) return reply('Aucune parole détectée.');
+      const dur = Math.round(result.duration || 0);
+      return reply('📝 *TRANSCRIPTION*\n\n' + result.text +
+        '\n\n' + elapsed() + (dur ? ' | 🎧 ' + dur + 's' : '') + (result.language ? ' | 🌐 ' + result.language : ''));
+    }
+
+    // ── Image generation : générer une image ──
+    if (lower === 'dessine' || lower === 'imagegen' || lower === 'genimg') {
+      if (!arg) return reply('Usage: .ainoria dessine <prompt>\n\nExemple: .ainoria dessine Un chat portant des lunettes de soleil');
+      await m.react('🎨');
+      try {
+        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(arg)}?nologo=true&width=1024&model=flux`;
+        const buf = await getBuffer(url);
+        if (!buf || !buf.length) return reply('Impossible de générer l\'image.');
+        await conn.sendMessage(m.chat, { image: buf, caption: `🎨 *${arg}*` }, { quoted: m });
+        return reply(elapsed());
+      } catch (e) {
+        return reply('Erreur génération image: ' + e.message);
+      }
     }
 
     // ── Question IA — AINORIA répond avec son cerveau ──
