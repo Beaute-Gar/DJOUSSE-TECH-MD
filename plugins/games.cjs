@@ -175,11 +175,11 @@ async function aiGenerate(chatId, promptType, opts = {}) {
     } catch {}
   }
 
-  // Niveau 2 : IA secondaire (pollinations)
+  // Niveau 2 : IA secondaire (groq rapide)
   try {
-    const axios = require('axios');
-    const r = await axios.get('https://text.pollinations.ai/' + encodeURIComponent(prompt.slice(0, 2000)), { timeout: 45000 });
-    const out = String(r.data || '').trim();
+    const { groq, MODELS } = require('../lib/ai.cjs');
+    const messages = [{ role: 'user', content: prompt.slice(0, 2000) }];
+    const out = await groq(messages, { model: MODELS.chatFast, temperature: 0.8, maxTokens: 500 });
     const result = parseAIResult(out, promptType);
     if (result) {
       addUsed(chatId, result.raw || result.text || JSON.stringify(result));
