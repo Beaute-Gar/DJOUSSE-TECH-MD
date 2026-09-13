@@ -319,14 +319,30 @@ async function executePlugin(command, conn, m, body, args, ctx) {
                 const metadata = await conn.groupMetadata(m.chat);
                 pluginCtx.groupMetadata = metadata;
                 pluginCtx.participants = metadata.participants;
-                pluginCtx.groupAdmins = getGroupAdmins(metadata.participants).map(jidNormalizedUser);
-                pluginCtx.isAdmin = pluginCtx.groupAdmins.includes(jidNormalizedUser(m.sender));
-                pluginCtx.isBotAdmin = pluginCtx.groupAdmins.includes(jidNormalizedUser(conn.user.id));
+                pluginCtx.groupAdmins = getGroupAdmins(metadata.participants)
+                    .filter(Boolean)
+                    .map(jid => {
+                        try { return jidNormalizedUser(String(jid)); }
+                        catch (_) { return String(jid); }
+                    });
+                const normalizedSender = m.sender
+                    ? jidNormalizedUser(String(m.sender)) : '';
+                const normalizedBotJid = conn?.user?.id
+                    ? jidNormalizedUser(String(conn.user.id)) : '';
+                pluginCtx.isAdmin = Boolean(
+                    normalizedSender && pluginCtx.groupAdmins.includes(normalizedSender)
+                );
+                pluginCtx.isBotAdmin = Boolean(
+                    normalizedBotJid && pluginCtx.groupAdmins.includes(normalizedBotJid)
+                );
             } catch (_) {}
         }
 
         await command.function(conn, m, commands, pluginCtx);
-        incrementStats(m.botNumber || '', 'commandsUsed').catch(() => {});
+        const statsNumber = m?.botNumber || ctx?.botNum || '';
+        if (statsNumber) {
+            incrementStats(statsNumber, 'commandsUsed').catch(() => {});
+        }
     } catch (e) {
         console.error(`[CMD] Error executing ${command.pattern}:`, e.message);
         try {
