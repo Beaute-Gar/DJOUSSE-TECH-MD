@@ -1,40 +1,42 @@
 node_modules/
 session/
 session-*/
-session-backup/
 sessions/
-data/*.db
-data/*.db-shm
-data/*.db-wal
 database/
+data/
+logs/
+tmp/
+temp/
+
+.env
+.env.*
+
+*.log
 *.db
 *.db-shm
 *.db-wal
-*.log
-.env
-.env.*
-!.env.example
-.wwebjs_cache/
-temp/
-tmp/
+*.lock
+
+plugins.zip
+packages/
+
+# Old files
+core-server/
+android/
+www/
+docs/
+media/
+public/
+scripts/
+.artifacts/
+inconnu/
+
+# Build files
 *.apk
 *.keystore
 *.jks
 android.zip
-bot.lock
-pino.log
 
-# Backups & extracted
-plugins-backup-*/
-plugins-extracted/
-plugins.zip
-packages/
-
-# Android build
-android/app/build/
-android/.gradle/
-android/build/
-android/app/src/main/jniLibs/
-
-# Core server (old)
-core-server/
+# Session files
+creds.json
+lid-mapping-*.json

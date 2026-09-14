@@ -1,6 +1,0 @@
-{
-  "message": "isRender is not defined",
-  "stack": "ReferenceError: isRender is not defined\n    at C:\\Users\\djous\\Documents\\DJOUSSE-TECH-MD\\index.cjs:1341:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
-  "timestamp": "2026-09-11T21:31:11.216Z",
-  "pid": 16240
-}

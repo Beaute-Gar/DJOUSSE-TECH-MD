@@ -1,0 +1,33 @@
+{
+  "name": "DJOUSSE TECH MD",
+  "description": "WhatsApp MD Bot Multi-Compte par Beaute Gar",
+  "repository": "https://github.com/Beaute-Gar/DJOUSSE-TECH-MD",
+  "keywords": ["whatsapp", "baileys", "bot", "djousse", "tech"],
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-nodejs.git"
+    }
+  ],
+  "env": {
+    "SESSION_ID": {
+      "description": "Session string du bot",
+      "required": false,
+      "value": ""
+    },
+    "OWNER_NUMBER": {
+      "description": "Numéro du propriétaire du bot",
+      "required": true,
+      "value": "237693978044"
+    },
+    "BOT_NAME": {
+      "description": "Nom du bot",
+      "required": false,
+      "value": "DJOUSSE TECH"
+    },
+    "PREFIX": {
+      "description": "Préfixe des commandes",
+      "required": false,
+      "value": "."
+    }
+  }
+}
