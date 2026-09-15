@@ -172,24 +172,39 @@
       showStatus('loading', 'Génération du code en cours...');
       document.getElementById('generateBtn').disabled = true;
 
-      // Simulate pair code generation (in real app, this calls a backend)
-      // For now, generate a random 8-char code
-      setTimeout(() => {
-        generatedCode = generateRandomCode();
-        document.getElementById('pairCode').textContent = generatedCode;
-        document.getElementById('pairCodeBox').classList.add('show');
-        showStatus('success', 'Code généré ! Suivez les instructions ci-dessous.');
-        document.getElementById('generateBtn').disabled = false;
-      }, 1500);
-    }
+      try {
+        const res = await fetch('https://djousse-pairing.onrender.com/api/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: phone })
+        });
 
-    function generateRandomCode() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let code = '';
-      for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          showStatus('error', data.error || 'Erreur lors de la génération');
+          document.getElementById('generateBtn').disabled = false;
+          return;
+        }
+
+        if (data.pairCode && data.pairCode !== 'CONNECTED') {
+          generatedCode = data.pairCode;
+          document.getElementById('pairCode').textContent = generatedCode;
+          document.getElementById('pairCodeBox').classList.add('show');
+          showStatus('success', 'Code généré ! Suivez les instructions ci-dessous.');
+        }
+
+        if (data.sessionId) {
+          generatedCode = data.sessionId;
+          showStatus('success', 'Connexion réussie ! Voici votre SESSION_ID.');
+        }
+
+        document.getElementById('generateBtn').disabled = false;
+
+      } catch (err) {
+        showStatus('error', 'Impossible de joindre le serveur de pairing. Réessayez plus tard.');
+        document.getElementById('generateBtn').disabled = false;
       }
-      return code;
     }
 
     function copyCode() {
