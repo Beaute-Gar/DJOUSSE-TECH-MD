@@ -18,8 +18,8 @@
     "license": "MIT",
     "dependencies": {
         "@bochilteam/scraper": "^5.0.1",
-        "@bochilteam/scraper-tiktok": "^5.0.0",
         "@bochilteam/scraper-facebook": "^5.0.0",
+        "@bochilteam/scraper-tiktok": "^5.0.0",
         "@vitalets/google-translate-api": "^9.2.1",
         "@whiskeysockets/baileys": "^7.0.0-rc.14",
         "axios": "^1.7.2",
@@ -42,7 +42,7 @@
         "qrcode": "^1.5.3",
         "qrcode-terminal": "^0.12.0",
         "ruhend-scraper": "^9.0.8",
-        "sharp": "^0.33.4",
+        "sharp": "^0.33.5",
         "yt-search": "^2.13.1",
         "ytdl-core": "^4.11.5"
     }

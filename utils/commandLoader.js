@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { commandMap } = require('../commands/command.cjs');
 
 const loadCommands = () => {
   const commands = new Map();
@@ -11,9 +12,10 @@ const loadCommands = () => {
   
   for (const category of categories) {
     const categoryPath = path.join(commandsDir, category);
-    const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js'));
+    const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js') || f.endsWith('.cjs'));
     
     for (const file of files) {
+      if (file === 'command.cjs') continue;
       try {
         const command = require(path.join(categoryPath, file));
         if (command.name) {
@@ -27,6 +29,12 @@ const loadCommands = () => {
       } catch (e) {
         console.error(`Erreur chargement ${file}: ${e.message}`);
       }
+    }
+  }
+
+  for (const [name, command] of commandMap) {
+    if (!commands.has(name)) {
+      commands.set(name, command);
     }
   }
   
