@@ -28,6 +28,9 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
+// Global socket reference for modules that need it (e.g., status quotes)
+let globalSock = null;
+
 const store = {
   messages: new Map(),
   maxPerChat: 20,
@@ -112,6 +115,9 @@ async function startBot() {
 
   store.bind(sock.ev);
 
+  // Store global socket reference for external modules
+  globalSock = sock;
+
   let lastActivity = Date.now();
   const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
@@ -162,6 +168,25 @@ async function startBot() {
       }
 
       handler.initializeAntiCall(sock);
+
+      // Initialize Auto Status Quotes scheduler
+      try {
+        const statusQuotes = require('./utils/statusQuotes');
+        const sessionId = sock.user.id.split(':')[0];
+        
+        // Start cache refresh
+        statusQuotes.startCacheRefresh(config.statusQuotes?.cacheRefreshHours || 6);
+        
+        // Start scheduler if enabled globally
+        if (config.statusQuotes?.enabled) {
+          statusQuotes.startScheduler(sock, sessionId);
+          console.log('[STATUS-QUOTE] Scheduler démarré');
+        } else {
+          console.log('[STATUS-QUOTE] Système disponible (désactivé)');
+        }
+      } catch (e) {
+        console.error('[STATUS-QUOTE] Erreur init:', e.message);
+      }
 
       const now = Date.now();
       for (const [jid, chatMsgs] of store.messages.entries()) {
@@ -282,4 +307,4 @@ process.on('unhandledRejection', (err) => {
   console.error('Rejection non interceptée:', err);
 });
 
-module.exports = { store };
+module.exports = { store, getSock: () => globalSock };

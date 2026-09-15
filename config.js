@@ -95,5 +95,18 @@ module.exports = {
         github: 'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD',
         instagram: '',
         youtube: ''
+    },
+
+    // Auto Status Quotes
+    statusQuotes: {
+        enabled: process.env.STATUS_QUOTES_ENABLED === 'true',
+        intervalHours: parseInt(process.env.STATUS_QUOTES_INTERVAL_HOURS || '6', 10),
+        maxLength: parseInt(process.env.STATUS_QUOTES_MAX_LENGTH || '350', 10),
+        cacheRefreshHours: parseInt(process.env.STATUS_QUOTES_CACHE_REFRESH_HOURS || '6', 10),
+        noRepeatDays: parseInt(process.env.STATUS_QUOTES_NO_REPEAT_DAYS || '30', 10),
+        source: process.env.STATUS_QUOTES_SOURCE || 'zenquotes',
+        fallback: process.env.STATUS_QUOTES_FALLBACK || 'quotable',
+        timezone: process.env.STATUS_QUOTES_TIMEZONE || 'Africa/Douala',
+        schedule: process.env.STATUS_QUOTES_SCHEDULE || '07:00,12:00,18:00,21:00',
     }
 };
