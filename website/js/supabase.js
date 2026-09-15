@@ -1,19 +1,19 @@
 // ===== DJOUSSE TECH — Supabase Client =====
-// Charge Supabase via CDN, initialise le client
+// Client 100% côté client — utilise la publishable key (pas le secret)
 
 let supabaseClient = null;
 
 function getSupabase() {
   if (supabaseClient) return supabaseClient;
 
-  const { url, anonKey } = CONFIG.supabase;
+  const { url, publishableKey } = CONFIG.supabase;
 
   if (!window.supabase) {
-    console.error('Supabase SDK non chargé. Ajoute le script CDN.');
+    console.error('Supabase SDK non chargé. Vérifie le script CDN.');
     return null;
   }
 
-  supabaseClient = window.supabase.createClient(url, anonKey);
+  supabaseClient = window.supabase.createClient(url, publishableKey);
   return supabaseClient;
 }
 
@@ -366,7 +366,6 @@ async function adminDeleteUser(userId) {
   const sb = getSupabase();
   if (!sb) return { error: 'Supabase non configuré' };
 
-  // Supprimer le profil (les bots seront supprimés en cascade)
   const { error } = await sb
     .from('profiles')
     .delete()

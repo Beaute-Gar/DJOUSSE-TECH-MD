@@ -1,8 +1,11 @@
 // ===== DJOUSSE TECH — Configuration =====
+// Variables d'environnement Supabase
+// NE JAMAIS exposer le SECRET_KEY côté client
+
 const CONFIG = {
   supabase: {
     url: 'https://tifyhwyugquvqikupjxa.supabase.co',
-    anonKey: 'sb_publishable_SL6P6PSoNBcVDIZE0NyXew_Phj_MP6G',
+    publishableKey: 'sb_publishable_SL6P6PSoNBcVDIZE0NyXew_Phj_MP6G',
   },
   app: {
     name: 'DJOUSSE TECH',
