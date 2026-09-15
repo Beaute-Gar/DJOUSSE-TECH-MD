@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — DJOUSSE TECH</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="dashboard-page">
+    <div class="dashboard-header">
+      <a href="/" class="logo">
+        <div class="logo-icon">DT</div>
+        <span class="logo-text">DJOUSSE TECH</span>
+      </a>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span class="status-badge status-online">● En ligne</span>
+        <a href="/" class="btn btn-outline" style="padding:8px 16px;">Déconnexion</a>
+      </div>
+    </div>
+    <div class="dashboard-content">
+      <h1 style="font-size:28px;font-weight:800;margin-bottom:32px;">Dashboard</h1>
+
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <h3>Statut du bot</h3>
+          <div class="value"><span class="status-badge status-online">● En ligne</span></div>
+          <div class="sub">Connecté depuis 2h 34min</div>
+        </div>
+        <div class="dash-card">
+          <h3>Messages aujourd'hui</h3>
+          <div class="value">1 247</div>
+          <div class="sub">+12% par rapport à hier</div>
+        </div>
+        <div class="dash-card">
+          <h3>Membres du groupe</h3>
+          <div class="value">3 891</div>
+          <div class="sub">+23 nouveaux aujourd'hui</div>
+        </div>
+        <div class="dash-card">
+          <h3>Commandes utilisées</h3>
+          <div class="value">456</div>
+          <div class="sub">120 commandes disponibles</div>
+        </div>
+      </div>
+
+      <div style="margin-top:40px;">
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;">Paramètres rapides</h2>
+        <div class="dashboard-grid">
+          <div class="dash-card">
+            <h3>Nom du bot</h3>
+            <div class="value" style="font-size:20px;">DJOUSSE TECH</div>
+            <div class="sub">Modifiable dans config.js</div>
+          </div>
+          <div class="dash-card">
+            <h3>Préfixe</h3>
+            <div class="value" style="font-size:20px;">.</div>
+            <div class="sub">Modifiable dans .env</div>
+          </div>
+          <div class="dash-card">
+            <h3>Mode</h3>
+            <div class="value" style="font-size:20px;">Public</div>
+            <div class="sub">Tout le monde peut utiliser le bot</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:40px;">
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;">Commandes récentes</h2>
+        <div class="dash-card" style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--slate-200);text-align:left;">
+                <th style="padding:12px 0;color:var(--slate-500);font-weight:500;">Commande</th>
+                <th style="padding:12px 0;color:var(--slate-500);font-weight:500;">Utilisateur</th>
+                <th style="padding:12px 0;color:var(--slate-500);font-weight:500;">Heure</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--slate-100);">
+                <td style="padding:12px 0;font-weight:500;">.ping</td>
+                <td style="padding:12px 0;color:var(--slate-600);">+237 693 978 044</td>
+                <td style="padding:12px 0;color:var(--slate-400);">14:32</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--slate-100);">
+                <td style="padding:12px 0;font-weight:500;">.ai bonjour</td>
+                <td style="padding:12px 0;color:var(--slate-600);">+237 681 234 567</td>
+                <td style="padding:12px 0;color:var(--slate-400);">14:28</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--slate-100);">
+                <td style="padding:12px 0;font-weight:500;">.sticker</td>
+                <td style="padding:12px 0;color:var(--slate-600);">+237 677 345 678</td>
+                <td style="padding:12px 0;color:var(--slate-400);">14:15</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--slate-100);">
+                <td style="padding:12px 0;font-weight:500;">.menu</td>
+                <td style="padding:12px 0;color:var(--slate-600);">+237 699 456 789</td>
+                <td style="padding:12px 0;color:var(--slate-400);">14:02</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 0;font-weight:500;">.joke</td>
+                <td style="padding:12px 0;color:var(--slate-600);">+237 655 567 890</td>
+                <td style="padding:12px 0;color:var(--slate-400);">13:55</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-top:40px;text-align:center;">
+        <a href="/" class="btn btn-outline">Retour à l'accueil</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

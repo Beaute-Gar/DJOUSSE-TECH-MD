@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription — DJOUSSE TECH</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <a href="/" class="logo">
+        <div class="logo-icon">DT</div>
+        <span class="logo-text">DJOUSSE TECH</span>
+      </a>
+      <h2>Créer un compte</h2>
+      <p class="subtitle">Rejoignez DJOUSSE TECH et lancez votre bot.</p>
+
+      <form id="signupForm">
+        <div class="form-group">
+          <label for="name">Nom</label>
+          <input type="text" id="name" placeholder="Votre nom" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="votre@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="terms" required>
+          <label for="terms">J'accepte les <a href="terms.html">Conditions Générales</a> et la <a href="privacy.html">Politique de Confidentialité</a></label>
+        </div>
+        <button type="submit" class="btn btn-primary">S'inscrire</button>
+      </form>
+
+      <div class="auth-links">
+        Déjà un compte ? <a href="login.html">Se connecter</a>
+      </div>
+      <div class="auth-footer">© 2026 DJOUSSE TECH EVOLUTION · <a href="terms.html">Conditions</a> · <a href="privacy.html">Confidentialité</a></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('signupForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      // TODO: Intégrer avec Supabase ou backend
+      alert('Inscription en cours de développement. Bienvenue, ' + name + ' !');
+    });
+  </script>
+</body>
+</html>
