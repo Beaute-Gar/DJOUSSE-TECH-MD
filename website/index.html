@@ -338,7 +338,26 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Auth state — update header
+async function updateAuthState() {
+  try {
+    const session = await db.getSession();
+    const authBtns = document.querySelector('.header-actions');
+    if (session && authBtns) {
+      authBtns.innerHTML = `
+        <a href="dashboard.html" class="btn-ghost">Dashboard</a>
+        <a href="#" onclick="db.signOut()" class="btn-primary">Déconnexion</a>
+      `;
+    }
+  } catch(e) {}
+}
+updateAuthState();
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
 
 </body>
 </html>

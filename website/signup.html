@@ -16,24 +16,27 @@
       <h2>Créer un compte</h2>
       <p class="subtitle">Rejoignez DJOUSSE TECH et lancez votre bot.</p>
 
+      <div id="authError" style="display:none;padding:12px;border-radius:10px;background:rgba(239,68,68,0.1);color:var(--red-500);font-size:14px;margin-bottom:16px;"></div>
+      <div id="authSuccess" style="display:none;padding:12px;border-radius:10px;background:rgba(16,185,129,0.1);color:var(--emerald-500);font-size:14px;margin-bottom:16px;"></div>
+
       <form id="signupForm">
         <div class="form-group">
-          <label for="name">Nom</label>
-          <input type="text" id="name" placeholder="Votre nom" required>
+          <label for="name">Nom complet</label>
+          <input type="text" id="name" placeholder="Votre nom" required autocomplete="name">
         </div>
         <div class="form-group">
           <label for="email">Email</label>
-          <input type="email" id="email" placeholder="votre@email.com" required>
+          <input type="email" id="email" placeholder="votre@email.com" required autocomplete="email">
         </div>
         <div class="form-group">
           <label for="password">Mot de passe</label>
-          <input type="password" id="password" placeholder="••••••••" required>
+          <input type="password" id="password" placeholder="•••••••• (min. 6 caractères)" required autocomplete="new-password" minlength="6">
         </div>
         <div class="checkbox-group">
           <input type="checkbox" id="terms" required>
           <label for="terms">J'accepte les <a href="terms.html">Conditions Générales</a> et la <a href="privacy.html">Politique de Confidentialité</a></label>
         </div>
-        <button type="submit" class="btn btn-primary">S'inscrire</button>
+        <button type="submit" id="signupBtn" class="btn btn-primary">S'inscrire</button>
       </form>
 
       <div class="auth-links">
@@ -43,14 +46,9 @@
     </div>
   </div>
 
-  <script>
-    document.getElementById('signupForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('email').value;
-      // TODO: Intégrer avec Supabase ou backend
-      alert('Inscription en cours de développement. Bienvenue, ' + name + ' !');
-    });
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>
