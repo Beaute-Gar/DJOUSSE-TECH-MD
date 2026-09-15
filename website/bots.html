@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes Bots — DJOUSSE TECH</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #111827; }
+    .dash-layout { display: flex; min-height: 100vh; }
+
+    .sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e7eb; padding: 20px 12px; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; z-index: 40; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 12px; margin-bottom: 32px; }
+    .sidebar-logo .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; }
+    .sidebar-logo span { font-weight: 700; font-size: 15px; color: #111827; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #6b7280; text-decoration: none; transition: all 0.15s; }
+    .sidebar-link:hover { background: #f3f4f6; color: #111827; }
+    .sidebar-link.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+    .sidebar-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-bottom { border-top: 1px solid #e5e7eb; padding-top: 12px; }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; }
+    .sidebar-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user-plan { font-size: 11px; color: #9ca3af; }
+
+    .main { flex: 1; margin-left: 240px; padding: 24px 32px; max-width: 1200px; }
+
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .breadcrumbs .muted { color: #9ca3af; }
+    .breadcrumbs .sep { color: #d1d5db; }
+    .breadcrumbs .active { color: #111827; font-weight: 600; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-icon { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e5e7eb; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+    .btn-icon:hover { background: #f9fafb; }
+    .btn-new-bot { padding: 10px 18px; border-radius: 10px; border: none; background: #2563eb; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+    .btn-new-bot:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+
+    .panel-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+
+    .bots-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .bots-header h2 { font-size: 18px; font-weight: 700; }
+    .bots-count { font-size: 13px; color: #6b7280; }
+
+    .bot-card { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px; transition: all 0.15s; }
+    .bot-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #d1d5db; }
+    .bot-avatar { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+    .bot-info { flex: 1; min-width: 0; }
+    .bot-name { font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 4px; }
+    .bot-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #9ca3af; }
+    .bot-status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+    .bot-status::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
+    .bot-status.online::before { background: #10b981; }
+    .bot-status.offline::before { background: #9ca3af; }
+    .bot-status.connecting::before { background: #f59e0b; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .bot-actions { display: flex; gap: 8px; }
+    .btn-sm { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #e5e7eb; background: #fff; color: #374151; transition: all 0.15s; }
+    .btn-sm:hover { background: #f9fafb; }
+    .btn-sm.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .btn-sm.primary:hover { background: #1d4ed8; }
+    .btn-sm.danger { color: #dc2626; border-color: #fecaca; }
+    .btn-sm.danger:hover { background: #fef2f2; }
+    .btn-sm.success { background: #10b981; color: #fff; border-color: #10b981; }
+    .btn-sm.success:hover { background: #059669; }
+
+    .empty-state { text-align: center; padding: 64px 24px; }
+    .empty-state-icon { font-size: 56px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .empty-state p { color: #6b7280; margin-bottom: 24px; max-width: 360px; margin-left: auto; margin-right: auto; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-content { background: #fff; border-radius: 16px; padding: 32px; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-title { font-size: 20px; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #6b7280; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: #f3f4f6; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; outline: none; }
+    .form-group input:focus, .form-group select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+    .btn-cancel { padding: 10px 18px; border-radius: 10px; border: 1px solid #e5e7eb; background: #fff; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .btn-cancel:hover { background: #f9fafb; }
+    .btn-submit { padding: 10px 18px; border-radius: 10px; border: none; background: #2563eb; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-submit:hover { background: #1d4ed8; }
+
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+    .filter-bar input { padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; outline: none; flex: 1; }
+    .filter-bar input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .filter-bar select { padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; outline: none; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+      .bot-card { flex-direction: column; align-items: flex-start; }
+      .bot-actions { width: 100%; }
+      .bot-actions .btn-sm { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">DT</div>
+        <span>DJOUSSE TECH</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
+          Dashboard
+        </a>
+        <a href="bots.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="6" width="16" height="12" rx="2" fill="currentColor"/><circle cx="9" cy="11" r="1.5" fill="#fff"/><circle cx="15" cy="11" r="1.5" fill="#fff"/><path d="M7 16h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          Mes Bots
+        </a>
+        <a href="session.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Session ID
+        </a>
+        <a href="logs.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Logs
+        </a>
+        <a href="rewards.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Récompenses
+        </a>
+        <a href="https://djousse-pairing.onrender.com/" target="_blank" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Obtenir Session
+        </a>
+        <a href="https://djousse-tech-md.vercel.app" target="_blank" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/></svg>
+          Site Web
+        </a>
+        <a href="admin.html" class="sidebar-link" id="adminSidebarLink" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/></svg>
+          Admin
+        </a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="userAvatar">BG</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="userName">Beaute Gar</div>
+            <div class="sidebar-user-plan" id="userPlan">Free</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="breadcrumbs">
+          <span class="muted">Home</span>
+          <span class="sep">/</span>
+          <span class="active">Mes Bots</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn-icon" onclick="loadBots()" title="Rafraîchir">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" fill="#6b7280"/></svg>
+          </button>
+          <button class="btn-new-bot" onclick="openAddBotModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Nouveau Bot
+          </button>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="bots-header">
+          <h2>Mes Bots</h2>
+          <span class="bots-count" id="botsCount">0 bot(s)</span>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="searchInput" placeholder="Rechercher un bot..." oninput="filterBots()">
+          <select id="statusFilter" onchange="filterBots()">
+            <option value="all">Tous</option>
+            <option value="online">En ligne</option>
+            <option value="offline">Hors ligne</option>
+          </select>
+        </div>
+
+        <div id="botsList"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ADD BOT MODAL -->
+  <div class="modal-overlay" id="addBotModal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Nouveau Bot</h3>
+        <button class="modal-close" onclick="closeAddBotModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label for="botName">Nom du bot</label>
+        <input type="text" id="botName" placeholder="Mon Super Bot">
+      </div>
+      <div class="form-group">
+        <label for="botPhone">Numéro WhatsApp</label>
+        <input type="tel" id="botPhone" placeholder="+237693978044">
+      </div>
+      <div class="form-actions">
+        <button class="btn-cancel" onclick="closeAddBotModal()">Annuler</button>
+        <button class="btn-submit" onclick="createBot()">Créer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = window.SUPABASE_URL;
+    const supabaseKey = window.SUPABASE_ANON_KEY;
+    let supabase, currentUser = null;
+
+    function getSupabase() {
+      if (!supabase) supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      return supabase;
+    }
+
+    async function init() {
+      const sb = getSupabase();
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      currentUser = session.user;
+
+      const { data: profile } = await sb.from('profiles').select('full_name, is_admin, plan').eq('id', currentUser.id).single();
+      if (profile) {
+        document.getElementById('userName').textContent = profile.full_name || currentUser.email;
+        document.getElementById('userAvatar').textContent = (profile.full_name || currentUser.email).slice(0,2).toUpperCase();
+        document.getElementById('userPlan').textContent = profile.plan === 'pro' ? 'Pro' : profile.plan === 'premium' ? 'Premium' : 'Free';
+        if (profile.is_admin) document.getElementById('adminSidebarLink').style.display = 'flex';
+      }
+      loadBots();
+    }
+
+    async function loadBots() {
+      const sb = getSupabase();
+      const { data: bots } = await sb.from('bots').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      renderBots(bots || []);
+    }
+
+    function renderBots(bots) {
+      const list = document.getElementById('botsList');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+
+      let filtered = bots.filter(b => {
+        if (search && !b.name?.toLowerCase().includes(search) && !b.phone?.includes(search)) return false;
+        if (statusFilter === 'online' && b.status !== 'online') return false;
+        if (statusFilter === 'offline' && b.status !== 'offline') return false;
+        return true;
+      });
+
+      document.getElementById('botsCount').textContent = `${filtered.length} bot(s)`;
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🤖</div>
+            <h3>Aucun bot trouvé</h3>
+            <p>Créez votre premier bot WhatsApp pour commencer à automatiser vos conversations.</p>
+            <button class="btn-new-bot" onclick="openAddBotModal()" style="margin:0 auto;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Créer un Bot
+            </button>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(b => `
+        <div class="bot-card">
+          <div class="bot-avatar">${(b.name || 'B').slice(0,2).toUpperCase()}</div>
+          <div class="bot-info">
+            <div class="bot-name">${b.name || 'Sans nom'}</div>
+            <div class="bot-meta">
+              <span class="bot-status ${b.status === 'online' ? 'online' : b.status === 'connecting' ? 'connecting' : 'offline'}">${b.status === 'online' ? 'En ligne' : b.status === 'connecting' ? 'Connexion...' : 'Hors ligne'}</span>
+              <span>${b.phone || '—'}</span>
+              <span>${new Date(b.created_at).toLocaleDateString('fr')}</span>
+            </div>
+          </div>
+          <div class="bot-actions">
+            <button class="btn-sm" onclick="viewBotLogs('${b.id}')">Logs</button>
+            ${b.status === 'online'
+              ? `<button class="btn-sm danger" onclick="stopBot('${b.id}')">Arrêter</button>`
+              : `<button class="btn-sm success" onclick="startBot('${b.id}')">Démarrer</button>`}
+            <button class="btn-sm danger" onclick="deleteBot('${b.id}')">Supprimer</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterBots() { loadBots(); }
+
+    function openAddBotModal() { document.getElementById('addBotModal').style.display = 'flex'; }
+    function closeAddBotModal() { document.getElementById('addBotModal').style.display = 'none'; }
+
+    async function createBot() {
+      const name = document.getElementById('botName').value.trim();
+      const phone = document.getElementById('botPhone').value.trim();
+      if (!name) { alert('Entrez un nom pour le bot.'); return; }
+
+      const sb = getSupabase();
+      const { error } = await sb.from('bots').insert([{ user_id: currentUser.id, name, phone, status: 'offline' }]);
+      if (error) { alert('Erreur: ' + error.message); return; }
+      closeAddBotModal();
+      document.getElementById('botName').value = '';
+      document.getElementById('botPhone').value = '';
+      loadBots();
+    }
+
+    async function deleteBot(id) {
+      if (!confirm('Supprimer ce bot ? Cette action est irréversible.')) return;
+      const sb = getSupabase();
+      await sb.from('bots').delete().eq('id', id);
+      loadBots();
+    }
+
+    async function stopBot(id) {
+      const sb = getSupabase();
+      await sb.from('bots').update({ status: 'offline' }).eq('id', id);
+      loadBots();
+    }
+
+    async function startBot(id) {
+      const sb = getSupabase();
+      await sb.from('bots').update({ status: 'connecting' }).eq('id', id);
+      loadBots();
+    }
+
+    function viewBotLogs(botId) { window.location.href = `logs.html?bot=${botId}`; }
+
+    init();
+  </script>
+</body>
+</html>

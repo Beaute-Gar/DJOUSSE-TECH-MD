@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logs — DJOUSSE TECH</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #111827; }
+    .dash-layout { display: flex; min-height: 100vh; }
+
+    .sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e7eb; padding: 20px 12px; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; z-index: 40; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 12px; margin-bottom: 32px; }
+    .sidebar-logo .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; }
+    .sidebar-logo span { font-weight: 700; font-size: 15px; color: #111827; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #6b7280; text-decoration: none; transition: all 0.15s; }
+    .sidebar-link:hover { background: #f3f4f6; color: #111827; }
+    .sidebar-link.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+    .sidebar-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-bottom { border-top: 1px solid #e5e7eb; padding-top: 12px; }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; }
+    .sidebar-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user-plan { font-size: 11px; color: #9ca3af; }
+
+    .main { flex: 1; margin-left: 240px; padding: 24px 32px; max-width: 1200px; }
+
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .breadcrumbs .muted { color: #9ca3af; }
+    .breadcrumbs .sep { color: #d1d5db; }
+    .breadcrumbs .active { color: #111827; font-weight: 600; }
+
+    .panel-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+
+    .logs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .logs-header h2 { font-size: 18px; font-weight: 700; }
+    .logs-count { font-size: 13px; color: #6b7280; }
+
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+    .filter-bar input { padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; outline: none; flex: 1; min-width: 150px; }
+    .filter-bar input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .filter-bar select { padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; outline: none; }
+    .filter-bar .btn-clear { padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; font-size: 13px; font-weight: 500; cursor: pointer; color: #6b7280; }
+    .filter-bar .btn-clear:hover { background: #f9fafb; }
+
+    .log-list { display: flex; flex-direction: column; gap: 2px; }
+    .log-entry { display: flex; align-items: flex-start; gap: 14px; padding: 14px 12px; border-radius: 10px; transition: background 0.15s; }
+    .log-entry:hover { background: #f9fafb; }
+    .log-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+    .log-icon.info { background: #eff6ff; color: #2563eb; }
+    .log-icon.success { background: #ecfdf5; color: #10b981; }
+    .log-icon.warning { background: #fffbeb; color: #f59e0b; }
+    .log-icon.error { background: #fef2f2; color: #dc2626; }
+    .log-content { flex: 1; min-width: 0; }
+    .log-title { font-size: 14px; font-weight: 500; color: #111827; margin-bottom: 2px; }
+    .log-desc { font-size: 13px; color: #6b7280; line-height: 1.4; }
+    .log-time { font-size: 12px; color: #9ca3af; flex-shrink: 0; white-space: nowrap; }
+    .log-bot-tag { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: #f3f4f6; color: #6b7280; }
+
+    .empty-state { text-align: center; padding: 64px 24px; }
+    .empty-state-icon { font-size: 56px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .empty-state p { color: #6b7280; margin-bottom: 24px; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+      .log-entry { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">DT</div>
+        <span>DJOUSSE TECH</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
+          Dashboard
+        </a>
+        <a href="bots.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="6" width="16" height="12" rx="2" fill="currentColor"/><circle cx="9" cy="11" r="1.5" fill="#fff"/><circle cx="15" cy="11" r="1.5" fill="#fff"/><path d="M7 16h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          Mes Bots
+        </a>
+        <a href="session.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Session ID
+        </a>
+        <a href="logs.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Logs
+        </a>
+        <a href="rewards.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Récompenses
+        </a>
+        <a href="https://djousse-pairing.onrender.com/" target="_blank" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Obtenir Session
+        </a>
+        <a href="https://djousse-tech-md.vercel.app" target="_blank" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/></svg>
+          Site Web
+        </a>
+        <a href="admin.html" class="sidebar-link" id="adminSidebarLink" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/></svg>
+          Admin
+        </a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="userAvatar">BG</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="userName">Beaute Gar</div>
+            <div class="sidebar-user-plan" id="userPlan">Free</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="breadcrumbs">
+          <span class="muted">Home</span>
+          <span class="sep">/</span>
+          <span class="active">Logs</span>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="logs-header">
+          <div>
+            <h2>Journaux d'activité</h2>
+            <span class="logs-count" id="logsCount">0 entrée(s)</span>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="searchInput" placeholder="Rechercher dans les logs..." oninput="filterLogs()">
+          <select id="typeFilter" onchange="filterLogs()">
+            <option value="all">Tous les types</option>
+            <option value="info">Info</option>
+            <option value="success">Succès</option>
+            <option value="warning">Avertissement</option>
+            <option value="error">Erreur</option>
+          </select>
+          <select id="botFilter" onchange="filterLogs()">
+            <option value="all">Tous les bots</option>
+          </select>
+          <button class="btn-clear" onclick="clearFilters()">Réinitialiser</button>
+        </div>
+
+        <div id="logsList"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = window.SUPABASE_URL;
+    const supabaseKey = window.SUPABASE_ANON_KEY;
+    let supabase, currentUser = null, allLogs = [], allBots = [];
+
+    function getSupabase() {
+      if (!supabase) supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      return supabase;
+    }
+
+    async function init() {
+      const sb = getSupabase();
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      currentUser = session.user;
+
+      const { data: profile } = await sb.from('profiles').select('full_name, is_admin').eq('id', currentUser.id).single();
+      if (profile) {
+        document.getElementById('userName').textContent = profile.full_name || currentUser.email;
+        document.getElementById('userAvatar').textContent = (profile.full_name || currentUser.email).slice(0,2).toUpperCase();
+        if (profile.is_admin) document.getElementById('adminSidebarLink').style.display = 'flex';
+      }
+
+      const { data: bots } = await sb.from('bots').select('id, name').eq('user_id', currentUser.id);
+      allBots = bots || [];
+      populateBotFilter(allBots);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const botId = urlParams.get('bot');
+      if (botId) document.getElementById('botFilter').value = botId;
+
+      loadLogs();
+    }
+
+    function populateBotFilter(bots) {
+      const select = document.getElementById('botFilter');
+      bots.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.name;
+        select.appendChild(opt);
+      });
+    }
+
+    async function loadLogs() {
+      const sb = getSupabase();
+      const { data: logs } = await sb.from('activity_logs')
+        .select('*, bots(name)')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      allLogs = logs || [];
+      renderLogs(allLogs);
+    }
+
+    function renderLogs(logs) {
+      const list = document.getElementById('logsList');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const typeFilter = document.getElementById('typeFilter').value;
+      const botFilter = document.getElementById('botFilter').value;
+
+      let filtered = logs.filter(l => {
+        if (search && !l.action?.toLowerCase().includes(search) && !l.details?.toLowerCase().includes(search)) return false;
+        if (typeFilter !== 'all' && l.type !== typeFilter) return false;
+        if (botFilter !== 'all' && l.bot_id !== botFilter) return false;
+        return true;
+      });
+
+      document.getElementById('logsCount').textContent = `${filtered.length} entrée(s)`;
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <h3>Aucun log trouvé</h3>
+            <p>Les activités de vos bots apparaîtront ici une fois qu'ils seront actifs.</p>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(l => {
+        const icon = l.type === 'success' ? '✓' : l.type === 'error' ? '✕' : l.type === 'warning' ? '⚠' : 'ℹ';
+        const botName = l.bots?.name || 'Bot';
+        const time = new Date(l.created_at).toLocaleString('fr', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+        return `
+          <div class="log-entry">
+            <div class="log-icon ${l.type || 'info'}">${icon}</div>
+            <div class="log-content">
+              <div class="log-title">${l.action || 'Activité'}</div>
+              <div class="log-desc">${l.details || '—'}</div>
+            </div>
+            <span class="log-bot-tag">${botName}</span>
+            <span class="log-time">${time}</span>
+          </div>`;
+      }).join('');
+    }
+
+    function filterLogs() { renderLogs(allLogs); }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('typeFilter').value = 'all';
+      document.getElementById('botFilter').value = 'all';
+      renderLogs(allLogs);
+    }
+
+    init();
+  </script>
+</body>
+</html>
