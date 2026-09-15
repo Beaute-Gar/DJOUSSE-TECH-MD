@@ -1,6 +1,6 @@
 /**
- * DJOUSSE TECH MD - Point d'entrée principal
- * Basé sur KnightBot-Mini, adapté par Beaute Gar
+ * DJOUSSE TECH MD — Command Center Entry Point
+ * Intègre: TUI + Session Manager + Event Bus + AINORIA
  */
 
 process.env.PUPPETEER_SKIP_DOWNLOAD = 'true';
@@ -8,10 +8,10 @@ process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true';
 
 require('dotenv').config();
 
-const { initializeTempSystem } = require('./utils/tempManager');
-const { startCleanup } = require('./utils/cleanup');
-initializeTempSystem();
-startCleanup();
+const { startTUI, render } = require('./tui/index');
+const bus = require('./src/core/eventBus');
+const sessionManager = require('./src/sessions/sessionManager');
+const ainoria = require('./src/ainoria/ainoria');
 
 const pino = require('pino');
 const {
@@ -28,8 +28,26 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-// Global socket reference for modules that need it (e.g., status quotes)
-let globalSock = null;
+const processedMessages = new Set();
+setInterval(() => processedMessages.clear(), 5 * 60 * 1000);
+
+const createSuppressedLogger = (level = 'silent') => {
+  let logger;
+  try {
+    logger = pino({
+      level,
+      transport: process.env.NODE_ENV === 'production' ? undefined : {
+        target: 'pino-pretty',
+        options: { colorize: true, ignore: 'pid,hostname' }
+      }
+    });
+  } catch (err) {
+    logger = pino({ level });
+  }
+  logger.debug = () => {};
+  logger.trace = () => {};
+  return logger;
+};
 
 const store = {
   messages: new Map(),
@@ -52,60 +70,38 @@ const store = {
   loadMessage: async (jid, id) => store.messages.get(jid)?.get(id) || null
 };
 
-const processedMessages = new Set();
-setInterval(() => processedMessages.clear(), 5 * 60 * 1000);
+async function startSession(sessionId, options = {}) {
+  const sessionDir = path.join(__dirname, sessionId);
+  sessionManager.createSession(sessionId, { ...options, status: 'INITIALIZING' });
 
-const createSuppressedLogger = (level = 'silent') => {
-  const forbiddenPatterns = [
-    'closing session', 'closing open session', 'sessionentry', 'prekey bundle',
-    'pendingprekey', '_chains', 'registrationid', 'currentratchet', 'chainkey',
-    'ratchet', 'signal protocol', 'ephemeralkeypair', 'indexinfo', 'basekey'
-  ];
-  let logger;
-  try {
-    logger = pino({
-      level,
-      transport: process.env.NODE_ENV === 'production' ? undefined : {
-        target: 'pino-pretty',
-        options: { colorize: true, ignore: 'pid,hostname' }
-      }
-    });
-  } catch (err) {
-    logger = pino({ level });
-  }
-  logger.debug = () => {};
-  logger.trace = () => {};
-  return logger;
-};
-
-async function startBot() {
-  const sessionFolder = `./${config.sessionName}`;
-  const sessionFile = path.join(sessionFolder, 'creds.json');
-
-  if (config.sessionID && config.sessionID.startsWith('DJOUSSE!')) {
+  // Handle session ID import
+  if (options.sessionID && options.sessionID.startsWith('DJOUSSE!')) {
     try {
-      const [, b64data] = config.sessionID.split('!');
-      if (!b64data) throw new Error('Format de session invalide');
-      const cleanB64 = b64data.replace('...', '');
-      const compressedData = Buffer.from(cleanB64, 'base64');
-      const decompressedData = zlib.gunzipSync(compressedData);
-      if (!fs.existsSync(sessionFolder)) fs.mkdirSync(sessionFolder, { recursive: true });
-      fs.writeFileSync(sessionFile, decompressedData, 'utf8');
-      console.log('Session chargée depuis DJOUSSE!...');
+      const [, b64data] = options.sessionID.split('!');
+      if (b64data) {
+        const cleanB64 = b64data.replace('...', '');
+        const compressedData = Buffer.from(cleanB64, 'base64');
+        const decompressedData = zlib.gunzipSync(compressedData);
+        if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
+        fs.writeFileSync(path.join(sessionDir, 'creds.json'), decompressedData, 'utf8');
+      }
     } catch (e) {
-      console.error('Erreur session:', e.message);
+      bus.emit('system:error', { source: 'session', error: e.message });
     }
   }
 
-  const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
+  const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
   const { version } = await fetchLatestBaileysVersion();
   const suppressedLogger = createSuppressedLogger('silent');
+
+  sessionManager.setStatus(sessionId, 'CONNECTING');
+  bus.emit('session:connecting', { sessionId });
 
   const sock = makeWASocket({
     version,
     logger: suppressedLogger,
     printQRInTerminal: false,
-    browser: ['DJOUSSE TECH MD', 'Chrome', '1.0'],
+    browser: ['DJOUSSE TECH', 'Chrome', '1.0'],
     auth: state,
     syncFullHistory: false,
     downloadHistory: false,
@@ -114,9 +110,7 @@ async function startBot() {
   });
 
   store.bind(sock.ev);
-
-  // Store global socket reference for external modules
-  globalSock = sock;
+  sessionManager.setSocket(sessionId, sock);
 
   let lastActivity = Date.now();
   const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
@@ -125,10 +119,10 @@ async function startBot() {
 
   const watchdogInterval = setInterval(async () => {
     if (Date.now() - lastActivity > INACTIVITY_TIMEOUT && sock.ws.readyState === 1) {
-      console.log('Inactivité détectée. Reconnexion...');
+      bus.emit('session:reconnecting', { sessionId, reason: 'inactivity' });
       await sock.end(undefined, undefined, { reason: 'inactive' });
       clearInterval(watchdogInterval);
-      setTimeout(() => startBot(), 5000);
+      setTimeout(() => startSession(sessionId, options), 5000);
     }
   }, 5 * 60 * 1000);
 
@@ -141,27 +135,32 @@ async function startBot() {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
-      console.log('\nScanne ce QR code avec WhatsApp :\n');
+      sessionManager.setStatus(sessionId, 'WAITING_FOR_QR');
+      bus.emit('session:qr', { sessionId });
       qrcode.generate(qr, { small: true });
     }
 
     if (connection === 'close') {
-      const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
       const statusCode = lastDisconnect?.error?.output?.statusCode;
-      if (statusCode === 515 || statusCode === 503 || statusCode === 408) {
-        console.log(`Connexion fermée (${statusCode}). Reconnexion...`);
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+      if (statusCode === DisconnectReason.loggedOut) {
+        sessionManager.setStatus(sessionId, 'LOGGED_OUT');
+        bus.emit('session:logged-out', { sessionId });
       } else {
-        console.log('Connexion fermée. Reconnexion:', shouldReconnect);
-      }
-      if (shouldReconnect) {
-        setTimeout(() => startBot(), 3000);
+        sessionManager.setStatus(sessionId, 'DISCONNECTED');
+        bus.emit('session:disconnected', { sessionId, statusCode });
+        if (shouldReconnect) {
+          sessionManager.setStatus(sessionId, 'RECONNECTING');
+          bus.emit('session:reconnecting', { sessionId, statusCode });
+          setTimeout(() => startSession(sessionId, options), 3000);
+        }
       }
     } else if (connection === 'open') {
-      console.log('\nBot connecté !');
-      console.log(`Numéro: ${sock.user.id.split(':')[0]}`);
-      console.log(`Nom: ${config.botName}`);
-      console.log(`Préfixe: ${config.prefix}`);
-      console.log(`Propriétaire: ${config.ownerName.join(', ')}\n`);
+      const phone = sock.user.id.split(':')[0];
+      sessionManager.updateSession(sessionId, { phone, status: 'CONNECTED' });
+      sessionManager.setStatus(sessionId, 'CONNECTED');
+      bus.emit('session:connected', { sessionId, phone });
 
       if (config.autoBio) {
         await sock.updateProfileStatus(`${config.botName} | Actif 24/7`).catch(() => {});
@@ -169,25 +168,16 @@ async function startBot() {
 
       handler.initializeAntiCall(sock);
 
-      // Initialize Auto Status Quotes scheduler
+      // Initialize Status Quotes
       try {
         const statusQuotes = require('./utils/statusQuotes');
-        const sessionId = sock.user.id.split(':')[0];
-        
-        // Start cache refresh
         statusQuotes.startCacheRefresh(config.statusQuotes?.cacheRefreshHours || 6);
-        
-        // Start scheduler if enabled globally
         if (config.statusQuotes?.enabled) {
           statusQuotes.startScheduler(sock, sessionId);
-          console.log('[STATUS-QUOTE] Scheduler démarré');
-        } else {
-          console.log('[STATUS-QUOTE] Système disponible (désactivé)');
         }
-      } catch (e) {
-        console.error('[STATUS-QUOTE] Erreur init:', e.message);
-      }
+      } catch (e) {}
 
+      // Clean old messages
       const now = Date.now();
       for (const [jid, chatMsgs] of store.messages.entries()) {
         const timestamps = Array.from(chatMsgs.values()).map(m => m.messageTimestamp * 1000 || 0);
@@ -195,7 +185,6 @@ async function startBot() {
           store.messages.delete(jid);
         }
       }
-      console.log(`Store nettoyé. Chats actifs: ${store.messages.size}`);
     }
   });
 
@@ -203,7 +192,7 @@ async function startBot() {
 
   const isSystemJid = (jid) => {
     if (!jid) return true;
-    return jid.includes('@broadcast') || jid.includes('status.broadcast') || jid.includes('@newsletter') || jid.includes('@newsletter.');
+    return jid.includes('@broadcast') || jid.includes('status.broadcast') || jid.includes('@newsletter');
   };
 
   sock.ev.on('messages.upsert', ({ messages, type }) => {
@@ -224,24 +213,20 @@ async function startBot() {
       }
 
       processedMessages.add(msgId);
+      sessionManager.incrementStat(sessionId, 'messagesReceived');
 
-      if (msg.key && msg.key.id) {
-        if (!store.messages.has(from)) store.messages.set(from, new Map());
-        const chatMsgs = store.messages.get(from);
-        chatMsgs.set(msg.key.id, msg);
-        if (chatMsgs.size > store.maxPerChat) {
-          const sortedIds = Array.from(chatMsgs.entries())
-            .sort((a, b) => (a[1].messageTimestamp || 0) - (b[1].messageTimestamp || 0))
-            .map(([id]) => id);
-          for (let i = 0; i < sortedIds.length - store.maxPerChat; i++) {
-            chatMsgs.delete(sortedIds[i]);
-          }
-        }
-      }
+      bus.emit('message:received', {
+        sessionId,
+        from,
+        sender: msg.key.participant || msg.key.remoteJid,
+        isGroup: from.endsWith('@g.us'),
+        messageId: msgId,
+      });
 
       handler.handleMessage(sock, msg).catch(err => {
-        if (!err.message?.includes('rate-overlimit') && !err.message?.includes('not-authorized')) {
-          console.error('Erreur message:', err.message);
+        if (!err.message?.includes('rate-overlimit')) {
+          sessionManager.incrementStat(sessionId, 'errors');
+          bus.emit('system:error', { source: 'handler', sessionId, error: err.message });
         }
       });
 
@@ -261,9 +246,6 @@ async function startBot() {
     }
   });
 
-  sock.ev.on('message-receipt.update', () => {});
-  sock.ev.on('messages.update', () => {});
-
   sock.ev.on('group-participants.update', async (update) => {
     await handler.handleGroupUpdate(sock, update);
   });
@@ -271,40 +253,56 @@ async function startBot() {
   sock.ev.on('error', (error) => {
     const statusCode = error?.output?.statusCode;
     if (statusCode === 515 || statusCode === 503 || statusCode === 408) return;
-    console.error('Erreur socket:', error.message || error);
+    bus.emit('system:error', { source: 'socket', sessionId, error: error.message || String(error) });
   });
 
   return sock;
 }
 
-console.log('Démarrage de DJOUSSE TECH MD...');
-console.log(`Nom: ${config.botName}`);
-console.log(`Préfixe: ${config.prefix}`);
-console.log(`Propriétaire: ${config.ownerName.join(', ')}\n`);
+async function main() {
+  // Start TUI
+  startTUI();
 
-startBot().catch(err => {
-  console.error('Erreur démarrage:', err);
-  process.exit(1);
-});
+  // Initialize AINORIA
+  await ainoria.initialize();
 
+  // Load existing sessions
+  const db = sessionManager.loadSessionsDB();
+  if (db.sessions && db.sessions.length > 0) {
+    for (const s of db.sessions) {
+      bus.emit('session:loaded', { sessionId: s.id });
+    }
+  }
+
+  // Start default session
+  const sessionId = config.sessionName || 'session';
+  try {
+    await startSession(sessionId, {
+      sessionID: config.sessionID,
+      owner: config.ownerNumber?.[0],
+    });
+  } catch (err) {
+    bus.emit('system:error', { source: 'startup', error: err.message });
+  }
+}
+
+// Global error handlers
 process.on('uncaughtException', (err) => {
-  if (err.code === 'ENOSPC' || err.message?.includes('no space left on device')) {
-    console.error('Erreur espace disque. Nettoyage...');
+  bus.emit('system:error', { source: 'uncaught', error: err.message, stack: err.stack });
+  if (err.code === 'ENOSPC') {
     const { cleanupOldFiles } = require('./utils/cleanup');
     cleanupOldFiles();
-    return;
   }
-  console.error('Exception non interceptée:', err);
 });
 
 process.on('unhandledRejection', (err) => {
-  if (err.code === 'ENOSPC' || err.message?.includes('no space left on device')) {
-    const { cleanupOldFiles } = require('./utils/cleanup');
-    cleanupOldFiles();
-    return;
-  }
-  if (err.message?.includes('rate-overlimit')) return;
-  console.error('Rejection non interceptée:', err);
+  if (err?.message?.includes('rate-overlimit')) return;
+  bus.emit('system:error', { source: 'unhandled', error: err?.message || String(err) });
 });
 
-module.exports = { store, getSock: () => globalSock };
+main().catch(err => {
+  console.error('Fatal:', err);
+  process.exit(1);
+});
+
+module.exports = { store, bus, sessionManager, ainoria };

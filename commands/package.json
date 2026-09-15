@@ -1,7 +1,7 @@
 {
     "name": "djousse-tech-md",
-    "version": "3.0.0",
-    "description": "DJOUSSE TECH MD - WhatsApp Bot Command Center",
+    "version": "2.0.0",
+    "description": "DJOUSSE TECH MD - WhatsApp Bot Multi-Compte",
     "main": "index.js",
     "type": "commonjs",
     "scripts": {
