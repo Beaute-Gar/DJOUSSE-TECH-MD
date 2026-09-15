@@ -27,6 +27,7 @@ www/
 docs/
 media/
 public/
+!pairing-server/public/
 scripts/
 .artifacts/
 inconnu/

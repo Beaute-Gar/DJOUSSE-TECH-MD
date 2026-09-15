@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DJOUSSE TECH — Pairing WhatsApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: linear-gradient(135deg, #f0f5ff 0%, #f8fafc 50%, #f0f5ff 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .container { max-width: 500px; width: 100%; }
+    .card { background: #fff; border-radius: 20px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); border: 1px solid #e5e7eb; }
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; justify-content: center; }
+    .logo-icon { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #2563eb, #1d4ed8); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+    .logo span { font-weight: 700; font-size: 20px; color: #111827; }
+    h1 { font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #111827; letter-spacing: -0.02em; }
+    .subtitle { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 32px; line-height: 1.5; }
+
+    /* Form */
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
+    .input-wrapper { position: relative; }
+    .input-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #9ca3af; font-weight: 500; }
+    .form-group input { width: 100%; padding: 14px 16px 14px 40px; border: 2px solid #e5e7eb; border-radius: 14px; font-size: 18px; outline: none; transition: all 0.2s; font-weight: 500; }
+    .form-group input:focus { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+    .form-group input::placeholder { color: #d1d5db; }
+    .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(37,99,235,0.4); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-success { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16,185,129,0.3); }
+    .btn-success:hover { box-shadow: 0 6px 24px rgba(16,185,129,0.4); }
+
+    /* Pair Code Display */
+    .pair-result { display: none; text-align: center; margin-top: 24px; }
+    .pair-result.show { display: block; }
+    .pair-code-display { font-size: 42px; font-weight: 800; color: #2563eb; letter-spacing: 6px; font-family: 'Courier New', monospace; margin-bottom: 8px; padding: 20px; background: #eff6ff; border-radius: 16px; border: 2px dashed #bfdbfe; }
+    .pair-code-label { font-size: 14px; color: #6b7280; margin-bottom: 16px; }
+    .copy-btn { padding: 10px 24px; border-radius: 10px; border: 2px solid #e5e7eb; background: #fff; color: #111827; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+
+    /* Session ID Display */
+    .session-result { display: none; text-align: center; margin-top: 24px; }
+    .session-result.show { display: block; }
+    .session-box { padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; margin-bottom: 16px; }
+    .session-label { font-size: 13px; color: #6b7280; margin-bottom: 8px; }
+    .session-id { font-size: 12px; color: #16a34a; font-family: monospace; word-break: break-all; line-height: 1.5; max-height: 80px; overflow-y: auto; }
+
+    /* Status */
+    .status { padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-bottom: 20px; display: none; align-items: center; gap: 10px; }
+    .status.show { display: flex; }
+    .status.loading { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .status.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .status.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .spinner { width: 18px; height: 18px; border: 2px solid #bfdbfe; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Steps */
+    .steps { margin-top: 28px; padding: 20px; background: #f9fafb; border-radius: 14px; }
+    .steps h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #111827; }
+    .steps ol { padding-left: 20px; font-size: 13px; color: #6b7280; line-height: 2; }
+    .steps li { margin-bottom: 2px; }
+    .steps code { background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #374151; }
+
+    /* Back */
+    .back { display: block; text-align: center; margin-top: 20px; font-size: 14px; color: #6b7280; text-decoration: none; }
+    .back:hover { color: #2563eb; }
+
+    /* Info box */
+    .info-box { padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; margin-top: 20px; font-size: 13px; color: #92400e; line-height: 1.5; }
+    .info-box strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="logo">
+        <div class="logo-icon">DT</div>
+        <span>DJOUSSE TECH</span>
+      </div>
+
+      <h1>Connexion WhatsApp</h1>
+      <p class="subtitle">Générez un code pour connecter votre bot au numéro WhatsApp de votre choix.</p>
+
+      <!-- Status -->
+      <div id="status" class="status">
+        <div class="spinner"></div>
+        <span id="statusText"></span>
+      </div>
+
+      <!-- Form -->
+      <div id="formSection">
+        <div class="form-group">
+          <label>Numéro WhatsApp (avec indicatif)</label>
+          <div class="input-wrapper">
+            <input type="tel" id="phone" placeholder="693978044" value="">
+          </div>
+        </div>
+        <button class="btn" id="generateBtn" onclick="generateCode()">
+          Générer le Code de Pairing
+        </button>
+      </div>
+
+      <!-- Pair Code Result -->
+      <div id="pairResult" class="pair-result">
+        <div class="pair-code-display" id="pairCode">----------</div>
+        <div class="pair-code-label">Entrez ce code dans WhatsApp</div>
+        <button class="copy-btn" onclick="copyCode()">📋 Copier le code</button>
+      </div>
+
+      <!-- Session ID Result -->
+      <div id="sessionResult" class="session-result">
+        <div class="session-box">
+          <div class="session-label">Votre SESSION_ID :</div>
+          <div class="session-id" id="sessionId">...</div>
+        </div>
+        <button class="btn btn-success" onclick="copySessionId()" style="margin-bottom:12px;">📋 Copier le SESSION_ID</button>
+        <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'" style="background:#fff;color:#111827;border:1px solid #e5e7eb;">→ Aller au Dashboard</button>
+      </div>
+
+      <!-- Instructions -->
+      <div class="steps">
+        <h3>Comment ça marche :</h3>
+        <ol>
+          <li>Entrez votre numéro WhatsApp avec l'indicatif</li>
+          <li>Cliquez sur "Générer le Code"</li>
+          <li>Un code à 6 chiffres apparaît</li>
+          <li>Ouvrez <strong>WhatsApp</strong> → <strong>Appareils liés</strong></li>
+          <li>Cliquez <strong>"Connecter un appareil"</strong></li>
+          <li>Choisissez <strong>"Connecter avec numéro de téléphone"</strong></li>
+          <li>Entrez le code affiché ici</li>
+          <li>Le bot se connecte et génère votre <code>SESSION_ID</code></li>
+        </ol>
+      </div>
+
+      <div class="info-box">
+        <strong>Astuce :</strong> Vous pouvez aussi utiliser la commande <code>.pair</code> directement dans le bot WhatsApp pour obtenir un code.
+      </div>
+    </div>
+
+    <a href="dashboard.html" class="back">← Retour au dashboard</a>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentSessionId = null;
+
+    function showStatus(type, message) {
+      const el = document.getElementById('status');
+      const text = document.getElementById('statusText');
+      el.className = 'status show ' + type;
+      text.textContent = message;
+
+      if (type === 'loading') {
+        el.innerHTML = '<div class="spinner"></div><span>' + message + '</span>';
+      } else {
+        el.innerHTML = '<span>' + message + '</span>';
+      }
+    }
+
+    function hideStatus() {
+      document.getElementById('status').className = 'status';
+    }
+
+    async function generateCode() {
+      const phone = document.getElementById('phone').value.trim();
+
+      if (!phone) {
+        showStatus('error', 'Veuillez entrer votre numéro WhatsApp.');
+        return;
+      }
+
+      // Auto-add + prefix if missing
+      const fullPhone = phone.startsWith('+') ? phone : '+' + phone;
+
+      showStatus('loading', 'Génération du code en cours...');
+      document.getElementById('generateBtn').disabled = true;
+      document.getElementById('formSection').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: fullPhone })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          showStatus('error', data.error || 'Erreur inconnue');
+          document.getElementById('generateBtn').disabled = false;
+          document.getElementById('formSection').style.display = 'block';
+          return;
+        }
+
+        currentSessionId = data.sessionId;
+
+        // Listen for real-time updates
+        socket.on('pair:' + currentSessionId, (update) => {
+          if (update.status === 'code_ready' && update.pairCode) {
+            document.getElementById('pairCode').textContent = update.pairCode;
+            document.getElementById('pairResult').classList.add('show');
+            showStatus('success', 'Code généré ! Entrez-le dans WhatsApp maintenant.');
+          }
+
+          if (update.status === 'connected' && update.sessionId) {
+            document.getElementById('sessionId').textContent = update.sessionId;
+            document.getElementById('sessionResult').classList.add('show');
+            document.getElementById('pairResult').style.display = 'none';
+            document.getElementById('formSection').style.display = 'none';
+            showStatus('success', 'WhatsApp connecté avec succès ! Votre SESSION_ID est prêt.');
+          }
+        });
+
+        // If code is returned immediately
+        if (data.pairCode && data.pairCode !== 'CONNECTED') {
+          document.getElementById('pairCode').textContent = data.pairCode;
+          document.getElementById('pairResult').classList.add('show');
+          showStatus('success', 'Code généré ! Entrez-le dans WhatsApp maintenant.');
+        }
+
+        // If already connected
+        if (data.pairCode === 'CONNECTED' && data.sessionId) {
+          document.getElementById('sessionId').textContent = data.sessionId;
+          document.getElementById('sessionResult').classList.add('show');
+          document.getElementById('formSection').style.display = 'none';
+          showStatus('success', 'WhatsApp connecté avec succès !');
+        }
+
+      } catch (err) {
+        showStatus('error', 'Erreur de connexion au serveur. Vérifiez que le serveur est actif.');
+        document.getElementById('generateBtn').disabled = false;
+        document.getElementById('formSection').style.display = 'block';
+      }
+    }
+
+    function copyCode() {
+      const code = document.getElementById('pairCode').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        showStatus('success', 'Code copié ! Collez-le dans WhatsApp.');
+      });
+    }
+
+    function copySessionId() {
+      const sid = document.getElementById('sessionId').textContent;
+      navigator.clipboard.writeText(sid).then(() => {
+        alert('SESSION_ID copié ! Collez-le dans votre fichier .env du bot.');
+      });
+    }
+  </script>
+</body>
+</html>
