@@ -265,6 +265,147 @@ function getPlanFeatures(profile) {
   return CONFIG.plans[plan]?.features || CONFIG.plans.free.features;
 }
 
+// ===== ADMIN FUNCTIONS =====
+
+async function isAdmin(userId) {
+  const profile = await getProfile(userId);
+  return profile?.is_admin === true;
+}
+
+async function adminGetAllUsers(limit = 50, offset = 0) {
+  const sb = getSupabase();
+  if (!sb) return [];
+
+  const { data, error } = await sb
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) { console.error('Admin users error:', error); return []; }
+  return data || [];
+}
+
+async function adminGetAllBots(limit = 50, offset = 0) {
+  const sb = getSupabase();
+  if (!sb) return [];
+
+  const { data, error } = await sb
+    .from('bots')
+    .select('*, profiles!bots_user_id_fkey(full_name, email)')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) { console.error('Admin bots error:', error); return []; }
+  return data || [];
+}
+
+async function adminGetAllPayments(limit = 50, offset = 0) {
+  const sb = getSupabase();
+  if (!sb) return [];
+
+  const { data, error } = await sb
+    .from('payments')
+    .select('*, profiles!payments_user_id_fkey(full_name, email)')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) { console.error('Admin payments error:', error); return []; }
+  return data || [];
+}
+
+async function adminGetAllLogs(limit = 50, offset = 0) {
+  const sb = getSupabase();
+  if (!sb) return [];
+
+  const { data, error } = await sb
+    .from('activity_logs')
+    .select('*, profiles!activity_logs_user_id_fkey(full_name, email)')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) { console.error('Admin logs error:', error); return []; }
+  return data || [];
+}
+
+async function adminGetStats() {
+  const sb = getSupabase();
+  if (!sb) return null;
+
+  const [users, bots, payments, onlineBots] = await Promise.all([
+    sb.from('profiles').select('id', { count: 'exact', head: true }),
+    sb.from('bots').select('id', { count: 'exact', head: true }),
+    sb.from('payments').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+    sb.from('bots').select('id', { count: 'exact', head: true }).eq('status', 'online'),
+  ]);
+
+  return {
+    totalUsers: users.count || 0,
+    totalBots: bots.count || 0,
+    totalPayments: payments.count || 0,
+    onlineBots: onlineBots.count || 0,
+  };
+}
+
+async function adminUpdateUser(userId, updates) {
+  const sb = getSupabase();
+  if (!sb) return { error: 'Supabase non configuré' };
+
+  const { data, error } = await sb
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) return { error: error.message };
+  return { data, error: null };
+}
+
+async function adminDeleteUser(userId) {
+  const sb = getSupabase();
+  if (!sb) return { error: 'Supabase non configuré' };
+
+  // Supprimer le profil (les bots seront supprimés en cascade)
+  const { error } = await sb
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
+
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
+async function adminUpdatePayment(paymentId, status) {
+  const sb = getSupabase();
+  if (!sb) return { error: 'Supabase non configuré' };
+
+  const { data, error } = await sb
+    .from('payments')
+    .update({ status })
+    .eq('id', paymentId)
+    .select()
+    .single();
+
+  if (error) return { error: error.message };
+  return { data, error: null };
+}
+
+async function adminSearchUsers(query) {
+  const sb = getSupabase();
+  if (!sb) return [];
+
+  const { data, error } = await sb
+    .from('profiles')
+    .select('*')
+    .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) return [];
+  return data || [];
+}
+
 // ===== EXPORTS =====
 if (typeof window !== 'undefined') {
   window.db = {
@@ -274,6 +415,9 @@ if (typeof window !== 'undefined') {
     getBots, createBot, updateBot, deleteBot,
     logActivity, getRecentLogs,
     createPayment, getPayments,
-    isPlanActive, getPlanFeatures
+    isPlanActive, getPlanFeatures,
+    isAdmin,
+    adminGetAllUsers, adminGetAllBots, adminGetAllPayments, adminGetAllLogs,
+    adminGetStats, adminUpdateUser, adminDeleteUser, adminUpdatePayment, adminSearchUsers
   };
 }

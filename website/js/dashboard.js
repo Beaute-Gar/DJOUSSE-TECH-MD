@@ -29,12 +29,16 @@ function renderUserInfo() {
   const nameEl = document.getElementById('userName');
   const emailEl = document.getElementById('userEmail');
   const avatarEl = document.getElementById('userAvatar');
+  const adminLink = document.getElementById('adminLink');
 
   if (nameEl) nameEl.textContent = userProfile.full_name || 'Utilisateur';
   if (emailEl) emailEl.textContent = userProfile.email;
   if (avatarEl) {
     const initials = (userProfile.full_name || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
     avatarEl.textContent = initials;
+  }
+  if (adminLink && userProfile.is_admin) {
+    adminLink.style.display = 'inline-flex';
   }
 }
 
