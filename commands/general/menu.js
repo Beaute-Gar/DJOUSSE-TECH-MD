@@ -54,7 +54,7 @@ module.exports = {
     text += `│ ⚡ Prefix: ${config.prefix}\n`;
     text += `│ 📦 Total Commands: ${commands.size}\n`;
     text += `│ 👑 Owner: ${ownerName}\n`;
-    text += `│ 🤖 BOT: https://knightbotmini.online/\n`;
+    text += `│ 🤖 BOT: https://github.com/Beaute-Gar/DJOUSSE-TECH-MD\n`;
     text += `│\n`;
 
     const catEmojis = {
