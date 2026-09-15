@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — DJOUSSE TECH</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #111827; }
+    .dash-layout { display: flex; min-height: 100vh; }
+
+    .sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e7eb; padding: 20px 12px; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; z-index: 40; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 12px; margin-bottom: 32px; }
+    .sidebar-logo .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; }
+    .sidebar-logo span { font-weight: 700; font-size: 15px; color: #111827; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #6b7280; text-decoration: none; transition: all 0.15s; }
+    .sidebar-link:hover { background: #f3f4f6; color: #111827; }
+    .sidebar-link.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+    .sidebar-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-section { font-size: 11px; color: #9ca3af; text-transform: uppercase; padding: 16px 12px 8px; font-weight: 600; letter-spacing: 0.08em; }
+    .sidebar-bottom { border-top: 1px solid #e5e7eb; padding-top: 12px; }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; }
+    .sidebar-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user-plan { font-size: 11px; color: #9ca3af; }
+
+    .main { flex: 1; margin-left: 240px; padding: 24px 32px; max-width: 800px; }
+
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .breadcrumbs .muted { color: #9ca3af; }
+    .breadcrumbs .sep { color: #d1d5db; }
+    .breadcrumbs .active { color: #111827; font-weight: 600; }
+
+    .settings-section { background: #fff; border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); border: 1px solid #f3f4f6; }
+    .settings-section-header { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+    .settings-section-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .settings-section-desc { font-size: 14px; color: #6b7280; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px; }
+    .form-group input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 14px; outline: none; transition: 0.2s; }
+    .form-group input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .form-group input:disabled { background: #f9fafb; color: #9ca3af; cursor: not-allowed; }
+    .form-group small { font-size: 12px; color: #9ca3af; margin-top: 4px; display: block; }
+
+    .btn-primary { padding: 12px 24px; border-radius: 8px; border: none; background: #2563eb; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-primary:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+    .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; opacity: 0.5; }
+
+    .btn-danger { padding: 12px 24px; border-radius: 8px; border: 1px solid #ef4444; background: transparent; color: #ef4444; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-danger:hover { background: #ef4444; color: #fff; transform: translateY(-1px); }
+
+    .plan-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .plan-label { font-size: 14px; color: #6b7280; }
+    .plan-value { font-size: 14px; font-weight: 500; }
+    .plan-badge { padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+    .plan-badge.free { background: #f3f4f6; color: #6b7280; }
+    .plan-badge.premium { background: #fef3c7; color: #d97706; }
+    .plan-badge.pro { background: #ede9fe; color: #7c3aed; }
+
+    .upgrade-banner { margin-top: 16px; padding: 12px 14px; border-radius: 8px; background: #eff6ff; border: 1px solid #bfdbfe; }
+    .upgrade-banner p { margin: 0; font-size: 13px; color: #1e3a8a; }
+    .upgrade-banner a { color: #2563eb; text-decoration: underline; font-weight: 500; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dash-layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">DT</div>
+        <span>DJOUSSE TECH</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">Main</div>
+        <a href="dashboard.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
+          Dashboard
+        </a>
+        <a href="bots.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="6" width="16" height="12" rx="2" fill="currentColor"/><circle cx="9" cy="11" r="1.5" fill="#fff"/><circle cx="15" cy="11" r="1.5" fill="#fff"/><path d="M7 16h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          Mes Bots
+        </a>
+        <a href="session.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Add New Bot
+        </a>
+        <a href="logs.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M7 8L10 11L7 14M13 14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Console
+        </a>
+        <div class="sidebar-section">Account</div>
+        <a href="rewards.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="8" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M12 8V21M3 12H21" stroke="currentColor" stroke-width="2"/><path d="M12 8C12 8 12 4 9 4C6.5 4 6 6.5 8 8M12 8C12 8 12 4 15 4C17.5 4 18 6.5 16 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Récompenses
+        </a>
+        <a href="index.html" class="sidebar-link" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/></svg>
+          Site Web
+        </a>
+        <a href="settings.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/></svg>
+          Settings
+        </a>
+        <div class="sidebar-section">Support</div>
+        <a href="https://t.me/knighttbot" target="_blank" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Contact
+        </a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="sidebarAvatar">BG</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarName">Chargement...</div>
+            <div class="sidebar-user-plan" id="sidebarPlan">Free</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="breadcrumbs">
+          <span class="muted">Home</span>
+          <span class="sep">/</span>
+          <span class="active">Settings</span>
+        </div>
+      </div>
+
+      <h1 style="font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-0.02em;">Settings</h1>
+      <p style="font-size:14px;color:#6b7280;margin-bottom:32px;">Gérez les paramètres de votre compte</p>
+
+      <!-- Profile -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2 class="settings-section-title">Profile</h2>
+          <p class="settings-section-desc">Mettez à jour vos informations de profil</p>
+        </div>
+        <form id="profileForm" onsubmit="saveProfile(event)">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" disabled>
+            <small>Email cannot be changed</small>
+          </div>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="fullName" placeholder="Enter your full name">
+          </div>
+          <button type="submit" class="btn-primary" id="saveBtn" disabled>Save Changes</button>
+        </form>
+      </div>
+
+      <!-- Plan & Billing -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <h2 class="settings-section-title">Plan & Billing</h2>
+          <p class="settings-section-desc">View your current plan and validity</p>
+        </div>
+        <div class="plan-row">
+          <span class="plan-label">Current plan</span>
+          <span class="plan-badge free" id="planBadge">Free</span>
+        </div>
+        <div class="plan-row">
+          <span class="plan-label">Valid until</span>
+          <span class="plan-value" id="planExpiry">—</span>
+        </div>
+        <div class="upgrade-banner">
+          <p>Passez à Premium pour déployer des bots illimités : <a href="https://t.me/knighttbot" target="_blank">Contactez-nous sur Telegram</a></p>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="settings-section" style="border:1px solid #fecaca;">
+        <div class="settings-section-header">
+          <h2 class="settings-section-title" style="color:#dc2626;">Danger Zone</h2>
+          <p class="settings-section-desc">Irreversible actions for your account</p>
+        </div>
+        <button class="btn-danger" onclick="signOut()">Sign Out</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = window.SUPABASE_URL;
+    const supabaseKey = window.SUPABASE_ANON_KEY;
+    let supabase, currentUser = null, originalName = '';
+
+    function getSupabase() {
+      if (!supabase) supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      return supabase;
+    }
+
+    async function init() {
+      const sb = getSupabase();
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      currentUser = session.user;
+
+      document.getElementById('email').value = currentUser.email;
+
+      const { data: profile } = await sb.from('profiles').select('full_name, plan, plan_expires_at, coins, is_admin').eq('id', currentUser.id).single();
+      if (profile) {
+        document.getElementById('fullName').value = profile.full_name || '';
+        originalName = profile.full_name || '';
+        document.getElementById('sidebarName').textContent = profile.full_name || currentUser.email;
+        document.getElementById('sidebarAvatar').textContent = (profile.full_name || currentUser.email).slice(0,2).toUpperCase();
+
+        const plan = profile.plan || 'free';
+        const badge = document.getElementById('planBadge');
+        badge.textContent = plan === 'pro' ? 'Pro' : plan === 'premium' ? 'Premium' : 'Free';
+        badge.className = 'plan-badge ' + plan;
+
+        if (profile.plan_expires_at) {
+          document.getElementById('planExpiry').textContent = new Date(profile.plan_expires_at).toLocaleDateString('fr');
+        }
+
+        document.getElementById('sidebarPlan').textContent = plan === 'pro' ? 'Pro' : plan === 'premium' ? 'Premium' : 'Free';
+
+        if (profile.is_admin) {
+          document.getElementById('adminSidebarLink') && (document.getElementById('adminSidebarLink').style.display = 'flex');
+        }
+      }
+
+      document.getElementById('fullName').addEventListener('input', () => {
+        document.getElementById('saveBtn').disabled = document.getElementById('fullName').value === originalName;
+      });
+    }
+
+    async function saveProfile(e) {
+      e.preventDefault();
+      const name = document.getElementById('fullName').value.trim();
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+
+      const sb = getSupabase();
+      const { error } = await sb.from('profiles').update({ full_name: name }).eq('id', currentUser.id);
+      if (error) { alert('Erreur: ' + error.message); btn.disabled = false; return; }
+
+      originalName = name;
+      document.getElementById('sidebarName').textContent = name || currentUser.email;
+      document.getElementById('sidebarAvatar').textContent = (name || currentUser.email).slice(0,2).toUpperCase();
+      btn.textContent = 'Saved!';
+      setTimeout(() => { btn.textContent = 'Save Changes'; }, 2000);
+    }
+
+    async function signOut() {
+      if (!confirm('Voulez-vous vraiment vous déconnecter ?')) return;
+      const sb = getSupabase();
+      await sb.auth.signOut();
+      window.location.href = 'login.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>
