@@ -5,109 +5,377 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — DJOUSSE TECH</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #111827; }
+    .dash-layout { display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e7eb; padding: 20px 12px; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; z-index: 40; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 12px; margin-bottom: 32px; }
+    .sidebar-logo .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2563eb, #1d4ed8); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; }
+    .sidebar-logo span { font-weight: 700; font-size: 15px; color: #111827; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #6b7280; text-decoration: none; transition: all 0.15s; }
+    .sidebar-link:hover { background: #f3f4f6; color: #111827; }
+    .sidebar-link.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+    .sidebar-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-bottom { border-top: 1px solid #e5e7eb; padding-top: 12px; }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; }
+    .sidebar-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user-plan { font-size: 11px; color: #9ca3af; }
+
+    /* MAIN */
+    .main { flex: 1; margin-left: 240px; padding: 24px 32px; max-width: 1200px; }
+
+    /* TOP BAR */
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .breadcrumbs .muted { color: #9ca3af; }
+    .breadcrumbs .sep { color: #d1d5db; }
+    .breadcrumbs .active { color: #111827; font-weight: 600; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-icon { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #e5e7eb; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+    .btn-icon:hover { background: #f9fafb; }
+    .btn-new-bot { padding: 10px 18px; border-radius: 10px; border: none; background: #2563eb; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+    .btn-new-bot:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+
+    /* WELCOME BANNER */
+    .welcome-banner { background: #fff; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .welcome-left { flex: 1; min-width: 240px; }
+    .welcome-title { font-size: 26px; font-weight: 700; margin: 0 0 8px; color: #111827; letter-spacing: -0.02em; }
+    .welcome-subtitle { font-size: 14px; color: #6b7280; margin: 0; line-height: 1.5; }
+    .welcome-stats { display: flex; align-items: center; gap: 24px; }
+    .welcome-stat { text-align: center; }
+    .welcome-stat-value { font-size: 22px; font-weight: 700; color: #111827; margin-bottom: 4px; }
+    .welcome-stat-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+    .welcome-stat-divider { width: 1px; height: 40px; background: #e5e7eb; }
+
+    /* STAT CARDS */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; border-top: 3px solid #2563eb; transition: all 0.2s; }
+    .stat-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.12); transform: translateY(-2px); }
+    .stat-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .stat-card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .stat-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 9999px; }
+    .stat-card-value { font-size: 28px; font-weight: 700; color: #2563eb; margin-bottom: 4px; line-height: 1.2; }
+    .stat-card-label { font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 2px; }
+    .stat-card-subtitle { font-size: 12px; color: #9ca3af; }
+
+    /* TWO COLUMN */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* PANEL CARD */
+    .panel-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .panel-title { font-size: 18px; font-weight: 700; margin: 0 0 16px; color: #111827; }
+
+    /* QUICK ACTIONS */
+    .quick-actions { display: flex; flex-direction: column; gap: 4px; }
+    .quick-action { display: flex; align-items: center; gap: 14px; padding: 12px 10px; border-radius: 10px; cursor: pointer; transition: background 0.15s; text-decoration: none; color: inherit; }
+    .quick-action:hover { background: #f9fafb; }
+    .quick-action-icon { width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+    .quick-action-text { flex: 1; min-width: 0; }
+    .quick-action-title { font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 2px; }
+    .quick-action-desc { font-size: 12px; color: #9ca3af; }
+    .quick-action-arrow { color: #9ca3af; font-size: 16px; }
+
+    /* BOTS TABLE */
+    .bots-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .bots-table th { text-align: left; padding: 12px 8px; color: #6b7280; font-weight: 500; border-bottom: 2px solid #e5e7eb; font-size: 13px; }
+    .bots-table td { padding: 14px 8px; border-bottom: 1px solid #f3f4f6; }
+    .bots-table tr:hover td { background: #f9fafb; }
+    .status-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+    .status-dot::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
+    .status-online::before { background: #10b981; }
+    .status-offline::before { background: #9ca3af; }
+    .status-connecting::before { background: #f59e0b; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-content { background: #fff; border-radius: 16px; padding: 32px; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-title { font-size: 20px; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #6b7280; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: #f3f4f6; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; outline: none; }
+    .form-group input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 48px 24px; }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .empty-state p { color: #6b7280; margin-bottom: 24px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+      .welcome-banner { flex-direction: column; }
+      .welcome-stats { flex-wrap: wrap; gap: 16px; }
+    }
+  </style>
 </head>
 <body>
-  <div class="dashboard-page">
-    <!-- HEADER -->
-    <div class="dashboard-header">
-      <a href="/" class="logo">
+  <div class="dash-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
         <div class="logo-icon">DT</div>
-        <span class="logo-text">DJOUSSE TECH</span>
-      </a>
-      <div style="display:flex;align-items:center;gap:16px;">
-        <a href="admin.html" id="adminLink" style="display:none;padding:6px 12px;border-radius:8px;background:rgba(124,58,237,0.1);color:var(--violet-600);font-size:12px;font-weight:600;text-decoration:none;">👑 Admin</a>
-        <div id="userAvatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--brand-500),var(--violet-600));display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:700;">U</div>
-        <a href="#" onclick="db.signOut()" class="btn btn-outline" style="padding:8px 16px;">Déconnexion</a>
+        <span>DJOUSSE TECH</span>
       </div>
-    </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link active">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="14" y="14" width="7" height="7" rx="1.5" fill="currentColor"/></svg>
+          Dashboard
+        </a>
+        <a href="bots.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="6" width="16" height="12" rx="2" fill="currentColor"/><circle cx="9" cy="11" r="1.5" fill="#fff"/><circle cx="15" cy="11" r="1.5" fill="#fff"/><path d="M7 16h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          Mes Bots
+        </a>
+        <a href="session.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Obtenir Session
+        </a>
+        <a href="logs.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 13H7V11H3V13ZM3 17H11V15H3V17ZM3 9H11V7H3V9ZM13 17H21V15H13V17ZM13 13H21V11H13V13ZM13 7V9H21V7H13Z" fill="currentColor"/></svg>
+          Logs
+        </a>
+        <a href="rewards.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/></svg>
+          Récompenses
+        </a>
+        <a href="index.html" class="sidebar-link" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Site Web
+        </a>
+        <a href="admin.html" class="sidebar-link" id="adminSidebarLink" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="2"/></svg>
+          Admin
+        </a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="sidebarAvatar">U</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="sidebarName">Chargement...</div>
+            <div class="sidebar-user-plan" id="sidebarPlan">Gratuit</div>
+          </div>
+        </div>
+        <a href="#" onclick="db.signOut()" class="sidebar-link" style="color:#ef4444;">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Déconnexion
+        </a>
+      </div>
+    </aside>
 
-    <div class="dashboard-content">
-      <!-- USER INFO -->
-      <div style="margin-bottom:32px;">
-        <h1 style="font-size:28px;font-weight:800;">Bonjour, <span id="userName">...</span> 👋</h1>
-        <p style="color:var(--slate-500);font-size:14px;" id="userEmail">...</p>
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <!-- TOP BAR -->
+      <div class="topbar">
+        <div class="breadcrumbs">
+          <span class="muted">Accueil</span>
+          <span class="sep">/</span>
+          <span class="active">Dashboard</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn-icon" onclick="location.reload()" title="Rafraîchir">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" fill="#2563eb"/></svg>
+          </button>
+          <button class="btn-new-bot" onclick="showCreateBotModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Nouveau Bot
+          </button>
+        </div>
       </div>
 
-      <!-- STATS -->
-      <div class="dashboard-grid">
-        <div class="dash-card">
-          <h3>Messages aujourd'hui</h3>
-          <div class="value" id="statMessages">0</div>
-          <div class="sub">Tous vos bots confondus</div>
+      <!-- WELCOME BANNER -->
+      <div class="welcome-banner">
+        <div class="welcome-left">
+          <h1 class="welcome-title" id="welcomeTitle">Bonjour 👋</h1>
+          <p class="welcome-subtitle">Vos bots tournent en toute tranquillité. Voici ce qui se passe aujourd'hui.</p>
         </div>
-        <div class="dash-card">
-          <h3>Membres total</h3>
-          <div class="value" id="statMembers">0</div>
-          <div class="sub">Dans tous les groupes</div>
-        </div>
-        <div class="dash-card">
-          <h3>Commandes utilisées</h3>
-          <div class="value" id="statCommands">0</div>
-          <div class="sub">120 disponibles</div>
-        </div>
-        <div class="dash-card">
-          <h3>Bots actifs</h3>
-          <div class="value" id="statBots">0/0</div>
-          <div class="sub">En ligne / Total</div>
-        </div>
-      </div>
-
-      <!-- PLAN STATUS -->
-      <div style="margin-top:40px;">
-        <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;">Mon abonnement</h2>
-        <div class="dash-card" id="planStatus">
-          <p style="color:var(--slate-500);">Chargement...</p>
-        </div>
-      </div>
-
-      <!-- BOTS -->
-      <div style="margin-top:40px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <h2 style="font-size:20px;font-weight:700;">Mes bots</h2>
-          <button onclick="showCreateBotModal()" class="btn btn-primary" style="padding:8px 20px;">+ Nouveau bot</button>
-        </div>
-        <div id="botList">
-          <div class="dash-card" style="text-align:center;padding:48px;">
-            <p style="color:var(--slate-500);">Chargement...</p>
+        <div class="welcome-stats">
+          <div class="welcome-stat">
+            <div class="welcome-stat-value">24/7</div>
+            <div class="welcome-stat-label">Uptime</div>
+          </div>
+          <div class="welcome-stat-divider"></div>
+          <div class="welcome-stat">
+            <div class="welcome-stat-value">99.9%</div>
+            <div class="welcome-stat-label">Fiabilité</div>
+          </div>
+          <div class="welcome-stat-divider"></div>
+          <div class="welcome-stat">
+            <div class="welcome-stat-value" id="welcomeRemaining">∞</div>
+            <div class="welcome-stat-label">Disponible</div>
           </div>
         </div>
       </div>
 
-      <!-- RECENT ACTIVITY -->
-      <div style="margin-top:40px;">
-        <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;">Activité récente</h2>
-        <div class="dash-card">
-          <div id="recentCmds">
-            <p style="color:var(--slate-500);padding:12px 0;">Chargement...</p>
+      <!-- STAT CARDS -->
+      <div class="stats-grid">
+        <div class="stat-card" style="border-top-color:#2563eb;">
+          <div class="stat-card-top">
+            <div class="stat-card-icon" style="background:#eff6ff;">🤖</div>
+            <span class="stat-badge" style="background:#eff6ff;color:#2563eb;">Actif</span>
+          </div>
+          <div class="stat-card-value" id="statBots">0</div>
+          <div class="stat-card-label">Bots Total</div>
+          <div class="stat-card-subtitle">Sessions enregistrées</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#10b981;">
+          <div class="stat-card-top">
+            <div class="stat-card-icon" style="background:#ecfdf5;">🟢</div>
+            <span class="stat-badge" style="background:#ecfdf5;color:#059669;">En ligne</span>
+          </div>
+          <div class="stat-card-value" style="color:#10b981;" id="statRunning">0</div>
+          <div class="stat-card-label">En ligne</div>
+          <div class="stat-card-subtitle">Actifs maintenant</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#f59e0b;">
+          <div class="stat-card-top">
+            <div class="stat-card-icon" style="background:#fffbeb;">💰</div>
+            <span class="stat-badge" style="background:#fffbeb;color:#d97706;">Solde</span>
+          </div>
+          <div class="stat-card-value" id="statMessages">0</div>
+          <div class="stat-card-label">Messages</div>
+          <div class="stat-card-subtitle">Aujourd'hui</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#8b5cf6;">
+          <div class="stat-card-top">
+            <div class="stat-card-icon" style="background:#f5f3ff;">👑</div>
+            <span class="stat-badge" id="planBadge" style="background:#ecfdf5;color:#059669;">Gratuit</span>
+          </div>
+          <div class="stat-card-value" style="color:#111827;" id="statPlan">Free</div>
+          <div class="stat-card-label">Plan Actif</div>
+          <div class="stat-card-subtitle" id="statPlanSub">Pas de plan actif</div>
+        </div>
+      </div>
+
+      <!-- TWO COLUMN: QUICK ACTIONS + BOTS -->
+      <div class="two-col">
+        <!-- QUICK ACTIONS -->
+        <div class="panel-card">
+          <h2 class="panel-title">Actions Rapides</h2>
+          <div class="quick-actions">
+            <a href="https://knight-bot-paircode.onrender.com/" target="_blank" class="quick-action">
+              <div class="quick-action-icon">🔑</div>
+              <div class="quick-action-text">
+                <div class="quick-action-title">Obtenir Session ID</div>
+                <div class="quick-action-desc">Coupler un nouveau numéro WhatsApp</div>
+              </div>
+              <span class="quick-action-arrow">›</span>
+            </a>
+            <a href="logs.html" class="quick-action">
+              <div class="quick-action-icon">📋</div>
+              <div class="quick-action-text">
+                <div class="quick-action-title">Voir les Logs</div>
+                <div class="quick-action-desc">Vérifier l'activité du bot</div>
+              </div>
+              <span class="quick-action-arrow">›</span>
+            </a>
+            <a href="rewards.html" class="quick-action">
+              <div class="quick-action-icon">🎁</div>
+              <div class="quick-action-text">
+                <div class="quick-action-title">Récompenses</div>
+                <div class="quick-action-desc">Gagner des pièces par parrainage</div>
+              </div>
+              <span class="quick-action-arrow">›</span>
+            </a>
+            <a href="https://youtu.be/" target="_blank" class="quick-action">
+              <div class="quick-action-icon">📖</div>
+              <div class="quick-action-text">
+                <div class="quick-action-title">Tutorial</div>
+                <div class="quick-action-desc">Guide de démarrage pour débutants</div>
+              </div>
+              <span class="quick-action-arrow">›</span>
+            </a>
+            <a href="admin.html" class="quick-action" id="adminQuickAction" style="display:none;">
+              <div class="quick-action-icon" style="background:#f5f3ff;">⚙️</div>
+              <div class="quick-action-text">
+                <div class="quick-action-title">Panel Admin</div>
+                <div class="quick-action-desc">Gérer les utilisateurs et bots</div>
+              </div>
+              <span class="quick-action-arrow">›</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- MY BOTS -->
+        <div class="panel-card">
+          <h2 class="panel-title">Mes Bots</h2>
+          <div id="botList">
+            <div class="empty-state">
+              <div class="empty-state-icon">🤖</div>
+              <h3>Aucun bot configuré</h3>
+              <p>Créez votre premier bot WhatsApp en quelques clics.</p>
+              <button class="btn-new-bot" onclick="showCreateBotModal()" style="margin:0 auto;">+ Nouveau bot</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- QUICK LINKS -->
-      <div style="margin-top:40px;display:flex;gap:16px;flex-wrap:wrap;">
-        <a href="index.html" class="btn btn-outline">Retour à l'accueil</a>
-        <a href="terms.html" class="btn btn-outline">Conditions</a>
-        <a href="privacy.html" class="btn btn-outline">Confidentialité</a>
+      <!-- ADMIN SECTION (visible only for admins) -->
+      <div id="adminSection" style="display:none;margin-top:24px;">
+        <div class="panel-card">
+          <h2 class="panel-title">👑 Admin — Vue d'ensemble</h2>
+          <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-top:16px;">
+            <div style="text-align:center;padding:16px;">
+              <div style="font-size:28px;font-weight:700;color:#2563eb;" id="adminUsers">0</div>
+              <div style="font-size:13px;color:#6b7280;">Utilisateurs</div>
+            </div>
+            <div style="text-align:center;padding:16px;">
+              <div style="font-size:28px;font-weight:700;color:#10b981;" id="adminBotsOnline">0</div>
+              <div style="font-size:13px;color:#6b7280;">Bots en ligne</div>
+            </div>
+            <div style="text-align:center;padding:16px;">
+              <div style="font-size:28px;font-weight:700;color:#f59e0b;" id="adminBotsTotal">0</div>
+              <div style="font-size:13px;color:#6b7280;">Bots total</div>
+            </div>
+            <div style="text-align:center;padding:16px;">
+              <div style="font-size:28px;font-weight:700;color:#8b5cf6;" id="adminPayments">0</div>
+              <div style="font-size:13px;color:#6b7280;">Paiements</div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:16px;">
+            <a href="admin.html" class="btn-new-bot" style="text-decoration:none;">Ouvrir Panel Admin</a>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 
   <!-- MODAL: Créer un bot -->
-  <div id="createBotModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;">
-    <div style="background:white;border-radius:20px;padding:32px;max-width:440px;width:90%;box-shadow:0 24px 48px rgba(0,0,0,0.2);">
-      <h3 style="font-size:20px;font-weight:700;margin-bottom:24px;">Créer un bot</h3>
+  <div id="createBotModal" style="display:none;" class="modal-overlay" onclick="if(event.target===this)hideCreateBotModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Créer un bot</h3>
+        <button class="modal-close" onclick="hideCreateBotModal()">✕</button>
+      </div>
       <form id="createBotForm" onsubmit="handleCreateBot(event)">
         <div class="form-group">
-          <label for="newBotName">Nom du bot</label>
+          <label>Nom du bot</label>
           <input type="text" id="newBotName" placeholder="DJOUSSE TECH" value="DJOUSSE TECH">
         </div>
         <div class="form-group">
-          <label for="newBotPrefix">Préfixe des commandes</label>
+          <label>Session ID (optionnel)</label>
+          <input type="text" id="newBotSession" placeholder="DJOUSSE!...">
+        </div>
+        <div class="form-group">
+          <label>Préfixe des commandes</label>
           <input type="text" id="newBotPrefix" placeholder="." value="." maxlength="3">
         </div>
         <div style="display:flex;gap:12px;margin-top:24px;">
-          <button type="button" onclick="hideCreateBotModal()" class="btn btn-outline" style="flex:1;">Annuler</button>
-          <button type="submit" id="createBotBtn" class="btn btn-primary" style="flex:1;">Créer</button>
+          <button type="button" onclick="hideCreateBotModal()" class="btn-outline" style="flex:1;padding:10px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-weight:600;">Annuler</button>
+          <button type="submit" id="createBotBtn" class="btn-new-bot" style="flex:1;justify-content:center;">Créer</button>
         </div>
       </form>
     </div>

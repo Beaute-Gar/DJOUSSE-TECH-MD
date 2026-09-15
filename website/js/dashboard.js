@@ -10,133 +10,150 @@ async function initDashboard() {
   if (!currentUser) return;
 
   userProfile = await db.getProfile(currentUser.id);
-  if (!userProfile) {
-    console.error('Profil introuvable');
-    return;
-  }
+  if (!userProfile) return;
 
   userBots = await db.getBots(currentUser.id);
 
-  renderUserInfo();
+  renderSidebar();
+  renderWelcome();
   renderStats();
   renderBotList();
-  renderRecentCommands();
   renderPlanStatus();
+
+  // Load admin stats if admin
+  if (userProfile.is_admin) {
+    loadAdminStats();
+  }
 }
 
-// ===== RENDER USER INFO =====
-function renderUserInfo() {
-  const nameEl = document.getElementById('userName');
-  const emailEl = document.getElementById('userEmail');
-  const avatarEl = document.getElementById('userAvatar');
-  const adminLink = document.getElementById('adminLink');
+// ===== SIDEBAR =====
+function renderSidebar() {
+  const avatar = document.getElementById('sidebarAvatar');
+  const name = document.getElementById('sidebarName');
+  const plan = document.getElementById('sidebarPlan');
+  const adminLink = document.getElementById('adminSidebarLink');
+  const adminQuick = document.getElementById('adminQuickAction');
 
-  if (nameEl) nameEl.textContent = userProfile.full_name || 'Utilisateur';
-  if (emailEl) emailEl.textContent = userProfile.email;
-  if (avatarEl) {
+  if (avatar) {
     const initials = (userProfile.full_name || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
-    avatarEl.textContent = initials;
+    avatar.textContent = initials;
   }
-  if (adminLink && userProfile.is_admin) {
-    adminLink.style.display = 'inline-flex';
-  }
+  if (name) name.textContent = userProfile.full_name || 'Utilisateur';
+  if (plan) plan.textContent = userProfile.plan === 'pro' ? 'Pro 👑' : userProfile.plan === 'premium' ? 'Premium ⭐' : 'Gratuit';
+  if (adminLink && userProfile.is_admin) adminLink.style.display = 'flex';
+  if (adminQuick && userProfile.is_admin) adminQuick.style.display = 'flex';
 }
 
-// ===== RENDER STATS =====
+// ===== WELCOME BANNER =====
+function renderWelcome() {
+  const title = document.getElementById('welcomeTitle');
+  if (!title) return;
+
+  const hour = new Date().getHours();
+  let greeting = 'Bonsoir';
+  if (hour < 12) greeting = 'Bonjour';
+  else if (hour < 17) greeting = 'Bon après-midi';
+
+  const firstName = (userProfile.full_name || 'Utilisateur').split(' ')[0];
+  title.textContent = `${greeting}, ${firstName} 👋`;
+}
+
+// ===== STATS =====
 function renderStats() {
+  const totalBots = userBots.length;
+  const runningBots = userBots.filter(b => b.status === 'online').length;
   const totalMessages = userBots.reduce((sum, b) => sum + (b.messages_today || 0), 0);
-  const totalMembers = userBots.reduce((sum, b) => sum + (b.members_count || 0), 0);
-  const totalCommands = userBots.reduce((sum, b) => sum + (b.commands_used || 0), 0);
-  const onlineBots = userBots.filter(b => b.status === 'online').length;
 
+  setText('statBots', totalBots);
+  setText('statRunning', runningBots);
   setText('statMessages', totalMessages.toLocaleString());
-  setText('statMembers', totalMembers.toLocaleString());
-  setText('statCommands', totalCommands.toLocaleString());
-  setText('statBots', onlineBots + '/' + userBots.length);
 }
 
-// ===== RENDER BOT LIST =====
+// ===== PLAN STATUS =====
+function renderPlanStatus() {
+  const badge = document.getElementById('planBadge');
+  const value = document.getElementById('statPlan');
+  const sub = document.getElementById('statPlanSub');
+
+  const plan = userProfile.plan || 'free';
+  const planConfig = CONFIG.plans[plan];
+  const isActive = db.isPlanActive(userProfile);
+
+  if (badge) {
+    badge.textContent = plan === 'pro' ? 'Pro 👑' : plan === 'premium' ? 'Premium ⭐' : 'Gratuit';
+    badge.style.background = plan === 'pro' ? '#f5f3ff' : plan === 'premium' ? '#fffbeb' : '#ecfdf5';
+    badge.style.color = plan === 'pro' ? '#7c3aed' : plan === 'premium' ? '#d97706' : '#059669';
+  }
+  if (value) value.textContent = planConfig.name;
+  if (sub) {
+    if (plan === 'free') {
+      sub.textContent = 'Pas de plan actif';
+    } else if (userProfile.plan_expires_at) {
+      const expires = new Date(userProfile.plan_expires_at);
+      const now = new Date();
+      const days = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+      sub.textContent = isActive ? `Expire dans ${days}j` : 'Expiré';
+    }
+  }
+}
+
+// ===== BOT LIST =====
 function renderBotList() {
   const container = document.getElementById('botList');
   if (!container) return;
 
   if (userBots.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center;padding:48px 24px;">
-        <p style="font-size:48px;margin-bottom:16px;">🤖</p>
-        <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;">Aucun bot configuré</h3>
-        <p style="color:var(--slate-500);margin-bottom:24px;">Créez votre premier bot WhatsApp en quelques clics.</p>
-        <button onclick="showCreateBotModal()" class="btn btn-primary">Créer un bot</button>
+      <div class="empty-state">
+        <div class="empty-state-icon">🤖</div>
+        <h3>Aucun bot configuré</h3>
+        <p>Créez votre premier bot WhatsApp en quelques clics.</p>
+        <button class="btn-new-bot" onclick="showCreateBotModal()" style="margin:0 auto;">+ Nouveau bot</button>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = userBots.map(bot => `
-    <div class="dash-card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-      <div style="display:flex;align-items:center;gap:16px;">
-        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--brand-500),var(--brand-700));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;">
-          ${bot.bot_image ? `<img src="${bot.bot_image}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : 'DT'}
-        </div>
-        <div>
-          <div style="font-weight:600;">${escapeHtml(bot.bot_name)}</div>
-          <div style="font-size:13px;color:var(--slate-500);">
-            ${bot.phone_number ? bot.phone_number : 'Non connecté'} · Préfixe: ${escapeHtml(bot.prefix)}
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span class="status-badge ${bot.status === 'online' ? 'status-online' : 'status-offline'}">
-          ● ${bot.status === 'online' ? 'En ligne' : bot.status === 'connecting' ? 'Connexion...' : 'Hors ligne'}
-        </span>
-        <button onclick="deleteBot('${bot.id}')" style="background:none;border:none;color:var(--red-500);cursor:pointer;font-size:18px;" title="Supprimer">🗑️</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-// ===== RENDER RECENT COMMANDS =====
-function renderRecentCommands() {
-  // Placeholder — sera alimenté par les logs Supabase
-  const commands = [
-    { cmd: '.ping', user: 'Vous', time: 'Maintenant' },
-  ];
-
-  setText('recentCmds', commands.map(c =>
-    `<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--slate-100);">
-      <span style="font-weight:500;">${escapeHtml(c.cmd)}</span>
-      <span style="color:var(--slate-500);font-size:13px;">${escapeHtml(c.time)}</span>
-    </div>`
-  ).join(''));
-}
-
-// ===== RENDER PLAN STATUS =====
-function renderPlanStatus() {
-  const planEl = document.getElementById('planStatus');
-  if (!planEl) return;
-
-  const plan = userProfile.plan || 'free';
-  const isActive = db.isPlanActive(userProfile);
-  const planConfig = CONFIG.plans[plan];
-
-  planEl.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-      <span style="font-size:24px;">${plan === 'pro' ? '👑' : plan === 'premium' ? '⭐' : '🆓'}</span>
-      <div>
-        <div style="font-weight:700;font-size:18px;">Plan ${planConfig.name}</div>
-        <div style="font-size:13px;color:${isActive ? 'var(--emerald-500)' : 'var(--red-500)'};">
-          ${isActive ? 'Actif' : 'Expiré'}
-          ${userProfile.plan_expires_at ? ` — expire le ${new Date(userProfile.plan_expires_at).toLocaleDateString('fr-FR')}` : ''}
-        </div>
-      </div>
-    </div>
-    <div style="font-size:14px;color:var(--slate-600);">
-      ${planConfig.features.customName ? '✓' : '✕'} Nom personnalisé<br>
-      ${planConfig.features.customImage ? '✓' : '✕'} Image personnalisée<br>
-      ${planConfig.features.customChannel ? '✓' : '✕'} Channel personnalisé
-    </div>
-    ${plan === 'free' ? '<a href="#pricing" class="btn btn-primary" style="margin-top:16px;width:100%;text-align:center;">Passer à Premium</a>' : ''}
+  container.innerHTML = `
+    <table class="bots-table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Statut</th>
+          <th>Préfixe</th>
+          <th>Messages</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${userBots.map(bot => `
+          <tr>
+            <td style="font-weight:600;">${escapeHtml(bot.bot_name)}</td>
+            <td><span class="status-dot ${bot.status === 'online' ? 'status-online' : 'status-offline'}">${bot.status === 'online' ? 'En ligne' : 'Hors ligne'}</span></td>
+            <td style="color:#6b7280;">${escapeHtml(bot.prefix)}</td>
+            <td style="color:#6b7280;">${bot.messages_today || 0}</td>
+            <td>
+              <button onclick="deleteBot('${bot.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;" title="Supprimer">🗑️</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
   `;
+}
+
+// ===== ADMIN STATS =====
+async function loadAdminStats() {
+  const section = document.getElementById('adminSection');
+  if (section) section.style.display = 'block';
+
+  const stats = await db.adminGetStats();
+  if (!stats) return;
+
+  setText('adminUsers', stats.totalUsers);
+  setText('adminBotsOnline', stats.onlineBots);
+  setText('adminBotsTotal', stats.totalBots);
+  setText('adminPayments', stats.totalPayments);
 }
 
 // ===== CREATE BOT =====
@@ -154,9 +171,9 @@ async function handleCreateBot(e) {
   e.preventDefault();
 
   const botName = document.getElementById('newBotName').value.trim() || 'DJOUSSE TECH';
+  const sessionId = document.getElementById('newBotSession').value.trim();
   const prefix = document.getElementById('newBotPrefix').value.trim() || '.';
 
-  // Vérifier le plan
   const features = db.getPlanFeatures(userProfile);
   if (!features.customName && botName !== 'DJOUSSE TECH') {
     alert('Le nom personnalisé nécessite un plan Premium ou Pro.');
@@ -167,6 +184,7 @@ async function handleCreateBot(e) {
 
   const result = await db.createBot(currentUser.id, {
     bot_name: botName,
+    session_id: sessionId || null,
     prefix: prefix,
   });
 
@@ -178,7 +196,6 @@ async function handleCreateBot(e) {
   }
 
   await db.logActivity(currentUser.id, 'create_bot', result.data.id, { bot_name: botName });
-
   hideCreateBotModal();
   userBots = await db.getBots(currentUser.id);
   renderBotList();
@@ -188,7 +205,7 @@ async function handleCreateBot(e) {
 
 // ===== DELETE BOT =====
 async function deleteBot(botId) {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer ce bot ?')) return;
+  if (!confirm('Supprimer ce bot ?')) return;
 
   const result = await db.deleteBot(botId);
   if (result.error) {
@@ -215,5 +232,20 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ===== INIT ON LOAD =====
+function showLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (loading) {
+    btn.disabled = true;
+    btn.dataset.originalText = btn.textContent;
+    btn.textContent = 'Chargement...';
+    btn.style.opacity = '0.7';
+  } else {
+    btn.disabled = false;
+    btn.textContent = btn.dataset.originalText || btn.textContent;
+    btn.style.opacity = '1';
+  }
+}
+
+// ===== INIT =====
 document.addEventListener('DOMContentLoaded', initDashboard);
