@@ -1,32 +1,29 @@
-<div align="center">
+<p align="center">
+  <img src="assets/bot1.png" alt="DJOUSSE TECH" width="400"/>
+</p>
 
-## DJOUSSE TECH MD
+<h1 align="center">DJOUSSE TECH</h1>
 
-[![Made with Baileys](https://img.shields.io/badge/Made%20with-Baileys-00bcd4?style=for-the-badge)](https://github.com/WhiskeySockets/Baileys)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
-
-</div>
-
-DJOUSSE TECH MD est un bot WhatsApp multi-compte construit sur la librairie **Baileys**.
-Conçu pour être rapide, léger et facile à personnaliser sans toucher au code source.
-Projet **100% open source** — tu peux le modifier, le rebrander et en faire **ton propre bot** gratuitement.
+<p align="center">
+  <b>Votre Assistant WhatsApp Toujours Avec Vous</b><br>
+  Multi-Device WhatsApp Bot • Made with ❤️ by <a href="https://github.com/Beaute-Gar">Beaute Gar</a>
+</p>
 
 ---
 
-## Fonctionnalités
+## ✨ Features
 
-- **Open Source** — tout le code est éditable, hébergeable partout (Heroku, VPS, panel, etc.)
-- **Customisation facile** — change le nom, le préfixe, l'image du bot, le newsletter via des commandes
-- **Système de commandes modulaire** — tout est rangé dans le dossier `commands/`
-- **Optimisé** — gestion mémoire optimisée, sessions via `SESSION_ID`, temp files auto-nettoyés
-- **Outils propriétaire** — restart, update, broadcast, et plus
+- 🤖 **339+ Commandes** — 16 catégories (General, AI, Fun, Games, Economy, Admin, Owner, Media, etc.)
+- 🔗 **Multi-Device** — Support WhatsApp Multi-Device (Baileys)
+- 💰 **Système Économie** — Daily, Work, Shop, Level Up, Leaderboard
+- 🎮 **Jeux** — Quiz, Slots, Tic Tac Toe, Hangman, RPS et plus
+- 🛡️ **Anti-Spam** — Protection contre les liens, stickers, tags indésirables
+- 🌐 **Site Web** — Dashboard, Panel Admin, Pairing QR Code
+- 🤖 **Robot à Émotions** — Un assistant robot avec personnalité et émotions
 
----
+## 🚀 Démarrage Rapide
 
-## Installation rapide
-
-### 1. Cloner le repo
+### 1. Cloner le dépôt
 
 ```bash
 git clone https://github.com/Beaute-Gar/DJOUSSE-TECH-MD.git
@@ -41,106 +38,81 @@ npm install
 
 ### 3. Configurer
 
-Crée un fichier `.env` à la racine :
+Créez un fichier `.env` :
 
 ```env
-SESSION_ID=DJOUSSE!...
-OWNER_NUMBER=237693978044
-OWNER_NAME=Beaute Gar
+SESSION_ID=votre_session_id
 BOT_NAME=DJOUSSE TECH
+OWNER_NUMBER=237693978044
 PREFIX=.
-GROQ_API_KEY=ta_cle_groq
+MODE=public
 ```
 
-Ou édite `config.js` directement.
-
-### 4. Lancer
+### 4. Lancer le bot
 
 ```bash
 node index.js
 ```
 
-- Si `SESSION_ID` est vide, un **QR code** apparaît — scanne-le avec WhatsApp (Appareils liés)
-- Si `SESSION_ID` est défini, le bot se connecte automatiquement
+## 📁 Structure du Projet
+
+```
+DJOUSSE-TECH-MD/
+├── commands/           # 339+ fichiers de commandes
+│   ├── admin/          # Commandes administration
+│   ├── ai/             # Intelligence artificielle
+│   ├── anime/          # Commandes anime
+│   ├── convert/        # Conversion de fichiers
+│   ├── economy/        # Système économie
+│   ├── fun/            # Divertissement
+│   ├── game/           # Jeux
+│   ├── general/        # Commandes générales
+│   ├── group/          # Gestion de groupes
+│   ├── info/           # Informations
+│   ├── media/          # Téléchargement média
+│   ├── owner/          # Commandes propriétaire
+│   ├── security/       # Sécurité
+│   ├── sticker/        # Stickers
+│   ├── textmaker/      # Effets de texte
+│   ├── tool/           # Outils
+│   └── utility/        # Utilitaires
+├── assets/             # Images du bot
+├── database/           # Base de données JSON
+├── utils/              # Utilitaires
+├── pairing-server/     # Serveur de pairing WhatsApp
+├── website/            # Site web (Vercel)
+└── index.js            # Point d'entrée
+```
+
+## 🌐 Site Web
+
+- **URL** : [djousse-tech-md.vercel.app](https://djousse-tech-md.vercel.app/)
+- **Pairing** : [djousse-pairing.onrender.com](https://djousse-pairing.onrender.com)
+
+## 📱 Commandes Populaires
+
+| Commande | Description |
+|----------|-------------|
+| `.alive` | Statut du bot |
+| `.menu` | Liste des commandes |
+| `.sticker` | Convertir image en sticker |
+| `.daily` | Récompense quotidienne |
+| `.work` | Travailler pour gagner des coins |
+| `.ai` | Chat intelligent |
+| `.translate` | Traduire du texte |
+| `.tts` | Texte en speech |
+
+## 👑 Owner
+
+**Beaute Gar** — [GitHub](https://github.com/Beaute-Gar)
+
+## 📄 License
+
+MIT License
 
 ---
 
-## Déploiement
-
-### Heroku
-
-[![Deploy on Heroku](https://img.shields.io/badge/Deploy-Heroku-430098?style=for-the-badge&logo=heroku&logoColor=white)](https://heroku.com/deploy)
-
-### Panel (Katabump, etc.)
-
-Configure les variables d'environnement dans ton panel avec les mêmes clés que le fichier `.env`.
-
----
-
-## Commandes
-
-Le bot contient **90+ commandes** organisées par catégorie :
-
-| Catégorie | Exemples |
-|-----------|----------|
-| **Admin** | antilink, welcome, warn, kick, mute, promote |
-| **IA** | ai, gptimage, magicstudio |
-| **Anime** | neko, waifu, hneko |
-| **Fun** | bomb, dare, truth, joke, meme, ship, tictactoe |
-| **Général** | menu, ping, sticker, tts, translate, uptime |
-| **Média** | facebook, instagram, tiktok, song, lyrics |
-| **Owner** | restart, broadcast, mode, sudo, block |
-| **Textmaker** | neon, glitch, fire,冰, metallic |
-| **Utility** | calc, weather, translate |
-
-Tape `.menu` dans le bot pour voir la liste complète.
-
----
-
-## Communauté
-
-- **GitHub** : [Beaute-Gar/DJOUSSE-TECH-MD](https://github.com/Beaute-Gar/DJOUSSE-TECH-MD)
-- **Créateur** : Beaute Gar (Cameroun)
-
----
-
-## Crédits
-
-- **Beaute Gar** — Développeur principal
-- **Mr Unique Hacker** — Base KnightBot-Mini
-- **Baileys** — Librairie WhatsApp Web API
-- Autres bibliothèques open source listées dans `package.json`
-
----
-
-## Avertissement
-
-- Ce bot est créé **à des fins éducatives uniquement**
-- Ce n'est **PAS** un bot WhatsApp officiel
-- L'utilisation de bots tiers peut **violer les CGU de WhatsApp** et mener à un **ban**
-
-> Tu utilises ce bot **à tes propres risques**.
-> Les développeurs ne sont **pas responsables** de tout ban ou problème résultant de son utilisation.
-
----
-
-## Licence (MIT)
-
-Ce projet est sous licence **MIT**.
-
-Tu dois :
-- Utiliser ce logiciel en conformité avec les lois applicables
-- Garder les mentions de licence et copyright originales
-- Créditer les auteurs originaux
-- Ne pas utiliser ce logiciel pour du spam, de l'abus ou des activités malveillantes
-
----
-
-## Copyright
-
-Copyright (c) **2026 Beaute Gar**. Tous droits réservés.
-
-Ce projet contient du code de divers projets open source, notamment :
-- **Baileys** — Licence MIT
-- **KnightBot-Mini** — Licence MIT
-- Autres bibliothèques listées dans `package.json`
+<p align="center">
+  <img src="assets/bot2.png" alt="DJOUSSE TECH" width="300"/><br><br>
+  Made with 💚 by <b>Beaute Gar</b>
+</p>

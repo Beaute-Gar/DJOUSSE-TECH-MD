@@ -1,0 +1,24 @@
+{
+  "date": "2026-09-15T20:58:45.339Z",
+  "totalBrut": 436,
+  "doublonsSupprimes": 0,
+  "invalidEntries": 0,
+  "totalFinal": 436,
+  "fr": 110,
+  "en": 326,
+  "valid350": 434,
+  "valid250": 429,
+  "valid150": 405,
+  "sources": {
+    "github": {
+      "reposInspected": 1,
+      "count": 327
+    },
+    "evolutionPersonnelle": {
+      "count": 109
+    },
+    "ouestFrance": {
+      "count": 0
+    }
+  }
+}

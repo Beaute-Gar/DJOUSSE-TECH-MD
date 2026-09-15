@@ -41,3 +41,7 @@ android.zip
 # Session files
 creds.json
 lid-mapping-*.json
+
+# Keep collector scripts
+!scripts/collectors/
+!data/status/

@@ -357,6 +357,59 @@ module.exports = {
         }
       }
 
+      case 'update': {
+        if (!isOwner) {
+          await ctx.react('❌');
+          return ctx.reply('❌ Owner only.');
+        }
+        try {
+          await ctx.reply('🔄 Lancement de la collecte de citations...');
+          const { exec } = require('child_process');
+          const path = require('path');
+          const script = path.join(__dirname, '..', '..', 'scripts', 'collectors', 'index.cjs');
+          exec(`node "${script}"`, { timeout: 60000 }, async (err, stdout) => {
+            if (err) {
+              await ctx.react('❌');
+              return ctx.reply(`❌ Erreur collecteur: ${err.message}`);
+            }
+            // Refresh cache after collection
+            await statusQuotes.refreshCache();
+            const stats = statusQuotes.getQuoteStats();
+            await ctx.react('✅');
+            await ctx.reply(
+              `✅ Collecte terminée !\n\n` +
+              `📊 Citations totales: *${stats.cacheCount}*\n` +
+              `📁 Sources locales: *${stats.localCount}*\n` +
+              `💾 Dernière MAJ: ${stats.lastCacheUpdate ? new Date(stats.lastCacheUpdate).toLocaleString('fr-FR') : 'jamais'}`
+            );
+          });
+        } catch (e) {
+          await ctx.react('❌');
+          return ctx.reply(`Error running update: ${e.message}`);
+        }
+        return;
+      }
+
+      case 'stats': {
+        try {
+          const stats = statusQuotes.getQuoteStats();
+          const lines = [
+            `╭─── *QUOTE STATS* ───╮`,
+            `│ Cache: *${stats.cacheCount}* citations`,
+            `│ Locales: *${stats.localCount}* citations`,
+            `│ Historique: *${stats.historyCount}* publications`,
+            `│ Dernière MAJ: ${stats.lastCacheUpdate ? new Date(stats.lastCacheUpdate).toLocaleString('fr-FR') : 'jamais'}`,
+            `│ Sources: ${stats.sources.join(', ') || 'aucune'}`,
+            `╰──────────────────────────╯`,
+          ];
+          await ctx.react('📊');
+          return ctx.reply(lines.join('\n'));
+        } catch (e) {
+          await ctx.react('❌');
+          return ctx.reply(`Error: ${e.message}`);
+        }
+      }
+
       default: {
         const lines = [
           `╭─── *STATUS QUOTE HELP* ───╮`,
@@ -377,6 +430,8 @@ module.exports = {
           `│  refresh  - Force cache refresh`,
           `│  interval - Set interval (min)`,
           `│  time     - Set time category`,
+          `│  update   - Run quote collector`,
+          `│  stats    - Show quote statistics`,
           ``,
           `╰──────────────────────────────────╯`
         ];

@@ -13,6 +13,7 @@ const DATA_DIR = path.join(__dirname, '..', 'data');
 const CACHE_FILE = path.join(DATA_DIR, 'status-quotes-cache.json');
 const HISTORY_FILE = path.join(DATA_DIR, 'status-quotes-history.json');
 const LOCAL_QUOTES_FILE = path.join(DATA_DIR, 'status-quotes.json');
+const COLLECTED_QUOTES_FILE = path.join(DATA_DIR, 'status', 'quotes.json');
 const SESSION_CONFIG_FILE = path.join(DATA_DIR, 'status-quotes-session.json');
 
 // ─── Constants ─────────────────────────────────────────
@@ -227,42 +228,66 @@ async function fetchFromQuotable() {
 
 function loadLocalQuotes() {
   const local = readJSON(LOCAL_QUOTES_FILE, []);
-  return local.filter(isValidQuote).map(normalizeQuote);
+  const legacy = local.filter(isValidQuote).map(normalizeQuote);
+  
+  // Load collected quotes (from scripts/collectors)
+  const collected = readJSON(COLLECTED_QUOTES_FILE, []);
+  const mapped = collected.filter(isValidQuote).map(q => ({
+    text: (q.text || '').trim(),
+    author: (q.author || 'Inconnu').trim(),
+    source: 'collector',
+    category: q.categories ? q.categories[0] : (q.category || null),
+  }));
+  
+  return [...legacy, ...mapped];
+}
+
+function getQuoteStats() {
+  const cache = loadCache();
+  const local = loadLocalQuotes();
+  const history = loadHistory();
+  return {
+    cacheCount: cache.quotes.length,
+    localCount: local.length,
+    historyCount: history.length,
+    lastCacheUpdate: cache.lastUpdated,
+    sources: [...new Set(local.map(q => q.source))],
+  };
 }
 
 async function refreshCache() {
   log('Rafraîchissement du cache...');
   
   const cache = loadCache();
+  let allQuotes = [...cache.quotes];
   
-  // Try ZenQuotes first
+  // 1. Try ZenQuotes API
   const zenQuotes = await fetchFromZenQuotes();
   if (zenQuotes && zenQuotes.length > 0) {
-    const allQuotes = deduplicateQuotes([...zenQuotes, ...cache.quotes]);
-    saveCache({ quotes: allQuotes, lastUpdated: new Date().toISOString(), source: 'zenquotes' });
-    log(`Cache mis à jour: ${allQuotes.length} citations (source: zenquotes)`);
-    return;
+    allQuotes = deduplicateQuotes([...allQuotes, ...zenQuotes]);
   }
   
-  // Fallback to Quotable
-  const quotableQuotes = await fetchFromQuotable();
-  if (quotableQuotes && quotableQuotes.length > 0) {
-    const allQuotes = deduplicateQuotes([...quotableQuotes, ...cache.quotes]);
-    saveCache({ quotes: allQuotes, lastUpdated: new Date().toISOString(), source: 'quotable' });
-    log(`Cache mis à jour: ${allQuotes.length} citations (source: quotable)`);
-    return;
+  // 2. Try Quotable API
+  if (allQuotes.length < 100) {
+    const quotableQuotes = await fetchFromQuotable();
+    if (quotableQuotes && quotableQuotes.length > 0) {
+      allQuotes = deduplicateQuotes([...allQuotes, ...quotableQuotes]);
+    }
   }
   
-  // Try local quotes
+  // 3. Load all local sources (collector + legacy proverbs)
   const localQuotes = loadLocalQuotes();
   if (localQuotes.length > 0) {
-    const allQuotes = deduplicateQuotes([...localQuotes, ...cache.quotes]);
-    saveCache({ quotes: allQuotes, lastUpdated: new Date().toISOString(), source: 'local' });
-    log(`Cache mis à jour: ${allQuotes.length} citations (source: local)`);
-    return;
+    allQuotes = deduplicateQuotes([...allQuotes, ...localQuotes]);
+    log(`Sources locales chargées: ${localQuotes.length} citations`);
   }
   
-  log('Aucune source disponible pour rafraîchir le cache');
+  if (allQuotes.length > 0) {
+    saveCache({ quotes: allQuotes, lastUpdated: new Date().toISOString(), source: 'mixed' });
+    log(`Cache mis à jour: ${allQuotes.length} citations total`);
+  } else {
+    log('Aucune source disponible pour rafraîchir le cache');
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -694,6 +719,7 @@ module.exports = {
   selectQuote,
   formatStatus,
   validateStatusLength,
+  getQuoteStats,
   
   // Cache
   loadCache,
