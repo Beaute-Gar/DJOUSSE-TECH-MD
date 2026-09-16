@@ -26,7 +26,7 @@ module.exports = {
   ownerOnly: true,
   execute: async (sock, msg, args, ctx) => {
     const senderNumber = msg.sender.split('@')[0];
-    const sessionId = senderNumber;
+    const sessionId = config.sessionName || 'session';
 
     if (!config.ownerNumber.includes(senderNumber)) {
       return ctx.react('❌');
