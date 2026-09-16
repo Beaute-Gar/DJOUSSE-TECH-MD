@@ -1,1 +1,13 @@
-{}
+{
+  "session": {
+    "enabled": true,
+    "lastPublished": null,
+    "schedule": "07:00,12:00,18:00,21:00",
+    "intervalHours": 6,
+    "source": "zenquotes",
+    "fallback": "quotable",
+    "maxLength": 350,
+    "noRepeatDays": 30,
+    "cacheRefreshHours": 6
+  }
+}

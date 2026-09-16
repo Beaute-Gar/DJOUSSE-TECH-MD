@@ -168,7 +168,7 @@
           Settings
         </a>
         <div class="sidebar-section">Support</div>
-        <a href="https://github.com/Beaute-Gar/DJOUSSE-TECH-MD" target="_blank" class="sidebar-link">
+        <a href="https://github.com/Djousse-Uriel/DJOUSSE-TECH-MD" target="_blank" class="sidebar-link">
           <svg viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Contact
         </a>
@@ -212,22 +212,22 @@
       <div class="welcome-banner">
         <div class="welcome-left">
           <h1 class="welcome-title" id="welcomeTitle">Bonjour 👋</h1>
-          <p class="welcome-subtitle">Vos bots tournent en toute tranquillité. Voici ce qui se passe aujourd'hui.</p>
+          <p class="welcome-subtitle">Créez un bot personnalisé qui utilise automatiquement les commandes DJOUSSE TECH.</p>
         </div>
         <div class="welcome-stats">
           <div class="welcome-stat">
-            <div class="welcome-stat-value">24/7</div>
-            <div class="welcome-stat-label">Uptime</div>
+          <div class="welcome-stat-value">—</div>
+          <div class="welcome-stat-label">Uptime réel</div>
           </div>
           <div class="welcome-stat-divider"></div>
           <div class="welcome-stat">
-            <div class="welcome-stat-value">99.9%</div>
-            <div class="welcome-stat-label">Fiabilité</div>
+          <div class="welcome-stat-value">—</div>
+          <div class="welcome-stat-label">Fiabilité réelle</div>
           </div>
           <div class="welcome-stat-divider"></div>
           <div class="welcome-stat">
-            <div class="welcome-stat-value" id="welcomeRemaining">∞</div>
-            <div class="welcome-stat-label">Disponible</div>
+          <div class="welcome-stat-value">.</div>
+          <div class="welcome-stat-label">Préfixe par défaut</div>
           </div>
         </div>
       </div>
@@ -369,22 +369,28 @@
   <div id="createBotModal" style="display:none;" class="modal-overlay" onclick="if(event.target===this)hideCreateBotModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="modal-title">Créer un bot</h3>
+        <h3 class="modal-title">Créer mon bot personnalisé</h3>
         <button class="modal-close" onclick="hideCreateBotModal()">✕</button>
       </div>
       <form id="createBotForm" onsubmit="handleCreateBot(event)">
         <div class="form-group">
-          <label>Nom du bot</label>
-          <input type="text" id="newBotName" placeholder="DJOUSSE TECH" value="DJOUSSE TECH">
+          <label for="newBotName">Nom du bot</label>
+          <input type="text" id="newBotName" placeholder="Mon Bot DJOUSSE" required maxlength="60" autocomplete="off">
         </div>
         <div class="form-group">
-          <label>Session ID (optionnel)</label>
-          <input type="text" id="newBotSession" placeholder="DJOUSSE!...">
+          <label for="newBotPrefix">Préfixe des commandes</label>
+          <input type="text" id="newBotPrefix" placeholder="." value="." required maxlength="3" autocomplete="off">
+          <small style="display:block;margin-top:7px;color:#6b7280;line-height:1.5;">Exemple : avec <code>!</code>, la commande ping devient <code>!ping</code>.</small>
         </div>
         <div class="form-group">
-          <label>Préfixe des commandes</label>
-          <input type="text" id="newBotPrefix" placeholder="." value="." maxlength="3">
+          <label for="newBotSession">Session ID WhatsApp</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="password" id="newBotSession" placeholder="Collez le SESSION_ID reçu après le QR code" required autocomplete="off" spellcheck="false" style="flex:1;">
+            <button type="button" id="toggleSessionBtn" onclick="toggleSessionVisibility()" class="btn-outline" style="padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;" aria-label="Afficher ou masquer le Session ID">Afficher</button>
+          </div>
+          <small style="display:block;margin-top:7px;color:#6b7280;line-height:1.5;">Scannez d’abord le QR code dans <a href="session.html" target="_blank" style="color:#2563eb;">la page de connexion WhatsApp</a>, puis copiez le Session ID reçu ici.</small>
         </div>
+        <div style="padding:12px 14px;border-radius:10px;background:#eff6ff;color:#1e40af;font-size:13px;line-height:1.5;">Les commandes développées par DJOUSSE TECH sont utilisées automatiquement par ce bot. Vous personnalisez seulement son nom et son préfixe.</div>
         <div style="display:flex;gap:12px;margin-top:24px;">
           <button type="button" onclick="hideCreateBotModal()" class="btn-outline" style="flex:1;padding:10px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-weight:600;">Annuler</button>
           <button type="submit" id="createBotBtn" class="btn-new-bot" style="flex:1;justify-content:center;">Créer</button>
@@ -394,9 +400,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js"></script>
-  <script src="js/supabase.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/dashboard.js"></script>
+  <script src="config.js"></script>
+  <script src="supabase.js"></script>
+  <script src="auth.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>

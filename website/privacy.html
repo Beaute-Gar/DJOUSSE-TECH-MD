@@ -3,64 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Politique de Confidentialité — DJOUSSE TECH</title>
+  <title>Politique de confidentialité — DJOUSSE TECH</title>
+  <meta name="description" content="Politique de confidentialité de DJOUSSE TECH : données collectées, utilisation, sécurité, services tiers et droits des utilisateurs.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="legal-page">
-    <a href="/" class="back-link">← Retour à DJOUSSE TECH</a>
-    <h1>Politique de Confidentialité</h1>
-    <p class="updated">Dernière mise à jour : Septembre 2026</p>
+  <main class="legal-page">
+    <a href="index.html" class="back-link">← Retour à DJOUSSE TECH</a>
+    <h1>Politique de confidentialité</h1>
+    <p class="updated">Dernière mise à jour : 16 septembre 2026</p>
+    <p>Cette politique explique comment <strong>DJOUSSE TECH</strong>, produit dirigé par <strong>Djousse Uriel</strong>, traite les informations utilisées pour fournir son site, son dashboard et ses fonctionnalités de gestion de bots WhatsApp. Elle doit être lue avec les <a href="terms.html">Conditions générales d’utilisation</a>.</p>
+    <div class="architecture-note"><b>Principe de transparence</b><span>WhatsApp transporte l’information. DJOUSSE TECH la comprend, la traite et peut agir dessus. AINORIA est le noyau intelligent de DJOUSSE TECH, et non une marque séparée.</span></div>
 
-    <h2>1. Informations collectées</h2>
-    <p>Nous pouvons collecter :</p>
-    <ul>
-      <li>Adresse email</li>
-      <li>Informations de profil du compte</li>
-      <li>Informations de déploiement du bot</li>
-      <li>Statut de l'abonnement et des paiements</li>
-      <li>Journaux d'utilisation et diagnostics système</li>
-    </ul>
+    <h2>1. Responsable et champ d’application</h2>
+    <p>Le responsable du traitement est DJOUSSE TECH / Djousse Uriel. Les coordonnées de contact sont indiquées à la section 13. Cette politique concerne le site, les pages d’inscription et de connexion, le dashboard, les bots configurés par les utilisateurs, les journaux techniques et les services associés.</p>
 
-    <h2>2. Utilisation des informations</h2>
-    <p>Les informations collectées sont utilisées pour :</p>
-    <ul>
-      <li>L'authentification</li>
-      <li>Le déploiement et la gestion du bot</li>
-      <li>La gestion des abonnements</li>
-      <li>Le support technique</li>
-      <li>La sécurité et la surveillance de la plateforme</li>
-    </ul>
+    <h2>2. Données que nous pouvons traiter</h2>
+    <h3>2.1 Données de compte</h3>
+    <ul><li>nom ou nom d’affichage ;</li><li>adresse email ;</li><li>identifiant interne du compte ;</li><li>état du compte, rôle, plan et date d’expiration éventuelle.</li></ul>
+    <h3>2.2 Données de bot et de session</h3>
+    <ul><li>nom du bot et préfixe choisi ;</li><li>identifiant du bot et identifiant du propriétaire ;</li><li>Session ID ou référence de session WhatsApp fournie par l’utilisateur ;</li><li>statut de connexion, numéro ou groupe lorsque ces informations sont effectivement retournés par le backend ;</li><li>statistiques d’activité, commandes exécutées et erreurs disponibles.</li></ul>
+    <p>Le Session ID est une information sensible. Il permet d’identifier ou de restaurer une session WhatsApp selon le fonctionnement du service de connexion. Ne le partagez jamais publiquement.</p>
+    <h3>2.3 Données techniques</h3>
+    <p>Le site peut traiter des informations nécessaires à la sécurité et au fonctionnement : adresse IP, navigateur, appareil, dates de connexion, erreurs, journaux d’activité et événements de sécurité. Nous n’affichons pas de statistiques fictives lorsqu’une donnée réelle n’est pas disponible.</p>
+    <h3>2.4 Données de paiement</h3>
+    <p>Les paiements, lorsqu’ils seront activés, peuvent comporter un plan, un montant, une devise, une méthode, un identifiant de transaction et un statut. Les informations bancaires complètes doivent rester chez le prestataire de paiement et ne doivent pas être enregistrées dans DJOUSSE TECH.</p>
 
-    <h2>3. Informations de session</h2>
-    <p>Les identifiants de session du bot et les informations de déploiement associées sont stockés de manière sécurisée et uniquement utilisés pour maintenir la connectivité du bot et le fonctionnement de la plateforme.</p>
+    <h2>3. Finalités et bases de traitement</h2>
+    <table><thead><tr><th>Finalité</th><th>Données principales</th><th>Fondement général</th></tr></thead><tbody><tr><td>Créer et sécuriser un compte</td><td>Email, nom, identifiant</td><td>Exécution du service et sécurité</td></tr><tr><td>Créer et gérer un bot</td><td>Nom, préfixe, session, statut</td><td>Exécution de la demande de l’utilisateur</td></tr><tr><td>Faire fonctionner WhatsApp</td><td>Session et événements nécessaires</td><td>Exécution du service demandé</td></tr><tr><td>Prévenir les abus</td><td>Logs, événements techniques</td><td>Intérêt légitime et sécurité</td></tr><tr><td>Gérer les plans et paiements</td><td>Plan, transaction, statut</td><td>Exécution contractuelle et obligations applicables</td></tr><tr><td>Répondre au support</td><td>Coordonnées et demande</td><td>Demande de l’utilisateur</td></tr></tbody></table>
 
-    <h2>4. Services tiers</h2>
-    <p>DJOUSSE TECH peut utiliser des services tiers de confiance tels que :</p>
-    <ul>
-      <li>Supabase (authentification et base de données)</li>
-      <li>GitHub (code source)</li>
-    </ul>
+    <h2>4. WhatsApp, Baileys et données de messagerie</h2>
+    <p>Une intégration WhatsApp peut utiliser un service de connexion compatible avec WhatsApp Web, tel que Baileys, si cette architecture est activée. DJOUSSE TECH peut alors traiter les événements nécessaires au fonctionnement du bot : messages reçus, commandes, identifiants de conversations, groupes, erreurs et réponses envoyées.</p>
+    <p>DJOUSSE TECH n’est pas WhatsApp et n’est pas affilié à Meta. L’utilisateur doit disposer de l’autorisation nécessaire pour connecter son compte et respecter les conditions de WhatsApp. Les messages ne doivent pas être utilisés pour le spam, le harcèlement ou une surveillance illégale.</p>
 
-    <h2>5. Protection des données</h2>
-    <p>Des mesures de sécurité raisonnables sont mises en œuvre pour protéger les informations des utilisateurs et les données de la plateforme.</p>
+    <h2>5. Services tiers</h2>
+    <p>Le fonctionnement peut dépendre de prestataires tiers, notamment :</p>
+    <ul><li><strong>Supabase</strong> pour l’authentification, la base de données et les politiques d’accès ;</li><li><strong>un hébergeur Node.js</strong> pour le service WhatsApp et les sessions persistantes, lorsqu’il est activé ;</li><li><strong>un prestataire de paiement</strong>, uniquement lorsque les paiements seront activés ;</li><li><strong>GitHub</strong> pour le code source ou le support du projet, selon les liens publiés.</li></ul>
+    <p>Chaque prestataire peut appliquer ses propres conditions et politiques. La liste doit être mise à jour avant toute mise en production d’un nouveau service.</p>
 
-    <h2>6. Partage de données</h2>
-    <p>DJOUSSE TECH ne vend pas les informations personnelles des utilisateurs à des tiers.</p>
+    <h2>6. Cookies et stockage local</h2>
+    <p>Le site peut utiliser des cookies, jetons de session et mécanismes de stockage nécessaires à la connexion, à la sécurité et au maintien de l’espace utilisateur. Aucun cookie publicitaire ou outil d’analyse non essentiel ne doit être activé sans information et, lorsque la loi l’exige, consentement préalable.</p>
 
-    <h2>7. Cookies et sessions</h2>
-    <p>La plateforme peut utiliser des cookies, des jetons d'authentification et un stockage de session pour améliorer l'expérience utilisateur et maintenir les sessions de connexion.</p>
+    <h2>7. Partage et divulgation</h2>
+    <p>Nous ne vendons pas les données personnelles. Elles peuvent être accessibles aux prestataires nécessaires au fonctionnement du service, aux personnes autorisées chargées du support, ou aux autorités lorsque la loi l’impose. Toute demande interne doit rester limitée à ce qui est nécessaire.</p>
 
-    <h2>8. Responsabilité de l'utilisateur</h2>
-    <p>Les utilisateurs sont responsables de la sécurisation de leurs propres appareils et identifiants de compte.</p>
+    <h2>8. Sécurité</h2>
+    <p>Nous mettons en œuvre des contrôles d’accès, l’isolation par utilisateur, des politiques RLS, la limitation des privilèges, la validation des entrées et la journalisation des événements importants. Les Session IDs et credentials WhatsApp doivent être chiffrés côté serveur avant une utilisation de production à grande échelle. L’utilisateur doit protéger son mot de passe, son appareil et ses codes de récupération.</p>
 
-    <h2>9. Mises à jour de la politique</h2>
-    <p>Cette Politique de Confidentialité peut être mise à jour périodiquement sans préavis.</p>
+    <h2>9. Conservation</h2>
+    <p>Les données sont conservées pendant la durée nécessaire à la fourniture du service, à la sécurité, au support, à la preuve des opérations et aux obligations applicables. Les sessions WhatsApp doivent être supprimées lorsque l’utilisateur supprime son bot, demande leur suppression ou lorsque la session est définitivement déconnectée, sous réserve des obligations légales et des sauvegardes techniques.</p>
 
-    <h2>10. Contact</h2>
-    <p>Les utilisateurs peuvent contacter le support pour toute question relative à la confidentialité via le tableau de bord ou les canaux officiels de support.</p>
+    <h2>10. Droits des utilisateurs</h2>
+    <p>Selon la loi applicable, l’utilisateur peut demander l’accès, la correction, la suppression, la limitation, la portabilité ou l’opposition à certains traitements. Il peut également retirer un consentement lorsque le traitement repose sur celui-ci. Une vérification raisonnable de l’identité peut être nécessaire. Les demandes peuvent être adressées via le dashboard ou les canaux officiels de support.</p>
 
-    <p style="margin-top:40px;font-size:12px;color:var(--slate-400);">© 2026 DJOUSSE TECH EVOLUTION · <a href="terms.html" style="color:var(--slate-400);">Conditions</a> · <a href="privacy.html" style="color:var(--slate-400);">Confidentialité</a></p>
-  </div>
+    <h2>11. Mineurs</h2>
+    <p>Le service n’est pas destiné aux enfants qui n’ont pas l’âge légal requis pour créer un compte dans leur pays. Nous pouvons supprimer un compte si nous apprenons qu’il a été créé en violation de cette règle.</p>
+
+    <h2>12. Modifications</h2>
+    <p>Cette politique peut évoluer lorsque les fonctionnalités, les prestataires ou les obligations changent. La date de mise à jour sera modifiée et les changements importants seront présentés de manière visible lorsque cela est nécessaire.</p>
+
+    <h2>13. Contact</h2>
+    <p>Pour toute question relative à la confidentialité, à la suppression d’un compte ou à une session WhatsApp, utilisez le support officiel indiqué dans le dashboard. Avant la mise en production commerciale, une adresse email dédiée et, si nécessaire, l’identité juridique complète du responsable devront être ajoutées ici.</p>
+    <p class="footer-copy">© 2026 DJOUSSE TECH · <a href="terms.html">Conditions générales</a> · <a href="privacy.html">Confidentialité</a></p>
+  </main>
 </body>
 </html>

@@ -1,0 +1,1763 @@
+# MISSION PRINCIPALE — TRANSFORMATION COMPLÈTE DU SITE DJOUSSE TECH
+
+Tu es l'ingénieur logiciel principal, architecte système, développeur full-stack, expert UX/UI, expert sécurité, DevOps, SEO et monétisation du projet **DJOUSSE TECH**.
+
+Ta mission est de **prendre le site web existant du projet DJOUSSE TECH et le transformer en une plateforme professionnelle, moderne, extensible, sécurisée, réellement fonctionnelle et prête à être déployée en production**.
+
+Le site est associé au bot WhatsApp **DJOUSSE TECH**.
+
+Important :
+
+**AINORIA est le cerveau / noyau intelligent de DJOUSSE TECH. Ce n'est PAS une marque séparée.**
+
+Le principe du projet est :
+
+> WhatsApp transporte l'information. DJOUSSE TECH la comprend, la traite et agit dessus.
+
+Le site doit donc être pensé comme le **centre de contrôle, de présentation, de connexion, de documentation, de gestion et de monétisation de DJOUSSE TECH**, tandis que WhatsApp reste l'interface principale pour l'utilisateur.
+
+---
+
+# 1. RÈGLE ABSOLUE : AUDITER AVANT DE MODIFIER
+
+NE COMMENCE PAS immédiatement à réécrire le projet.
+
+Commence par :
+
+1. analyser toute l'architecture actuelle ;
+2. parcourir tous les fichiers pertinents ;
+3. identifier le framework utilisé ;
+4. identifier le backend ;
+5. identifier la base de données ;
+6. identifier les API ;
+7. identifier les routes ;
+8. identifier les composants frontend ;
+9. identifier les systèmes d'authentification ;
+10. identifier les systèmes de connexion WhatsApp ;
+11. identifier les variables d'environnement ;
+12. identifier les dépendances ;
+13. identifier les vulnérabilités ;
+14. identifier les fonctionnalités existantes ;
+15. identifier les fonctionnalités cassées ;
+16. identifier les données simulées ou fictives ;
+17. identifier les doublons ;
+18. identifier les composants inutilisés ;
+19. identifier les problèmes UX/UI ;
+20. identifier les problèmes de performance ;
+21. identifier les problèmes SEO ;
+22. identifier les possibilités de monétisation.
+
+Ne détruis jamais une fonctionnalité existante avant d'avoir compris son rôle.
+
+Ne remplace pas toute l'architecture par une autre technologie simplement parce qu'elle est plus moderne.
+
+**Privilégie l'amélioration de l'existant.**
+
+---
+
+# 2. OBJECTIF FINAL
+
+À la fin de la mission, le site doit devenir une véritable plateforme :
+
+**DJOUSSE TECH**
+
+avec notamment :
+
+* page d'accueil ;
+* présentation du projet ;
+* présentation de DJOUSSE TECH ;
+* présentation d'AINORIA ;
+* connexion WhatsApp ;
+* QR Code ;
+* code d'appairage ;
+* gestion des sessions ;
+* dashboard ;
+* documentation ;
+* liste des commandes ;
+* démonstrations ;
+* statistiques réelles ;
+* gestion des utilisateurs ;
+* sécurité ;
+* paramètres ;
+* système de publicité ;
+* espace annonceur ;
+* système de monétisation ;
+* SEO ;
+* analytics ;
+* pages légales ;
+* système d'administration ;
+* architecture extensible ;
+* API documentée ;
+* système de logs ;
+* monitoring ;
+* sauvegarde ;
+* gestion des erreurs.
+
+---
+
+# 3. DESIGN GLOBAL
+
+Refais l'interface si nécessaire afin d'obtenir une apparence :
+
+* professionnelle ;
+* moderne ;
+* claire ;
+* premium ;
+* futuriste ;
+* lisible ;
+* responsive ;
+* rapide ;
+* cohérente ;
+* adaptée au mobile ;
+* adaptée au desktop.
+
+Le design doit correspondre à une plateforme technologique sérieuse.
+
+Évite :
+
+* surcharge visuelle ;
+* animations inutiles ;
+* couleurs agressives ;
+* interfaces ressemblant à un template générique ;
+* faux chiffres ;
+* fausses statistiques ;
+* faux utilisateurs ;
+* faux messages WhatsApp ;
+* faux revenus ;
+* faux utilisateurs connectés.
+
+Le site doit avoir une identité visuelle cohérente autour de :
+
+**DJOUSSE TECH**
+
+avec une esthétique technologique moderne.
+
+Utilise éventuellement :
+
+* dark mode ;
+* glassmorphism léger ;
+* cartes modernes ;
+* effets lumineux subtils ;
+* gradients maîtrisés ;
+* microanimations ;
+* icônes cohérentes ;
+* typographie moderne.
+
+Mais la priorité absolue reste :
+
+**LISIBILITÉ + PERFORMANCE + PROFESSIONNALISME.**
+
+---
+
+# 4. PAGE D'ACCUEIL
+
+Construis une landing page extrêmement professionnelle.
+
+Elle doit expliquer immédiatement :
+
+## DJOUSSE TECH
+
+**L'intelligence qui travaille avec WhatsApp.**
+
+Message central :
+
+> WhatsApp transporte l'information. DJOUSSE TECH la comprend.
+
+Présente clairement :
+
+* ce qu'est DJOUSSE TECH ;
+* ce qu'est AINORIA ;
+* comment fonctionne le système ;
+* pourquoi l'utilisateur peut l'utiliser ;
+* les principales fonctionnalités ;
+* les commandes ;
+* la sécurité ;
+* les possibilités futures.
+
+Ajouter des boutons CTA :
+
+**Connecter WhatsApp**
+
+**Découvrir les commandes**
+
+**Voir la documentation**
+
+**Découvrir DJOUSSE TECH**
+
+---
+
+# 5. CONNEXION WHATSAPP
+
+La connexion doit être une fonctionnalité centrale.
+
+Créer une interface permettant :
+
+### QR CODE
+
+Afficher le QR Code généré réellement par le backend.
+
+### CODE D'APPAIRAGE
+
+Permettre l'utilisation d'un code d'appairage à 8 caractères si le backend le supporte.
+
+### ÉTAT DE CONNEXION
+
+Afficher réellement :
+
+* connexion en cours ;
+* QR disponible ;
+* code disponible ;
+* connecté ;
+* déconnecté ;
+* reconnexion ;
+* erreur.
+
+NE JAMAIS afficher :
+
+« Bot connecté »
+
+si la session n'est pas réellement connectée.
+
+Les informations affichées doivent provenir du backend.
+
+---
+
+# 6. MULTI-SESSION
+
+Le système doit être conçu pour permettre plusieurs utilisateurs.
+
+Chaque connexion WhatsApp doit posséder un espace isolé.
+
+Exemple conceptuel :
+
+Utilisateur A
+→ Session WhatsApp A
+→ Dashboard A
+→ données A
+
+Utilisateur B
+→ Session WhatsApp B
+→ Dashboard B
+→ données B
+
+Ne jamais mélanger les données.
+
+Un utilisateur ne doit jamais pouvoir accéder aux données d'une autre session.
+
+---
+
+# 7. DASHBOARD
+
+Créer un dashboard moderne.
+
+Il doit afficher UNIQUEMENT des données réelles.
+
+Sections possibles :
+
+### Connexion
+
+* état WhatsApp ;
+* numéro connecté ;
+* date de connexion ;
+* durée de connexion ;
+* dernière activité.
+
+### Activité
+
+* messages traités ;
+* commandes exécutées ;
+* groupes ;
+* conversations ;
+* erreurs ;
+* temps de réponse.
+
+### Bot
+
+* version ;
+* nombre de plugins chargés ;
+* nombre de commandes disponibles ;
+* modules actifs ;
+* état d'AINORIA.
+
+### Système
+
+* CPU ;
+* RAM ;
+* uptime ;
+* version Node ;
+* état backend.
+
+Aucun chiffre fictif.
+
+Si une donnée n'existe pas :
+
+afficher :
+
+**Donnée indisponible**
+
+et non une valeur inventée.
+
+---
+
+# 8. CENTRE DES COMMANDES
+
+Créer une page extrêmement importante :
+
+## COMMANDES DJOUSSE TECH
+
+Elle doit récupérer dynamiquement les commandes réellement disponibles.
+
+Chaque commande doit pouvoir afficher :
+
+* nom ;
+* syntaxe ;
+* description ;
+* catégorie ;
+* permissions ;
+* exemple ;
+* paramètres ;
+* alias ;
+* statut ;
+* plugin correspondant.
+
+Exemple :
+
+`.ping`
+
+Description :
+
+Vérifie la disponibilité du bot.
+
+Syntaxe :
+
+`.ping`
+
+Exemple :
+
+`.ping`
+
+---
+
+Créer des catégories :
+
+* Général ;
+* Utilitaires ;
+* IA ;
+* Administration ;
+* Groupes ;
+* Médias ;
+* Téléchargement ;
+* Jeux ;
+* Fun ;
+* Sécurité ;
+* Automatisation ;
+* AINORIA ;
+* Système ;
+* Propriétaire.
+
+Ne crée pas manuellement une liste fictive si les commandes peuvent être découvertes automatiquement depuis le backend.
+
+Construis plutôt une API :
+
+`/api/commands`
+
+ou une architecture équivalente.
+
+---
+
+# 9. DOCUMENTATION INTERACTIVE
+
+Créer une documentation professionnelle.
+
+Elle doit permettre :
+
+* recherche ;
+* filtrage ;
+* catégories ;
+* exemples ;
+* syntaxe ;
+* permissions ;
+* paramètres ;
+* copier la commande ;
+* navigation rapide.
+
+Créer également :
+
+## GUIDE DE DÉMARRAGE
+
+1. ouvrir WhatsApp ;
+2. connecter le compte ;
+3. utiliser le QR ou le code ;
+4. attendre la connexion ;
+5. envoyer une commande ;
+6. découvrir les fonctionnalités.
+
+---
+
+# 10. AINORIA
+
+Créer une section :
+
+## AINORIA
+
+Présenter AINORIA comme :
+
+> Le cerveau intelligent de DJOUSSE TECH.
+
+Expliquer simplement :
+
+* compréhension du contexte ;
+* mémoire ;
+* raisonnement ;
+* outils ;
+* agents ;
+* automatisation ;
+* gestion des permissions ;
+* intégration WhatsApp.
+
+Ne pas présenter AINORIA comme un bot WhatsApp indépendant.
+
+---
+
+# 11. INTELLIGENCE ARTIFICIELLE
+
+L'architecture doit permettre d'utiliser plusieurs fournisseurs de modèles.
+
+Prévoir une couche abstraite :
+
+`AIProvider`
+
+pouvant supporter par exemple :
+
+* OpenRouter ;
+* Gemini ;
+* autres fournisseurs compatibles.
+
+La clé API doit être stockée dans les variables d'environnement.
+
+JAMAIS :
+
+* clé API dans le frontend ;
+* clé API dans Git ;
+* clé API dans HTML ;
+* clé API dans JavaScript client.
+
+Prévoir :
+
+`.env`
+
+et :
+
+`.env.example`
+
+---
+
+# 12. SYSTÈME DE PUBLICITÉ
+
+Créer une architecture complète de monétisation publicitaire.
+
+IMPORTANT :
+
+Ne jamais prétendre qu'un compte Google AdSense ou autre compte publicitaire existe si ce n'est pas le cas.
+
+Préparer le site pour intégrer légalement et techniquement :
+
+## Google AdSense
+
+Prévoir :
+
+* emplacement publicitaire configurable ;
+* composant Advertisement ;
+* gestion des formats ;
+* responsive ads ;
+* emplacement header ;
+* emplacement contenu ;
+* emplacement sidebar ;
+* emplacement footer ;
+* emplacement documentation.
+
+Prévoir également la possibilité d'intégrer d'autres réseaux publicitaires compatibles.
+
+Architecture :
+
+`AdProvider`
+
+permettant par exemple :
+
+`Google AdSense`
+
+`Custom Ads`
+
+`Direct Sponsors`
+
+`Affiliate Ads`
+
+etc.
+
+Le système doit permettre de changer de fournisseur sans refaire tout le frontend.
+
+---
+
+# 13. GESTION DES PUBLICITÉS
+
+Créer un panneau administrateur :
+
+## Gestion des publicités
+
+Permettre de configurer :
+
+* emplacement ;
+* format ;
+* fournisseur ;
+* statut ;
+* code publicitaire ;
+* fréquence ;
+* pages concernées.
+
+Prévoir :
+
+* activation ;
+* désactivation ;
+* prévisualisation ;
+* statistiques ;
+* impression ;
+* clic si techniquement disponible.
+
+NE JAMAIS générer de faux revenus.
+
+Si aucune donnée réelle n'est disponible :
+
+`0`
+
+ou :
+
+`Aucune donnée`
+
+---
+
+# 14. ESPACE ANNONCEUR
+
+Prévoir une architecture future pour permettre aux entreprises de publier leurs propres annonces.
+
+Fonctionnalités prévues :
+
+* création campagne ;
+* titre ;
+* description ;
+* image ;
+* URL ;
+* budget ;
+* durée ;
+* statut ;
+* validation admin.
+
+Prévoir plusieurs statuts :
+
+`draft`
+
+`pending`
+
+`approved`
+
+`active`
+
+`paused`
+
+`rejected`
+
+`completed`
+
+---
+
+# 15. MONÉTISATION
+
+Préparer une architecture extensible pouvant supporter plusieurs revenus.
+
+Exemples :
+
+### Publicité
+
+AdSense / annonces directes.
+
+### Affiliation
+
+Liens affiliés.
+
+### Services premium
+
+Plans futurs.
+
+### Sponsoring
+
+Entreprises partenaires.
+
+### Services DJOUSSE TECH
+
+Fonctionnalités professionnelles payantes futures.
+
+Important :
+
+Ne pas activer de paiement réel sans configuration réelle.
+
+Préparer cependant une abstraction :
+
+`PaymentProvider`
+
+pour permettre l'intégration future de solutions compatibles avec le Cameroun et l'international.
+
+---
+
+# 16. GOOGLE ADSENSE ET CONSENTEMENT
+
+Prévoir la conformité nécessaire.
+
+Ajouter une architecture pour :
+
+* politique de confidentialité ;
+* cookies ;
+* consentement ;
+* préférences de confidentialité ;
+* gestion des traceurs ;
+* publicité personnalisée/non personnalisée selon configuration.
+
+Ne jamais contourner les politiques Google.
+
+Ne jamais cliquer automatiquement sur des publicités.
+
+Ne jamais générer de faux clics ou impressions.
+
+Ne jamais utiliser de techniques destinées à tromper les systèmes publicitaires.
+
+---
+
+# 17. SEO
+
+Optimiser entièrement le site.
+
+Créer :
+
+* title ;
+* meta description ;
+* Open Graph ;
+* Twitter/X cards ;
+* canonical ;
+* sitemap ;
+* robots.txt ;
+* structured data ;
+* favicon ;
+* manifest si pertinent.
+
+Créer des pages SEO :
+
+* Accueil ;
+* DJOUSSE TECH ;
+* AINORIA ;
+* Commandes ;
+* Documentation ;
+* Fonctionnalités ;
+* FAQ ;
+* Contact.
+
+Optimiser :
+
+* vitesse ;
+* Core Web Vitals ;
+* accessibilité ;
+* mobile ;
+* structure H1/H2/H3 ;
+* URLs propres.
+
+---
+
+# 18. ANALYTICS
+
+Préparer une architecture analytics.
+
+Elle doit pouvoir supporter :
+
+* Google Analytics ;
+* autre solution analytics ;
+* statistiques internes.
+
+Ne collecter que les données nécessaires.
+
+Prévoir :
+
+* visiteurs ;
+* pages vues ;
+* événements ;
+* clics CTA ;
+* connexions ;
+* utilisation documentation.
+
+Respecter la confidentialité.
+
+---
+
+# 19. ADMINISTRATION
+
+Créer un espace :
+
+`/admin`
+
+avec authentification forte.
+
+Fonctionnalités :
+
+* dashboard système ;
+* utilisateurs ;
+* sessions ;
+* commandes ;
+* plugins ;
+* publicités ;
+* campagnes ;
+* analytics ;
+* logs ;
+* erreurs ;
+* paramètres ;
+* sécurité.
+
+Ne jamais exposer les informations sensibles au frontend public.
+
+---
+
+# 20. AUTHENTIFICATION
+
+Implémenter une authentification robuste si elle est nécessaire.
+
+Prévoir :
+
+* sessions sécurisées ;
+* cookies HttpOnly ;
+* Secure en HTTPS ;
+* SameSite ;
+* expiration ;
+* rotation ;
+* protection CSRF ;
+* rate limiting ;
+* validation des entrées ;
+* contrôle des rôles.
+
+Rôles possibles :
+
+`USER`
+
+`ADMIN`
+
+`SUPER_ADMIN`
+
+Ne jamais stocker les mots de passe en clair.
+
+Utiliser un hash sécurisé.
+
+---
+
+# 21. SÉCURITÉ WEB
+
+Effectuer un audit complet.
+
+Protéger contre :
+
+* XSS ;
+* CSRF ;
+* SQL injection ;
+* NoSQL injection ;
+* command injection ;
+* path traversal ;
+* SSRF ;
+* brute force ;
+* session hijacking ;
+* fixation de session ;
+* IDOR ;
+* fuite de secrets ;
+* upload malveillant ;
+* abus API ;
+* rate abuse.
+
+Ajouter si adapté :
+
+* Helmet ;
+* rate limiting ;
+* CSP ;
+* validation stricte ;
+* sanitation ;
+* permissions backend ;
+* logs de sécurité.
+
+---
+
+# 22. API
+
+Créer ou améliorer une API propre.
+
+Prévoir une organisation :
+
+`/api/auth`
+
+`/api/session`
+
+`/api/whatsapp`
+
+`/api/status`
+
+`/api/commands`
+
+`/api/plugins`
+
+`/api/ainoria`
+
+`/api/ads`
+
+`/api/analytics`
+
+`/api/admin`
+
+`/api/health`
+
+Chaque endpoint doit :
+
+* valider ses entrées ;
+* vérifier les permissions ;
+* retourner des erreurs propres ;
+* ne jamais exposer les secrets ;
+* respecter les limites ;
+* produire des logs appropriés.
+
+---
+
+# 23. HEALTH CHECK
+
+Créer :
+
+`/api/health`
+
+Retourner réellement :
+
+* backend ;
+* database ;
+* WhatsApp ;
+* AINORIA ;
+* mémoire ;
+* uptime ;
+* version.
+
+Exemple conceptuel :
+
+```json
+{
+  "status": "ok",
+  "database": "connected",
+  "whatsapp": "connected",
+  "ainoria": "ready"
+}
+```
+
+Les valeurs doivent être générées dynamiquement.
+
+---
+
+# 24. MONITORING
+
+Prévoir :
+
+* logs structurés ;
+* erreurs ;
+* exceptions ;
+* uptime ;
+* disponibilité ;
+* temps de réponse ;
+* état WhatsApp.
+
+Ne jamais afficher publiquement :
+
+* tokens ;
+* cookies ;
+* clés API ;
+* mots de passe ;
+* données privées ;
+* contenu privé des conversations.
+
+---
+
+# 25. DONNÉES RÉELLES UNIQUEMENT
+
+C'est une règle critique.
+
+Le site ne doit jamais présenter comme réel :
+
+* utilisateurs fictifs ;
+* groupes fictifs ;
+* messages fictifs ;
+* statistiques fictives ;
+* revenus fictifs ;
+* connexions fictives ;
+* nombre de commandes fictif.
+
+Pour les démonstrations, utiliser explicitement :
+
+`DÉMONSTRATION`
+
+ou :
+
+`EXEMPLE`
+
+Les statistiques du dashboard doivent venir du backend.
+
+---
+
+# 26. PRIVACY
+
+Respecter la confidentialité des utilisateurs.
+
+Le système doit isoler les données des différentes sessions.
+
+Prévoir :
+
+* suppression des données ;
+* export si nécessaire ;
+* politique de confidentialité ;
+* minimisation des données ;
+* accès contrôlé ;
+* logs sans données sensibles.
+
+---
+
+# 27. PAGES LÉGALES
+
+Créer :
+
+* Politique de confidentialité ;
+* Conditions d'utilisation ;
+* Politique cookies ;
+* Mentions légales ;
+* Politique publicitaire ;
+* Contact.
+
+Ne pas inventer d'informations juridiques spécifiques.
+
+Utiliser des placeholders clairement identifiés lorsqu'une information légale doit être fournie par le propriétaire.
+
+---
+
+# 28. CONTACT
+
+Créer une page contact professionnelle.
+
+Prévoir :
+
+* formulaire ;
+* email configurable ;
+* réseaux sociaux ;
+* WhatsApp si configuré ;
+* GitHub si configuré.
+
+Le formulaire doit être sécurisé contre :
+
+* spam ;
+* injection ;
+* abus.
+
+Ajouter éventuellement un rate limit.
+
+---
+
+# 29. PERFORMANCE
+
+Optimiser :
+
+* images ;
+* JavaScript ;
+* CSS ;
+* bundle ;
+* lazy loading ;
+* cache ;
+* compression ;
+* requêtes API ;
+* base de données.
+
+Éviter les dépendances inutiles.
+
+Le site doit rester utilisable sur des appareils modestes et des connexions lentes.
+
+---
+
+# 30. RESPONSIVE
+
+Tester au minimum :
+
+* smartphone ;
+* tablette ;
+* laptop ;
+* desktop.
+
+Le dashboard doit être parfaitement utilisable sur mobile.
+
+---
+
+# 31. ACCESSIBILITÉ
+
+Prévoir :
+
+* contraste ;
+* navigation clavier ;
+* labels ;
+* aria ;
+* tailles de texte ;
+* boutons accessibles ;
+* messages d'erreur compréhensibles.
+
+---
+
+# 32. ARCHITECTURE EXTENSIBLE
+
+L'architecture doit permettre d'ajouter facilement :
+
+* nouveaux fournisseurs IA ;
+* nouveaux fournisseurs publicitaires ;
+* nouveaux moyens de paiement ;
+* nouveaux plugins ;
+* nouvelles commandes ;
+* nouveaux agents AINORIA ;
+* nouvelles pages ;
+* nouvelles API.
+
+Éviter le code monolithique.
+
+Utiliser des interfaces/adapters/services lorsque cela apporte une vraie valeur.
+
+---
+
+# 33. SYSTÈME DE CONFIGURATION
+
+Centraliser les paramètres.
+
+Créer par exemple :
+
+`.env.example`
+
+avec des variables comme :
+
+```env
+NODE_ENV=
+PORT=
+DATABASE_URL=
+SESSION_SECRET=
+ADMIN_SECRET=
+OPENROUTER_API_KEY=
+GEMINI_API_KEY=
+ADSENSE_CLIENT_ID=
+GOOGLE_ANALYTICS_ID=
+```
+
+Ne jamais remplir avec de vraies clés.
+
+---
+
+# 34. ENVIRONNEMENT DE PRODUCTION
+
+Préparer :
+
+* production ;
+* développement ;
+* test.
+
+Ajouter :
+
+`.gitignore`
+
+correctement configuré.
+
+Vérifier qu'aucun secret ne se trouve dans Git.
+
+---
+
+# 35. TESTS
+
+Ajouter ou améliorer les tests.
+
+Tester :
+
+* API ;
+* authentification ;
+* permissions ;
+* sessions ;
+* connexion WhatsApp ;
+* commandes ;
+* dashboard ;
+* publicité ;
+* analytics ;
+* erreurs ;
+* sécurité.
+
+Créer des tests de régression pour les fonctionnalités existantes.
+
+---
+
+# 36. GESTION DES ERREURS
+
+Créer une UX propre.
+
+Ne jamais afficher :
+
+```text
+Error
+undefined
+Cannot read properties...
+```
+
+à l'utilisateur.
+
+Afficher plutôt :
+
+> Une erreur est survenue. Veuillez réessayer.
+
+Et enregistrer le détail technique dans les logs.
+
+---
+
+# 37. MODE MAINTENANCE
+
+Prévoir un système permettant à l'administrateur d'activer :
+
+`Maintenance Mode`
+
+avec une page professionnelle.
+
+---
+
+# 38. SYSTÈME DE NOTIFICATIONS
+
+Prévoir :
+
+* notification connexion ;
+* déconnexion ;
+* erreur ;
+* maintenance ;
+* nouvelle fonctionnalité ;
+* annonce importante.
+
+---
+
+# 39. CENTRE DE MISE À JOUR
+
+Afficher éventuellement :
+
+* version DJOUSSE TECH ;
+* dernière mise à jour ;
+* changelog ;
+* état des services.
+
+---
+
+# 40. INSTALLATION / DÉPLOIEMENT
+
+Mettre à jour si nécessaire :
+
+* README ;
+* instructions d'installation ;
+* variables d'environnement ;
+* build ;
+* start ;
+* déploiement.
+
+Documenter clairement :
+
+```text
+npm install
+npm run build
+npm start
+```
+
+si ces scripts correspondent réellement au projet.
+
+Ne pas inventer des commandes qui n'existent pas.
+
+---
+
+# 41. GESTION DES DÉPENDANCES
+
+Analyser les dépendances.
+
+Supprimer seulement les dépendances inutiles après vérification.
+
+Mettre à jour celles qui peuvent l'être sans casser le projet.
+
+Signaler les dépendances vulnérables.
+
+---
+
+# 42. MIGRATION DE BASE DE DONNÉES
+
+Si une base de données existe déjà :
+
+NE PAS LA SUPPRIMER.
+
+Créer une stratégie de migration.
+
+Faire des sauvegardes avant toute migration destructive.
+
+---
+
+# 43. BACKUP
+
+Prévoir :
+
+* sauvegarde DB ;
+* restauration ;
+* rotation ;
+* documentation.
+
+Ne jamais supprimer définitivement les données existantes sans confirmation ou sauvegarde.
+
+---
+
+# 44. UX DU BOT
+
+Le site doit expliquer clairement que le site n'est pas le bot lui-même.
+
+Le site sert notamment à :
+
+**Connecter → Configurer → Comprendre → Administrer → Superviser**
+
+Le bot fonctionne principalement dans WhatsApp.
+
+---
+
+# 45. IDENTITÉ DE MARQUE
+
+Utiliser :
+
+**DJOUSSE TECH**
+
+Nom principal.
+
+**AINORIA**
+
+Cerveau intelligent de DJOUSSE TECH.
+
+Ne pas transformer AINORIA en marque concurrente ou projet séparé.
+
+Préserver une identité cohérente.
+
+---
+
+# 46. COMMANDES VISUELLES
+
+Créer une représentation très moderne des commandes.
+
+Exemple :
+
+```text
+╭────────────────────────────╮
+│ ⚡ DJOUSSE TECH             │
+│    COMMAND CENTER          │
+╰────────────────────────────╯
+
+▸ .ping
+  Vérifie la connexion du bot
+
+▸ .menu
+  Affiche les commandes
+
+▸ .ai
+  Interagit avec l'intelligence
+
+▸ .group
+  Outils de gestion de groupe
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Exemple :
+   .ping
+
+🔐 Permission :
+   Tous les utilisateurs
+```
+
+Cette présentation doit rester compatible avec WhatsApp.
+
+---
+
+# 47. RECHERCHE DE COMMANDES
+
+Créer une recherche :
+
+`Rechercher une commande...`
+
+avec filtrage instantané.
+
+Exemples :
+
+`.ping`
+
+`IA`
+
+`groupe`
+
+`admin`
+
+`jeu`
+
+---
+
+# 48. GÉNÉRATEUR DE PUBLICITÉS
+
+Créer un module permettant à l'administrateur de préparer des publicités.
+
+Interface :
+
+## AD GENERATOR
+
+Champs :
+
+* titre ;
+* description ;
+* image ;
+* CTA ;
+* URL ;
+* catégorie ;
+* emplacement ;
+* date de début ;
+* date de fin.
+
+Prévoir un aperçu :
+
+`Desktop`
+
+`Mobile`
+
+`WhatsApp-style preview`
+
+Ne pas publier automatiquement sans validation.
+
+---
+
+# 49. ESPACE REVENUS
+
+Créer une page :
+
+## MONÉTISATION
+
+Elle doit présenter les différentes sources de revenus.
+
+Exemple :
+
+```text
+PUBLICITÉ
+0 impression
+0 clic
+0 revenu
+
+AFFILIATION
+0 clic
+0 conversion
+0 revenu
+
+SPONSORING
+0 campagne
+0 revenu
+```
+
+Les données doivent être réelles.
+
+Si aucune intégration n'existe encore, afficher clairement :
+
+**Pas encore configuré**
+
+et non de faux revenus.
+
+---
+
+# 50. PRÉPARATION AU PAIEMENT
+
+Créer une architecture permettant plus tard :
+
+* CinetPay ;
+* Mobile Money ;
+* cartes ;
+* autres providers.
+
+Mais aucune transaction réelle ne doit être activée sans credentials et configuration valides.
+
+Créer une abstraction :
+
+```text
+PaymentProvider
+```
+
+---
+
+# 51. SYSTÈME DE PLANS FUTURS
+
+Préparer :
+
+### FREE
+
+Fonctionnalités gratuites.
+
+### PRO
+
+Fonctionnalités premium futures.
+
+### BUSINESS
+
+Fonctionnalités professionnelles futures.
+
+Ne pas afficher de tarifs inventés comme s'ils étaient définitifs.
+
+Utiliser :
+
+`Bientôt disponible`
+
+si nécessaire.
+
+---
+
+# 52. ANTI-ABUS
+
+Ajouter :
+
+* rate limiting ;
+* quotas ;
+* limites API ;
+* protection brute force ;
+* anti-spam ;
+* logs d'abus.
+
+---
+
+# 53. ADMIN SUPER USER
+
+Prévoir un administrateur principal pouvant :
+
+* voir l'état global ;
+* gérer les annonces ;
+* gérer les utilisateurs ;
+* voir les erreurs ;
+* gérer les paramètres ;
+* activer maintenance ;
+* gérer les intégrations ;
+* consulter les statistiques.
+
+---
+
+# 54. NE PAS CASSER LE BOT
+
+C'est une priorité absolue.
+
+Le site ne doit pas casser :
+
+* Baileys ;
+* sessions WhatsApp ;
+* plugins ;
+* commandes ;
+* AINORIA ;
+* stockage ;
+* API existantes.
+
+Avant toute modification importante :
+
+1. comprendre ;
+2. sauvegarder ;
+3. modifier ;
+4. tester ;
+5. vérifier.
+
+---
+
+# 55. DÉTECTION AUTOMATIQUE
+
+Lorsque possible, le système doit découvrir automatiquement :
+
+* commandes ;
+* plugins ;
+* sessions ;
+* statut ;
+* fonctionnalités ;
+* versions.
+
+Éviter les listes codées en dur lorsque les données existent déjà dans le backend.
+
+---
+
+# 56. QUALITÉ DU CODE
+
+Le code final doit être :
+
+* propre ;
+* lisible ;
+* modulaire ;
+* documenté ;
+* maintenable ;
+* sécurisé ;
+* extensible.
+
+Éviter :
+
+* code mort ;
+* duplication ;
+* fonctions gigantesques ;
+* secrets hardcodés ;
+* données fictives ;
+* hacks temporaires laissés en production.
+
+---
+
+# 57. RÈGLE DE NON-RÉGRESSION
+
+Après chaque modification importante :
+
+* lancer les tests ;
+* vérifier le build ;
+* vérifier les routes ;
+* vérifier le frontend ;
+* vérifier les APIs ;
+* vérifier la connexion WhatsApp si possible.
+
+Si une modification casse quelque chose :
+
+**corriger avant de continuer.**
+
+---
+
+# 58. AUDIT FINAL
+
+À la fin, réalise automatiquement un audit :
+
+## FRONTEND
+
+* UI ;
+* responsive ;
+* accessibilité ;
+* performance.
+
+## BACKEND
+
+* API ;
+* sécurité ;
+* erreurs ;
+* architecture.
+
+## WHATSAPP
+
+* connexion ;
+* sessions ;
+* statut ;
+* commandes.
+
+## AINORIA
+
+* disponibilité ;
+* intégration ;
+* fournisseurs IA.
+
+## MONÉTISATION
+
+* publicité ;
+* AdSense ;
+* campagnes ;
+* analytics ;
+* paiement.
+
+## SEO
+
+* sitemap ;
+* robots ;
+* metadata ;
+* structured data.
+
+## SÉCURITÉ
+
+* secrets ;
+* auth ;
+* CSRF ;
+* XSS ;
+* injections ;
+* rate limiting.
+
+---
+
+# 59. RAPPORT FINAL OBLIGATOIRE
+
+Lorsque tout est terminé, donne-moi un rapport structuré :
+
+### 1. CE QUI EXISTAIT
+
+### 2. CE QUI A ÉTÉ CORRIGÉ
+
+### 3. CE QUI A ÉTÉ AJOUTÉ
+
+### 4. CE QUI A ÉTÉ SUPPRIMÉ
+
+### 5. ARCHITECTURE FINALE
+
+### 6. NOUVELLES ROUTES API
+
+### 7. NOUVELLES PAGES
+
+### 8. VARIABLES .ENV
+
+### 9. SÉCURITÉ
+
+### 10. PUBLICITÉ
+
+### 11. MONÉTISATION
+
+### 12. SEO
+
+### 13. TESTS
+
+### 14. PROBLÈMES RESTANTS
+
+### 15. ACTIONS MANUELLES À EFFECTUER
+
+---
+
+# 60. IMPORTANT : AUTONOMIE
+
+Tu dois prendre les décisions techniques nécessaires toi-même.
+
+Ne me demande pas confirmation pour chaque petit changement.
+
+Tu peux :
+
+* analyser ;
+* corriger ;
+* refactoriser ;
+* améliorer ;
+* tester ;
+* documenter ;
+* optimiser.
+
+Mais pour les opérations potentiellement destructives ou irréversibles :
+
+**fais d'abord une sauvegarde et préserve la possibilité de revenir en arrière.**
+
+Ne supprime jamais les données utilisateur simplement pour simplifier le développement.
+
+---
+
+# 61. RÈGLE DE VÉRITÉ
+
+Tu ne dois jamais déclarer :
+
+* « sécurisé » ;
+* « connecté » ;
+* « rentable » ;
+* « AdSense actif » ;
+* « paiement fonctionnel » ;
+* « statistiques disponibles » ;
+* « utilisateurs connectés »
+
+sans preuve technique réelle.
+
+Distingue toujours :
+
+`CONFIGURÉ`
+
+`ACTIF`
+
+`NON CONFIGURÉ`
+
+`INDISPONIBLE`
+
+`ERREUR`
+
+`DÉMONSTRATION`
+
+---
+
+# 62. OBJECTIF BUSINESS
+
+Le site doit être conçu pour permettre à DJOUSSE TECH de devenir progressivement une plateforme durable.
+
+Architecture de revenus :
+
+```text
+DJOUSSE TECH
+      │
+      ├── Publicité
+      │     ├── Google AdSense
+      │     ├── Annonces directes
+      │     └── Sponsoring
+      │
+      ├── Affiliation
+      │
+      ├── Services premium
+      │
+      ├── Plans professionnels
+      │
+      └── Services futurs
+```
+
+Mais aucune source de revenu ne doit être présentée comme active avant sa configuration réelle.
+
+---
+
+# 63. PRIORITÉS
+
+Respecte cet ordre :
+
+### PRIORITÉ 1
+
+Faire fonctionner correctement l'existant.
+
+### PRIORITÉ 2
+
+Sécuriser.
+
+### PRIORITÉ 3
+
+Connecter le frontend aux vraies données.
+
+### PRIORITÉ 4
+
+Améliorer l'UX/UI.
+
+### PRIORITÉ 5
+
+Rendre l'architecture extensible.
+
+### PRIORITÉ 6
+
+Ajouter documentation et SEO.
+
+### PRIORITÉ 7
+
+Préparer publicité et monétisation.
+
+### PRIORITÉ 8
+
+Ajouter analytics et outils business.
+
+### PRIORITÉ 9
+
+Optimiser performance.
+
+### PRIORITÉ 10
+
+Audit final et documentation.
+
+---
+
+# 64. DIRECTIVE FINALE
+
+Ne construis pas simplement une jolie landing page.
+
+Construis le **site officiel professionnel de DJOUSSE TECH**, capable d'évoluer avec le bot.
+
+Le résultat doit être :
+
+**fonctionnel + réel + sécurisé + professionnel + extensible + maintenable + monétisable + responsive + prêt pour la production.**
+
+Tu dois privilégier la qualité réelle du système plutôt que l'apparence d'un système complet.
+
+**Aucune donnée fictive dans les fonctionnalités réelles.**
+
+**Aucun secret exposé.**
+
+**Aucune fonctionnalité annoncée comme active si elle ne fonctionne pas réellement.**
+
+**Aucune régression du bot WhatsApp.**
+
+Commence maintenant par l'audit complet du projet, puis implémente les améliorations progressivement et teste chaque étape.

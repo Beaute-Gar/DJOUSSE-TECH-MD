@@ -141,14 +141,23 @@ async function createBot(userId, botData) {
   const sb = getSupabase();
   if (!sb) return { error: 'Supabase non configuré' };
 
+  const botName = String(botData.bot_name || '').trim();
+  const prefix = String(botData.prefix || '.').trim();
+  const sessionId = String(botData.session_id || '').trim();
+  if (!botName) return { error: 'Le nom du bot est obligatoire' };
+  if (botName.length > 60) return { error: 'Le nom du bot ne peut pas dépasser 60 caractères' };
+  if (!/^\S{1,3}$/.test(prefix)) return { error: 'Le préfixe doit contenir de 1 à 3 caractères sans espace' };
+  if (sessionId.length < 8 || sessionId.length > 2048) return { error: 'Le Session ID WhatsApp est obligatoire et invalide' };
+
   const { data, error } = await sb
     .from('bots')
     .insert({
       user_id: userId,
-      bot_name: botData.bot_name || 'DJOUSSE TECH',
+      bot_name: botName,
       bot_image: botData.bot_image || null,
-      session_id: botData.session_id || null,
-      prefix: botData.prefix || '.',
+      session_id: sessionId,
+      prefix,
+      command_source: 'developer_catalog',
     })
     .select()
     .single();

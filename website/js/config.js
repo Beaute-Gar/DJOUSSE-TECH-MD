@@ -9,7 +9,7 @@ const CONFIG = {
   },
   app: {
     name: 'DJOUSSE TECH',
-    owner: 'Beaute Gar',
+    owner: 'Djousse Uriel',
     ownerNumber: '237693978044',
     prefix: '.',
     currency: 'XAF',

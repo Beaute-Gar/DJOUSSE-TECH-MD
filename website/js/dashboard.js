@@ -121,6 +121,7 @@ function renderBotList() {
           <th>Nom</th>
           <th>Statut</th>
           <th>Préfixe</th>
+          <th>Commandes</th>
           <th>Messages</th>
           <th></th>
         </tr>
@@ -129,8 +130,9 @@ function renderBotList() {
         ${userBots.map(bot => `
           <tr>
             <td style="font-weight:600;">${escapeHtml(bot.bot_name)}</td>
-            <td><span class="status-dot ${bot.status === 'online' ? 'status-online' : 'status-offline'}">${bot.status === 'online' ? 'En ligne' : 'Hors ligne'}</span></td>
+            <td><span class="status-dot ${bot.status === 'online' ? 'status-online' : bot.status === 'connecting' ? 'status-connecting' : 'status-offline'}">${formatBotStatus(bot.status)}</span></td>
             <td style="color:#6b7280;">${escapeHtml(bot.prefix)}</td>
+            <td style="color:#2563eb;font-size:12px;">${bot.command_source === 'custom' ? 'Personnalisées' : 'Catalogue DJOUSSE TECH'}</td>
             <td style="color:#6b7280;">${bot.messages_today || 0}</td>
             <td>
               <button onclick="deleteBot('${bot.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;" title="Supprimer">🗑️</button>
@@ -170,13 +172,20 @@ function hideCreateBotModal() {
 async function handleCreateBot(e) {
   e.preventDefault();
 
-  const botName = document.getElementById('newBotName').value.trim() || 'DJOUSSE TECH';
-  const sessionId = document.getElementById('newBotSession').value.trim();
+  const botName = document.getElementById('newBotName').value.trim();
   const prefix = document.getElementById('newBotPrefix').value.trim() || '.';
+  const sessionId = document.getElementById('newBotSession').value.trim();
 
-  const features = db.getPlanFeatures(userProfile);
-  if (!features.customName && botName !== 'DJOUSSE TECH') {
-    alert('Le nom personnalisé nécessite un plan Premium ou Pro.');
+  if (!botName) {
+    alert('Veuillez donner un nom à votre bot.');
+    return;
+  }
+  if (!/^\S{1,3}$/.test(prefix)) {
+    alert('Le préfixe doit contenir de 1 à 3 caractères sans espace.');
+    return;
+  }
+  if (!sessionId || sessionId.length < 8) {
+    alert('Le Session ID WhatsApp est obligatoire. Scannez le QR code puis collez le Session ID reçu.');
     return;
   }
 
@@ -184,8 +193,8 @@ async function handleCreateBot(e) {
 
   const result = await db.createBot(currentUser.id, {
     bot_name: botName,
-    session_id: sessionId || null,
     prefix: prefix,
+    session_id: sessionId,
   });
 
   showLoading('createBotBtn', false);
@@ -195,7 +204,11 @@ async function handleCreateBot(e) {
     return;
   }
 
-  await db.logActivity(currentUser.id, 'create_bot', result.data.id, { bot_name: botName });
+  await db.logActivity(currentUser.id, 'create_bot', result.data.id, {
+    bot_name: botName,
+    prefix,
+    command_source: 'developer_catalog',
+  });
   hideCreateBotModal();
   userBots = await db.getBots(currentUser.id);
   renderBotList();
@@ -245,6 +258,20 @@ function showLoading(btnId, loading) {
     btn.textContent = btn.dataset.originalText || btn.textContent;
     btn.style.opacity = '1';
   }
+}
+
+function formatBotStatus(status) {
+  const labels = { online: 'Connecté', connecting: 'Connexion…', error: 'Erreur', offline: 'Hors ligne' };
+  return labels[status] || 'Donnée indisponible';
+}
+
+function toggleSessionVisibility() {
+  const input = document.getElementById('newBotSession');
+  const button = document.getElementById('toggleSessionBtn');
+  if (!input || !button) return;
+  const visible = input.type === 'text';
+  input.type = visible ? 'password' : 'text';
+  button.textContent = visible ? 'Afficher' : 'Masquer';
 }
 
 // ===== INIT =====
