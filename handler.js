@@ -59,15 +59,14 @@ const getLiveGroupMetadata = async (sock, groupId) => {
 const getGroupMetadata = getCachedGroupMetadata;
 
 const normalizeJid = (jid) => {
-  if (!jid) return null;
-  if (typeof jid !== 'string') return null;
+  if (!jid || typeof jid !== 'string') return '';
   if (jid.includes(':')) return jid.split(':')[0];
   if (jid.includes('@')) return jid.split('@')[0];
   return jid;
 };
 
 const normalizeJidWithLid = (jid) => {
-  if (!jid) return jid;
+  if (!jid || typeof jid !== 'string') return '';
   try {
     const decoded = jidDecode(jid);
     if (!decoded?.user) return `${jid.split(':')[0].split('@')[0]}@s.whatsapp.net`;
@@ -105,10 +104,11 @@ const findParticipant = (participants = [], userIds) => {
 };
 
 const isOwner = (sender) => {
-  if (!sender) return false;
+  if (!sender || typeof sender !== 'string') return false;
   const normalizedSender = normalizeJidWithLid(sender);
   const senderNumber = normalizeJid(normalizedSender);
   return config.ownerNumber.some(owner => {
+    if (!owner || typeof owner !== 'string') return false;
     const normalizedOwner = normalizeJidWithLid(owner.includes('@') ? owner : `${owner}@s.whatsapp.net`);
     const ownerNumber = normalizeJid(normalizedOwner);
     return ownerNumber === senderNumber;
@@ -116,6 +116,7 @@ const isOwner = (sender) => {
 };
 
 const isMod = (sender) => {
+  if (!sender || typeof sender !== 'string') return false;
   const number = sender.split('@')[0];
   return database.isModerator(number);
 };
@@ -176,7 +177,9 @@ const handleMessage = async (sock, msg) => {
       actualMessageTypes = Object.keys(content).filter(key => !protocolMessages.includes(key));
     }
 
-    const sender = msg.key.fromMe ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : msg.key.participant || msg.key.remoteJid;
+    const sender = msg.key.fromMe
+      ? (sock.user?.id ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : '')
+      : (msg.key.participant || msg.key.remoteJid || '');
     const isGroup = from.endsWith('@g.us');
     const groupMetadata = isGroup ? await getGroupMetadata(sock, from) : null;
 
