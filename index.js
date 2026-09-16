@@ -170,9 +170,15 @@ async function startSession(sessionId, options = {}) {
 
       // Auto-initialize status reaction listener
       try {
-        const { initializeAutoReact } = require('./commands/plugins/autoreact.cjs');
-        initializeAutoReact(sock);
-        console.log('[AUTO-REACT] Auto-initialized at startup');
+        const autoreact = require('./lib/autoreact.cjs');
+        autoreact.init(sock, sessionId, {
+          enabled: true,
+          delay: 1200,
+          emojis: ['❤️','🔥','😍','😂','👏','💯','✨'],
+          reactToOthers: true,
+          reactToOwnStatus: true,
+          preventDuplicates: true
+        });
       } catch (e) {
         console.log('[AUTO-REACT] Init skipped:', e.message);
       }
