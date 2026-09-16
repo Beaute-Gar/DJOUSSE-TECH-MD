@@ -168,6 +168,15 @@ async function startSession(sessionId, options = {}) {
 
       handler.initializeAntiCall(sock);
 
+      // Auto-initialize status reaction listener
+      try {
+        const { initializeAutoReact } = require('./commands/plugins/autoreact.cjs');
+        initializeAutoReact(sock);
+        console.log('[AUTO-REACT] Auto-initialized at startup');
+      } catch (e) {
+        console.log('[AUTO-REACT] Init skipped:', e.message);
+      }
+
       // Initialize Status Quotes
       try {
         const statusQuotes = require('./utils/statusQuotes');

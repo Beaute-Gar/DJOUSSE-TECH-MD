@@ -27,7 +27,7 @@ module.exports = {
     autoTyping: false,
     autoBio: false,
     autoSticker: false,
-    autoReact: false,
+    autoReact: true,
     autoReactMode: 'bot',
     autoDownload: false,
 
