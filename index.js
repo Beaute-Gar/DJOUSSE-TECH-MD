@@ -168,17 +168,10 @@ async function startSession(sessionId, options = {}) {
 
       handler.initializeAntiCall(sock);
 
-      // Auto-initialize status reaction listener
+      // Auto-initialize status reaction listener (exact copy from iluser/autoreact-whatsapp)
       try {
         const autoreact = require('./lib/autoreact.cjs');
-        autoreact.init(sock, sessionId, {
-          enabled: true,
-          delay: 1200,
-          emojis: ['❤️','🔥','😍','😂','👏','💯','✨'],
-          reactToOthers: true,
-          reactToOwnStatus: false,
-          preventDuplicates: true
-        });
+        autoreact.init(sock);
       } catch (e) {
         console.log('[AUTO-REACT] Init skipped:', e.message);
       }
