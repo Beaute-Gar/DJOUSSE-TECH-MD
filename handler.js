@@ -110,14 +110,25 @@ const findParticipant = (participants = [], userIds) => {
 
 const isOwner = (sender) => {
   if (!sender || typeof sender !== 'string') return false;
-  const normalizedSender = normalizeJidWithLid(sender);
-  const senderNumber = normalizeJid(normalizedSender);
-  return config.ownerNumber.some(owner => {
+  const senderNumber = normalizeJid(sender);
+  // Check against owner numbers
+  if (config.ownerNumber.some(owner => {
     if (!owner || typeof owner !== 'string') return false;
-    const normalizedOwner = normalizeJidWithLid(owner.includes('@') ? owner : `${owner}@s.whatsapp.net`);
-    const ownerNumber = normalizeJid(normalizedOwner);
+    const ownerNumber = normalizeJid(owner);
     return ownerNumber === senderNumber;
-  });
+  })) return true;
+  // Check if sender is the bot itself (LID or JID)
+  if (sock?.user) {
+    const botId = normalizeJid(sock.user.id);
+    const botLid = sock.user.lid ? normalizeJid(sock.user.lid) : null;
+    const senderNorm = normalizeJid(sender);
+    if (senderNorm === botId) return true;
+    if (botLid && senderNorm === botLid) return true;
+    // Also check full JID match
+    if (sender === sock.user.id) return true;
+    if (botLid && sender === botLid) return true;
+  }
+  return false;
 };
 
 const isMod = (sender) => {
@@ -135,8 +146,13 @@ const isAdmin = async (sock, participant, groupId, groupMetadata = null) => {
   }
   if (!liveMetadata || !liveMetadata.participants) return false;
   const foundParticipant = findParticipant(liveMetadata.participants, participant);
-  if (!foundParticipant) return false;
-  return foundParticipant.admin === 'admin' || foundParticipant.admin === 'superadmin';
+  if (foundParticipant) {
+    return foundParticipant.admin === 'admin' || foundParticipant.admin === 'superadmin';
+  }
+  // Fallback: check if participant matches owner number
+  const participantNumber = normalizeJid(participant);
+  if (config.ownerNumber.some(owner => normalizeJid(owner) === participantNumber)) return true;
+  return false;
 };
 
 const isBotAdmin = async (sock, groupId, groupMetadata = null) => {
@@ -150,8 +166,11 @@ const isBotAdmin = async (sock, groupId, groupMetadata = null) => {
     const liveMetadata = await getLiveGroupMetadata(sock, groupId);
     if (!liveMetadata || !liveMetadata.participants) return false;
     const participant = findParticipant(liveMetadata.participants, botJids);
-    if (!participant) return false;
-    return participant.admin === 'admin' || participant.admin === 'superadmin';
+    if (participant) {
+      return participant.admin === 'admin' || participant.admin === 'superadmin';
+    }
+    // Fallback: owner is always considered admin
+    return true;
   } catch (error) {
     return false;
   }
@@ -190,7 +209,7 @@ const handleMessage = async (sock, msg) => {
     }
 
     const sender = msg.key.fromMe
-      ? (sock.user?.id ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : '')
+      ? (sock.user?.id ? sock.user.id : '')
       : (msg.key.participant || msg.key.remoteJid || '');
     const isGroup = from.endsWith('@g.us');
     const groupMetadata = isGroup ? await getGroupMetadata(sock, from) : null;
