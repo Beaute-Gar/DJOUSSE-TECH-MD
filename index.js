@@ -176,7 +176,7 @@ async function startSession(sessionId, options = {}) {
           delay: 1200,
           emojis: ['❤️','🔥','😍','😂','👏','💯','✨'],
           reactToOthers: true,
-          reactToOwnStatus: true,
+          reactToOwnStatus: false,
           preventDuplicates: true
         });
       } catch (e) {
