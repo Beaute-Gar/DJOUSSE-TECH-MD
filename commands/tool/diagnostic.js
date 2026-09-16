@@ -66,7 +66,7 @@ cmd({
 ┃ 💾 RAM : ${mem} MB
 ┃ ⏱️ Uptime : ${h}h ${mi}m
 ┃ 🤖 IA Keys : ${aiKey}
-┃ 📚 Commandes : ${require('../command.cjs').commands.length}
+┃ 📚 Commandes : ${require('../command.cjs').commandMap.size}
 ╰─────────────❖●►
 > ᴘᴏᴡᴇʀᴇᴅ ʙʏ DJOUSSE TECH`;
 

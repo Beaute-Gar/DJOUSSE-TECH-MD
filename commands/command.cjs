@@ -45,7 +45,9 @@ function cmd(opts, handler) {
         // Inject conn in ctx for KnightBot-style commands using ctx.conn
         if (!ctx.conn) ctx.conn = sock;
 
-        await handler(sock, msg, { args, ...ctx });
+        const fullText = args.join(' ');
+        ctx.q = fullText;
+        await handler(sock, msg, args, ctx);
       } catch (e) {
         console.error(`[CMD] Error in ${name}:`, e.message);
         const from = ctx.from || msg.key?.remoteJid;

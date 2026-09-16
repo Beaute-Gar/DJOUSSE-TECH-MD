@@ -11,6 +11,8 @@ const { tryAutoLevelUp, formatLevelUpMessage } = require('./utils/economy');
 const { jidDecode, jidEncode } = require('@whiskeysockets/baileys');
 const fs = require('fs');
 const path = require('path');
+const bus = require('./src/core/eventBus');
+const sessionManager = require('./src/sessions/sessionManager');
 
 const commands = loadCommands();
 
@@ -348,15 +350,47 @@ const handleMessage = async (sock, msg) => {
     // Execute
     console.log(`Commande: ${commandName} | Sender: ${sender}`);
 
-    await command.execute(sock, msg, args, {
+    // Inject common props on msg so both module.exports and cmd() plugins work
+    msg.sender = msg.sender || sender;
+    msg.chat = msg.chat || from;
+    msg.body = msg.body || body;
+    msg.text = msg.text || body;
+    msg.isGroup = msg.isGroup ?? isGroup;
+    msg.isOwner = msg.isOwner ?? isOwner(sender);
+    msg.from = from;
+
+    const ctx = {
       from, sender, isGroup, groupMetadata,
       isOwner: isOwner(sender),
       isAdmin: await isAdmin(sock, sender, from, groupMetadata),
       isBotAdmin: await isBotAdmin(sock, from, groupMetadata),
       isMod: isMod(sender),
       reply: (text) => sock.sendMessage(from, { text }, { quoted: msg }),
-      react: (emoji) => sock.sendMessage(from, { react: { text: emoji, key: msg.key } }).catch(() => {})
-    });
+      react: (emoji) => sock.sendMessage(from, { react: { text: emoji, key: msg.key } }).catch(() => {}),
+      body, q: args.join(' '), prefix: config.prefix, conn: sock,
+      args
+    };
+
+    await command.execute(sock, msg, args, ctx);
+
+    // Track stats for Command Center
+    try {
+      const sessionId = config.sessionName || 'session';
+      sessionManager.incrementStat(sessionId, 'commandsExecuted');
+      sessionManager.addCommandHistory(sessionId, {
+        command: commandName,
+        sender,
+        from,
+        isGroup,
+      });
+      bus.emit('command:executed', {
+        sessionId,
+        command: commandName,
+        sender,
+        from,
+        isGroup,
+      });
+    } catch (e) {}
 
   } catch (error) {
     if (error.message && error.message.includes('rate-overlimit')) return;
