@@ -168,6 +168,12 @@ async function startSession(sessionId, options = {}) {
 
       handler.initializeAntiCall(sock);
 
+      // Initialize anti-ban system
+      try {
+        const antiBan = require('./lib/anti-ban.cjs');
+        antiBan.init(sock);
+      } catch (e) {}
+
       // Auto-initialize status reaction listener (exact copy from iluser/autoreact-whatsapp)
       try {
         const autoreact = require('./lib/autoreact.cjs');
