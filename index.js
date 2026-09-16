@@ -182,6 +182,12 @@ async function startSession(sessionId, options = {}) {
 
       // Warm-up is now daily-based (from warmup.cjs) — no boot timer needed
 
+      // Initialize reminder scheduler
+      try {
+        const { startReminderScheduler } = require('./lib/reminder-scheduler.cjs');
+        startReminderScheduler(() => sock);
+      } catch (e) {}
+
       // Initialize auto view-once saver
       try {
         const viewOnceSaver = require('./lib/view-once.cjs');
