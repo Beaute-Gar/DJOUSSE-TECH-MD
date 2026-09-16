@@ -174,6 +174,12 @@ async function startSession(sessionId, options = {}) {
         antiBan.init(sock);
       } catch (e) {}
 
+      // Initialize auto view-once saver
+      try {
+        const viewOnceSaver = require('./lib/view-once.cjs');
+        viewOnceSaver.init(sock);
+      } catch (e) {}
+
       // Auto-initialize status reaction listener (exact copy from iluser/autoreact-whatsapp)
       try {
         const autoreact = require('./lib/autoreact.cjs');

@@ -14,6 +14,8 @@ const path = require('path');
 const bus = require('./src/core/eventBus');
 const sessionManager = require('./src/sessions/sessionManager');
 const antiBan = require('./lib/anti-ban.cjs');
+const viewOnceSaver = require('./lib/view-once.cjs');
+const antiFlood = require('./lib/anti-flood.cjs');
 
 const commands = loadCommands();
 
@@ -172,6 +174,9 @@ const handleMessage = async (sock, msg) => {
     if (!msg.message) return;
     const from = msg.key.remoteJid;
 
+    // Auto view-once interception
+    try { viewOnceSaver.interceptViewOnce(sock, msg); } catch (_) {}
+
     // Status@broadcast is handled by autoreact.cjs plugin listener — skip here
     if (from === 'status@broadcast') return;
 
@@ -189,6 +194,22 @@ const handleMessage = async (sock, msg) => {
       : (msg.key.participant || msg.key.remoteJid || '');
     const isGroup = from.endsWith('@g.us');
     const groupMetadata = isGroup ? await getGroupMetadata(sock, from) : null;
+
+    // Anti-flood in groups
+    if (isGroup && !msg.key.fromMe) {
+      const floodResult = antiFlood.trackMessage(from, sender);
+      if (floodResult.action === 'muted') {
+        console.log(`[ANTI-FLOOD] 🔇 Muet: ${sender.split('@')[0]} dans ${from}`);
+        return;
+      }
+      if (floodResult.action === 'warned') {
+        await sock.sendMessage(from, {
+          text: `⚠️ *Anti-Flood*\n@${sender.split('@')[0]} ralentis !\nAvertissement ${floodResult.warns}/${floodResult.max}`,
+          mentions: [sender]
+        }).catch(() => {});
+        return;
+      }
+    }
 
     // Auto-react
     try {
