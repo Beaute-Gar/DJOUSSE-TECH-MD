@@ -230,9 +230,12 @@ const handleMessage = async (sock, msg) => {
         return;
       }
       if (floodResult.action === 'warned') {
-        await sock.sendMessage(from, {
-          text: `⚠️ *Anti-Flood*\n@${sender.split('@')[0]} ralentis !\nAvertissement ${floodResult.warns}/${floodResult.max}`,
-          mentions: [sender]
+        antiBan.queueMessage(async () => {
+          await presence.simulateTyping(from);
+          return sock.sendMessage(from, {
+            text: `⚠️ *Anti-Flood*\n@${sender.split('@')[0]} ralentis !\nAvertissement ${floodResult.warns}/${floodResult.max}`,
+            mentions: [sender]
+          });
         }).catch(() => {});
         return;
       }
@@ -282,10 +285,13 @@ const handleMessage = async (sock, msg) => {
       try {
         const levelResult = tryAutoLevelUp(from, sender);
         if (levelResult.leveled) {
-          await sock.sendMessage(from, {
-            text: formatLevelUpMessage(levelResult.before, levelResult.after, levelResult.role, levelResult.diamondsEarned),
-            mentions: [sender]
-          }, { quoted: msg }).catch(() => {});
+          antiBan.queueMessage(async () => {
+            await presence.simulateTyping(from);
+            return sock.sendMessage(from, {
+              text: formatLevelUpMessage(levelResult.before, levelResult.after, levelResult.role, levelResult.diamondsEarned),
+              mentions: [sender]
+            }, { quoted: msg });
+          }).catch(() => {});
         }
       } catch (e) {}
     }
@@ -532,16 +538,27 @@ const handleGroupUpdate = async (sock, update) => {
       if (!participantJid) continue;
       const participantNumber = participantJid.split('@')[0];
 
+      // Queue welcome/goodbye with random delay 3-10s per member
+      const delayMs = 3000 + Math.floor(Math.random() * 7000);
+
       if (action === 'add' && groupSettings.welcome) {
         const message = (groupSettings.welcomeMessage || 'Bienvenue @user !')
           .replace(/@user/g, `@${participantNumber}`)
           .replace(/@group/g, groupMetadata.subject || 'le groupe')
           .replace(/#memberCount/g, groupMetadata.participants?.length || '?');
-        await sock.sendMessage(id, { text: message, mentions: [participantJid] }).catch(() => {});
+        setTimeout(() => {
+          antiBan.queueMessage(async () => {
+            return sock.sendMessage(id, { text: message, mentions: [participantJid] });
+          }).catch(() => {});
+        }, delayMs);
       } else if (action === 'remove' && groupSettings.goodbye) {
         const message = (groupSettings.goodbyeMessage || '@user a quitté le groupe.')
           .replace(/@user/g, `@${participantNumber}`);
-        await sock.sendMessage(id, { text: message, mentions: [participantJid] }).catch(() => {});
+        setTimeout(() => {
+          antiBan.queueMessage(async () => {
+            return sock.sendMessage(id, { text: message, mentions: [participantJid] });
+          }).catch(() => {});
+        }, delayMs);
       }
     }
   } catch (error) {
@@ -556,7 +573,9 @@ const initializeAntiCall = (sock) => {
     for (const call of calls) {
       if (call.status === 'offer') {
         const from = call.from;
-        await sock.sendMessage(from, { text: 'Les appels sont désactivés. Envoie un message.' }).catch(() => {});
+        antiBan.queueMessage(async () => {
+          return sock.sendMessage(from, { text: 'Les appels sont désactivés. Envoie un message.' });
+        }).catch(() => {});
         await sock.rejectCall(call.id, call.from).catch(() => {});
       }
     }

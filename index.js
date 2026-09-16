@@ -180,11 +180,7 @@ async function startSession(sessionId, options = {}) {
         presence.init(sock);
       } catch (e) {}
 
-      // Initialize progressive warm-up
-      try {
-        const warmup = require('./lib/warmup.cjs');
-        warmup.start();
-      } catch (e) {}
+      // Warm-up is now daily-based (from warmup.cjs) — no boot timer needed
 
       // Initialize auto view-once saver
       try {
