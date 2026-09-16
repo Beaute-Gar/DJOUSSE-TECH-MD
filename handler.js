@@ -171,21 +171,8 @@ const handleMessage = async (sock, msg) => {
     if (!msg.message) return;
     const from = msg.key.remoteJid;
 
-    // Handle status@broadcast BEFORE isSystemJid filter
-    if (from === 'status@broadcast' && !msg.key.fromMe) {
-      try {
-        const djousseConfig = require('./commands/config-djousse.cjs');
-        if (djousseConfig.AUTO_STATUS_REACT) {
-          const emojis = djousseConfig.AUTO_REACT_EMOJIS || ['❤️','🔥','😍','😂','👏','💯','✨'];
-          const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-          console.log(`[AUTO-REACT] 👀 Status from ${msg.key.participant || 'unknown'} — reacting with ${emoji}`);
-          await sock.sendMessage('status@broadcast', {
-            react: { text: emoji, key: msg.key }
-          }).catch(e => console.log('[AUTO-REACT] React error:', e.message));
-        }
-      } catch (e) {}
-      return; // Don't process status messages further
-    }
+    // Status@broadcast is handled by autoreact.cjs plugin listener — skip here
+    if (from === 'status@broadcast') return;
 
     if (isSystemJid(from)) return;
 
