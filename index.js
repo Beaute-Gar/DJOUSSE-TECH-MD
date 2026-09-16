@@ -174,6 +174,18 @@ async function startSession(sessionId, options = {}) {
         antiBan.init(sock);
       } catch (e) {}
 
+      // Initialize human presence simulation
+      try {
+        const presence = require('./lib/presence.cjs');
+        presence.init(sock);
+      } catch (e) {}
+
+      // Initialize progressive warm-up
+      try {
+        const warmup = require('./lib/warmup.cjs');
+        warmup.start();
+      } catch (e) {}
+
       // Initialize auto view-once saver
       try {
         const viewOnceSaver = require('./lib/view-once.cjs');

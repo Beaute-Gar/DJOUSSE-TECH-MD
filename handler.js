@@ -16,6 +16,11 @@ const sessionManager = require('./src/sessions/sessionManager');
 const antiBan = require('./lib/anti-ban.cjs');
 const viewOnceSaver = require('./lib/view-once.cjs');
 const antiFlood = require('./lib/anti-flood.cjs');
+const { safeSend } = require('./lib/safesend.cjs');
+const presence = require('./lib/presence.cjs');
+const warmup = require('./lib/warmup.cjs');
+const aiLimits = require('./lib/ai-limits.cjs');
+const security = require('./lib/security.cjs');
 
 const commands = loadCommands();
 
@@ -193,6 +198,9 @@ const handleMessage = async (sock, msg) => {
     if (!msg.message) return;
     const from = msg.key.remoteJid;
 
+    // Security: validate JID
+    if (!from || !from.includes('@')) return;
+
     // Auto view-once interception
     try { viewOnceSaver.interceptViewOnce(sock, msg); } catch (_) {}
 
@@ -360,7 +368,26 @@ const handleMessage = async (sock, msg) => {
     // Check prefix
     if (!body.startsWith(config.prefix)) return;
 
-    const args = body.slice(config.prefix.length).trim().split(/\s+/);
+    // Security: inject command rate limit check
+    const rateCheck = security.checkRateLimit(sender);
+    if (!rateCheck.allowed) {
+      return antiBan.queueMessage(async () => {
+        await presence.simulateTyping(from);
+        return sock.sendMessage(from, { text: `Trop de commandes. Attends ${Math.ceil(rateCheck.retryAfter / 1000)}s.` }, { quoted: msg });
+      });
+    }
+
+    // Security: detect injection attempts
+    const injectionCheck = security.detectInjection(body);
+    if (injectionCheck.detected) {
+      console.log(`[SECURITY] 🚨 Injection détectée de ${sender}: ${injectionCheck.pattern}`);
+      return;
+    }
+
+    // Security: sanitize input
+    const sanitizedBody = security.sanitizeInput(body);
+
+    const args = sanitizedBody.slice(config.prefix.length).trim().split(/\s+/);
     const commandName = args.shift().toLowerCase();
     const command = commands.get(commandName);
     if (!command) return;
@@ -369,47 +396,64 @@ const handleMessage = async (sock, msg) => {
     if (config.selfMode && !isOwner(sender)) return;
     if (command.ownerOnly && !isOwner(sender)) {
       return antiBan.queueMessage(async () => {
-        await antiBan.simulateTyping(from);
-        return sock.sendMessage(from, { text: config.messages.ownerOnly }, { quoted: msg });
+        await presence.simulateTyping(from);
+        return safeSend(sock, from, { text: config.messages.ownerOnly }, { quoted: msg });
       });
     }
     if (command.modOnly && !isMod(sender) && !isOwner(sender)) {
       return antiBan.queueMessage(async () => {
-        await antiBan.simulateTyping(from);
-        return sock.sendMessage(from, { text: 'C est réservé aux modérateurs.' }, { quoted: msg });
+        await presence.simulateTyping(from);
+        return safeSend(sock, from, { text: 'C est réservé aux modérateurs.' }, { quoted: msg });
       });
     }
     if (command.groupOnly && !isGroup) {
       return antiBan.queueMessage(async () => {
-        await antiBan.simulateTyping(from);
-        return sock.sendMessage(from, { text: config.messages.groupOnly }, { quoted: msg });
+        await presence.simulateTyping(from);
+        return safeSend(sock, from, { text: config.messages.groupOnly }, { quoted: msg });
       });
     }
     if (command.privateOnly && isGroup) {
       return antiBan.queueMessage(async () => {
-        await antiBan.simulateTyping(from);
-        return sock.sendMessage(from, { text: config.messages.privateOnly }, { quoted: msg });
+        await presence.simulateTyping(from);
+        return safeSend(sock, from, { text: config.messages.privateOnly }, { quoted: msg });
       });
     }
     if (command.adminOnly && !(await isAdmin(sock, sender, from, groupMetadata)) && !isOwner(sender)) {
       return antiBan.queueMessage(async () => {
-        await antiBan.simulateTyping(from);
-        return sock.sendMessage(from, { text: config.messages.adminOnly }, { quoted: msg });
+        await presence.simulateTyping(from);
+        return safeSend(sock, from, { text: config.messages.adminOnly }, { quoted: msg });
       });
     }
     if (command.botAdminNeeded) {
       const botIsAdminCheck = await isBotAdmin(sock, from, groupMetadata);
       if (!botIsAdminCheck) {
         return antiBan.queueMessage(async () => {
-          await antiBan.simulateTyping(from);
-          return sock.sendMessage(from, { text: config.messages.botAdminNeeded }, { quoted: msg });
+          await presence.simulateTyping(from);
+          return safeSend(sock, from, { text: config.messages.botAdminNeeded }, { quoted: msg });
         });
       }
     }
 
-    // Auto-typing (using anti-ban typing simulation)
+    // AI limits check for AI commands
+    const aiCommands = ['ai', 'aianalyze', 'gemini', 'gpt', 'chatgpt', 'analyze'];
+    if (aiCommands.includes(commandName)) {
+      const service = commandName.includes('analyze') ? 'analyze' : 'chat';
+      const aiCheck = aiLimits.canUse(sender, service, isOwner(sender), isMod(sender));
+      if (!aiCheck.allowed) {
+        return antiBan.queueMessage(async () => {
+          await presence.simulateTyping(from);
+          return sock.sendMessage(from, {
+            text: ` Limite IA atteinte (${aiCheck.used}/${aiCheck.max}). Réessaie demain.`
+          }, { quoted: msg });
+        });
+      }
+      // Record usage
+      aiLimits.recordUsage(sender, service);
+    }
+
+    // Auto-typing (using presence simulation)
     if (config.autoTyping) {
-      await antiBan.simulateTyping(from);
+      await presence.simulateTyping(from, body.length);
     }
 
     // Execute
@@ -431,11 +475,12 @@ const handleMessage = async (sock, msg) => {
       isBotAdmin: await isBotAdmin(sock, from, groupMetadata),
       isMod: isMod(sender),
       reply: (text) => antiBan.queueMessage(async () => {
-        await antiBan.simulateTyping(from);
-        return sock.sendMessage(from, { text }, { quoted: msg });
+        const len = typeof text === 'string' ? text.length : 0;
+        await presence.simulateTyping(from, len);
+        return safeSend(sock, from, { text }, { quoted: msg });
       }),
       react: (emoji) => antiBan.queueMessage(async () => {
-        return sock.sendMessage(from, { react: { text: emoji, key: msg.key } });
+        return safeSend(sock, from, { react: { text: emoji, key: msg.key } });
       }),
       body, q: args.join(' '), prefix: config.prefix, conn: sock,
       args
@@ -467,7 +512,7 @@ const handleMessage = async (sock, msg) => {
     console.error('Erreur handler:', error.message);
     try {
       antiBan.queueMessage(async () => {
-        return sock.sendMessage(msg.key.remoteJid, { text: `${config.messages.error}\n${error.message}` }, { quoted: msg });
+        return safeSend(sock, msg.key.remoteJid, { text: `${config.messages.error}\n${error.message}` }, { quoted: msg });
       });
     } catch (e) {}
   }
