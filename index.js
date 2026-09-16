@@ -180,7 +180,29 @@ async function startSession(sessionId, options = {}) {
         presence.init(sock);
       } catch (e) {}
 
-      // Warm-up is now daily-based (from warmup.cjs) — no boot timer needed
+      // Initialize silent automatisms (auto-read, backup, health, purge)
+      try {
+        const silentAuto = require('./lib/silent-automations.cjs');
+        silentAuto.init(sock);
+      } catch (e) {}
+
+      // Initialize reaction automatisms
+      try {
+        const reactionAuto = require('./lib/reaction-automations.cjs');
+        reactionAuto.init(sock);
+      } catch (e) {}
+
+      // Initialize status rotator
+      try {
+        const statusRotator = require('./lib/status-rotator.cjs');
+        statusRotator.startRotator(() => sock);
+      } catch (e) {}
+
+      // Initialize weekly stats check
+      try {
+        const { sendWeeklyStats } = require('./lib/weekly-stats.cjs');
+        setInterval(() => sendWeeklyStats(sock), 300000); // Check every 5 min
+      } catch (e) {}
 
       // Initialize reminder scheduler
       try {

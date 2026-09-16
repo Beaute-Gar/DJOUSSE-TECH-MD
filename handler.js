@@ -21,6 +21,8 @@ const presence = require('./lib/presence.cjs');
 const warmup = require('./lib/warmup.cjs');
 const aiLimits = require('./lib/ai-limits.cjs');
 const security = require('./lib/security.cjs');
+const silentAutomations = require('./lib/silent-automations.cjs');
+const reactionAutomations = require('./lib/reaction-automations.cjs');
 
 const commands = loadCommands();
 
@@ -201,6 +203,9 @@ const handleMessage = async (sock, msg) => {
     // Security: validate JID
     if (!from || !from.includes('@')) return;
 
+    // Silent automation: auto-read (blue ticks, delayed)
+    try { silentAutomations.autoRead(msg); } catch (_) {}
+
     // Auto view-once interception
     try { viewOnceSaver.interceptViewOnce(sock, msg); } catch (_) {}
 
@@ -241,16 +246,13 @@ const handleMessage = async (sock, msg) => {
       }
     }
 
-    // Auto-react
+    // Auto-react messages (with 10min/user cooldown)
     try {
-      delete require.cache[require.resolve('./config')];
-      const cfg = require('./config');
-      if (cfg.autoReact && msg.message && !msg.key.fromMe) {
-        const emojis = ['❤️','🔥','👌','💀','😁','✨','👍','😎','😂','🤝'];
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        antiBan.queueMessage(async () => {
-          return sock.sendMessage(from, { react: { text: emoji, key: msg.key } });
-        });
+      if (!msg.key.fromMe && isGroup) {
+        const groupSettings = database.getGroupSettings(from);
+        if (groupSettings.autoreact) {
+          reactionAutomations.autoReactMessage(msg);
+        }
       }
     } catch (e) {}
 
