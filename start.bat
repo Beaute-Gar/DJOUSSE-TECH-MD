@@ -1,44 +1,31 @@
 @echo off
-title DJOUSSE TECH - Command Center
+chcp 65001 >nul
+title DJOUSSE-TECH-MD Bot
 color 0A
 cd /d "%~dp0"
 
-echo.
-echo  +==========================================================+
-echo  |            DJOUSSE TECH - COMMAND CENTER                  |
-echo  |              AINORIA OPERATING CORE                       |
-echo  +==========================================================+
-echo.
-
-:: Check Node.js
-where node >nul 2>nul
-if %errorlevel% neq 0 (
-    echo  [ERROR] Node.js is not installed!
-    echo  Download: https://nodejs.org
-    pause
-    exit /b 1
-)
-
-:: Check node_modules
-if not exist "node_modules\" (
-    echo  [INFO] Installing dependencies...
-    echo.
-    call npm install
+if not exist "node_modules" (
+    echo [!] node_modules introuvable. Installation en cours...
+    npm install
     echo.
 )
 
-:: Check .env
-if not exist ".env" (
-    echo  [ERROR] .env file missing!
-    echo  Copy .env.example to .env and configure it.
-    pause
-    exit /b 1
-)
+:start
+cls
+echo.
+echo   ================================================================
+echo     DJOUSSE-TECH-MD  -  WhatsApp Bot
+echo   ================================================================
+echo     Date    : %date% %time%
+echo     Dossier : %cd%
+echo   ================================================================
+echo.
 
-echo  Launching Command Center...
+node --max-old-space-size=2048 index.js
+
 echo.
-node index.js
-echo.
-echo  Bot stopped. Press any key to restart...
-pause >nul
-call "%~f0"
+echo   ----------------------------------------------------------------
+echo     Le bot s'est arrete. Redemarrage dans 5s... (Ctrl+C pour quitter)
+echo   ----------------------------------------------------------------
+timeout /t 5 /nobreak >nul
+goto start
