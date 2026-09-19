@@ -4,7 +4,8 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 const statusQuotes = require('../../utils/statusQuotes');
 
 cmd({
-    pattern: 'status',
+    pattern: 'statusquote',
+    alias: ['sq', 'pubstatus'],
     react: '📢',
     desc: 'Publier une citation en statut WhatsApp (test immédiat)',
     category: 'owner',

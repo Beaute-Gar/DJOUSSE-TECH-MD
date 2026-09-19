@@ -2,9 +2,7 @@ const { cmd, commandMap } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
 const path = require('path');
 const fs = require('fs');
-const { box } = require('../lib/djousse-ui.cjs');
 
-// Bot images
 const ASSETS_DIR = path.join(__dirname, '..', '..', 'assets');
 const BOT_IMAGES = [
     path.join(ASSETS_DIR, 'bot1.png'),
@@ -21,11 +19,44 @@ function getNextMenuImage() {
 }
 
 function fmtUptime(s) {
-    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m ${Math.floor(s % 60)}s`;
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = Math.floor(s % 60);
+    if (h > 0) return `${h}h ${m}m ${sec}s`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
 }
 
-function commandsGroup(input) {
+function inferCategory(filename) {
+    if (!filename) return 'OTHER';
+    const p = String(filename).toLowerCase();
+    if (p.includes('\\group\\') || p.includes('/group/')) return 'GROUP';
+    if (p.includes('\\admin\\') || p.includes('/admin/')) return 'ADMIN';
+    if (p.includes('\\ai\\') || p.includes('/ai/') || p.includes('ainoria')) return 'AI';
+    if (p.includes('\\download\\') || p.includes('/download/')) return 'DOWNLOAD';
+    if (p.includes('\\convert\\') || p.includes('/convert/')) return 'CONVERT';
+    if (p.includes('\\owner\\') || p.includes('/owner/')) return 'OWNER';
+    if (p.includes('\\main\\') || p.includes('/main/')) return 'MAIN';
+    if (p.includes('\\search\\') || p.includes('/search/')) return 'SEARCH';
+    if (p.includes('\\fun\\') || p.includes('/fun/')) return 'FUN';
+    if (p.includes('\\security\\') || p.includes('/security/')) return 'SECURITY';
+    if (p.includes('\\moderation\\') || p.includes('/moderation/')) return 'MODERATION';
+    if (p.includes('\\economy\\') || p.includes('/economy/')) return 'ECONOMY';
+    if (p.includes('\\media\\') || p.includes('/media/')) return 'MEDIA';
+    if (p.includes('\\info\\') || p.includes('/info/')) return 'INFO';
+    if (p.includes('\\business\\') || p.includes('/business/')) return 'BUSINESS';
+    if (p.includes('\\tool\\') || p.includes('/tool/')) return 'TOOLS';
+    if (p.includes('\\sticker\\') || p.includes('/sticker/')) return 'STICKER';
+    if (p.includes('\\image\\') || p.includes('/image/')) return 'IMAGE';
+    if (p.includes('\\logo\\') || p.includes('/logo/')) return 'LOGO';
+    if (p.includes('\\profile\\') || p.includes('/profile/')) return 'PROFILE';
+    if (p.includes('\\settings\\') || p.includes('/settings/')) return 'SETTINGS';
+    if (p.includes('\\system\\') || p.includes('/system/')) return 'SYSTEM';
+    if (p.includes('\\util\\') || p.includes('/util/') || p.includes('utility')) return 'UTILITY';
+    return 'OTHER';
+}
+
+function buildCommandsGroup(input) {
     let list = [];
     if (input instanceof Map) {
         list = [...input.values()];
@@ -50,63 +81,71 @@ function commandsGroup(input) {
             cat = inferCategory(c.filename);
         }
         cat = cat.toUpperCase().trim();
+        if (!cat) cat = 'OTHER';
 
-        if (!cats[cat]) cats[cat] = new Set();
-        cats[cat].add(name.toLowerCase());
+        const aliases = Array.isArray(c.aliases) ? c.aliases.filter(a => a && typeof a === 'string') : [];
+
+        if (!cats[cat]) cats[cat] = [];
+        cats[cat].push({ name: name.toLowerCase(), aliases: aliases.map(a => a.toLowerCase()) });
     }
 
     for (const cat of Object.keys(cats)) {
-        cats[cat] = [...cats[cat]].sort();
+        cats[cat].sort((a, b) => a.name.localeCompare(b.name));
     }
 
     return cats;
 }
 
-function inferCategory(filename) {
-    if (!filename) return 'OTHER';
-    const path = String(filename).toLowerCase();
-    if (path.includes('\\group\\') || path.includes('/group/')) return 'GROUP';
-    if (path.includes('\\admin\\') || path.includes('/admin/')) return 'ADMIN';
-    if (path.includes('\\ai\\') || path.includes('/ai/') || path.includes('ainoria')) return 'AI';
-    if (path.includes('\\anime\\') || path.includes('/anime/')) return 'ANIME';
-    if (path.includes('\\game\\') || path.includes('/game/')) return 'GAME';
-    if (path.includes('\\download\\') || path.includes('/download/')) return 'DOWNLOAD';
-    if (path.includes('\\image\\') || path.includes('/image/')) return 'IMAGE';
-    if (path.includes('\\sticker\\') || path.includes('/sticker/')) return 'STICKER';
-    if (path.includes('\\convert\\') || path.includes('/convert/')) return 'CONVERT';
-    if (path.includes('\\tool\\') || path.includes('/tool/')) return 'TOOLS';
-    if (path.includes('\\owner\\') || path.includes('/owner/')) return 'OWNER';
-    if (path.includes('\\main\\') || path.includes('/main/')) return 'MAIN';
-    if (path.includes('\\search\\') || path.includes('/search/')) return 'SEARCH';
-    if (path.includes('\\fun\\') || path.includes('/fun/')) return 'FUN';
-    if (path.includes('\\security\\') || path.includes('/security/')) return 'SECURITY';
-    if (path.includes('\\moderation\\') || path.includes('/moderation/')) return 'MODERATION';
-    if (path.includes('\\economy\\') || path.includes('/economy/')) return 'ECONOMY';
-    if (path.includes('\\media\\') || path.includes('/media/')) return 'MEDIA';
-    if (path.includes('\\info\\') || path.includes('/info/')) return 'INFO';
-    if (path.includes('\\news\\') || path.includes('/news/')) return 'NEWS';
-    if (path.includes('\\business\\') || path.includes('/business/')) return 'BUSINESS';
-    return 'OTHER';
+function safeStr(val, fallback = '') {
+    if (val === null || val === undefined) return fallback;
+    if (typeof val === 'object') return JSON.stringify(val);
+    return String(val);
 }
 
-function buildHeader(totalCmds) {
-    const mem = (process.memoryUsage().rss / 1048576).toFixed(1);
-    const up = fmtUptime(process.uptime());
-    const num = config.OWNER_NUMBER || '';
-    return box('MENU — DJOUSSE TECH', [
-        { label: '👋 Salut', value: num },
-        { label: '📡 Uptime', value: up },
-        { label: '💾 RAM', value: `${mem} MB` },
-        { label: '⚡ Commandes', value: totalCmds },
-    ]);
+function validateMenu(text) {
+    if (!text || typeof text !== 'string') return false;
+    if (text.includes('undefined')) return false;
+    if (text.includes('[object Object]')) return false;
+    if (text.includes('null')) return false;
+    return true;
 }
 
-function buildCategoryBlock(cat, cmds) {
+function buildMenuText(grouped) {
     const lines = [];
-    for (const c of cmds) {
-        lines.push({ raw: `⚡ \`.${c}\`` });
+    const userNum = safeStr(config.OWNER_NUMBER, 'Owner');
+    const uptime = fmtUptime(process.uptime());
+    const mem = (process.memoryUsage().rss / 1048576).toFixed(1);
+    const totalCmds = Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0);
+
+    lines.push('╭━━━〔 ⛓️ DJOUSSE TECH 〕━━━╮');
+    lines.push(`┃ 👋 Salut : ${userNum}`);
+    lines.push(`┃ 📡 Uptime : ${uptime}`);
+    lines.push(`┃ 💾 RAM : ${mem} MB`);
+    lines.push(`┃ ⚡ Commandes : ${totalCmds}`);
+    lines.push('╰━━━━━━━━━━━━━━━━━━━━━━╯');
+    lines.push('');
+
+    const catList = Object.keys(grouped).sort();
+
+    for (const cat of catList) {
+        const cmds = grouped[cat];
+        lines.push(`╭─〔 ${cat} 〕`);
+        for (const entry of cmds) {
+            const allNames = [entry.name, ...entry.aliases];
+            const display = allNames.map(n => `.${n}`).join(' | ');
+            lines.push(`│ ⚡ ${display}`);
+        }
+        lines.push('╰──────────────────────');
     }
-    return box(`〔 ${cat} 〕`, lines);
+
+    lines.push('');
+    lines.push('╭━━━〔 ⛓️ DJOUSSE TECH 〕━━━╮');
+    lines.push(`┃ 📦 ${totalCmds} commandes disponibles`);
+    lines.push('┃ 💡 Tape .help <commande>');
+    lines.push('┃ 🚀 Bot opérationnel');
+    lines.push('╰━━━━━━━━━━━━━━━━━━━━━━╯');
+
+    return lines.join('\n');
 }
 
 cmd({
@@ -118,71 +157,60 @@ cmd({
 }, async (conn, m, cmdList, ctx) => {
     try {
         const args = (ctx.args || []).map(a => a.toLowerCase());
-        const grouped = commandsGroup(commandMap);
-        const totalCmds = Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0);
+        const grouped = buildCommandsGroup(commandMap);
 
         if (args.length > 0) {
             const query = args[0].replace(/^\./, '').toUpperCase();
-
             let cat = Object.keys(grouped).find(c => c === query)
                 || Object.keys(grouped).find(c => c.startsWith(query) || query.startsWith(c));
 
             if (!cat) {
                 const available = Object.keys(grouped).sort().join(', ');
-                return ctx.reply(box('ERROR', [
-                    { raw: `Module \`${query}\` introuvable.` },
-                    { blank: true },
-                    { raw: `📂 *Modules disponibles :*` },
-                    { raw: available },
-                ]));
+                return ctx.reply(
+                    '╭━━━〔 ❌ ERROR 〕━━━╮\n' +
+                    `┃ Module \`${query}\` introuvable.\n` +
+                    '╰━━━━━━━━━━━━━━━━━━━━━━╯\n\n' +
+                    `📂 *Modules disponibles :*\n${available}`
+                );
             }
 
             const cmds = grouped[cat];
-            return ctx.reply(buildCategoryBlock(cat, cmds));
-        }
-
-        const header = buildHeader(totalCmds);
-        const catList = Object.keys(grouped).sort();
-        const blocks = [];
-
-        for (const cat of catList) {
-            const cmds = grouped[cat];
-            blocks.push(buildCategoryBlock(cat, cmds));
-        }
-
-        let currentMsg = header;
-        const messages = [];
-
-        for (const block of blocks) {
-            if (currentMsg.length + block.length + 10 > 3800) {
-                messages.push(currentMsg);
-                currentMsg = block;
-            } else {
-                currentMsg += '\n' + block;
+            const catLines = [];
+            catLines.push(`╭─〔 ${cat} 〕`);
+            for (const entry of cmds) {
+                const allNames = [entry.name, ...entry.aliases];
+                const display = allNames.map(n => `.${n}`).join(' | ');
+                catLines.push(`│ ⚡ ${display}`);
             }
+            catLines.push('╰──────────────────────');
+            return ctx.reply(catLines.join('\n'));
         }
-        messages.push(currentMsg);
+
+        const menuText = buildMenuText(grouped);
+
+        if (!validateMenu(menuText)) {
+            console.error('[MENU] Validation failed — menu contient des valeurs invalides');
+            return ctx.reply('⚠️ Erreur de génération du menu.');
+        }
 
         const imgPath = getNextMenuImage();
-        for (let i = 0; i < messages.length; i++) {
-            const msgContent = messages[i];
-            if (i === 0 && imgPath) {
-                try {
-                    await conn.sendMessage(m.chat, {
-                        image: { url: imgPath },
-                        caption: msgContent,
-                        mentions: [m.sender]
-                    }, { quoted: m });
-                } catch (e) {
-                    await ctx.reply(msgContent);
-                }
-            } else {
-                await ctx.reply(msgContent);
+        if (imgPath) {
+            try {
+                await conn.sendMessage(m.chat, {
+                    image: { url: imgPath },
+                    caption: menuText,
+                    mentions: [m.sender]
+                }, { quoted: m });
+                return;
+            } catch (e) {
+                // fallback vers texte brut
             }
         }
+
+        await ctx.reply(menuText);
     } catch (e) {
         console.error('[MENU]', e.message);
-        return ctx.reply(box('ERROR', [{ raw: `Erreur menu: ${e.message}` }]));
+        return ctx.reply('⚠️ Erreur menu: ' + safeStr(e.message, 'inconnue'));
     }
 });
 
@@ -194,49 +222,30 @@ cmd({
     filename: __filename,
 }, async (conn, m, cmdList, ctx) => {
     try {
-        const grouped = commandsGroup(commandMap);
-        const totalCmds = Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0);
-        const header = buildHeader(totalCmds);
-        const catList = Object.keys(grouped).sort();
-        const blocks = [];
+        const grouped = buildCommandsGroup(commandMap);
+        const menuText = buildMenuText(grouped);
 
-        for (const cat of catList) {
-            const cmds = grouped[cat];
-            blocks.push(buildCategoryBlock(cat, cmds));
+        if (!validateMenu(menuText)) {
+            return ctx.reply('⚠️ Erreur de génération du menu.');
         }
-
-        let currentMsg = header;
-        const messages = [];
-
-        for (const block of blocks) {
-            if (currentMsg.length + block.length + 10 > 3800) {
-                messages.push(currentMsg);
-                currentMsg = block;
-            } else {
-                currentMsg += '\n' + block;
-            }
-        }
-        messages.push(currentMsg);
 
         const imgPath = getNextMenuImage();
-        for (let i = 0; i < messages.length; i++) {
-            const msgContent = messages[i];
-            if (i === 0 && imgPath) {
-                try {
-                    await conn.sendMessage(m.chat, {
-                        image: { url: imgPath },
-                        caption: msgContent,
-                        mentions: [m.sender]
-                    }, { quoted: m });
-                } catch (e) {
-                    await ctx.reply(msgContent);
-                }
-            } else {
-                await ctx.reply(msgContent);
+        if (imgPath) {
+            try {
+                await conn.sendMessage(m.chat, {
+                    image: { url: imgPath },
+                    caption: menuText,
+                    mentions: [m.sender]
+                }, { quoted: m });
+                return;
+            } catch (e) {
+                // fallback
             }
         }
+
+        await ctx.reply(menuText);
     } catch (e) {
         console.error('[ALLMENU]', e.message);
-        return ctx.reply(box('ERROR', [{ raw: `Erreur: ${e.message}` }]));
+        return ctx.reply('⚠️ Erreur: ' + safeStr(e.message, 'inconnue'));
     }
 });
