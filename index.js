@@ -181,7 +181,6 @@ async function startSession(sessionId, options = {}) {
   const sock = makeWASocket({
     version,
     logger: suppressedLogger,
-    printQRInTerminal: false,
     browser: ['DJOUSSE TECH', 'Chrome', '1.0'],
     auth: state,
     syncFullHistory: false,
@@ -193,26 +192,30 @@ async function startSession(sessionId, options = {}) {
   store.bind(sock.ev);
   sessionManager.setSocket(sessionId, sock);
 
-  // Si méthode pairing, demander le code après connexion du socket
+  // Pairing code: écouter l'event qr (se déclenche même en mode pairing)
   if (isPairing && options.pairingPhone) {
-    // Attendre 3 secondes que le socket soit prêt (comme le repo original)
-    setTimeout(async () => {
-      try {
-        let code = await sock.requestPairingCode(options.pairingPhone);
-        code = code?.match(/.{1,4}/g)?.join('-') || code;
-        console.log('\n╔══════════════════════════════════════════════╗');
-        console.log('║         CODE DE PAIRING WHATSAPP            ║');
-        console.log('╠══════════════════════════════════════════════╣');
-        console.log(`║  Code: ${code}                         ║`);
-        console.log('║                                              ║');
-        console.log('║  1. Ouvrez WhatsApp > Appareils              ║');
-        console.log('║  2. Appuyez "Connecter un appareil"          ║');
-        console.log('║  3. Entrez le code ci-dessus                 ║');
-        console.log('╚══════════════════════════════════════════════╝\n');
-      } catch (e) {
-        console.error('[PAIRING] Erreur:', e.message);
+    sock.ev.on('connection.update', async (update) => {
+      const { qr } = update;
+      // L'event qr se déclenche même en mode pairing — c'est le signal pour demander le code
+      if (qr && !sock.authState.creds.registered) {
+        try {
+          let code = await sock.requestPairingCode(options.pairingPhone);
+          code = code?.match(/.{1,4}/g)?.join('-') || code;
+          console.log('\n╔══════════════════════════════════════════════╗');
+          console.log('║         CODE DE PAIRING WHATSAPP            ║');
+          console.log('╠══════════════════════════════════════════════╣');
+          console.log(`║  Code: ${code}                         ║`);
+          console.log('║                                              ║');
+          console.log('║  1. WhatsApp > Appareils lies                ║');
+          console.log('║  2. "Connecter un appareil"                  ║');
+          console.log('║  3. "Lier avec un numero"                    ║');
+          console.log('║  4. Entrez le code ci-dessus                 ║');
+          console.log('╚══════════════════════════════════════════════╝\n');
+        } catch (e) {
+          console.error('[PAIRING] Erreur:', e.message);
+        }
       }
-    }, 3000);
+    });
   }
 
   let lastActivity = Date.now();
