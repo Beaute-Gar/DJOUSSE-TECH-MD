@@ -67,6 +67,36 @@ console.log = (...args) => {
   originalConsoleLog(...args);
 };
 
+/* ═══════════════════════════════════════════════════════════════
+   READLINE — Choix de méthode de connexion
+   ═══════════════════════════════════════════════════════════════ */
+const readline = require('readline');
+
+function askQuestion(query) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise(resolve => rl.question(query, ans => { rl.close(); resolve(ans.trim()); }));
+}
+
+async function askConnectionMethod() {
+  console.log('\n╔══════════════════════════════════════════════╗');
+  console.log('║       DJOUSSE TECH — CONNEXION WHATSAPP     ║');
+  console.log('╠══════════════════════════════════════════════╣');
+  console.log('║  1 │ QR Code     — Scanner avec le téléphone ║');
+  console.log('║  2 │ Pairing Code — Saisir un code 8 chiffres║');
+  console.log('╚══════════════════════════════════════════════╝\n');
+  const choice = await askQuestion('Choix [1/2]: ');
+  if (choice === '2') {
+    const phone = await askQuestion('Numéro WhatsApp (ex: 237693978044): ');
+    const clean = phone.replace(/[^0-9]/g, '');
+    if (!clean || clean.length < 8) {
+      console.log('❌ Numéro invalide. Fallback QR Code.');
+      return { method: 'qr' };
+    }
+    return { method: 'pairing', phone: clean };
+  }
+  return { method: 'qr' };
+}
+
 process.on('uncaughtException', (err) => {
   if (isIgnoredError(err.message) || isIgnoredError(err.stack)) return;
   originalConsoleError('[UNCAUGHT]', err.message);
@@ -141,6 +171,10 @@ async function startSession(sessionId, options = {}) {
   const { version } = await fetchLatestBaileysVersion();
   const suppressedLogger = createSuppressedLogger('silent');
 
+  // Déterminer la méthode de connexion
+  const connectMethod = options.connectMethod || 'qr';
+  const isPairing = connectMethod === 'pairing';
+
   sessionManager.setStatus(sessionId, 'CONNECTING');
   bus.emit('session:connecting', { sessionId });
 
@@ -153,6 +187,7 @@ async function startSession(sessionId, options = {}) {
     syncFullHistory: false,
     downloadHistory: false,
     markOnlineOnConnect: false,
+    pairingCode: isPairing ? options.pairingPhone : undefined,
     getMessage: async () => undefined
   });
 
@@ -184,7 +219,22 @@ async function startSession(sessionId, options = {}) {
     if (qr) {
       sessionManager.setStatus(sessionId, 'WAITING_FOR_QR');
       bus.emit('session:qr', { sessionId });
-      qrcode.generate(qr, { small: true });
+      if (!isPairing) {
+        qrcode.generate(qr, { small: true });
+      }
+    }
+
+    // Pairing code display
+    if (update.pairingCode && isPairing) {
+      console.log('\n╔══════════════════════════════════════════════╗');
+      console.log('║         CODE DE PAIRING WHATSAPP            ║');
+      console.log('╠══════════════════════════════════════════════╣');
+      console.log(`║  Code: ${update.pairingCode}                      ║`);
+      console.log('║                                              ║');
+      console.log('║  1. Ouvrez WhatsApp > Appareils              ║');
+      console.log('║  2. Appuyez "Connecter un appareil"          ║');
+      console.log('║  3. Entrez le code ci-dessus                 ║');
+      console.log('╚══════════════════════════════════════════════╝\n');
     }
 
     if (connection === 'close') {
@@ -438,12 +488,29 @@ async function main() {
     }
   }
 
-  // Start default session
+  // Vérifier si déjà connecté (session existante avec creds)
   const sessionId = config.sessionName || 'session';
+  const sessionDir = path.join(__dirname, sessionId);
+  const hasCreds = fs.existsSync(path.join(sessionDir, 'creds.json'));
+
+  let connectMethod = 'qr';
+  let pairingPhone = null;
+
+  // Demander la méthode seulement si pas de session existante
+  if (!hasCreds) {
+    const choice = await askConnectionMethod();
+    connectMethod = choice.method;
+    pairingPhone = choice.phone || null;
+  } else {
+    console.log('[SESSION] Session existante détectée, reconnexion automatique...');
+  }
+
   try {
     await startSession(sessionId, {
       sessionID: config.sessionID,
       owner: config.ownerNumber?.[0],
+      connectMethod,
+      pairingPhone,
     });
   } catch (err) {
     bus.emit('system:error', { source: 'startup', error: err.message });
