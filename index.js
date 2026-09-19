@@ -187,12 +187,33 @@ async function startSession(sessionId, options = {}) {
     syncFullHistory: false,
     downloadHistory: false,
     markOnlineOnConnect: false,
-    pairingCode: isPairing ? options.pairingPhone : undefined,
     getMessage: async () => undefined
   });
 
   store.bind(sock.ev);
   sessionManager.setSocket(sessionId, sock);
+
+  // Si méthode pairing, demander le code après connexion du socket
+  if (isPairing && options.pairingPhone) {
+    sock.ev.on('connection.update', async (update) => {
+      if (update.connection === 'open' || update.qr) {
+        try {
+          const code = await sock.requestPairingCode(options.pairingPhone);
+          console.log('\n╔══════════════════════════════════════════════╗');
+          console.log('║         CODE DE PAIRING WHATSAPP            ║');
+          console.log('╠══════════════════════════════════════════════╣');
+          console.log(`║  Code: ${code}                      ║`);
+          console.log('║                                              ║');
+          console.log('║  1. Ouvrez WhatsApp > Appareils              ║');
+          console.log('║  2. Appuyez "Connecter un appareil"          ║');
+          console.log('║  3. Entrez le code ci-dessus                 ║');
+          console.log('╚══════════════════════════════════════════════╝\n');
+        } catch (e) {
+          console.error('[PAIRING] Erreur:', e.message);
+        }
+      }
+    });
+  }
 
   let lastActivity = Date.now();
   const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
@@ -222,19 +243,6 @@ async function startSession(sessionId, options = {}) {
       if (!isPairing) {
         qrcode.generate(qr, { small: true });
       }
-    }
-
-    // Pairing code display
-    if (update.pairingCode && isPairing) {
-      console.log('\n╔══════════════════════════════════════════════╗');
-      console.log('║         CODE DE PAIRING WHATSAPP            ║');
-      console.log('╠══════════════════════════════════════════════╣');
-      console.log(`║  Code: ${update.pairingCode}                      ║`);
-      console.log('║                                              ║');
-      console.log('║  1. Ouvrez WhatsApp > Appareils              ║');
-      console.log('║  2. Appuyez "Connecter un appareil"          ║');
-      console.log('║  3. Entrez le code ci-dessus                 ║');
-      console.log('╚══════════════════════════════════════════════╝\n');
     }
 
     if (connection === 'close') {
