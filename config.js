@@ -101,7 +101,7 @@ module.exports = {
 
     // Auto Status Quotes
     statusQuotes: {
-        enabled: process.env.STATUS_QUOTES_ENABLED === 'true',
+        enabled: process.env.STATUS_QUOTES_ENABLED !== 'false',
         intervalHours: parseInt(process.env.STATUS_QUOTES_INTERVAL_HOURS || '6', 10),
         maxLength: parseInt(process.env.STATUS_QUOTES_MAX_LENGTH || '350', 10),
         cacheRefreshHours: parseInt(process.env.STATUS_QUOTES_CACHE_REFRESH_HOURS || '6', 10),

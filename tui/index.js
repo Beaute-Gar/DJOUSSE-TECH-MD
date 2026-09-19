@@ -8,6 +8,7 @@ const os = require('os');
 const bus = require('../src/core/eventBus');
 const sessionManager = require('../src/sessions/sessionManager');
 const ainoria = require('../src/ainoria/ainoria');
+const { commandMap } = require('../commands/command.cjs');
 
 // ANSI Colors
 const C = {
@@ -44,7 +45,7 @@ function getMemoryUsage() {
   return {
     rss: (mem.rss / 1024 / 1024).toFixed(0),
     heap: (mem.heapUsed / 1024 / 1024).toFixed(0),
-    total: (mem.heapTotal / 1024 / 1024).toFixed(0),
+    total: (mem.rss / 1024 / 1024).toFixed(0),
   };
 }
 
@@ -81,7 +82,7 @@ function drawHeader() {
   const lines = [
     `${C.bold}SYSTEM${C.reset}     | ${C.bold}WHATSAPP${C.reset}        | ${C.bold}AINORIA${C.reset}       | ${C.bold}SECURITY${C.reset}`,
     `${C.green}ONLINE${C.reset}     | ${stats.connected} SESSIONS      | ${C.green}${ainoria.status}${C.reset}         | ${C.green}SECURE${C.reset}`,
-    `${C.dim}RAM: ${mem.rss}MB${C.reset}  | ${C.dim}Cmds: ${stats.totalCommands}${C.reset}     | ${C.dim}v${ainoria.version}${C.reset}       | ${C.dim}PID: ${process.pid}${C.reset}`,
+    `${C.dim}RAM: ${mem.rss}MB${C.reset}  | ${C.dim}Cmds: ${commandMap ? commandMap.size : 0}${C.reset}     | ${C.dim}v${ainoria.version}${C.reset}       | ${C.dim}PID: ${process.pid}${C.reset}`,
   ];
   return drawBox('DJOUSSE TECH // COMMAND CENTER', lines, 70);
 }
@@ -90,6 +91,7 @@ function drawDashboard() {
   const mem = getMemoryUsage();
   const stats = sessionManager.getTotalStats();
   const ainStats = ainoria.getStats();
+  const loadedCmds = commandMap ? commandMap.size : 0;
   const lines = [
     '',
     `${C.bold}SYSTEM${C.reset}`,
@@ -109,8 +111,8 @@ function drawDashboard() {
     '',
     `${C.bold}COMMANDS${C.reset}`,
     `${'-'.repeat(50)}`,
-    `Total loaded  ${stats.totalCommands}`,
-    `Executed      ${stats.totalMessages}`,
+    `Total loaded  ${loadedCmds}`,
+    `Executed      ${stats.totalCommands}`,
     `Errors        ${stats.totalErrors}`,
     '',
     `${C.bold}AINORIA${C.reset}`,

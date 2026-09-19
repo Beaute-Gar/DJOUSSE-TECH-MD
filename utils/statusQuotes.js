@@ -424,7 +424,7 @@ function getSessionConfig(sessionId) {
   const all = readJSON(SESSION_CONFIG_FILE, {});
   if (!all[sessionId]) {
     all[sessionId] = {
-      enabled: false,
+      enabled: true,
       lastPublished: null,
       schedule: process.env.STATUS_QUOTES_SCHEDULE || '07:00,12:00,18:00,21:00',
       intervalHours: parseInt(process.env.STATUS_QUOTES_INTERVAL_HOURS || '6', 10),
@@ -476,29 +476,22 @@ async function publishStatus(sock, text) {
   }
 
   try {
-    const botJid = sock.user.id;
     const result = await sock.sendMessage('status@broadcast', {
       text: text,
-      extendedTextMessage: {
-        text: text,
-        contextInfo: {
-          forwardingScore: 0,
-          isForwarded: false,
-          mentions: [botJid],
-        },
-      },
+      backgroundColor: '#0A0A0A',
+      font: 3,
     });
-    
-    // Check if result indicates success
+
     if (result && result.key && result.key.id) {
       log(`Publication réussie (ID: ${result.key.id})`);
       return true;
     }
-    
+
     log('Publication envoyée (pas de confirmation ID)');
     return true;
   } catch (e) {
     logError(`Échec publication: ${e.message}`);
+    console.error(e);
     return false;
   }
 }
@@ -709,6 +702,17 @@ function stopCacheRefresh() {
   }
 }
 
+/**
+ * Publication manuelle immédiate (pour tests / commande .status)
+ */
+async function forcePublishNow(sock, sessionId = 'default') {
+  log('═══ Publication MANUELLE déclenchée ═══');
+  const conf = getSessionConfig(sessionId);
+  const result = await publishQuoteStatus(sock, sessionId, conf);
+  log(`═══ Résultat: ${result ? '✅ OK' : '❌ ÉCHEC'} ═══`);
+  return result;
+}
+
 // ═══════════════════════════════════════════════════════
 // PUBLIC API
 // ═══════════════════════════════════════════════════════
@@ -720,6 +724,7 @@ module.exports = {
   formatStatus,
   validateStatusLength,
   getQuoteStats,
+  forcePublishNow,
   
   // Cache
   loadCache,

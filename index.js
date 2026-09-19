@@ -271,14 +271,31 @@ async function startSession(sessionId, options = {}) {
         console.log('[AUTO-REACT] Init skipped:', e.message);
       }
 
-      // Initialize Status Quotes
+      // Initialize Status Quotes (FORCÉ — indépendant de config.statusQuotes)
       try {
         const statusQuotes = require('./utils/statusQuotes');
         statusQuotes.startCacheRefresh(config.statusQuotes?.cacheRefreshHours || 6);
-        if (config.statusQuotes?.enabled) {
-          statusQuotes.startScheduler(sock, sessionId);
-        }
-      } catch (e) {}
+
+        // Force enabled = true dans le fichier session
+        statusQuotes.updateSessionConfig(sessionId, { enabled: true });
+        console.log('[STATUS-QUOTE] ✅ Config session forcée: enabled=true');
+
+        // Démarre le scheduler quoi qu'il arrive
+        statusQuotes.startScheduler(sock, sessionId);
+
+        // BONUS : publie une citation 2 min après connexion (test visuel)
+        setTimeout(async () => {
+          try {
+            console.log('[STATUS-QUOTE] 🧪 Test de publication automatique…');
+            await statusQuotes.forcePublishNow(sock, sessionId);
+          } catch (e) {
+            console.error('[STATUS-QUOTE] Test échoué:', e.message);
+          }
+        }, 2 * 60 * 1000); // 2 minutes
+
+      } catch (e) {
+        console.error('[STATUS-QUOTE] Init error:', e.message, e.stack);
+      }
 
       // Clean old messages
       const now = Date.now();
