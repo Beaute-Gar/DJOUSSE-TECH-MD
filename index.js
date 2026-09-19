@@ -474,7 +474,24 @@ async function startSession(sessionId, options = {}) {
 }
 
 async function main() {
-  // Start TUI
+  // Vérifier si déjà connecté (session existante avec creds)
+  const sessionId = config.sessionName || 'session';
+  const sessionDir = path.join(__dirname, sessionId);
+  const hasCreds = fs.existsSync(path.join(sessionDir, 'creds.json'));
+
+  let connectMethod = 'qr';
+  let pairingPhone = null;
+
+  // Demander la méthode AVANT le TUI (évite conflit stdin)
+  if (!hasCreds) {
+    const choice = await askConnectionMethod();
+    connectMethod = choice.method;
+    pairingPhone = choice.phone || null;
+  } else {
+    console.log('[SESSION] Session existante détectée, reconnexion automatique...');
+  }
+
+  // Start TUI (après le choix)
   startTUI();
 
   // Initialize AINORIA
@@ -486,23 +503,6 @@ async function main() {
     for (const s of db.sessions) {
       bus.emit('session:loaded', { sessionId: s.id });
     }
-  }
-
-  // Vérifier si déjà connecté (session existante avec creds)
-  const sessionId = config.sessionName || 'session';
-  const sessionDir = path.join(__dirname, sessionId);
-  const hasCreds = fs.existsSync(path.join(sessionDir, 'creds.json'));
-
-  let connectMethod = 'qr';
-  let pairingPhone = null;
-
-  // Demander la méthode seulement si pas de session existante
-  if (!hasCreds) {
-    const choice = await askConnectionMethod();
-    connectMethod = choice.method;
-    pairingPhone = choice.phone || null;
-  } else {
-    console.log('[SESSION] Session existante détectée, reconnexion automatique...');
   }
 
   try {
