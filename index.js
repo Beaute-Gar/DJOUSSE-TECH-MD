@@ -195,24 +195,24 @@ async function startSession(sessionId, options = {}) {
 
   // Si méthode pairing, demander le code après connexion du socket
   if (isPairing && options.pairingPhone) {
-    sock.ev.on('connection.update', async (update) => {
-      if (update.connection === 'open' || update.qr) {
-        try {
-          const code = await sock.requestPairingCode(options.pairingPhone);
-          console.log('\n╔══════════════════════════════════════════════╗');
-          console.log('║         CODE DE PAIRING WHATSAPP            ║');
-          console.log('╠══════════════════════════════════════════════╣');
-          console.log(`║  Code: ${code}                      ║`);
-          console.log('║                                              ║');
-          console.log('║  1. Ouvrez WhatsApp > Appareils              ║');
-          console.log('║  2. Appuyez "Connecter un appareil"          ║');
-          console.log('║  3. Entrez le code ci-dessus                 ║');
-          console.log('╚══════════════════════════════════════════════╝\n');
-        } catch (e) {
-          console.error('[PAIRING] Erreur:', e.message);
-        }
+    // Attendre 3 secondes que le socket soit prêt (comme le repo original)
+    setTimeout(async () => {
+      try {
+        let code = await sock.requestPairingCode(options.pairingPhone);
+        code = code?.match(/.{1,4}/g)?.join('-') || code;
+        console.log('\n╔══════════════════════════════════════════════╗');
+        console.log('║         CODE DE PAIRING WHATSAPP            ║');
+        console.log('╠══════════════════════════════════════════════╣');
+        console.log(`║  Code: ${code}                         ║`);
+        console.log('║                                              ║');
+        console.log('║  1. Ouvrez WhatsApp > Appareils              ║');
+        console.log('║  2. Appuyez "Connecter un appareil"          ║');
+        console.log('║  3. Entrez le code ci-dessus                 ║');
+        console.log('╚══════════════════════════════════════════════╝\n');
+      } catch (e) {
+        console.error('[PAIRING] Erreur:', e.message);
       }
-    });
+    }, 3000);
   }
 
   let lastActivity = Date.now();
