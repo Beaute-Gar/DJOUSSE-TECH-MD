@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const professions = [
   { name: 'Développeur Web', desc: 'Crée des sites web magnifiques.' },
@@ -26,6 +27,9 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const prof = professions[Math.floor(Math.random() * professions.length)];
-  const text = `💼 [ROBOT] PROFESSION ALÉATOIRE!\n\n🎯 Métier: ${prof.name}\n📝 Description: ${prof.desc}\n\n⚡ [ROBOT] Profession sélectionnée par algorithme aléatoire.`;
+  const text = boxWithFooter('💼 PROFESSION ALÉATOIRE', [
+    { label: '🎯 Métier', value: prof.name },
+    { label: '📝 Description', value: prof.desc },
+  ]);
   await m.reply(text);
 });

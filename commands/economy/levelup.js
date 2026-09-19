@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { getUser, updateUser } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'levelup',
@@ -14,7 +15,10 @@ cmd({
   const totalBalance = (user.coins || 0) + (user.bank || 0);
 
   if (totalBalance < cost) {
-    return m.reply(`⚙️ [SYSTEM] Insufficient funds for level up! Required: ${cost} coins | Available: ${totalBalance} coins. Keep accumulating resources!`);
+    return m.reply(boxWithFooter('ERROR', [
+      { label: 'Required', value: `${cost} coins` },
+      { label: 'Available', value: `${totalBalance} coins` },
+    ]));
   }
 
   if ((user.coins || 0) >= cost) {
@@ -29,5 +33,10 @@ cmd({
   user.transactions = (user.transactions || 0) + 1;
   updateUser(m.sender, user);
 
-  m.reply(`🤖 [LEVEL UP!] Level ${currentLevel} → Level ${user.level}! Cost deducted: ${cost} coins. New balance - Cash: ${user.coins} | Bank: ${user.bank}. Achievement unlocked! 🎮`);
+  m.reply(boxWithFooter('LEVEL UP!', [
+    { label: 'Level', value: `${currentLevel} → ${user.level}` },
+    { label: 'Cost', value: `${cost} coins` },
+    { label: 'Cash', value: `${user.coins} coins` },
+    { label: 'Bank', value: `${user.bank} coins` },
+  ]));
 });

@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const moods = [
   { mood: 'Heureux', emoji: '😊', description: 'Tout va bien dans le monde numérique.' },
@@ -21,6 +22,9 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const mood = moods[Math.floor(Math.random() * moods.length)];
-  const text = `🎭 [ROBOT] HUMEUR DU JOUR!\n\n${mood.emoji} Humeur: ${mood.mood}\n💬 ${mood.description}\n\n⚡ [ROBOT] Humeur détectée par algorithme émotionnel.`;
+  const text = boxWithFooter('🎭 HUMEUR DU JOUR', [
+    { label: `${mood.emoji} Humeur`, value: mood.mood },
+    { raw: `💬 ${mood.description}` },
+  ]);
   await m.reply(text);
 });

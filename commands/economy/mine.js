@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { getUser, updateUser } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'mine',
@@ -15,7 +16,7 @@ cmd({
 
   if (remaining > 0) {
     const minutes = Math.floor(remaining / (1000 * 60));
-    return m.reply(`⚙️ [SYSTEM] Mining equipment recalibrating. Time remaining: ${minutes}m. Patience yields ore.`);
+    return m.reply(boxWithFooter('COOLDOWN', [{ raw: `Mining equipment recalibrating. Time remaining: ${minutes}m.` }]));
   }
 
   const finds = [
@@ -34,5 +35,9 @@ cmd({
   user.transactions = (user.transactions || 0) + 1;
   updateUser(m.sender, user);
 
-  m.reply(`🤖 [MINING REPORT] Digging complete! Found: ${find.item}. Earnings: +${reward} coins. Total balance: ${user.coins} coins. Mining efficiency: MAXIMUM! ⛏️`);
+  m.reply(boxWithFooter('MINING COMPLETE', [
+    { label: 'Found', value: find.item },
+    { label: 'Earnings', value: `+${reward} coins` },
+    { label: 'Total', value: `${user.coins} coins` },
+  ]));
 });

@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const stories = [
   {
@@ -39,6 +40,10 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const story = stories[Math.floor(Math.random() * stories.length)];
-  const text = `📖 [ROBOT] HISTOIRE ALÉATOIRE!\n\nTitre: "${story.title}"\n\n${story.content}\n\n⚡ [ROBOT] Histoire générée par algorithme narratif.`;
+  const text = boxWithFooter('📖 HISTOIRE ALÉATOIRE', [
+    { label: 'Titre', value: `"${story.title}"` },
+    { blank: true },
+    { raw: story.content },
+  ]);
   await m.reply(text);
 });

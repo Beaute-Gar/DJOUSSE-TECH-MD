@@ -30,6 +30,8 @@ module.exports = {
     autoReact: true,
     autoReactMode: 'bot',
     autoDownload: false,
+    ANTI_DELETE: false,
+    ANTI_VV: true,
 
     // Paramètres par défaut des groupes
     defaultGroupSettings: {

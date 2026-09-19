@@ -22,10 +22,10 @@
         "@bochilteam/scraper-tiktok": "^5.0.0",
         "@ffmpeg-installer/ffmpeg": "^1.1.0",
         "@vitalets/google-translate-api": "^9.2.1",
-        "@whiskeysockets/baileys": "^6.7.9",
+        "@whiskeysockets/baileys": "^6.7.22",
         "@xaviabot/fb-downloader": "^1.0.14",
         "axios": "^1.7.2",
-        "canvas": "^3.2.1",
+
         "cheerio": "^1.0.0-rc.12",
         "dotenv": "^16.4.5",
         "ffmpeg-static": "^5.3.0",
@@ -34,8 +34,7 @@
         "form-data": "^4.0.0",
         "gifted-btns": "*",
         "jimp": "^1.6.0",
-        "lottie-node": "^2.0.0",
-        "lottie-web": "^5.13.0",
+
         "mathjs": "^15.2.0",
         "moment-timezone": "^0.5.45",
         "mumaker": "^2.0.0",
@@ -47,7 +46,8 @@
         "qrcode-reader": "^1.0.4",
         "qrcode-terminal": "^0.12.0",
         "ruhend-scraper": "^9.0.8",
-        "sharp": "^0.35.4",
+        "sharp": "0.32.6",
+        "tesseract.js": "^5.1.0",
         "wa-sticker-formatter": "^4.4.4",
         "yt-search": "^2.13.1",
         "ytdl-core": "^4.11.5"

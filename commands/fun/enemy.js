@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'enemy',
@@ -8,7 +9,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const mentions = m.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
-  if (!mentions.length) return m.reply('🤖 [SYSTEM] Mention someone! Usage: .enemy @user');
+  if (!mentions.length) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Mention someone! Usage: .enemy @user' }]));
 
   const target = mentions[0];
   const percentage = Math.floor(Math.random() * 101);
@@ -22,7 +23,11 @@ cmd({
   else if (percentage >= 30) { level = 'LÉGÈRE RIVALITÉ'; emoji = '😒'; }
   else { level = 'PAS D\'ENNEMI'; emoji = '😊'; }
 
-  const text = `🤖 [SYSTEM] Analyse de rivalité en cours...\n\n⚔️ Résultat : ${sender} & ${targetName}\n${emoji} Niveau d'ennemi : ${percentage}%\n📝 Statut : ${level}\n\n⚡ [ROBOT] Calcul de rivalité terminé.`;
+  const text = boxWithFooter('⚔️ ANALYSE DE RIVALITÉ', [
+    { label: '⚔️ Résultat', value: `${sender} & ${targetName}` },
+    { label: emoji + ' Niveau d\'ennemi', value: `${percentage}%` },
+    { label: '📝 Statut', value: level },
+  ]);
 
   await conn.sendMessage(m.chat, { text, mentions: [target] }, { quoted: m });
 });

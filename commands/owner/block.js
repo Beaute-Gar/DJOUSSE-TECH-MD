@@ -1,29 +1,27 @@
-module.exports = {
-  name: 'block',
-  aliases: ['block'],
-  category: 'owner',
+const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
+
+cmd({
+  pattern: 'block',
+  alias: [],
   desc: 'Bloque un utilisateur',
-  ownerOnly: true,
-  adminOnly: false,
-  groupOnly: false,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    let target;
-    if (msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
-      target = msg.message.extendedTextMessage.contextInfo.mentionedJid[0];
-    } else if (args.length > 0) {
-      target = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
-    } else {
-      return ctx.reply('Mentionne quelqu\'un ou écris le numéro.');
-    }
-    try {
-      await sock.updateBlockStatus(target, 'block');
-      await ctx.react('🚫');
-      ctx.reply(`Utilisateur bloqué : ${target.split('@')[0]}`);
-    } catch (e) {
-      ctx.reply('Impossible de bloquer cet utilisateur...');
-    }
+  category: 'owner',
+  filename: __filename,
+  fromMe: true,
+}, async (conn, m, args, { from, reply, react }) => {
+  let target;
+  if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
+    target = m.message.extendedTextMessage.contextInfo.mentionedJid[0];
+  } else if (args.length > 0) {
+    target = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+  } else {
+    return reply(boxWithFooter('USAGE', [{ raw: 'Mentionne quelqu\'un ou écris le numéro.' }]));
   }
-};
+  try {
+    await conn.updateBlockStatus(target, 'block');
+    await react('🚫');
+    return reply(boxWithFooter('SUCCÈS', [{ raw: 'Bloqué: ' + target.split('@')[0] }]));
+  } catch {
+    return reply(boxWithFooter('ERREUR', [{ raw: 'Impossible de bloquer cet utilisateur.' }]));
+  }
+});

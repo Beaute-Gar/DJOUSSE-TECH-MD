@@ -1,0 +1,369 @@
+══════════════════════════════════════════════════════════════════════
+   RAPPORT DE TEST DES COMMANDES - DJOUSSE-TECH-MD
+══════════════════════════════════════════════════════════════════════
+
+Date : 18/09/2026 05:07:03
+Total : 113 commandes
+
+──────────────────────────────────────────────────────────────────────
+📊 STATISTIQUES
+──────────────────────────────────────────────────────────────────────
+✅ OK            : 111
+❌ Erreurs       : 1
+⚠️ Bugs          : 0
+🔇 Sans réponse  : 1
+
+──────────────────────────────────────────────────────────────────────
+❌ COMMANDES EN ERREUR
+──────────────────────────────────────────────────────────────────────
+
+📌 .cloneset
+   ❌ ENVOI ÉCHOUÉ
+
+──────────────────────────────────────────────────────────────────────
+⚠️ COMMANDES AVEC BUGS
+──────────────────────────────────────────────────────────────────────
+
+──────────────────────────────────────────────────────────────────────
+🔇 COMMANDES SANS RÉPONSE
+──────────────────────────────────────────────────────────────────────
+
+📌 .crime
+
+──────────────────────────────────────────────────────────────────────
+✅ COMMANDES OK
+──────────────────────────────────────────────────────────────────────
+
+📌 .allmenu
+   .allmenu
+
+📌 .hansuptime
+   .hansuptime
+
+📌 .host
+   .host
+
+📌 .info
+   .info
+
+📌 .menu
+   .menu
+
+📌 .owner
+   .owner
+
+📌 .repo
+   .repo
+
+📌 .verify
+   .verify
+
+📌 .create
+   .create
+
+📌 .join
+   .join
+
+📌 .personality
+   .personality
+
+📌 .prefix
+   .prefix
+
+📌 .security
+   .security
+
+📌 .ainoria
+   .ainoria
+
+📌 .clonevoice
+   .clonevoice
+
+📌 .clonevoicesave
+   .clonevoicesave
+
+📌 .myvoice
+   .myvoice
+
+📌 .voicedel
+   .voicedel
+
+📌 .voiceinfo
+   .voiceinfo
+
+📌 .mem
+   .mem
+
+📌 .memoire
+   .memoire
+
+📌 .oublier
+   .oublier
+
+📌 .label
+   .label
+
+📌 .autoreply
+   .autoreply
+
+📌 .toimage
+   .toimage
+
+📌 .tts bonjour
+   .tts bonjour
+
+📌 .fb
+   .fb
+
+📌 .ig
+   .ig
+
+📌 .lyrics despacito
+   .lyrics despacito
+
+📌 .pinterest
+   .pinterest
+
+📌 .song despacito
+   .song despacito
+
+📌 .tt
+   .tt
+
+📌 .twitter
+   .twitter
+
+📌 .ytmp4 despacito
+   .ytmp4 despacito
+
+📌 .autolevelup
+   .autolevelup
+
+📌 .balance
+   .balance
+
+📌 .buy
+   .buy
+
+📌 .daily
+   .crime
+
+📌 .dep
+   .dep
+
+📌 .economy
+   .economy
+
+📌 .levelup
+   .levelup
+
+📌 .mine
+   .mine
+
+📌 .pay
+   .pay
+
+📌 .role
+   .role
+
+📌 .shop
+   .shop
+
+📌 .topcoins
+   .topcoins
+
+📌 .wd
+   .wd
+
+📌 .weekly
+   .weekly
+
+📌 .work
+   .work
+
+📌 .8ball
+   .8ball
+
+📌 .babyname
+   .babyname
+
+📌 .bestie
+   .bestie
+
+📌 .caption
+   .caption
+
+📌 .character
+   .character
+
+📌 .coinflip
+   .coinflip
+
+📌 .dare
+   .dare
+
+📌 .debate
+   .debate
+
+📌 .divorce
+   .divorce
+
+📌 .enemy
+   .enemy
+
+📌 .fact
+   .fact
+
+📌 .fortune
+   .fortune
+
+📌 .goodmorning
+   .goodmorning
+
+📌 .goodnight
+   .goodnight
+
+📌 .guessnumber
+   .guessnumber
+
+📌 .hangman
+   .hangman
+
+📌 .horoscope
+   .horoscope
+
+📌 .hug
+   .hug
+
+📌 .joke
+   .joke
+
+📌 .kiss
+   .kiss
+
+📌 .love
+   .love
+
+📌 .marry
+   .marry
+
+📌 .memes
+   .memes
+
+📌 .mood
+   .mood
+
+📌 .nhie
+   .nhie
+
+📌 .poke
+   .poke
+
+📌 .profession
+   .profession
+
+📌 .quote
+   .quote
+
+📌 .resetgame
+   .resetgame
+
+📌 .roast
+   .roast
+
+📌 .roulette
+   .roulette
+
+📌 .rps
+   .rps
+
+📌 .slap
+   .slap
+
+📌 .slots
+   .slots
+
+📌 .soulmate
+   .soulmate
+
+📌 .story
+   .story
+
+📌 .ttt
+   .ttt
+
+📌 .vs
+   .vs
+
+📌 .wanted
+   .wanted
+
+📌 .wyr
+   .wyr
+
+📌 .base64 123
+   .base64 123
+
+📌 .convert
+   .convert
+
+📌 .toaudio
+   .toaudio
+
+📌 .toimg
+   .toimg
+
+📌 .hansfast
+   .hansfast
+
+📌 .ppcouple
+   .ppcouple
+
+📌 .antivv
+   .antivv
+
+📌 .bot_info
+   .bot_info
+
+📌 .deleteme
+   .deleteme
+
+📌 .securitestats
+   .securitestats
+
+📌 .statusreply
+   .statusreply
+
+📌 .myaccount
+   .myaccount
+
+📌 .stats
+   .stats
+
+📌 .movie inception
+   .movie inception
+
+📌 .linkinfo
+   .linkinfo
+
+📌 .linkinfo
+   .linkinfo
+
+📌 .pdf
+   .pdf
+
+📌 .pdf
+   .pdf
+
+📌 .tourl
+   .tourl
+
+📌 .tourl
+   .tourl
+
+📌 .code
+   .code
+
+📌 .code
+   .code
+

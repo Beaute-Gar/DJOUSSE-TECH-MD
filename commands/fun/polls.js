@@ -1,5 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 const fs = require('fs');
 const path = require('path');
 
@@ -27,7 +27,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, commands, { q, reply }) => {
   if (!q) {
-    return reply(box('📊 *SONDAGES*', [
+    return reply(boxWithFooter('📊 *SONDAGES*', [
       { label: 'Usage', value: '.poll Question | Option1 | Option2 | ...' },
       { label: 'Exemple', value: '.poll Pizza ou Burger ? | Pizza | Burger | Les deux' },
       { blank: true },
@@ -36,7 +36,7 @@ cmd({
   }
 
   const parts = q.split('|').map(s => s.trim()).filter(Boolean);
-  if (parts.length < 3) return reply('❌ Il faut au moins une question + 2 options.\nFormat: `.poll Question | Option1 | Option2`');
+  if (parts.length < 3) return reply(boxWithFooter('ERREUR', [{ raw: '❌ Il faut au moins une question + 2 options.\nFormat: `.poll Question | Option1 | Option2`' }]));
 
   const question = parts[0];
   const options = parts.slice(1, 11);
@@ -95,7 +95,7 @@ cmd({
 
   const votedAction = previousVote !== undefined ? 'mis à jour' : 'enregistré';
   await m.react('✅');
-  return reply(box(`📊 *${poll.question}*`, [
+  return reply(boxWithFooter('📊 *${poll.question}*', [
     { raw: results },
     { blank: true },
     { label: 'Total', value: `${total} vote(s)` },
@@ -115,7 +115,7 @@ cmd({
     v.chat === m.chat && (Date.now() - v.created) < 86400000
   );
 
-  if (!chatPolls.length) return reply('📊 Aucun sondage actif.');
+  if (!chatPolls.length) return reply(boxWithFooter('INFO', [{ raw: '📊 Aucun sondage actif.' }]));
 
   const [key, poll] = chatPolls[chatPolls.length - 1];
   const counts = new Array(poll.options.length).fill(0);
@@ -127,7 +127,7 @@ cmd({
     return `${i + 1}. ${o} — ${counts[i]} vote(s) (${pct}%)`;
   }).join('\n');
 
-  return reply(box(`📊 *RÉSULTATS — ${poll.question}*`, [
+  return reply(boxWithFooter('📊 *RÉSULTATS — ${poll.question}*', [
     { raw: results },
     { blank: true },
     { label: 'Total', value: `${total} vote(s)` },

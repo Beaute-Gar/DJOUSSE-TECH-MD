@@ -1,6 +1,6 @@
 const { cmd } = require('../command.cjs');
 const axios = require('axios');
-const { box, truncate } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter, truncate } = require('../lib/djousse-ui.cjs');
 const { mp3ToVoiceNote } = require('../lib/voice.cjs');
 
 cmd({
@@ -12,14 +12,14 @@ cmd({
   filename: __filename
 }, async (conn, m) => {
   const text = (m.body.split(' ').slice(1).join(' ') || (m.quoted ? (m.quoted.msg?.text || m.quoted.text || '') : '')).trim();
-  if (!text) return m.reply(box('🔊 *TEXT-TO-SPEECH*', [
+  if (!text) return m.reply(boxWithFooter('🔊 *TEXT-TO-SPEECH*', [
     { raw: 'Utilisation :' },
     { raw: '.tts <texte>' },
     { blank: true },
     { raw: 'Exemple :' },
     { raw: '.tts Bonjour tout le monde' },
   ]));
-  if (text.length > 200) return m.reply('❌ Texte trop long (max 200 caractères).');
+  if (text.length > 200) return m.reply(boxWithFooter('ERREUR', [{ raw: '❌ Texte trop long (max 200 caractères).' }]));
   try {
     const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=fr&client=tw-ob`;
     const res = await axios.get(url, {
@@ -37,6 +37,6 @@ cmd({
       ? { audio: vn.audio, mimetype: vn.mimetype, ptt: true, seconds: vn.seconds, caption }
       : { audio: mp3, mimetype: 'audio/mpeg', ptt: false, caption }, { quoted: m });
   } catch (e) {
-    m.reply('❌ Erreur TTS: ' + e.message);
+    m.reply(boxWithFooter('ERREUR', [{ raw: `❌ Erreur TTS: ${e.message}` }]));
   }
 });

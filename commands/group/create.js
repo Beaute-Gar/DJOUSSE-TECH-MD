@@ -1,5 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 cmd({
   pattern: 'create',
@@ -9,7 +9,7 @@ cmd({
   filename: __filename,
   fromMe: true,
 }, async (conn, m, commands, { from, q, reply }) => {
-  if (!q) return reply(box('👥 *GROUP CREATION*', [
+  if (!q) return reply(boxWithFooter('👥 *GROUP CREATION*', [
     { raw: '.create <Nom>' }, { raw: '.create <Nom> add <num1,num2>' },
   ]));
   let groupName = q; let numbersToAdd = [];
@@ -20,9 +20,13 @@ cmd({
   }
   try {
     const response = await conn.groupCreate(groupName, []);
-    if (numbersToAdd.length > 0) await conn.groupParticipantsUpdate(response.gid, numbersToAdd, 'add');
-    reply(box('✅ *GROUPE CRÉÉ*', [
+    if (numbersToAdd.length > 0) {
+      const { safeGroupUpdate } = require('../../utils/safe-group-update');
+      const result = await safeGroupUpdate(conn, response.gid, numbersToAdd, 'add', { maxRetries: 1 });
+      if (!result.ok) console.log('[CREATE] Add members warning:', result.error);
+    }
+    reply(boxWithFooter('✅ *GROUPE CRÉÉ*', [
       { label: 'Nom', value: groupName }, { label: 'ID', value: response.gid },
     ]));
-  } catch (err) { reply('❌ Erreur lors de la création.'); }
+  } catch (err) { reply(boxWithFooter('ERREUR', [{ raw: '❌ Erreur lors de la création.' }])); }
 });

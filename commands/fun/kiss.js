@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'kiss',
@@ -8,7 +9,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const mentions = m.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
-  if (!mentions.length) return m.reply('🤖 [SYSTEM] Mention someone to kiss! Usage: .kiss @user');
+  if (!mentions.length) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Mention someone to kiss! Usage: .kiss @user' }]));
 
   const target = mentions[0];
   const messages = [
@@ -16,9 +17,11 @@ cmd({
     `🤖 [SYSTEM] Scan émotionnel terminé. ${m.sender.split('@')[0]} a envoyé un baiser numérique à @${target.split('@')[0]}. Température amoureuse : ${Math.floor(Math.random() * 100)}°.`,
     `⚡ [ROBOT] Protocole kiss.exe exécuté. Cible : @${target.split('@')[0]}. Taux de dopamine simulé : ${Math.floor(Math.random() * 100)}%.`,
     `💖 [SYSTEM] ${m.sender.split('@')[0]} a généré un baiser haute définition vers @${target.split('@')[0]}. Connexion émotionnelle établie.`,
-    `💋 [ROBOT] Algorithme romantique activé. @${target.split('@')[0]} a reçu ${Math.floor(Math.random() * 10)} baisers加密.`
+    `💋 [ROBOT] Algorithme romantique activé. @${target.split('@')[0]} a reçu ${Math.floor(Math.random() * 10)} baisers virtuels.`
   ];
 
-  const text = messages[Math.floor(Math.random() * messages.length)];
+  const text = boxWithFooter('💋 BAISER VIRTUEL', [
+    { raw: messages[Math.floor(Math.random() * messages.length)] },
+  ]);
   await conn.sendMessage(m.chat, { text, mentions: [target] }, { quoted: m });
 });

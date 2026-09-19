@@ -1,12 +1,13 @@
 // plugins/deldup.cjs — .deldup : quitte les groupes dupliqués (même nom), garde un seul
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({ pattern: 'deldup', desc: 'Quitter les groupes dupliqués (même nom) en gardant un seul', category: 'group', filename: __filename, fromMe: true }, async (conn, m) => {
     const sock = conn;
     const from = m.chat;
-    if (!from || !from.endsWith('@g.us')) return m.reply('⚠️ Cette commande ne fonctionne qu\'en groupe.');
+    if (!from || !from.endsWith('@g.us')) return m.reply(boxWithFooter('ERREUR', [{ raw: '⚠️ Cette commande ne fonctionne qu\'en groupe.' }]));
 
-    await m.reply('🔍 *Recherche des groupes dupliqués...*');
+    await m.reply(box('RECHERCHE', ['🔍 Recherche des groupes dupliqués...']));
     const groups = await sock.groupFetchAllParticipating().catch(() => ({}));
     const byName = {};
     for (const [gid, g] of Object.entries(groups || {})) {
@@ -17,7 +18,7 @@ cmd({ pattern: 'deldup', desc: 'Quitter les groupes dupliqués (même nom) en ga
 
     const dupes = Object.values(byName).filter(list => list.length > 1);
     if (dupes.length === 0) {
-        return m.reply('✅ Aucun groupe dupliqué trouvé.');
+        return m.reply(boxWithFooter('SUCCÈS', [{ raw: '✅ Aucun groupe dupliqué trouvé.' }]));
     }
 
     let left = 0;
@@ -38,5 +39,5 @@ cmd({ pattern: 'deldup', desc: 'Quitter les groupes dupliqués (même nom) en ga
         details.push(`✔️ Gardé: ${keep.subject} (${keep.id})`);
     }
 
-    await m.reply(`🧹 *Nettoyage des doublons*\n\n${details.join('\n')}\n\n✅ ${left} groupe(s) quitté(s).`);
+    await m.reply(box('NETTOYAGE', ['🧹 Nettoyage des doublons', '', ...details, '', '✅ ' + left + ' groupe(s) quitté(s).']));
 });

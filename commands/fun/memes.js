@@ -1,5 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box, truncate } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter, truncate } = require('../lib/djousse-ui.cjs');
 
 /* memes.cjs — Blagues et memes aléatoires */
 
@@ -24,7 +24,7 @@ cmd({
     await m.react('😂').catch(() => {});
   } catch (e) {
     await m.react('❌').catch(() => {});
-    reply('❌ Impossible de récupérer une blague.');
+    reply(boxWithFooter('ERREUR', [{ raw: '❌ Impossible de récupérer une blague.' }]));
   }
 });
 
@@ -40,7 +40,7 @@ cmd({
     await m.react('🕐').catch(() => {});
     const res = await fetch('https://meme-api.com/gimme');
     const meme = await res.json();
-    if (!meme.url) return reply('❌ Aucun meme trouvé.');
+    if (!meme.url) return reply(boxWithFooter('ERREUR', [{ raw: '❌ Aucun meme trouvé.' }]));
     await conn.sendMessage(from, {
       image: { url: meme.url },
       caption: '🤣 *' + (meme.title || 'Meme') + '*\n_' + (meme.subreddit || '') + '_',
@@ -48,7 +48,7 @@ cmd({
     await m.react('🤣').catch(() => {});
   } catch (e) {
     await m.react('❌').catch(() => {});
-    reply('❌ Impossible de récupérer un meme.');
+    reply(boxWithFooter('ERREUR', [{ raw: '❌ Impossible de récupérer un meme.' }]));
   }
 });
 

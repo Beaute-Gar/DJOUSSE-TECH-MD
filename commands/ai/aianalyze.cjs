@@ -1,6 +1,7 @@
 'use strict';
 
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 const aiMedia = require('../../lib/ai-media.cjs');
 
 cmd({
@@ -12,11 +13,11 @@ cmd({
     filename: __filename
 }, async (conn, m, commands, { reply, q }) => {
     const prompt = q || 'Décris ce média en détail';
-    await reply('🔍 Analyse en cours...');
+    await reply(boxWithFooter('ANALYSE', [{ raw: '🔍 Analyse en cours...' }]));
     const result = await aiMedia.analyzeMedia(conn, m, prompt);
     if (result) {
-        await reply(result);
+        await reply(boxWithFooter('RESULTAT', [{ raw: result }]));
     } else {
-        await reply('❌ Réponds à une image, vidéo ou audio avec `.aianalyze`');
+        await reply(boxWithFooter('ERROR', [{ raw: '❌ Réponds à une image, vidéo ou audio avec `.aianalyze`' }]));
     }
 });

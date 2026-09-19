@@ -1,10 +1,11 @@
 const { cmd } = require('../command.cjs');
 const PDFDocument = require('pdfkit');
+const { box } = require('../lib/djousse-ui.cjs');
 
 cmd({ pattern: 'pdf', desc: 'Générer un PDF à partir d\'un texte', category: 'tools', filename: __filename }, async (conn, m) => {
   const text = (m.body || '').split(' ').slice(1).join(' ').trim() || m.quoted?.text || '';
-  if (!text) return m.reply('❌ Usage: .pdf <texte>\nOu réponds à un message avec .pdf');
-  m.reply('📄 Génération du PDF...');
+  if (!text) return m.reply(box('ERROR', [{ raw: 'Usage: .pdf <texte>\nOu réponds à un message avec .pdf' }]));
+  m.reply(box('PDF', [{ raw: 'Génération du PDF...' }]));
   try {
     const doc = new PDFDocument({ size: 'A4', margin: 40 });
     const chunks = [];
@@ -25,7 +26,7 @@ cmd({ pattern: 'pdf', desc: 'Générer un PDF à partir d\'un texte', category: 
       document: buf,
       mimetype: 'application/pdf',
       fileName: `DJOUSSE-${Date.now()}.pdf`,
-      caption: '📄 Document généré',
+      caption: box('SUCCESS', [{ raw: 'Document généré' }]),
     }, { quoted: m });
-  } catch (e) { m.reply('❌ ' + e.message); }
+  } catch (e) { m.reply(box('ERROR', [{ raw: e.message }])); }
 });

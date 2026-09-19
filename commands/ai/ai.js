@@ -1,27 +1,23 @@
-const api = require('../../utils/api');
+const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
-module.exports = {
-  name: 'ai',
-  aliases: ['ai', 'gpt', 'chat'],
-  category: 'ai',
+cmd({
+  pattern: 'ai',
+  alias: ['gpt', 'chat'],
   desc: 'Pose une question à l\'IA',
-  ownerOnly: false,
-  adminOnly: false,
-  groupOnly: false,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    const text = args.join(' ');
-    if (!text) {
-      return await ctx.reply('Pose ta question.\nEx: .ai C\'est quoi la vie ?');
-    }
-    try {
-      await ctx.react('🤖');
-      const response = await api.gptResponse(text);
-      await ctx.reply(response);
-    } catch (e) {
-      await ctx.reply('Oups, l\'IA est pas disponible là.');
-    }
+  category: 'ai',
+  filename: __filename,
+}, async (conn, m, args, { from, reply, react }) => {
+  const text = args.join(' ');
+  if (!text) return reply(boxWithFooter('AI', [{ cmd: 'ai', desc: 'C\'est quoi la vie ?' }]));
+  try {
+    await react('🤖');
+    const fetch = require('node-fetch');
+    const res = await fetch('https://api.ahmmk.cloud/v1/gpt?message=' + encodeURIComponent(text));
+    const data = await res.json();
+    if (data.response) return reply(boxWithFooter('AI', [{ raw: data.response }]));
+    return reply(boxWithFooter('ERROR', [{ raw: 'L\'IA n\'est pas disponible.' }]));
+  } catch {
+    return reply(boxWithFooter('ERROR', [{ raw: 'Oups, l\'IA est pas dispo.' }]));
   }
-};
+});

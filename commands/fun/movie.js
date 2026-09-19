@@ -1,6 +1,6 @@
 ﻿const { cmd } = require('../command.cjs');
 const axios = require('axios');
-const { box, truncate } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter, truncate } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'movie',
@@ -11,7 +11,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, commands, { q, reply }) => {
   try {
-    if (!q) return reply(box('🎬 *INFOS FILM*', [
+    if (!q) return reply(boxWithFooter('🎬 *INFOS FILM*', [
       { raw: 'Utilisation :' },
       { raw: '.movie <titre>' },
       { blank: true },
@@ -25,7 +25,7 @@ cmd({
       params: { apikey: process.env.OMDB_API_KEY || '742b2d09', t: q, plot: 'full' },
     });
 
-    if (data.Response === 'False') return reply('❌ Film/serie introuvable : ' + q);
+    if (data.Response === 'False') return reply(boxWithFooter('ERREUR', [{ raw: `❌ Film/serie introuvable : ${q}` }]));
 
     const poster = data.Poster && data.Poster !== 'N/A' ? data.Poster : null;
 
@@ -58,6 +58,6 @@ cmd({
     await m.react('✅').catch(() => {});
   } catch (e) {
     await m.react('❌').catch(() => {});
-    reply('❌ Erreur: ' + e.message);
+    reply(boxWithFooter('ERREUR', [{ raw: `❌ Erreur: ${e.message}` }]));
   }
 });

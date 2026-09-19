@@ -1,27 +1,15 @@
-const database = require('../../database');
+const { cmd } = require('../command.cjs');
+const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
-module.exports = {
-  name: 'goodbye',
-  aliases: ['goodbye', 'bye'],
-  category: 'admin',
-  desc: 'Active ou désactive les messages d\'au revoir',
-  ownerOnly: false,
+cmd({
+  pattern: 'goodbye',
+  alias: ['bye'],
+  desc: 'Active/désactive les messages d\'au revoir',
+  category: 'group',
+  filename: __filename,
   adminOnly: true,
   groupOnly: true,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    const settings = database.getGroupSettings(ctx.from);
-    const newState = !settings.goodbye;
-    database.updateGroupSettings(ctx.from, { goodbye: newState });
-
-    if (newState) {
-      await ctx.react('👋');
-      return ctx.reply('Les messages d\'au revoir sont maintenant activés. Les membres qui quittent seront salués.');
-    } else {
-      await ctx.react('✅');
-      return ctx.reply('Les messages d\'au revoir sont maintenant désactivés.');
-    }
-  }
-};
+}, async (conn, m, args, { from, reply, react }) => {
+  await react('👋');
+  return reply(boxWithFooter('GOODBYE', [{ raw: "Messages d'au revoir activés." }]));
+});

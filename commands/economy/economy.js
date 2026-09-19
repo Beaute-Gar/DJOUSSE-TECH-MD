@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { getAllUsers, getLeaderboard } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'economy',
@@ -24,5 +25,11 @@ cmd({
   const totalUsers = users.length;
   const totalWealth = totalCoins + totalBank;
 
-  m.reply(`🤖 [DJOUSSE TECH ECONOMY REPORT] ═══════════════\n📊 System Statistics:\n\n👥 Total Users: ${totalUsers}\n💰 Cash in Circulation: ${totalCoins} coins\n🏦 Bank Reserves: ${totalBank} coins\n💎 Total Wealth: ${totalWealth} coins\n📈 Total Transactions: ${totalTransactions}\n\n═══════════════════\n⚙️ Economy status: OPERATIONAL. System running at optimal efficiency!`);
+  m.reply(boxWithFooter('ECONOMY REPORT', [
+    { label: 'Total Users', value: totalUsers },
+    { label: 'Cash in Circulation', value: `${totalCoins} coins` },
+    { label: 'Bank Reserves', value: `${totalBank} coins` },
+    { label: 'Total Wealth', value: `${totalWealth} coins` },
+    { label: 'Total Transactions', value: totalTransactions },
+  ]));
 });

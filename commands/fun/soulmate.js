@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'soulmate',
@@ -8,7 +9,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const mentions = m.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
-  if (!mentions.length) return m.reply('🤖 [SYSTEM] Mention someone! Usage: .soulmate @user');
+  if (!mentions.length) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Mention someone! Usage: .soulmate @user' }]));
 
   const target = mentions[0];
   const percentage = Math.floor(Math.random() * 101);
@@ -22,7 +23,11 @@ cmd({
   else if (percentage >= 30) { level = 'AMOUR POSSIBLE'; emoji = '❤️'; }
   else { level = 'PAS COMPATIBLES'; emoji = '💔'; }
 
-  const text = `🤖 [SYSTEM] Scan d'âmes jumelles en cours...\n\n🔮 Résultat : ${sender} & ${targetName}\n${emoji} Compatibilité : ${percentage}%\n📝 Statut : ${level}\n\n⚡ [ROBOT] Analyse romantique terminée.`;
+  const text = boxWithFooter('🔮 ÂMES JUMELLES', [
+    { label: '🔮 Résultat', value: `${sender} & ${targetName}` },
+    { label: emoji + ' Compatibilité', value: `${percentage}%` },
+    { label: '📝 Statut', value: level },
+  ]);
 
   await conn.sendMessage(m.chat, { text, mentions: [target] }, { quoted: m });
 });

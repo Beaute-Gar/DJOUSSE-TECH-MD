@@ -1,5 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box, truncate } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter, truncate } = require('../lib/djousse-ui.cjs');
 const os = require('os');
 const process = require('process');
 
@@ -45,6 +45,6 @@ cmd({
     ]);
     await conn.sendMessage(from, { text }, { quoted: m });
   } catch (error) {
-    reply('❌ Erreur lors de la récupération des infos host.');
+    reply(boxWithFooter('ERREUR', [{ raw: '❌ Erreur lors de la récupération des infos host.' }]));
   }
 });

@@ -36,6 +36,6 @@ cmd({
     await m.react('✅').catch(() => {});
   } catch (err) {
     await m.react('❌').catch(() => {});
-    reply(box('❌ *ERREUR*', [{ raw: truncate(err.message, 200) }]));
+    reply(boxWithFooter('❌ *ERREUR*', [{ raw: truncate(err.message, 200) }]));
   }
 });

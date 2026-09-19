@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'caption',
@@ -20,6 +21,8 @@ cmd({
     'Quand tu copies-colle depuis Stack Overflow et que ça marche.'
   ];
 
-  const text = `📸 [ROBOT] LÉGENDE GÉNÉRÉE!\n\n"${captions[Math.floor(Math.random() * captions.length)]}"\n\n⚡ [ROBOT] Caption créée par algorithme humoristique.`;
+  const text = boxWithFooter('📸 LÉGENDE GÉNÉRÉE', [
+    { raw: `"${captions[Math.floor(Math.random() * captions.length)]}"` },
+  ]);
   await m.reply(text);
 });

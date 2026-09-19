@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'marry',
@@ -8,7 +9,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const mentions = m.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
-  if (!mentions.length) return m.reply('🤖 [SYSTEM] Mention someone! Usage: .marry @user');
+  if (!mentions.length) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Mention someone! Usage: .marry @user' }]));
 
   const target = mentions[0];
   const sender = m.sender.split('@')[0];
@@ -17,9 +18,17 @@ cmd({
 
   let text;
   if (accepted) {
-    text = `💍 [ROBOT] Demande de mariage analysée...\n\n${sender} a proposé à ${targetName}\n✅ Réponse : ACCEPTÉ !\n💓 Félicitations ! Union virtuelle enregistrée.\n\n⚡ [ROBOT] Protocole de mariage exécuté avec succès.`;
+    text = boxWithFooter('💍 MARIAGE ACCEPTÉ', [
+      { raw: `${sender} a proposé à ${targetName}` },
+      { raw: '✅ Réponse : ACCEPTÉ !' },
+      { raw: '💓 Félicitations ! Union virtuelle enregistrée.' },
+    ]);
   } else {
-    text = `💔 [ROBOT] Demande de mariage analysée...\n\n${sender} a proposé à ${targetName}\n❌ Réponse : REFUSÉ.\n😭 Algorithme de rejet activé. ${sender} a été friendzoné numériquement.\n\n⚡ [ROBOT] Protocole de rejet terminé.`;
+    text = boxWithFooter('💔 MARIAGE REFUSÉ', [
+      { raw: `${sender} a proposé à ${targetName}` },
+      { raw: '❌ Réponse : REFUSÉ.' },
+      { raw: `😭 ${sender} a été friendzoné numériquement.` },
+    ]);
   }
 
   await conn.sendMessage(m.chat, { text, mentions: [target] }, { quoted: m });

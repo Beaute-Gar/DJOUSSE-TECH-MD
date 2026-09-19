@@ -1,5 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    JEUX — Dare, Quiz, Tic-Tac-Toe, Love — adaptés de N-main
@@ -139,17 +139,17 @@ cmd({
 }, async (conn, m, commands, { from, reply }) => {
   if (!tttGames[from]) {
     tttGames[from] = { playerX: m.sender, playerO: null, board: ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'], turn: 'X' };
-    return reply('🎮 *Tic-Tac-Toe créé !*\n🕹️ *' + m.sender.split('@')[0] + '* a lancé la partie.\nTape .ttt pour rejoindre !');
+    return reply(boxWithFooter('SUCCÈS', [{ raw: `🎮 *Tic-Tac-Toe créé !*\n🕹️ *${m.sender.split('@')[0]}* a lancé la partie.\nTape .ttt pour rejoindre !` }]));
   }
 
   const game = tttGames[from];
   if (!game.playerO && m.sender !== game.playerX) {
     game.playerO = m.sender;
-    return reply('✅ *Partie lancée !*\n' + drawBoard(game.board) + '\n❌ *' + game.playerX.split('@')[0] + '* vs ⭕ *' + game.playerO.split('@')[0] + '*\n\n🔥 C\'est à *' + game.playerX.split('@')[0] + '* (❌) !');
+    return reply(boxWithFooter('SUCCÈS', [{ raw: `✅ *Partie lancée !*\n${drawBoard(game.board)}\n❌ *${game.playerX.split('@')[0]}* vs ⭕ *${game.playerO.split('@')[0]}*\n\n🔥 C'est à *${game.playerX.split('@')[0]}* (❌) !` }]));
   }
 
-  if (!game.playerO) return reply('⚠️ En attente d\'un second joueur...');
-  return reply('⚠️ Partie déjà en cours. Attends ton tour.');
+  if (!game.playerO) return reply(boxWithFooter('ATTENTION', [{ raw: '⚠️ En attente d\'un second joueur...' }]));
+  return reply(boxWithFooter('ATTENTION', [{ raw: '⚠️ Partie déjà en cours. Attends ton tour.' }]));
 });
 
 cmd({
@@ -161,7 +161,7 @@ cmd({
 }, async (conn, m, commands, { from, reply }) => {
   if (tttGames[from]) {
     delete tttGames[from];
-    return reply('♻️ *Partie réinitialisée !*');
+    return reply(boxWithFooter('SUCCÈS', [{ raw: '♻️ *Partie réinitialisée !*' }]));
   }
-  return reply('❌ Aucune partie en cours.');
+  return reply(boxWithFooter('ERREUR', [{ raw: '❌ Aucune partie en cours.' }]));
 });

@@ -1,6 +1,6 @@
 const { cmd } = require('../command.cjs');
 const axios = require('axios');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 cmd({ pattern: 'animegirl', alias: ['waifu'], react: '💖', desc: 'Sends a random waifu', category: 'MATHTOOL', filename: __filename }, async (conn, m, commands, { from, reply }) => {
   try {
@@ -13,7 +13,7 @@ cmd({ pattern: 'animegirl', alias: ['waifu'], react: '💖', desc: 'Sends a rand
     await conn.sendMessage(from, { image: { url: img }, caption }, { quoted: m });
   } catch (err) {
     console.error('❌ WAIFU Error:', err.response?.data || err.message);
-    reply(box('💖 *RANDOM WAIFU*', [
+    reply(boxWithFooter('💖 *RANDOM WAIFU*', [
       { raw: '❌ *Failed to fetch waifu. Please try again later.*' },
     ]));
   }

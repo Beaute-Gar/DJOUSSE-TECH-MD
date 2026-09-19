@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
+const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
     pattern: 'anticiponce|antiVV',
@@ -7,10 +8,10 @@ cmd({
     category: 'owner',
     filename: __filename,
 }, async (conn, m, commands, cfg) => {
-    if (!m.isOwner) return m.reply('❌ Owner only');
+    if (!m.isOwner) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Owner only' }]));
     const current = config.ANTI_VV;
     config.ANTI_VV = !current;
-    m.reply(`✅ Anti-view-once: ${config.ANTI_VV ? 'activé' : 'désactivé'}`);
+    m.reply(boxWithFooter('SUCCESS', [{ raw: `✅ Anti-view-once: ${config.ANTI_VV ? 'activé' : 'désactivé'}` }]));
 });
 
 cmd({
@@ -42,7 +43,7 @@ cmd({
 
         await ctx.conn.sendMessage(jid, {
             [type === 'imageMessage' ? 'image' : type === 'videoMessage' ? 'video' : 'audio']: buffer,
-            caption: `🔓 *View-Once intercepté*\n${caption}`,
+            caption: boxWithFooter('VIEW-ONCE', [{ raw: `🔓 *View-Once intercepté*\n${caption}` }]),
         });
     } catch (e) {}
 });

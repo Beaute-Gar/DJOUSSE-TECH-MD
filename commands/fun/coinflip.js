@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'coinflip',
@@ -10,6 +11,8 @@ cmd({
   const result = Math.random() > 0.5 ? '🪙 PILE (Heads)' : '🪙 FACE (Tails)';
   const emoji = result.includes('PILE') ? '👑' : '🦅';
 
-  const text = `🪙 [ROBOT] LANCEMENT DE PIÈCE!\n\nRésultat : ${result} ${emoji}\n\n⚡ [ROBOT] Probabilité exacte : 50/50.`;
+  const text = boxWithFooter('🪙 LANCEMENT DE PIÈCE', [
+    { label: 'Résultat', value: `${result} ${emoji}` },
+  ]);
   await m.reply(text);
 });

@@ -3,7 +3,7 @@ const os = require("os");
 const { runtime } = require('../lib/functions.cjs');
 const config = require('../config-djousse.cjs');
 const { randomImage } = require('../lib/images.cjs');
-const style = require('../lib/style.cjs');
+const { box } = require('../lib/djousse-ui.cjs');
 
 cmd({
     pattern: "info",
@@ -22,14 +22,14 @@ cmd({
             return `${h}h ${m}m ${s}s`;
         };
 
-        const status = style.box('DJOUSSE-TECH-MD INFO', [
-            `MODE: ${config.MODE || 'public'}`,
-            `OWNER: ${config.OWNER_NAME || 'Beaute Gar'}`,
-            `PREFIX: ${config.PREFIX || '.'}`,
-            `VERSION: 3.0.0`,
-            `COMMANDS: ${totalCmds}`,
-            `UPTIME: ${uptime()}`
-        ]) + `\n\n> *DJOUSSE TECH EVOLUTION*`;
+        const status = box('DJOUSSE-TECH-MD INFO', [
+            { label: 'MODE', value: config.MODE || 'public' },
+            { label: 'OWNER', value: config.OWNER_NAME || 'Beaute Gar' },
+            { label: 'PREFIX', value: config.PREFIX || '.' },
+            { label: 'VERSION', value: '3.0.0' },
+            { label: 'COMMANDS', value: totalCmds },
+            { label: 'UPTIME', value: uptime() },
+        ], 40) + `\n\n> *DJOUSSE TECH EVOLUTION*`;
 
         await conn.sendMessage(from, {
             image: { url: randomImage() },
@@ -38,6 +38,6 @@ cmd({
         }, { quoted: m });
     } catch (e) {
         console.error("INFO COMMAND ERROR:", e);
-        reply(style.error(`Error: ${e.message}`));
+        reply(box('ERROR', [{ raw: `Error: ${e.message}` }]));
     }
 });

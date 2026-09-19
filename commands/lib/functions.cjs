@@ -27,6 +27,7 @@ function h2k(num) {
 
 function fetchJson(url, timeout = 15000) {
   return new Promise((resolve, reject) => {
+    if (!url || typeof url !== 'string') return reject(new Error('Invalid URL'));
     const timer = setTimeout(() => reject(new Error('Timeout')), timeout);
     const client = url.startsWith('https') ? https : http;
     const req = client.get(url, { timeout, headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
@@ -41,6 +42,7 @@ function fetchJson(url, timeout = 15000) {
 
 function getBuffer(url, timeout = 30000) {
   return new Promise((resolve, reject) => {
+    if (!url || typeof url !== 'string') return reject(new Error('Invalid URL'));
     const timer = setTimeout(() => reject(new Error('Timeout')), timeout);
     const client = url.startsWith('https') ? https : http;
     const req = client.get(url, { timeout, headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {

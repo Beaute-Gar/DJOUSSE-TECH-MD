@@ -1,6 +1,7 @@
 /**
  * Message Handler - DJOUSSE TECH MD
  * Basé sur KnightBot-Mini, adapté par Beaute Gar
+ * CORRIGÉ : sock is not defined dans isOwner()
  */
 
 const config = require('./config');
@@ -22,6 +23,8 @@ const warmup = require('./lib/warmup.cjs');
 const aiLimits = require('./lib/ai-limits.cjs');
 const security = require('./lib/security.cjs');
 const silentAutomations = require('./lib/silent-automations.cjs');
+const { pmGate } = require('./commands/pmguard');
+const { premiumGate } = require('./commands/premium');
 const reactionAutomations = require('./lib/reaction-automations.cjs');
 
 const commands = loadCommands();
@@ -115,23 +118,25 @@ const findParticipant = (participants = [], userIds) => {
   }) || null;
 };
 
-const isOwner = (sender) => {
+// ✅ CORRIGÉ : sock est maintenant un paramètre explicite
+const isOwner = (sock, sender) => {
   if (!sender || typeof sender !== 'string') return false;
   const senderNumber = normalizeJid(sender);
+
   // Check against owner numbers
   if (config.ownerNumber.some(owner => {
     if (!owner || typeof owner !== 'string') return false;
     const ownerNumber = normalizeJid(owner);
     return ownerNumber === senderNumber;
   })) return true;
+
   // Check if sender is the bot itself (LID or JID)
-  if (sock?.user) {
+  if (sock && sock.user) {
     const botId = normalizeJid(sock.user.id);
     const botLid = sock.user.lid ? normalizeJid(sock.user.lid) : null;
     const senderNorm = normalizeJid(sender);
     if (senderNorm === botId) return true;
     if (botLid && senderNorm === botLid) return true;
-    // Also check full JID match
     if (sender === sock.user.id) return true;
     if (botLid && sender === botLid) return true;
   }
@@ -227,6 +232,28 @@ const handleMessage = async (sock, msg) => {
     const isGroup = from.endsWith('@g.us');
     const groupMetadata = isGroup ? await getGroupMetadata(sock, from) : null;
 
+    // ✅ Cache LID → PN
+    try {
+      const lidResolver = require('./utils/lid-resolver');
+      const senderRaw = msg.key.participant || msg.key.remoteJid;
+      if (senderRaw && sock.user?.id) {
+        lidResolver.cacheLid(senderRaw, sock.user.id);
+      }
+      const ctxInfo = content?.extendedTextMessage?.contextInfo
+        || content?.imageMessage?.contextInfo
+        || content?.videoMessage?.contextInfo;
+      if (ctxInfo?.participant && ctxInfo?.remoteJid) {
+        lidResolver.cacheLid(ctxInfo.participant, ctxInfo.remoteJid);
+      }
+      if (isGroup && groupMetadata?.participants) {
+        for (const p of groupMetadata.participants) {
+          if (p.id && p.lid) {
+            lidResolver.cacheLid(p.lid, p.id);
+          }
+        }
+      }
+    } catch (e) {}
+
     // Anti-flood in groups
     if (isGroup && !msg.key.fromMe) {
       const floodResult = antiFlood.trackMessage(from, sender);
@@ -270,7 +297,7 @@ const handleMessage = async (sock, msg) => {
       const groupSettings = database.getGroupSettings(from);
       if (groupSettings.antiall) {
         const senderIsAdmin = await isAdmin(sock, sender, from, groupMetadata);
-        const senderIsOwner = isOwner(sender);
+        const senderIsOwner = isOwner(sock, sender); // ✅ CORRIGÉ
         if (!senderIsAdmin && !senderIsOwner) {
           const botIsAdminCheck = await isBotAdmin(sock, from, groupMetadata);
           if (botIsAdminCheck) {
@@ -311,8 +338,10 @@ const handleMessage = async (sock, msg) => {
             if (stickerCmd) {
               await stickerCmd.execute(sock, msg, [], {
                 from, sender, isGroup, groupMetadata,
-                isOwner: isOwner(sender), isAdmin: await isAdmin(sock, sender, from, groupMetadata),
-                isBotAdmin: await isBotAdmin(sock, from, groupMetadata), isMod: isMod(sender),
+                isOwner: isOwner(sock, sender), // ✅ CORRIGÉ
+                isAdmin: await isAdmin(sock, sender, from, groupMetadata),
+                isBotAdmin: await isBotAdmin(sock, from, groupMetadata),
+                isMod: isMod(sender),
                 reply: (text) => sock.sendMessage(from, { text }, { quoted: msg }),
                 react: (emoji) => sock.sendMessage(from, { react: { text: emoji, key: msg.key } }).catch(() => {})
               });
@@ -326,7 +355,7 @@ const handleMessage = async (sock, msg) => {
     // AFK
     if (!msg.key.fromMe) {
       const afk = require('./utils/afk');
-      if (afk.isEnabled() && !isOwner(sender)) {
+      if (afk.isEnabled() && !isOwner(sock, sender)) { // ✅ CORRIGÉ
         let shouldHandleAfk = false;
         if (!isGroup) {
           shouldHandleAfk = true;
@@ -361,8 +390,10 @@ const handleMessage = async (sock, msg) => {
             if (chatbotCmd) {
               await chatbotCmd.execute(sock, msg, [body], {
                 from, sender, isGroup, groupMetadata,
-                isOwner: isOwner(sender), isAdmin: await isAdmin(sock, sender, from, groupMetadata),
-                isBotAdmin: await isBotAdmin(sock, from, groupMetadata), isMod: isMod(sender),
+                isOwner: isOwner(sock, sender), // ✅ CORRIGÉ
+                isAdmin: await isAdmin(sock, sender, from, groupMetadata),
+                isBotAdmin: await isBotAdmin(sock, from, groupMetadata),
+                isMod: isMod(sender),
                 reply: (text) => sock.sendMessage(from, { text }, { quoted: msg }),
                 react: (emoji) => sock.sendMessage(from, { react: { text: emoji, key: msg.key } }).catch(() => {})
               });
@@ -370,6 +401,26 @@ const handleMessage = async (sock, msg) => {
           } catch (e) {}
           return;
         }
+      }
+    }
+
+    // 🎮 Interception des jeux AVANT le check du préfixe
+    if (body && !msg.key.fromMe) {
+      try {
+        const games = require('./commands/plugins/games.cjs');
+        const handled = await games.handleRawReply(sock, {
+          ...msg,
+          sender,
+          chat: from,
+          body,
+          isGroup,
+          botNumber: sock.user?.id || '',
+          reply: (text, mentions) => sock.sendMessage(from, { text, mentions }, { quoted: msg }).catch(() => {}),
+          react: (emoji) => sock.sendMessage(from, { react: { text: emoji, key: msg.key } }).catch(() => {}),
+        });
+        if (handled) return;
+      } catch (e) {
+        // Jeu non actif, on continue
       }
     }
 
@@ -395,20 +446,33 @@ const handleMessage = async (sock, msg) => {
     // Security: sanitize input
     const sanitizedBody = security.sanitizeInput(body);
 
+    // PMGuard: protection discussions privées (avant exécution des commandes)
+    if (!(await pmGate(sock, msg, isOwner(sock, sender)))) return;
+
+    // Premium: vérification accès premium (avant exécution des commandes)
+    if (!(await premiumGate(sock, msg, isOwner(sock, sender)))) return;
+
     const args = sanitizedBody.slice(config.prefix.length).trim().split(/\s+/);
     const commandName = args.shift().toLowerCase();
     const command = commands.get(commandName);
     if (!command) return;
 
     // Permission checks
-    if (config.selfMode && !isOwner(sender)) return;
-    if (command.ownerOnly && !isOwner(sender)) {
+    if (config.selfMode && !isOwner(sock, sender)) return; // ✅ CORRIGÉ
+
+    if (command.ownerOnly && !isOwner(sock, sender)) { // ✅ CORRIGÉ
       return antiBan.queueMessage(async () => {
         await presence.simulateTyping(from);
         return safeSend(sock, from, { text: config.messages.ownerOnly }, { quoted: msg });
       });
     }
-    if (command.modOnly && !isMod(sender) && !isOwner(sender)) {
+    if (command.fromMe && !isOwner(sock, sender)) {
+      return antiBan.queueMessage(async () => {
+        await presence.simulateTyping(from);
+        return safeSend(sock, from, { text: '❌ Cette commande est réservée au propriétaire du bot.' }, { quoted: msg });
+      });
+    }
+    if (command.modOnly && !isMod(sender) && !isOwner(sock, sender)) { // ✅ CORRIGÉ
       return antiBan.queueMessage(async () => {
         await presence.simulateTyping(from);
         return safeSend(sock, from, { text: 'C est réservé aux modérateurs.' }, { quoted: msg });
@@ -426,7 +490,7 @@ const handleMessage = async (sock, msg) => {
         return safeSend(sock, from, { text: config.messages.privateOnly }, { quoted: msg });
       });
     }
-    if (command.adminOnly && !(await isAdmin(sock, sender, from, groupMetadata)) && !isOwner(sender)) {
+    if (command.adminOnly && !(await isAdmin(sock, sender, from, groupMetadata)) && !isOwner(sock, sender)) { // ✅ CORRIGÉ
       return antiBan.queueMessage(async () => {
         await presence.simulateTyping(from);
         return safeSend(sock, from, { text: config.messages.adminOnly }, { quoted: msg });
@@ -446,7 +510,7 @@ const handleMessage = async (sock, msg) => {
     const aiCommands = ['ai', 'aianalyze', 'gemini', 'gpt', 'chatgpt', 'analyze'];
     if (aiCommands.includes(commandName)) {
       const service = commandName.includes('analyze') ? 'analyze' : 'chat';
-      const aiCheck = aiLimits.canUse(sender, service, isOwner(sender), isMod(sender));
+      const aiCheck = aiLimits.canUse(sender, service, isOwner(sock, sender), isMod(sender)); // ✅ CORRIGÉ
       if (!aiCheck.allowed) {
         return antiBan.queueMessage(async () => {
           await presence.simulateTyping(from);
@@ -464,8 +528,9 @@ const handleMessage = async (sock, msg) => {
       await presence.simulateTyping(from, body.length);
     }
 
-    // Execute
-    console.log(`Commande: ${commandName} | Sender: ${sender}`);
+    // ✅ Affichage propre des commandes entrantes
+    const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    console.log(`⚡ [${time}] .${commandName} ← ${sender.split('@')[0]}`);
 
     // Inject common props on msg so both module.exports and cmd() plugins work
     msg.sender = msg.sender || sender;
@@ -473,12 +538,74 @@ const handleMessage = async (sock, msg) => {
     msg.body = msg.body || body;
     msg.text = msg.text || body;
     msg.isGroup = msg.isGroup ?? isGroup;
-    msg.isOwner = msg.isOwner ?? isOwner(sender);
+    msg.isOwner = msg.isOwner ?? isOwner(sock, sender); // ✅ CORRIGÉ
     msg.from = from;
+
+    // ✅ Injecter m.quoted complet avec download()
+    try {
+      const content = getMessageContent(msg);
+      const ctxInfo = content?.extendedTextMessage?.contextInfo
+        || content?.imageMessage?.contextInfo
+        || content?.videoMessage?.contextInfo
+        || content?.audioMessage?.contextInfo
+        || content?.documentMessage?.contextInfo;
+
+      if (ctxInfo?.quotedMessage) {
+        const rawQ = ctxInfo.quotedMessage;
+        let qMsg = rawQ;
+        let qType = Object.keys(qMsg)[0];
+
+        if (qType === 'viewOnceMessage' || qType === 'viewOnceMessageV2') {
+          qMsg = qMsg[qType].message;
+          qType = Object.keys(qMsg)[0];
+        }
+
+        msg.quoted = {
+          message: rawQ,
+          stanzaId: ctxInfo.stanzaId,
+          participant: ctxInfo.participant,
+          mtype: qType,
+          type: qType,
+          key: {
+            remoteJid: from,
+            fromMe: false,
+            id: ctxInfo.stanzaId,
+            participant: ctxInfo.participant,
+          },
+          get text() {
+            return qMsg[qType]?.caption || qMsg[qType]?.text || qMsg.conversation || '';
+          },
+          get mimetype() {
+            return qMsg[qType]?.mimetype || '';
+          },
+          get msg() {
+            return qMsg[qType];
+          },
+          download: async () => {
+            const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+            const typeMap = {
+              imageMessage: 'image',
+              videoMessage: 'video',
+              audioMessage: 'audio',
+              stickerMessage: 'sticker',
+              documentMessage: 'document',
+            };
+            const mediaType = typeMap[qType];
+            if (!mediaType) throw new Error('No valid media type: ' + qType);
+            const stream = await downloadContentFromMessage(qMsg[qType], mediaType);
+            let buffer = Buffer.from([]);
+            for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+            return buffer;
+          },
+        };
+      }
+    } catch (e) {
+      console.error('[HANDLER] quoted injection error:', e.message);
+    }
 
     const ctx = {
       from, sender, isGroup, groupMetadata,
-      isOwner: isOwner(sender),
+      isOwner: isOwner(sock, sender), // ✅ CORRIGÉ
       isAdmin: await isAdmin(sock, sender, from, groupMetadata),
       isBotAdmin: await isBotAdmin(sock, from, groupMetadata),
       isMod: isMod(sender),
@@ -491,7 +618,7 @@ const handleMessage = async (sock, msg) => {
         return safeSend(sock, from, { react: { text: emoji, key: msg.key } });
       }),
       body, q: args.join(' '), prefix: config.prefix, conn: sock,
-      args
+      args, config
     };
 
     await command.execute(sock, msg, args, ctx);

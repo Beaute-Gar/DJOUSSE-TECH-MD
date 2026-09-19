@@ -1,37 +1,30 @@
-const config = require('../../config');
-const { loadCommands } = require('../../utils/commandLoader');
+const { cmd } = require('../command.cjs');
+const { box } = require('../lib/djousse-ui.cjs');
 
-module.exports = {
-  name: 'list',
-  aliases: ['list', 'commands'],
-  category: 'general',
+cmd({
+  pattern: 'list',
+  alias: ['cmdlist'],
   desc: 'Liste toutes les commandes',
-  ownerOnly: false,
-  adminOnly: false,
-  groupOnly: false,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    const commands = loadCommands();
-    const categories = {};
-    for (const [name, cmd] of commands) {
-      const cat = cmd.category || 'general';
-      if (!categories[cat]) categories[cat] = [];
-      if (!categories[cat].find(c => c.name === cmd.name)) {
-        categories[cat].push(cmd);
-      }
-    }
-
-    let text = `*${config.botName} - Liste des commandes*\n\n`;
-    for (const [cat, cmds] of Object.entries(categories).sort()) {
-      text += `*${cat.toUpperCase()}* (${cmds.length})\n`;
-      for (const cmd of cmds) {
-        text += `${config.prefix}${cmd.name}\n`;
-      }
-      text += '\n';
-    }
-    text += `Total: ${commands.size} commandes`;
-    await ctx.reply(text.trim());
+  category: 'main',
+  filename: __filename,
+}, async (conn, m, args, { from, reply }) => {
+  const { commandMap } = require('../command.cjs');
+  const seen = new Set();
+  const cats = {};
+  for (const [name, cmd] of commandMap) {
+    const cmdName = cmd.name || cmd.pattern;
+    if (!cmdName || typeof cmdName !== 'string' || seen.has(cmdName)) continue;
+    seen.add(cmdName);
+    const cat = (cmd.category || 'OTHER').toUpperCase();
+    if (!cats[cat]) cats[cat] = [];
+    cats[cat].push(cmdName);
   }
-};
+  const lines = [];
+  for (const [cat, cmds] of Object.entries(cats).sort()) {
+    lines.push({ raw: `*${cat}* (${cmds.length})` });
+    for (const c of cmds.sort()) lines.push({ raw: `.${c} ` });
+    lines.push({ blank: true });
+  }
+  lines.push({ raw: `Total: ${seen.size} commandes` });
+  return reply(box('COMMANDES', lines));
+});

@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'rps',
@@ -11,7 +12,7 @@ cmd({
   const playerChoice = args[0]?.toLowerCase();
 
   if (!playerChoice || !['pierre', 'rock', 'papier', 'paper', 'feuille', 'ciseaux', 'scissors'].includes(playerChoice)) {
-    return m.reply('🤖 [SYSTEM] Usage: .rps <pierre/papier/ciseaux>\n\nExemples:\n.rps pierre\n.rps papier\n.rps ciseaux');
+    return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Usage: .rps <pierre/papier/ciseaux>\n\nExemples:\n.rps pierre\n.rps papier\n.rps ciseaux' }]));
   }
 
   let playerNum;
@@ -29,6 +30,11 @@ cmd({
     result = '🏆 VOUS GAGNEZ!';
   else result = '💀 VOUS PERDEZ!';
 
-  const text = `✊ [ROBOT] ROCK PAPER SCISSORS!\n\nVous :${player}\nBot :${bot}\n\n${result}\n\n⚡ [ROBOT] Jeu terminé.`;
+  const text = boxWithFooter('✊ ROCK PAPER SCISSORS', [
+    { label: 'Vous', value: player },
+    { label: 'Bot', value: bot },
+    { blank: true },
+    { raw: result },
+  ]);
   await m.reply(text);
 });

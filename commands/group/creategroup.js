@@ -1,5 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 const { isLidUser } = require('@whiskeysockets/baileys');
 
 /*
@@ -126,7 +126,14 @@ async function processGroupCreation({ conn, groupJid, groupName, members, reply 
       const jid = members[i];
 
       try {
-        const result = await conn.groupParticipantsUpdate(groupJid, [jid], 'add');
+        const { safeGroupUpdate } = require('../../utils/safe-group-update');
+        const safeResult = await safeGroupUpdate(conn, groupJid, [jid], 'add', { maxRetries: 1 });
+        if (!safeResult.ok) {
+          failCount++;
+          console.log('[CREATEGROUP] ❌ ' + jid + ': ' + safeResult.error);
+          continue;
+        }
+        const result = safeResult.results;
         const item = Array.isArray(result) ? result[0] : null;
         const status = (item?.status != null ? String(item.status) : '').toLowerCase();
 
@@ -146,7 +153,7 @@ async function processGroupCreation({ conn, groupJid, groupName, members, reply 
         if (isRateLimitError(error)) {
           console.warn('[CREATEGROUP] 🛑 Rate limit WhatsApp. Arrêt.');
           try {
-            await reply('⚠️ *Ajout interrompu*\n\n✅ Ajoutés : ' + successCount + '\n❌ Échecs : ' + failCount);
+            await reply(boxWithFooter('ATTENTION', [{ raw: `⚠️ *Ajout interrompu*\n\n✅ Ajoutés : ${successCount}\n❌ Échecs : ${failCount}` }]));
           } catch (_) {}
           break;
         }
@@ -155,7 +162,7 @@ async function processGroupCreation({ conn, groupJid, groupName, members, reply 
       const processed = successCount + failCount + alreadyCount;
       if (processed > 0 && (processed % PROGRESS_EVERY === 0 || processed === members.length)) {
         try {
-          await reply('👥 *Progression*\n\n📊 ' + processed + '/' + members.length + '\n✅ ' + successCount + ' | ↪️ ' + alreadyCount + ' | ❌ ' + failCount);
+          await reply(boxWithFooter('INFO', [{ raw: `👥 *Progression*\n\n📊 ${processed}/${members.length}\n✅ ${successCount} | ↪️ ${alreadyCount} | ❌ ${failCount}` }]));
         } catch (_) {}
       }
 
@@ -179,7 +186,7 @@ async function processGroupCreation({ conn, groupJid, groupName, members, reply 
     );
   } catch (error) {
     console.error('[CREATEGROUP] Erreur:', getErrorMessage(error));
-    try { await reply('⚠️ *Ajout interrompu*\n\n✅ ' + successCount + ' | ❌ ' + failCount); } catch (_) {}
+    try { await reply(boxWithFooter('ATTENTION', [{ raw: `⚠️ *Ajout interrompu*\n\n✅ ${successCount} | ❌ ${failCount}` }])); } catch (_) {}
   } finally {
     runningJobs.delete(groupJid);
   }
@@ -198,21 +205,21 @@ cmd({
     const accountId = conn?.user?.id || 'default-account';
 
     if (runningJobs.has(accountId)) {
-      return reply('⏳ *Une création est déjà en cours.*');
+      return reply(boxWithFooter('ATTENTION', [{ raw: '⏳ *Une création est déjà en cours.*' }]));
     }
 
     runningJobs.set(accountId, { startedAt: Date.now() });
-    await reply('🔍 *Analyse de tes groupes...*');
+    await reply(boxWithFooter('INFO', [{ raw: '🔍 *Analyse de tes groupes...*' }]));
 
     const chats = await conn.groupFetchAllParticipating();
     const groupJids = Object.keys(chats || {});
 
     if (groupJids.length === 0) {
       runningJobs.delete(accountId);
-      return reply('❌ Aucun groupe trouvé.');
+      return reply(boxWithFooter('ERREUR', [{ raw: '❌ Aucun groupe trouvé.' }]));
     }
 
-    await reply('📊 *' + groupJids.length + ' groupes trouvés.* Extraction...');
+    await reply(boxWithFooter('INFO', [{ raw: `📊 *${groupJids.length} groupes trouvés.* Extraction...` }]));
 
     const ownJids = getOwnJids(conn);
     const lidMap = global.__lidToPn || new Map();
@@ -285,7 +292,7 @@ cmd({
       throw new Error('ID du groupe non retourné.');
     }
 
-    await reply('✅ *Groupe créé !*\n\n🆔 ' + newGroupJid + '\n👥 ' + membersToAdd.length + ' membres\n🚀 Ajout en arrière-plan...');
+    await reply(boxWithFooter('SUCCÈS', [{ raw: `✅ *Groupe créé !*\n\n🆔 ${newGroupJid}\n👥 ${membersToAdd.length} membres\n🚀 Ajout en arrière-plan...` }]));
 
     runningJobs.delete(accountId);
     runningJobs.set(newGroupJid, { startedAt: Date.now() });
@@ -296,6 +303,6 @@ cmd({
     return;
   } catch (error) {
     console.error('❌ creategroup:', getErrorMessage(error));
-    return reply('❌ *Erreur :* ' + getErrorMessage(error));
+    return reply(boxWithFooter('ERREUR', [{ raw: `❌ *Erreur :* ${getErrorMessage(error)}` }]));
   }
 });

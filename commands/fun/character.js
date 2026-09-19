@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const characters = [
   { trait: 'Leadership naturel', desc: 'Vous inspirez les autres naturellement.' },
@@ -26,6 +27,9 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const char = characters[Math.floor(Math.random() * characters.length)];
-  const text = `🧬 [ROBOT] TRAIT DE CARACTÈRE!\n\n✨ Trait: ${char.trait}\n💬 ${char.desc}\n\n⚡ [ROBOT] Trait sélectionné par algorithme de personnalité.`;
+  const text = boxWithFooter('🧬 TRAIT DE CARACTÈRE', [
+    { label: '✨ Trait', value: char.trait },
+    { raw: `💬 ${char.desc}` },
+  ]);
   await m.reply(text);
 });

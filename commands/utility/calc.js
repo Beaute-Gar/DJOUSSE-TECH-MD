@@ -1,26 +1,26 @@
-module.exports = {
-  name: 'calc',
-  aliases: ['calc', 'calculator'],
-  category: 'utility',
+const { cmd } = require('../command.cjs');
+const { box } = require('../lib/djousse-ui.cjs');
+
+cmd({
+  pattern: 'calc',
+  alias: ['calculator'],
   desc: 'Calculatrice',
-  ownerOnly: false,
-  adminOnly: false,
-  groupOnly: false,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    if (!args.length) return ctx.reply('Écris une expression mathématique.\nExemple: .calc 2 + 2');
-    const expr = args.join(' ');
-    try {
-      const sanitized = expr.replace(/[^0-9+\-*/().%]/g, '');
-      if (!sanitized) return ctx.reply('Expression invalide.');
-      const result = Function(`"use strict"; return (${sanitized})`)();
-      if (typeof result !== 'number' || isNaN(result)) return ctx.reply('Résultat invalide.');
-      await ctx.react('🔢');
-      ctx.reply(`${expr} = ${result}`);
-    } catch (e) {
-      ctx.reply('Erreur dans le calcul...');
-    }
+  category: 'util',
+  filename: __filename,
+}, async (conn, m, args, { from, reply, react }) => {
+  if (!args.length) return reply(box('CALCULETTE', [{ raw: 'Ex: .calc 2 + 2' }]));
+  const expr = args.join(' ');
+  try {
+    const sanitized = expr.replace(/[^0-9+\-*/().%]/g, '');
+    if (!sanitized) return reply(box('ERROR', [{ raw: 'Expression invalide.' }]));
+    const result = Function('"use strict"; return (' + sanitized + ')')();
+    if (typeof result !== 'number' || isNaN(result)) return reply(box('ERROR', [{ raw: 'Résultat invalide.' }]));
+    await react('🔢');
+    return reply(box('CALCULETTE', [
+      { label: 'Expression', value: expr },
+      { label: 'Résultat', value: result },
+    ]));
+  } catch {
+    return reply(box('ERROR', [{ raw: 'Erreur dans le calcul...' }]));
   }
-};
+});

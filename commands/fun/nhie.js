@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const statements = [
   'J\'ai déjà menti à un ami proche.',
@@ -26,6 +27,11 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const statement = statements[Math.floor(Math.random() * statements.length)];
-  const text = `🎭 [ROBOT] NEVER HAVE I EVER!\n\n📝 "${statement}"\n\n👍 J'ai fait (tapez "j'ai fait")\n👎 Je n'ai jamais fait (tapez "jamais")\n\n⚡ [ROBOT] Statement sélectionné.`;
+  const text = boxWithFooter('🎭 NEVER HAVE I EVER', [
+    { raw: `"${statement}"` },
+    { blank: true },
+    { raw: '👍 J\'ai fait (tapez "j\'ai fait")' },
+    { raw: '👎 Je n\'ai jamais fait (tapez "jamais")' },
+  ]);
   await m.reply(text);
 });

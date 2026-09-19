@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { saveDB } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'resetcoin',
@@ -9,10 +10,10 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   if (!config.owner || !config.owner.includes(m.sender)) {
-    return m.reply(`⚙️ [SYSTEM] Access denied! This command is restricted to system administrator (Beaute Gar). Nuclear option requires authorization.`);
+    return m.reply(boxWithFooter('ERROR', [{ raw: 'Access denied! This command is restricted to system administrator.' }]));
   }
 
   saveDB({});
 
-  m.reply(`🤖 [ADMIN COMMAND] WARNING: Global economy reset initiated! All balances set to zero. System has been rebooted. New economic cycle begins now! ⚠️`);
+  m.reply(boxWithFooter('ADMIN COMMAND', [{ raw: 'WARNING: Global economy reset initiated! All balances set to zero. New economic cycle begins now!' }]));
 });

@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 const config = require('../config-djousse.cjs');
 
 cmd({
@@ -7,9 +8,9 @@ cmd({
     category: 'owner',
     filename: __filename,
 }, async (conn, m, commands, cfg) => {
-    if (!m.isOwner) return m.reply('❌ Owner only');
+    if (!m.isOwner) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Owner only' }]));
     config.MENTION_REPLY = !config.MENTION_REPLY;
-    m.reply(`✅ Mention-reply: ${config.MENTION_REPLY ? 'activé' : 'désactivé'}`);
+    m.reply(boxWithFooter('MENTION-REPLY', [{ raw: `✅ Mention-reply: ${config.MENTION_REPLY ? 'activé' : 'désactivé'}` }]));
 });
 
 cmd({
@@ -30,7 +31,7 @@ cmd({
     try {
         const m = ctx.m;
         await ctx.conn.sendMessage(m.chat, {
-            text: config.MENTION_REPLY_MSG || 'Oui, tu m\'as mentionné ?',
+            text: boxWithFooter('MENTION', [{ raw: config.MENTION_REPLY_MSG || 'Oui, tu m\'as mentionné ?' }]),
             mentions: [m.sender],
         });
     } catch (e) {}

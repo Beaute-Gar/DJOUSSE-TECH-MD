@@ -1,6 +1,6 @@
 const { cmd } = require('../command.cjs');
 const settings = require('../lib/settings.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 const config = require('../config-djousse.cjs');
 
@@ -24,7 +24,7 @@ const SETTINGS_META = {
 function toggleReply(m, key) {
   const [emoji, label] = SETTINGS_META[key];
   const state = settings.toggle(key);
-  m.reply(box(`${emoji} *${label.toUpperCase()}*`, [
+  m.reply(boxWithFooter(`${emoji} *${label.toUpperCase()}*`, [
     { label: 'Statut', value: state ? '✅ ON' : '⚫ OFF' },
   ]));
 }
@@ -37,11 +37,11 @@ cmd({ pattern: 'autolike', desc: 'Like automatique des statuts (on/off)', catego
   if (args === 'on' || args === 'off') {
     config.AUTO_STATUS_REACT = args === 'on';
     settings.set('autolike', args === 'on');
-    m.reply(box('👍 *AUTO-LIKE*', [
+    m.reply(boxWithFooter('👍 *AUTO-LIKE*', [
       { label: 'Statut', value: args === 'on' ? '✅ ON' : '⚫ OFF' },
     ]));
   } else {
-    m.reply(box('👍 *AUTO-LIKE*', [
+    m.reply(boxWithFooter('👍 *AUTO-LIKE*', [
       { label: 'Actuel', value: current ? '✅ ON' : '⚫ OFF' },
       { label: 'Utilisation', value: '.autolike on|off' },
     ]));
@@ -56,12 +56,12 @@ for (const key of AUTOS) {
 
 cmd({ pattern: 'autoreplytext', desc: 'Texte de réponse automatique personnalisé', category: 'settings', filename: __filename, fromMe: true }, async (conn, m) => {
   const text = m.body.split(' ').slice(1).join(' ');
-  if (!text) return m.reply(box('💬 *TEXTE AUTO-RÉPONSE*', [
+  if (!text) return m.reply(boxWithFooter('💬 *TEXTE AUTO-RÉPONSE*', [
     { label: 'Utilisation', value: '.autoreplytext <texte>' },
     { label: 'Actuel', value: settings.get('autoreplytext') || '(vide)' },
   ]));
   settings.set('autoreplytext', text);
-  m.reply(box('💬 *TEXTE AUTO-RÉPONSE*', [
+  m.reply(boxWithFooter('💬 *TEXTE AUTO-RÉPONSE*', [
     { label: 'Texte', value: `*"${text}"*` },
   ]));
 });

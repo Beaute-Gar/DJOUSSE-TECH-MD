@@ -1,28 +1,128 @@
+/**
+ * lib/djousse-ui.cjs — Style HACKER GLOBAL DJOUSSE TECH
+ * ✅ Toutes les valeurs entre backticks
+ * ✅ Toutes les commandes entre backticks
+ * ✅ Footer automatique
+ */
+
+const FOOTER = 'ᴘᴏᴡᴇʀᴇᴅ ʙʏ DJOUSSE TECH';
+const SEP = '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬';
+
+/**
+ * Bloc principal — Style HACKER GLOBAL
+ */
 function box(title, lines, width = 40) {
-  const inner = width - 2;
   const rows = [];
-  rows.push(`╭${'─'.repeat(inner)}╮`);
+
   if (title) {
-    const t = ` ${title} `;
-    const left = Math.max(0, Math.floor((inner - t.length) / 2));
-    const right = Math.max(0, inner - left - t.length);
-    rows.push(`│${' '.repeat(left)}${t}${' '.repeat(right)}│`);
-    rows.push(`├${'─'.repeat(inner)}┤`);
+    rows.push(`⛓️ *${title}*`);
+    rows.push(SEP);
   }
+
   for (const line of lines) {
-    const text = typeof line === 'string' ? line : (line.raw || JSON.stringify(line));
-    const truncated = text.length > inner ? text.slice(0, inner - 1) + '…' : text;
-    rows.push(`│ ${truncated}${' '.repeat(Math.max(0, inner - 1 - truncated.length))}│`);
+    let text = '';
+
+    if (typeof line === 'string') {
+      text = line;
+    } else if (line && typeof line === 'object') {
+      if (line.blank === true) {
+        rows.push('');
+        continue;
+      }
+      // ✅ Label : Valeur entre backticks
+      if (line.label !== undefined && line.value !== undefined) {
+        const label = line.label.includes('*') ? line.label : `*${line.label}*`;
+        text = `┃ ${label} : \`${line.value}\``;
+      }
+      // ✅ Commande entre backticks
+      else if (line.cmd !== undefined) {
+        text = `┃ ⚡ \`.${line.cmd}\`${line.desc ? ` — _${line.desc}_` : ''}`;
+      }
+      // ✅ Texte brut
+      else if (line.raw !== undefined) {
+        text = `┃ ${line.raw}`;
+      } else {
+        continue;
+      }
+    } else if (line !== null && line !== undefined) {
+      text = `┃ ${String(line)}`;
+    }
+
+    if (text) rows.push(text);
   }
-  rows.push(`╰${'─'.repeat(inner)}╯`);
+
+  rows.push(SEP);
   return rows.join('\n');
 }
 
-function truncate(text, maxLen = 40) {
-  if (!text) return '';
-  return text.length > maxLen ? text.slice(0, maxLen - 1) + '…' : text;
+/**
+ * Box avec footer automatique
+ */
+function boxWithFooter(title, lines, footer = FOOTER) {
+  return box(title, lines) + `\n> ${footer}`;
 }
 
+/**
+ * Catégorie HACKER (pour le menu)
+ */
+function hackerCategory(name, commands) {
+  const rows = [];
+  rows.push(`┏━〔 *${name}* 〕`);
+  for (const cmd of commands) {
+    rows.push(`┃ ⚡ \`.${cmd}\``);
+  }
+  rows.push(`┗━━━━━━━━━━━━━━━━━━`);
+  return rows.join('\n');
+}
+
+/**
+ * Ligne de commande
+ */
+function cmdLine(name, desc = '') {
+  return `┃ ⚡ \`.${name}\`${desc ? ` — _${desc}_` : ''}`;
+}
+
+/**
+ * Info : Label : Valeur entre backticks
+ */
+function info(label, value) {
+  return `┃ *${label}* : \`${value}\``;
+}
+
+/**
+ * Séparateur
+ */
+function separator(width = 30) {
+  return '▬'.repeat(width);
+}
+
+/**
+ * Titre hacker
+ */
+function title(text) {
+  return `⛓️ *${text}*`;
+}
+
+/**
+ * Messages système
+ */
+function success(text) { return `┃ ✅ ${text}`; }
+function error(text)   { return `┃ ❌ ${text}`; }
+function warn(text)    { return `┃ ⚠️ ${text}`; }
+function critical(text){ return `┃ ☠️ ${text}`; }
+
+/**
+ * Tronquer
+ */
+function truncate(text, maxLen = 40) {
+  if (!text) return '';
+  const chars = [...String(text)];
+  return chars.length > maxLen ? chars.slice(0, maxLen - 1).join('') + '…' : text;
+}
+
+/**
+ * Uptime
+ */
 function uptime(seconds) {
   const d = Math.floor(seconds / 86400);
   const h = Math.floor((seconds % 86400) / 3600);
@@ -36,4 +136,20 @@ function uptime(seconds) {
   return parts.join(' ');
 }
 
-module.exports = { box, truncate, uptime };
+module.exports = {
+  box,
+  boxWithFooter,
+  hackerCategory,
+  cmdLine,
+  info,
+  separator,
+  title,
+  success,
+  error,
+  warn,
+  critical,
+  truncate,
+  uptime,
+  FOOTER,
+  SEP,
+};

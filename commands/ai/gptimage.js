@@ -1,30 +1,26 @@
-const api = require('../../utils/api');
+const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
-module.exports = {
-  name: 'gptimage',
-  aliases: ['gptimage', 'aiimg'],
-  category: 'ai',
+cmd({
+  pattern: 'gptimage',
+  alias: ['aiimg'],
   desc: 'Génère une image avec l\'IA',
-  ownerOnly: false,
-  adminOnly: false,
-  groupOnly: false,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    const prompt = args.join(' ');
-    if (!prompt) {
-      return await ctx.reply('Décris l\'image que tu veux.\nEx: .gptimage un chat dans l\'espace');
+  category: 'ai',
+  filename: __filename,
+}, async (conn, m, args, { from, reply, react }) => {
+  const prompt = args.join(' ');
+  if (!prompt) return reply(boxWithFooter('GPTIMAGE', [{ cmd: 'gptimage', desc: 'un chat dans l\'espace' }]));
+  try {
+    await react('🎨');
+    const fetch = require('node-fetch');
+    const res = await fetch('https://api.ahmmk.cloud/v1/gptimg?prompt=' + encodeURIComponent(prompt));
+    const data = await res.json();
+    if (data.url) {
+      await conn.sendMessage(from, { image: { url: data.url }, caption: box('IMAGE', [{ label: 'Prompt', value: prompt }]) });
+    } else {
+      return reply(boxWithFooter('ERROR', [{ raw: 'Pas réussi à générer l\'image.' }]));
     }
-    try {
-      await ctx.react('🎨');
-      const url = await api.imageFromText(prompt);
-      if (!url) {
-        return await ctx.reply('J\'ai pas réussi à générer l\'image.');
-      }
-      await sock.sendMessage(ctx.from, { image: { url }, caption: `Image générée: ${prompt}` });
-    } catch (e) {
-      await ctx.reply('Oups, la génération a pas marché.');
-    }
+  } catch {
+    return reply(boxWithFooter('ERROR', [{ raw: 'La génération a pas marché.' }]));
   }
-};
+});

@@ -1,5 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 const FACTS = [
   "Le miel ne se périme jamais — des pots vieux de 3000 ans ont été retrouvés encore comestibles en Égypte.",
@@ -21,7 +21,7 @@ const FACTS = [
 
 cmd({ pattern: 'fact', alias: ['fait', 'saviezvous'], react: '💡', desc: 'Un fait insolite au hasard', category: 'fun', filename: __filename }, async (conn, m, commands, { reply }) => {
   const fact = FACTS[Math.floor(Math.random() * FACTS.length)];
-  reply(box('💡 *LE SAVIEZ-VOUS ?*', [
+  reply(boxWithFooter('💡 *LE SAVIEZ-VOUS ?*', [
     { raw: fact },
   ]));
 });

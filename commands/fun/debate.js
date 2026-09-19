@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'debate',
@@ -8,7 +9,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const topic = args.join(' ');
-  if (!topic) return m.reply('🤖 [SYSTEM] Usage: .debate <sujet>\n\nExemple: .debate les chats sont-ils meilleurs que les chiens?');
+  if (!topic) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Usage: .debate <sujet>\n\nExemple: .debate les chats sont-ils meilleurs que les chiens?' }]));
 
   const positions = [
     ['FOR', 'CONTRE'],
@@ -33,6 +34,14 @@ cmd({
     'Biais cognitif détecté. Raisonnement flawed.'
   ];
 
-  const text = `⚖️ [ROBOT] DÉBAT SIMULÉ!\n\nSujet: "${topic}"\n\n🟢 ${pos[0]}: ${argumentsFor[Math.floor(Math.random() * argumentsFor.length)]}\n\n🔴 ${pos[1]}: ${argumentsAgainst[Math.floor(Math.random() * argumentsAgainst.length)]}\n\n⚖️ Verdict: Le débat continue... L'opinion est subjective.\n\n⚡ [ROBOT] Simulation de débat terminée.`;
+  const text = boxWithFooter('⚖️ DÉBAT SIMULÉ', [
+    { label: 'Sujet', value: `"${topic}"` },
+    { blank: true },
+    { raw: `🟢 ${pos[0]}: ${argumentsFor[Math.floor(Math.random() * argumentsFor.length)]}` },
+    { blank: true },
+    { raw: `🔴 ${pos[1]}: ${argumentsAgainst[Math.floor(Math.random() * argumentsAgainst.length)]}` },
+    { blank: true },
+    { raw: '⚖️ Verdict: Le débat continue... L\'opinion est subjective.' },
+  ]);
   await m.reply(text);
 });

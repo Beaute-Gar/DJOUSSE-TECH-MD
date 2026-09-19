@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const shopItems = [
   { name: 'vip badge', price: 5000, desc: 'VIP status badge - exclusive access!' },
@@ -14,17 +15,12 @@ cmd({
   category: 'economy',
   filename: __filename,
 }, async (conn, m, args, config) => {
-  let shopText = '🤖 [DJOUSSE TECH SHOP] ═══════════════\n';
-  shopText += '📦 Available items for purchase:\n\n';
+  const lines = shopItems.map((item, i) => ({
+    cmd: `buy ${item.name}`,
+    desc: `${item.price} coins — ${item.desc}`,
+  }));
 
-  shopItems.forEach((item, i) => {
-    shopText += `${i + 1}. ${item.name} - ${item.price} coins\n   📝 ${item.desc}\n\n`;
-  });
-
-  shopText += '═══════════════════\n';
-  shopText += '💡 Use .buy <item name> to purchase!';
-
-  m.reply(shopText);
+  m.reply(boxWithFooter('DJOUSSE TECH SHOP', lines));
 });
 
 module.exports = { shopItems };

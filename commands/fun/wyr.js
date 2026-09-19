@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const questions = [
   'Avoir la capacité de voler ou d\'être invisible?',
@@ -26,6 +27,10 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const question = questions[Math.floor(Math.random() * questions.length)];
-  const text = `🤔 [ROBOT] WOULD YOU RATHER?\n\n❓ ${question}\n\n📝 Répondez avec l'option 1 ou 2!\n\n⚡ [ROBOT] Question sélectionnée.`;
+  const text = boxWithFooter('🤔 WOULD YOU RATHER', [
+    { raw: `❓ ${question}` },
+    { blank: true },
+    { raw: '📝 Répondez avec l\'option 1 ou 2!' },
+  ]);
   await m.reply(text);
 });

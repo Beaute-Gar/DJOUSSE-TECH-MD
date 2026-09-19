@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const games = new Map();
 
@@ -9,12 +10,17 @@ cmd({
   category: 'fun',
   filename: __filename,
 }, async (conn, m, args, config) => {
-  if (games.has(m.chat)) return m.reply('🤖 [SYSTEM] Un jeu est déjà en cours! Terminez-le d\'abord.');
+  if (games.has(m.chat)) return m.reply(boxWithFooter('ERREUR', [{ raw: '🤖 [SYSTEM] Un jeu est déjà en cours! Terminez-le d\'abord.' }]));
 
   const number = Math.floor(Math.random() * 10) + 1;
   games.set(m.chat, { number, attempts: 0 });
 
-  const text = `🔢 [ROBOT] JEU DE DEVINETTE INITIÉ!\n\nDevinez un nombre entre 1 et 10.\nTapez un nombre pour jouer.\n\n⏳ Vous avez 5 tentatives.\n\n⚡ [ROBOT] Algorithme de nombre aléatoire activé.`;
+  const text = boxWithFooter('🔢 JEU DE DEVINETTE', [
+    { raw: 'Devinez un nombre entre 1 et 10.' },
+    { raw: 'Tapez un nombre pour jouer.' },
+    { blank: true },
+    { raw: '⏳ Vous avez 5 tentatives.' },
+  ]);
   await m.reply(text);
 });
 
@@ -32,14 +38,24 @@ cmd({
 
   if (guess === game.number) {
     games.delete(m.chat);
-    return m.reply(`🎉 [ROBOT] CORRECT!\n\nLe nombre était ${game.number}.\nTentatives: ${game.attempts}/5.\n🏆 Félicitations!`);
+    return m.reply(boxWithFooter('🎉 CORRECT', [
+      { raw: `Le nombre était ${game.number}.` },
+      { label: 'Tentatives', value: `${game.attempts}/5` },
+      { raw: '🏆 Félicitations!' },
+    ]));
   }
 
   if (game.attempts >= 5) {
     games.delete(m.chat);
-    return m.reply(`💀 [ROBOT] GAME OVER!\n\nLe nombre était ${game.number}.\nVous avez épuisé vos tentatives.`);
+    return m.reply(boxWithFooter('💀 GAME OVER', [
+      { raw: `Le nombre était ${game.number}.` },
+      { raw: 'Vous avez épuisé vos tentatives.' },
+    ]));
   }
 
   const hint = guess < game.number ? '📈 Plus grand!' : '📉 Plus petit!';
-  await m.reply(`${hint} Tentative ${game.attempts}/5. Essayez encore!`);
+  await m.reply(boxWithFooter('💡 INDICE', [
+    { raw: hint },
+    { raw: `Tentative ${game.attempts}/5. Essayez encore!` },
+  ]));
 });

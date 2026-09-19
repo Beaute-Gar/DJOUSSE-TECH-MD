@@ -1,27 +1,22 @@
-module.exports = {
-  name: 'hidetag',
-  aliases: ['hidetag'],
-  category: 'admin',
-  desc: 'Mentionne tous les membres du groupe (caché)',
-  ownerOnly: false,
+const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
+
+cmd({
+  pattern: 'hidetag',
+  alias: ['ht'],
+  desc: 'Mentionne tous les membres (message caché)',
+  category: 'group',
+  filename: __filename,
   adminOnly: true,
   groupOnly: true,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    try {
-      const meta = await sock.groupMetadata(ctx.from);
-      const participants = meta.participants || [];
-      const mentions = participants.map(p => p.id);
-      const text = args.join(' ') || ' ';
-
-      await sock.sendMessage(ctx.from, {
-        text: text,
-        mentions: mentions
-      });
-    } catch (err) {
-      return ctx.reply('Impossible de récupérer la liste des membres.');
-    }
+}, async (conn, m, args, { from, reply }) => {
+  try {
+    const meta = await conn.groupMetadata(from);
+    const participants = meta.participants || [];
+    const mentions = participants.map(p => p.id);
+    const text = args.join(' ') || ' ';
+    await conn.sendMessage(from, { text: box('HIDETAG', [{ raw: text }]), mentions });
+  } catch {
+    return reply(boxWithFooter('ERROR', [{ raw: 'Impossible de récupérer la liste des membres.' }]));
   }
-};
+});

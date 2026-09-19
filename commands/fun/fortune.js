@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const fortunes = [
   'Un ami proche vous apportera une bonne nouvelle.',
@@ -26,6 +27,8 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-  const text = `🥠 [ROBOT] COOKIE DE FORTUNE!\n\n📜 "${fortune}"\n\n⚡ [ROBOT] Fortune lue par algorithme de chance.`;
+  const text = boxWithFooter('🥠 COOKIE DE FORTUNE', [
+    { raw: `"${fortune}"` },
+  ]);
   await m.reply(text);
 });

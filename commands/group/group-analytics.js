@@ -3,6 +3,7 @@
 const { cmd } = require('../command.cjs');
 const fs = require('fs');
 const path = require('path');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 // ─── Group stats storage ─────────────────────────────────────────
 const STATS_FILE = path.join(__dirname, '..', 'data', 'group-stats.json');
@@ -55,13 +56,13 @@ cmd({
     category: 'group',
     filename: __filename
 }, async (conn, m, commands, { reply, isGroup }) => {
-    if (!isGroup) return reply('❌ Cette commande est pour les groupes.');
+    if (!isGroup) return reply(boxWithFooter('ERREUR', [{ raw: '❌ Cette commande est pour les groupes.' }]));
 
     const stats = loadStats();
     const cs = stats[m.chat];
 
     if (!cs || Object.keys(cs.messages).length === 0) {
-        return reply('📊 Aucune donnée pour ce groupe.');
+        return reply(boxWithFooter('INFO', [{ raw: '📊 Aucune donnée pour ce groupe.' }]));
     }
 
     // Total messages
@@ -88,17 +89,21 @@ cmd({
     const mentions = top5.map(([num]) => num + '@s.whatsapp.net');
 
     return reply(
-        `┏━⍟「 ☣ GROUP STATS ☣ 」⍟━┓\n` +
-        `┃\n` +
-        `┃ 👥 Membres actifs : ${activeMembers}\n` +
-        `┃ 📨 Total messages : ${total.toLocaleString()}\n` +
-        `┃ 📅 Jour le + actif : ${topDay ? topDay[0] : 'N/A'}\n` +
-        `┃ ⏰ Heure de pointe : ${topHour ? topHour[0] : 'N/A'}\n` +
-        `┃\n` +
-        `┃ ─── TOP MEMBRES ──────────\n` +
-        topList + '\n' +
-        `┃\n` +
-        `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟`
+        box('GROUP STATS', [
+            '☣ GROUP STATS ☣',
+            '',
+            '👥 Membres actifs: ' + activeMembers,
+            '📨 Total messages: ' + total.toLocaleString(),
+            '📅 Jour le + actif: ' + (topDay ? topDay[0] : 'N/A'),
+            '⏰ Heure de pointe: ' + (topHour ? topHour[0] : 'N/A'),
+            '',
+            '--- TOP MEMBRES ---',
+            ...top5.map(([num, count], i) => {
+                const pct = Math.round(count / total * 100);
+                const bar = '█'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
+                return (i + 1) + '. @' + num + ' ' + bar + ' ' + count + ' (' + pct + '%)';
+            })
+        ])
     );
 });
 

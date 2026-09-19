@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { getUser } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'role',
@@ -29,5 +30,9 @@ cmd({
     emoji = '👑';
   }
 
-  m.reply(`🤖 [ROLE STATUS] ═══════════════════\n${emoji} Current Role: ${role}\n💰 Total Wealth: ${total} coins\n📊 Level: ${user.level || 1}\n═══════════════════\nKeep climbing the ranks, friend! System acknowledges your progress. ⚙️`);
+  m.reply(boxWithFooter('ROLE STATUS', [
+    { label: 'Role', value: `${emoji} ${role}` },
+    { label: 'Total Wealth', value: `${total} coins` },
+    { label: 'Level', value: `${user.level || 1}` },
+  ]));
 });

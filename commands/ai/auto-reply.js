@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 const config = require('../config-djousse.cjs');
 
 cmd({
@@ -7,9 +8,9 @@ cmd({
     category: 'owner',
     filename: __filename,
 }, async (conn, m, commands, cfg) => {
-    if (!m.isOwner) return m.reply('❌ Owner only');
+    if (!m.isOwner) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Owner only' }]));
     config.AUTO_REPLY = !config.AUTO_REPLY;
-    m.reply(`✅ Auto-reply: ${config.AUTO_REPLY ? 'activé' : 'désactivé'}`);
+    m.reply(boxWithFooter('AUTO-REPLY', [{ raw: `✅ Auto-reply: ${config.AUTO_REPLY ? 'activé' : 'désactivé'}` }]));
 });
 
 cmd({
@@ -28,7 +29,7 @@ cmd({
         const body = m.message.conversation || m.message.extendedTextMessage?.text || '';
         if (!body) return;
         await ctx.conn.sendMessage(m.sender, {
-            text: config.AUTO_REPLY_MSG || 'Je suis occupé, je te répondrai plus tard.',
+            text: boxWithFooter('AUTO-REPLY', [{ raw: config.AUTO_REPLY_MSG || 'Je suis occupé, je te répondrai plus tard.' }]),
         });
     } catch (e) {}
 });

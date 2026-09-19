@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'divorce',
@@ -26,5 +27,5 @@ cmd({
   ];
 
   text += results[Math.floor(Math.random() * results.length)];
-  await m.reply(text);
+  await m.reply(boxWithFooter('💔 DIVORCE', [{ raw: text }]));
 });

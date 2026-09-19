@@ -1,7 +1,7 @@
 const { cmd } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
 const { getSecurityStats, resetSecurityState } = require('../src/middleware/security.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 /* ══ Commande .security — Stats anti-ban ══
    Affiche les compteurs de sécurité et l'état du warm-up. */
@@ -22,7 +22,7 @@ cmd({
     
     const senderNum = String(m.sender).split('@')[0].replace(/[^0-9]/g, '');
     if (!ownerNumbers.includes(senderNum)) {
-        return m.reply('❌ Commande réservée au owner.');
+        return m.reply(boxWithFooter('ERREUR', [{ raw: '❌ Commande réservée au owner.' }]));
     }
     
     try {
@@ -52,7 +52,7 @@ cmd({
         
         await m.reply(lines.join('\n'));
     } catch (e) {
-        await m.reply('❌ Erreur lecture stats: ' + e.message);
+        await m.reply(boxWithFooter('ERREUR', [{ raw: `❌ Erreur lecture stats: ${e.message}` }]));
     }
 });
 
@@ -70,14 +70,14 @@ cmd({
     
     const senderNum = String(m.sender).split('@')[0].replace(/[^0-9]/g, '');
     if (!ownerNumbers.includes(senderNum)) {
-        return m.reply('❌ Commande réservée au owner.');
+        return m.reply(boxWithFooter('ERREUR', [{ raw: '❌ Commande réservée au owner.' }]));
     }
     
     try {
         resetSecurityState();
-        await m.reply('✅ Compteurs de sécurité réinitialisés.');
+        await m.reply(boxWithFooter('SUCCÈS', [{ raw: '✅ Compteurs de sécurité réinitialisés.' }]));
     } catch (e) {
-        await m.reply('❌ Erreur reset: ' + e.message);
+        await m.reply(boxWithFooter('ERREUR', [{ raw: `❌ Erreur reset: ${e.message}` }]));
     }
 });
 

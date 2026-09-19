@@ -1,9 +1,9 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 cmd({ pattern: 'setname', desc: 'Changer le nom du groupe', category: 'group', filename: __filename, fromMe: true }, async (conn, m, commands, config) => {
-if (!m.isGroup) return m.reply('❌ Commande réservée aux groupes.');
+if (!m.isGroup) return m.reply(boxWithFooter('ERREUR', [{ raw: '❌ Commande réservée aux groupes.' }]));
 const name = m.body.split(' ').slice(1).join(' ');
-if (!name) return m.reply(box('📝 *NOM DU GROUPE*', [
+if (!name) return m.reply(boxWithFooter('📝 *NOM DU GROUPE*', [
   { raw: 'Utilisation :' },
   { raw: '.setname NouveauNom' },
 ]));

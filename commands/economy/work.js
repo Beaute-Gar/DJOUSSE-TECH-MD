@@ -1,9 +1,9 @@
 const { cmd } = require('../command.cjs');
 const { getUser, updateUser } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'work',
-  alias: ['wk'],
   desc: 'Work to earn coins!',
   category: 'economy',
   filename: __filename,
@@ -15,7 +15,7 @@ cmd({
 
   if (remaining > 0) {
     const minutes = Math.floor(remaining / (1000 * 60));
-    return m.reply(`⚙️ [SYSTEM] Work module cooling down. Time remaining: ${minutes}m. Rest mode engaged.`);
+    return m.reply(boxWithFooter('COOLDOWN', [{ raw: `Work module cooling down. Time remaining: ${minutes}m.` }]));
   }
 
   const jobs = [
@@ -39,5 +39,9 @@ cmd({
   user.transactions = (user.transactions || 0) + 1;
   updateUser(m.sender, user);
 
-  m.reply(`🤖 [WORK COMPLETE] Job performed: ${job}. Earnings: +${reward} coins. Total balance: ${user.coins} coins. Productivity level: OPTIMAL! ⚙️`);
+  m.reply(boxWithFooter('WORK COMPLETE', [
+    { label: 'Job', value: job },
+    { label: 'Earnings', value: `+${reward} coins` },
+    { label: 'Total', value: `${user.coins} coins` },
+  ]));
 });

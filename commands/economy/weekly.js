@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { getUser, updateUser } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'weekly',
@@ -16,7 +17,7 @@ cmd({
   if (remaining > 0) {
     const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
     const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    return m.reply(`⚙️ [SYSTEM] Weekly rewards on cooldown. Time remaining: ${days}d ${hours}h. System recommends patience protocol.`);
+    return m.reply(boxWithFooter('COOLDOWN', [{ raw: `Weekly rewards on cooldown. Time remaining: ${days}d ${hours}h.` }]));
   }
 
   const reward = 700;
@@ -25,5 +26,8 @@ cmd({
   user.transactions = (user.transactions || 0) + 1;
   updateUser(m.sender, user);
 
-  m.reply(`🤖 [BEEP BOOP] Weekly collection complete! +${reward} coins deposited. Total balance: ${user.coins} coins. Reward cycle synchronized! 💰`);
+  m.reply(boxWithFooter('WEEKLY COLLECTED', [
+    { label: 'Reward', value: `+${reward} coins` },
+    { label: 'Total', value: `${user.coins} coins` },
+  ]));
 });

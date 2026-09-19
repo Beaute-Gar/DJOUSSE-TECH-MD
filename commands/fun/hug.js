@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'hug',
@@ -8,7 +9,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const mentions = m.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
-  if (!mentions.length) return m.reply('🤖 [SYSTEM] Mention someone to hug! Usage: .hug @user');
+  if (!mentions.length) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Mention someone to hug! Usage: .hug @user' }]));
 
   const target = mentions[0];
   const messages = [
@@ -19,6 +20,8 @@ cmd({
     `🤗 [ROBOT] Algorithme de réconfort activé. @${target.split('@')[0]} a reçu ${Math.floor(Math.random() * 10)} câlins virtuels.`
   ];
 
-  const text = messages[Math.floor(Math.random() * messages.length)];
+  const text = boxWithFooter('🤗 CÂLIN VIRTUEL', [
+    { raw: messages[Math.floor(Math.random() * messages.length)] },
+  ]);
   await conn.sendMessage(m.chat, { text, mentions: [target] }, { quoted: m });
 });

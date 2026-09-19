@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'slots',
@@ -15,15 +16,23 @@ cmd({
   let text, reward;
   if (e1 === e2 && e2 === e3) {
     reward = 100;
-    text = `🎰 [ROBOT] JACKPOT!\n\n| ${e1} | ${e2} | ${e3} |\n\n🎉 Trois identiques! +${reward} pièces virtuelles!`;
+    text = boxWithFooter('🎰 JACKPOT!', [
+      { raw: `| ${e1} | ${e2} | ${e3} |` },
+      { raw: `🎉 Trois identiques! +${reward} pièces virtuelles!` },
+    ]);
   } else if (e1 === e2 || e2 === e3 || e1 === e3) {
     reward = 30;
-    text = `🎰 [ROBOT] PETIT GAGNANT!\n\n| ${e1} | ${e2} | ${e3} |\n\n😊 Deux identiques! +${reward} pièces virtuelles.`;
+    text = boxWithFooter('🎰 PETIT GAGNANT', [
+      { raw: `| ${e1} | ${e2} | ${e3} |` },
+      { raw: `😊 Deux identiques! +${reward} pièces virtuelles.` },
+    ]);
   } else {
     reward = 0;
-    text = `🎰 [ROBOT] PERDU!\n\n| ${e1} | ${e2} | ${e3} |\n\n😭 Aucune correspondance. +0 pièces.`;
+    text = boxWithFooter('🎰 PERDU', [
+      { raw: `| ${e1} | ${e2} | ${e3} |` },
+      { raw: '😭 Aucune correspondance. +0 pièces.' },
+    ]);
   }
 
-  text += `\n\n⚡ [ROBOT] Machine à sous exécutée.`;
   await m.reply(text);
 });

@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'roulette',
@@ -23,6 +24,9 @@ cmd({
   else if (color === '🔴') reward = '📈 Gain modéré! x2.';
   else reward = '📉 Perte...';
 
-  const text = `🎡 [ROBOT] ROULETTE LANÇÉE!\n\nRésultat : ${result}\n${reward}\n\n⚡ [ROBOT] Tour de roulette simulé.`;
+  const text = boxWithFooter('🎡 ROULETTE', [
+    { label: 'Résultat', value: result },
+    { raw: reward },
+  ]);
   await m.reply(text);
 });

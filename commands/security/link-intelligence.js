@@ -2,6 +2,7 @@
 
 const { cmd } = require('../command.cjs');
 const axios = require('axios');
+const { box } = require('../lib/djousse-ui.cjs');
 
 // ─── Analyser un lien ────────────────────────────────────────────
 async function analyzeLink(url) {
@@ -80,7 +81,7 @@ cmd({
         if (match) url = match[0];
     }
 
-    if (!url) return reply('❌ Envoie ou cite un lien avec .linkinfo <url>');
+    if (!url) return reply(box('ERROR', [{ raw: 'Envoie ou cite un lien avec .linkinfo <url>' }]));
 
     // Extraire le lien du texte
     const urlMatch = url.match(/https?:\/\/[^\s]+/);
@@ -92,20 +93,18 @@ cmd({
 
     const riskEmoji = result.risk === 'élevé' ? '🔴' : result.risk === 'moyen' ? '🟡' : '🟢';
 
-    return reply(
-        `┏━⍟「 ☣ LINK INTELLIGENCE ☣ 」⍟━┓\n` +
-        `┃\n` +
-        `┃ 🔗 URL : ${result.url}\n` +
-        `┃ 🌐 Domaine : ${result.domain}\n` +
-        `┃ 🔒 HTTPS : ${result.https ? '✅' : '❌'}\n` +
-        `┃ 🔄 Redirects : ${result.redirects}\n` +
-        `┃ 📊 Risque : ${riskEmoji} ${result.risk}\n` +
-        `┃\n` +
-        `┃ 📡 Signaux :\n` +
-        result.signals.map(s => `┃   • ${s}`).join('\n') + '\n' +
-        `┃\n` +
-        `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍟`
-    );
+    const lines = [
+        { label: '🔗 URL', value: result.url },
+        { label: '🌐 Domaine', value: result.domain },
+        { label: '🔒 HTTPS', value: result.https ? '✅' : '❌' },
+        { label: '🔄 Redirects', value: result.redirects },
+        { label: '📊 Risque', value: `${riskEmoji} ${result.risk}` },
+        { blank: true },
+        { raw: '📡 Signaux :' },
+        ...result.signals.map(s => ({ raw: `  • ${s}` })),
+    ];
+
+    return reply(box('☣ LINK INTELLIGENCE ☣', lines));
 });
 
 module.exports = { analyzeLink };

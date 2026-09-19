@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'vs',
@@ -8,7 +9,7 @@ cmd({
   filename: __filename,
 }, async (conn, m, args, config) => {
   const mentions = m.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
-  if (mentions.length < 2) return m.reply('🤖 [SYSTEM] Mention two users! Usage: .vs @user1 @user2');
+  if (mentions.length < 2) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Mention two users! Usage: .vs @user1 @user2' }]));
 
   const user1 = mentions[0].split('@')[0];
   const user2 = mentions[1].split('@')[0];
@@ -20,7 +21,19 @@ cmd({
   const total2 = stats2.power + stats2.speed + stats2.intelligence;
   const winner = total1 > total2 ? user1 : total2 > total1 ? user2 : null;
 
-  const text = `⚔️ [ROBOT] BATTLE INITIATED!\n\n🔵 ${user1}\n💪 Power: ${stats1.power} | ⚡ Speed: ${stats1.speed} | 🧠 Intelligence: ${stats1.intelligence}\n📊 Total: ${total1}\n\nVS\n\n🔴 ${user2}\n💪 Power: ${stats2.power} | ⡿ Speed: ${stats2.speed} | 🧠 Intelligence: ${stats2.intelligence}\n📊 Total: ${total2}\n\n🏆 ${winner ? `Gagnant: ${winner}` : '⚖️ MATCH NUL !'}\n\n⚡ [ROBOT] Combat simulé terminé.`;
+  const text = boxWithFooter('⚔️ BATTLE', [
+    { raw: `🔵 ${user1}` },
+    { raw: `💪 Power: ${stats1.power} | ⚡ Speed: ${stats1.speed} | 🧠 Intelligence: ${stats1.intelligence}` },
+    { label: '📊 Total', value: total1.toString() },
+    { blank: true },
+    { raw: 'VS' },
+    { blank: true },
+    { raw: `🔴 ${user2}` },
+    { raw: `💪 Power: ${stats2.power} | ⚡ Speed: ${stats2.speed} | 🧠 Intelligence: ${stats2.intelligence}` },
+    { label: '📊 Total', value: total2.toString() },
+    { blank: true },
+    { raw: winner ? `🏆 Gagnant: ${winner}` : '⚖️ MATCH NUL !' },
+  ]);
 
   await conn.sendMessage(m.chat, { text, mentions }, { quoted: m });
 });

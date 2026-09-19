@@ -1,11 +1,11 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 const botJid = (conn) => (conn.user?.id || '').split(':')[0] + '@s.whatsapp.net';
 
 cmd({ pattern: 'del', alias: ['delbot', 'clearbot'], desc: 'Supprimer TOUS les messages du bot dans le groupe (pour tout le monde)', category: 'group', filename: __filename, fromMe: true }, async (conn, m) => {
   const chat = m.chat;
-  if (!chat?.endsWith('@g.us')) return m.reply(box('🗑️ *DEL*', [
+  if (!chat?.endsWith('@g.us')) return m.reply(boxWithFooter('🗑️ *DEL*', [
     { raw: '❌ *Commande réservée aux groupes.*' },
   ]));
 
@@ -36,7 +36,7 @@ cmd({ pattern: 'del', alias: ['delbot', 'clearbot'], desc: 'Supprimer TOUS les m
     if (done % 15 === 0) await new Promise(r => setTimeout(r, 400));
   }
 
-  m.reply(box('🗑️ *DEL*', [
+  m.reply(boxWithFooter('🗑️ *DEL*', [
     { label: 'Supprimés', value: `${done} message(s)` },
     { label: 'Détectés', value: `${total}` },
     { raw: 'Messages du bot effacés pour tout le monde ✅' },

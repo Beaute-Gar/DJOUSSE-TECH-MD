@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const answers = [
   '🟢 Oui, absolument!',
@@ -25,9 +26,13 @@ cmd({
   category: 'fun',
   filename: __filename,
 }, async (conn, m, args, config) => {
-  if (!args.length) return m.reply('🤖 [SYSTEM] Usage: .8ball <question>\n\nExemple: .8ball Est-ce que je vais réussir?');
+  if (!args.length) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Usage: .8ball <question>\n\nExemple: .8ball Est-ce que je vais réussir?' }]));
 
   const answer = answers[Math.floor(Math.random() * answers.length)];
-  const text = `🎱 [ROBOT] MAGIC 8-BALL!\n\n❓ Question: ${args.join(' ')}\n\nRéponse: ${answer}\n\n⚡ [ROBOT] Réponse issue de la boule mystique numérique.`;
+  const text = boxWithFooter('🎱 MAGIC 8-BALL!', [
+    { raw: `❓ Question: ${args.join(' ')}` },
+    { blank: true },
+    { raw: `Réponse: ${answer}` },
+  ]);
   await m.reply(text);
 });

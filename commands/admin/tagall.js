@@ -1,32 +1,26 @@
-module.exports = {
-  name: 'tagall',
-  aliases: ['tagall'],
-  category: 'admin',
+const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
+
+cmd({
+  pattern: 'tagall',
+  alias: ['everyone'],
   desc: 'Mentionne tous les membres du groupe',
-  ownerOnly: false,
+  category: 'group',
+  filename: __filename,
   adminOnly: true,
   groupOnly: true,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    try {
-      const meta = await sock.groupMetadata(ctx.from);
-      const participants = meta.participants || [];
-      const mentions = participants.map(p => p.id);
-      const text = args.join(' ') || 'Appel général !';
-
-      let mentionText = `${text}\n\n`;
-      for (const p of participants) {
-        mentionText += `@${p.id.split('@')[0]}\n`;
-      }
-
-      await sock.sendMessage(ctx.from, {
-        text: mentionText,
-        mentions: mentions
-      });
-    } catch (err) {
-      return ctx.reply('Impossible de récupérer la liste des membres.');
+}, async (conn, m, args, { from, reply }) => {
+  try {
+    const meta = await conn.groupMetadata(from);
+    const participants = meta.participants || [];
+    const mentions = participants.map(p => p.id);
+    const text = args.join(' ') || 'Appel général !';
+    const lines = [{ raw: text }, { blank: true }];
+    for (const p of participants) {
+      lines.push({ raw: `@${p.id.split('@')[0]}` });
     }
+    await conn.sendMessage(from, { text: box('TAGALL', lines), mentions });
+  } catch {
+    return reply(boxWithFooter('ERROR', [{ raw: 'Impossible de récupérer la liste des membres.' }]));
   }
-};
+});

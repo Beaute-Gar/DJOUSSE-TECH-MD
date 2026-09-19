@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 const baileysDl = (() => { try { return require('@whiskeysockets/baileys').downloadMediaMessage; } catch { return null; } })();
 const fallbackDl = require('../lib/msg.cjs').downloadMediaMessage;
 const axios = require('axios');
@@ -131,11 +132,11 @@ cmd({
   desc: 'Configurer la clé API ElevenLabs pour le voice cloning',
   filename: __filename
 }, async (conn, m, commands, { q, reply, isOwner }) => {
-  if (!isOwner) return reply('❌ Commande réservée au propriétaire.');
-  if (!q) return reply('❌ Usage: .cloneset <clé_api_elevenlabs>\n\n📥 Obtiens ta clé sur https://elevenlabs.io');
+  if (!isOwner) return reply(boxWithFooter('ERROR', [{ raw: '❌ Commande réservée au propriétaire.' }]));
+  if (!q) return reply(boxWithFooter('CLONESET', [{ raw: '❌ Usage: .cloneset <clé_api_elevenlabs>' }, { raw: '📥 Obtiens ta clé sur https://elevenlabs.io' }]));
 
   process.env.ELEVENLABS_API_KEY = q.trim();
-  reply('✅ Clé API ElevenLabs configurée!\n\n🧪 Teste avec .clonevoice en répondant à un message vocal.');
+  reply(boxWithFooter('SUCCESS', [{ raw: '✅ Clé API ElevenLabs configurée!' }, { raw: '🧪 Teste avec .clonevoice en répondant à un message vocal.' }]));
 });
 
 cmd({
@@ -147,34 +148,37 @@ cmd({
 }, async (conn, m, commands, { q, reply }) => {
   const apiKey = getApiKey();
   if (!apiKey) {
-    return reply(
-      '❌ *Clé API ElevenLabs requise*\n\n' +
-      '📥 Obtiens ta clé gratuite sur :\nhttps://elevenlabs.io\n\n' +
-      '🔑 Puis configure-la avec :\n.cloneset <ta_clé>'
-    );
+    return reply(boxWithFooter('ERROR', [
+      { raw: '❌ *Clé API ElevenLabs requise*' },
+      { raw: '📥 Obtiens ta clé gratuite sur :' },
+      { raw: 'https://elevenlabs.io' },
+      { raw: '🔑 Puis configure-la avec :' },
+      { raw: '.cloneset <ta_clé>' }
+    ]));
   }
 
   // Vérifier qu'on répond à un message vocal
   const quoted = m.quoted;
   if (!quoted) {
-    return reply(
-      '🎤 *Usage :*\n' +
-      'Réponds à un message vocal avec :\n' +
-      '.clonevoice <texte à dire>\n\n' +
-      'Exemple :\n' +
-      '1. Quelqu\'un envoie un message vocal\n' +
-      '2. Tu réponds au message avec : .clonevoice Bonjour comment ça va ?\n' +
-      '3. Le bot reproduit la voix et dit le texte!'
-    );
+    return reply(boxWithFooter('CLONEVOICE', [
+      { raw: '🎤 *Usage :*' },
+      { raw: 'Réponds à un message vocal avec :' },
+      { raw: '.clonevoice <texte à dire>' },
+      { blank: true },
+      { raw: 'Exemple :' },
+      { raw: '1. Quelqu\'un envoie un message vocal' },
+      { raw: '2. Tu réponds au message avec : .clonevoice Bonjour comment ça va ?' },
+      { raw: '3. Le bot reproduit la voix et dit le texte!' }
+    ]));
   }
 
   const isAudio = quoted?.msg?.audioMessage || quoted?.type === 'audioMessage' || quoted?.type === 'ptt' || quoted?._data?.mimetype?.startsWith('audio');
   if (!isAudio) {
-    return reply('❌ Le message cité n\'est pas un message vocal.\nRéponds à un message vocal avec .clonevoice <texte>');
+    return reply(boxWithFooter('ERROR', [{ raw: '❌ Le message cité n\'est pas un message vocal.\nRéponds à un message vocal avec .clonevoice <texte>' }]));
   }
 
   if (!q || q.trim().length < 2) {
-    return reply('❌ Ajoute le texte à dire après .clonevoice\nEx: .clonevoice Bonjour tout le monde');
+    return reply(boxWithFooter('ERROR', [{ raw: '❌ Ajoute le texte à dire après .clonevoice\nEx: .clonevoice Bonjour tout le monde' }]));
   }
 
   // Télécharger l'audio source
@@ -184,10 +188,10 @@ cmd({
     const filename = 'clone_src_' + Date.now();
     audioPath = await downloadAudio(audioMsg, filename);
   } catch (e) {
-    return reply('❌ Impossible de télécharger l\'audio: ' + e.message);
+    return reply(boxWithFooter('ERROR', [{ raw: '❌ Impossible de télécharger l\'audio: ' + e.message }]));
   }
 
-  const statusMsg = await reply('🎤 *Clonage vocal en cours...*\n\n⏳ Analyse de la voix...');
+  const statusMsg = await reply(boxWithFooter('CLONEVOICE', [{ raw: '🎤 *Clonage vocal en cours...*' }, { raw: '⏳ Analyse de la voix...' }]));
 
   try {
     // 1. Créer le clone vocal
@@ -227,11 +231,18 @@ cmd({
   } catch (e) {
     const errMsg = e.response?.data?.detail?.message || e.message;
     if (errMsg.includes('quota') || errMsg.includes('limit')) {
-      reply('❌ *Quota ElevenLabs épuisé*\n\n📊 Limite gratuite: 10K caractères/mois\n💡 Réessaie plus tard ou passe au plan premium.');
+      reply(boxWithFooter('ERROR', [
+        { raw: '❌ *Quota ElevenLabs épuisé*' },
+        { raw: '📊 Limite gratuite: 10K caractères/mois' },
+        { raw: '💡 Réessaie plus tard ou passe au plan premium.' }
+      ]));
     } else if (errMsg.includes('voice')) {
-      reply('❌ Erreur de clonage vocal: ' + errMsg + '\n\n💡 Assure-toi que l\'audio est clair et d\'au moins 3 secondes.');
+      reply(boxWithFooter('ERROR', [
+        { raw: '❌ Erreur de clonage vocal: ' + errMsg },
+        { raw: '💡 Assure-toi que l\'audio est clair et d\'au moins 3 secondes.' }
+      ]));
     } else {
-      reply('❌ Erreur: ' + errMsg);
+      reply(boxWithFooter('ERROR', [{ raw: '❌ Erreur: ' + errMsg }]));
     }
   } finally {
     // Supprimer le fichier temporaire
@@ -249,32 +260,29 @@ cmd({
   const apiKey = getApiKey();
   const hasKey = !!apiKey;
 
-  let text = '🎤 *VOICE CLONING — DJOUSSE TECH*\n\n';
-  text += '┌─────────────────────────────────┐\n';
-  text += '│ 🔑 API: ElevenLabs\n';
-  text += '│ ✅ Clé: ' + (hasKey ? 'Configurée' : 'Non configurée') + '\n';
-  text += '│ 📊 Quota: ' + (hasKey ? '10K chars/mois (gratuit)' : 'N/A') + '\n';
-  text += '└─────────────────────────────────┘\n\n';
-
-  text += '📝 *Comment utiliser :*\n\n';
-  text += '1. Quelqu\'un envoie un message vocal\n';
-  text += '2. Tu réponds au message avec :\n';
-  text += '   .clonevoice Bonjour comment ça va ?\n';
-  text += '3. Le bot reproduit la voix et dit le texte!\n\n';
-
-  text += '🔑 *Configurer la clé API :*\n';
-  text += '1. Va sur https://elevenlabs.io\n';
-  text += '2. Crée un compte gratuit\n';
-  text += '3. Copie ta clé API\n';
-  text += '4. Tape .cloneset <ta_clé>\n\n';
-
-  text += '⚠️ *Limites :*\n';
-  text += '• Quota gratuit: 10K caractères/mois\n';
-  text += '• Audio source: 3-30 secondes recommandé\n';
-  text += '• Cloned voices: durée limitée (10 min)\n';
-  text += '• Meilleur résultat: voix claire, sans bruit';
-
-  reply(text);
+  reply(boxWithFooter('VOICE CLONING', [
+    { label: 'API', value: 'ElevenLabs' },
+    { label: 'Clé', value: hasKey ? 'Configurée' : 'Non configurée' },
+    { label: 'Quota', value: hasKey ? '10K chars/mois (gratuit)' : 'N/A' },
+    { blank: true },
+    { raw: '📝 *Comment utiliser :*' },
+    { raw: '1. Quelqu\'un envoie un message vocal' },
+    { raw: '2. Tu réponds au message avec :' },
+    { raw: '   .clonevoice Bonjour comment ça va ?' },
+    { raw: '3. Le bot reproduit la voix et dit le texte!' },
+    { blank: true },
+    { raw: '🔑 *Configurer la clé API :*' },
+    { raw: '1. Va sur https://elevenlabs.io' },
+    { raw: '2. Crée un compte gratuit' },
+    { raw: '3. Copie ta clé API' },
+    { raw: '4. Tape .cloneset <ta_clé>' },
+    { blank: true },
+    { raw: '⚠️ *Limites :*' },
+    { raw: '• Quota gratuit: 10K caractères/mois' },
+    { raw: '• Audio source: 3-30 secondes recommandé' },
+    { raw: '• Cloned voices: durée limitée (10 min)' },
+    { raw: '• Meilleur résultat: voix claire, sans bruit' }
+  ]));
 });
 
 cmd({
@@ -286,27 +294,29 @@ cmd({
 }, async (conn, m, commands, { q, reply }) => {
   const apiKey = getApiKey();
   if (!apiKey) {
-    return reply('❌ Clé API ElevenLabs requise.\nConfigure-la avec .cloneset <clé>');
+    return reply(boxWithFooter('ERROR', [{ raw: '❌ Clé API ElevenLabs requise.\nConfigure-la avec .cloneset <clé>' }]));
   }
 
   const quoted = m.quoted;
   if (!quoted) {
-    return reply(
-      '🎤 *Sauvegarder ta voix*\n\n' +
-      '1. Envoie un message vocal (ta voix)\n' +
-      '2. Réponds au message avec :\n' +
-      '   .clonevoicesave\n\n' +
-      'Le bot va sauvegarder ta voix pour toujours.\n' +
-      'Il pourra ensuite répondre avec ta voix !'
-    );
+    return reply(boxWithFooter('CLONEVOICESAVE', [
+      { raw: '🎤 *Sauvegarder ta voix*' },
+      { blank: true },
+      { raw: '1. Envoie un message vocal (ta voix)' },
+      { raw: '2. Réponds au message avec :' },
+      { raw: '   .clonevoicesave' },
+      { blank: true },
+      { raw: 'Le bot va sauvegarder ta voix pour toujours.' },
+      { raw: 'Il pourra ensuite répondre avec ta voix !' }
+    ]));
   }
 
   const isAudio = quoted?.msg?.audioMessage || quoted?.type === 'audioMessage' || quoted?.type === 'ptt' || quoted?._data?.mimetype?.startsWith('audio');
   if (!isAudio) {
-    return reply('❌ Le message cité n\'est pas un message vocal.');
+    return reply(boxWithFooter('ERROR', [{ raw: '❌ Le message cité n\'est pas un message vocal.' }]));
   }
 
-  const statusMsg = await reply('🎤 *Sauvegarde de ta voix...*\n\n⏳ Analyse en cours...');
+  const statusMsg = await conn.sendMessage(m.chat, { text: boxWithFooter('CLONEVOICESAVE', [{ raw: '🎤 *Sauvegarde de ta voix...*' }, { raw: '⏳ Analyse en cours...' }]) });
 
   try {
     // Adapter le message pour le téléchargement (Baileys ou wwebjs)
@@ -320,28 +330,31 @@ cmd({
 
     const senderNum = m.sender?.split(':')[0]?.split('@')[0];
     if (!senderNum) {
-      return reply('❌ Impossible de récupérer ton numéro.');
+      return reply(boxWithFooter('ERROR', [{ raw: '❌ Impossible de récupérer ton numéro.' }]));
     }
 
     saveVoiceProfile(senderNum, voiceId, cloneName);
 
-    await conn.sendMessage(m.chat, { delete: statusMsg.key }).catch(() => {});
-    reply(
-      '✅ *Voix sauvegardée !*\n\n' +
-      '🎤 Le bot peut maintenant répondre avec ta voix.\n\n' +
-      '📝 *Comment ça marche :*\n' +
-      '• Parfois il répond par texte\n' +
-      '• Parfois il répond par voix (avec ta voix clonée)\n' +
-      '• C\'est aléatoire pour un rendu naturel\n\n' +
-      '🗑️ Pour supprimer : .voicedel'
-    );
+    await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: statusMsg.key.id, participant: m.sender } }).catch(() => {});
+    reply(boxWithFooter('SUCCESS', [
+      { raw: '✅ *Voix sauvegardée !*' },
+      { blank: true },
+      { raw: '🎤 Le bot peut maintenant répondre avec ta voix.' },
+      { blank: true },
+      { raw: '📝 *Comment ça marche :*' },
+      { raw: '• Parfois il répond par texte' },
+      { raw: '• Parfois il répond par voix (avec ta voix clonée)' },
+      { raw: '• C\'est aléatoire pour un rendu naturel' },
+      { blank: true },
+      { raw: '🗑️ Pour supprimer : .voicedel' }
+    ]));
 
     try { fs.unlinkSync(audioPath); } catch {}
 
   } catch (e) {
-    await conn.sendMessage(m.chat, { delete: statusMsg.key }).catch(() => {});
+    await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: statusMsg.key.id, participant: m.sender } }).catch(() => {});
     const errMsg = e.response?.data?.detail?.message || e.message;
-    reply('❌ Erreur: ' + errMsg);
+    reply(boxWithFooter('ERROR', [{ raw: '❌ Erreur: ' + errMsg }]));
   }
 });
 
@@ -353,14 +366,14 @@ cmd({
   filename: __filename
 }, async (conn, m, commands, { reply }) => {
   const senderNum = m.sender?.split(':')[0]?.split('@')[0];
-  if (!senderNum) return reply('❌ Impossible de récupérer ton numéro.');
+  if (!senderNum) return reply(boxWithFooter('ERROR', [{ raw: '❌ Impossible de récupérer ton numéro.' }]));
 
   if (!hasVoiceProfile(senderNum)) {
-    return reply('❌ Tu n\'as pas de profil vocal sauvegardé.\nUtilise .clonevoicesave d\'abord.');
+    return reply(boxWithFooter('ERROR', [{ raw: '❌ Tu n\'as pas de profil vocal sauvegardé.\nUtilise .clonevoicesave d\'abord.' }]));
   }
 
   deleteVoiceProfile(senderNum);
-  reply('✅ Profil vocal supprimé.\nLe bot ne répondra plus par voix avec ta voix clonée.');
+  reply(boxWithFooter('SUCCESS', [{ raw: '✅ Profil vocal supprimé.\nLe bot ne répondra plus par voix avec ta voix clonée.' }]));
 });
 
 cmd({
@@ -371,32 +384,32 @@ cmd({
   filename: __filename
 }, async (conn, m, commands, { reply }) => {
   const senderNum = m.sender?.split(':')[0]?.split('@')[0];
-  if (!senderNum) return reply('❌ Impossible de récupérer ton numéro.');
+  if (!senderNum) return reply(boxWithFooter('ERROR', [{ raw: '❌ Impossible de récupérer ton numéro.' }]));
 
   const profile = getVoiceProfile(senderNum);
   if (!profile) {
-    return reply(
-      '🎤 *Tu n\'as pas de profil vocal*\n\n' +
-      'Pour en créer un :\n' +
-      '1. Envoie un message vocal\n' +
-      '2. Réponds avec .clonevoicesave\n\n' +
-      'Le bot pourra ensuite répondre avec ta voix !'
-    );
+    return reply(boxWithFooter('MYVOICE', [
+      { raw: '🎤 *Tu n\'as pas de profil vocal*' },
+      { blank: true },
+      { raw: 'Pour en créer un :' },
+      { raw: '1. Envoie un message vocal' },
+      { raw: '2. Réponds avec .clonevoicesave' },
+      { blank: true },
+      { raw: 'Le bot pourra ensuite répondre avec ta voix !' }
+    ]));
   }
 
   const created = new Date(profile.createdAt).toLocaleDateString('fr-FR');
   const used = profile.lastUsed ? new Date(profile.lastUsed).toLocaleDateString('fr-FR') : 'Jamais';
 
-  reply(
-    '🎤 *TON PROFIL VOCAL*\n\n' +
-    '┌─────────────────────────────────┐\n' +
-    '│ 📝 Nom: ' + (profile.name || 'N/A') + '\n' +
-    '│ 🆔 Voice ID: ' + profile.voiceId.slice(0, 12) + '...\n' +
-    '│ 📅 Créé: ' + created + '\n' +
-    '│ 🔄 Dernière utilisation: ' + used + '\n' +
-    '│ 📊 Utilisé: ' + (profile.useCount || 0) + ' fois\n' +
-    '└─────────────────────────────────┘\n\n' +
-    '✅ Le bot peut répondre avec ta voix !\n' +
-    '🗑️ Pour supprimer : .voicedel'
-  );
+  reply(boxWithFooter('TON PROFIL VOCAL', [
+    { label: 'Nom', value: profile.name || 'N/A' },
+    { label: 'Voice ID', value: profile.voiceId.slice(0, 12) + '...' },
+    { label: 'Créé', value: created },
+    { label: 'Dernière utilisation', value: used },
+    { label: 'Utilisé', value: (profile.useCount || 0) + ' fois' },
+    { blank: true },
+    { raw: '✅ Le bot peut répondre avec ta voix !' },
+    { raw: '🗑️ Pour supprimer : .voicedel' }
+  ]));
 });

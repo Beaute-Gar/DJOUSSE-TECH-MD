@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
@@ -23,7 +23,7 @@ cmd({ pattern: 'toimg', desc: 'Convert sticker to image', category: 'MATHTOOL', 
   try {
     const src = (m.quoted && m.quoted.msg) ? m.quoted : m;
     if (src.type !== 'stickerMessage') {
-      return reply(box('🖼️ *TOIMG*', [
+      return reply(boxWithFooter('🖼️ *TOIMG*', [
         { raw: '❌ *Utilisation :* réponds à un sticker avec .toimg' },
         { raw: '✨ *Exemple :* .toimg' },
       ]));
@@ -33,7 +33,7 @@ cmd({ pattern: 'toimg', desc: 'Convert sticker to image', category: 'MATHTOOL', 
       { raw: 'Here is your image!' },
     ]) }, { quoted: m });
   } catch (err) {
-    reply(box('🖼️ *TOIMG*', [
+    reply(boxWithFooter('🖼️ *TOIMG*', [
       { raw: '⚠️ *Failed to convert sticker:* ' + err.message },
     ]));
   }
@@ -43,7 +43,7 @@ cmd({ pattern: 'tomp3', desc: 'Convert video/voice to mp3', category: 'MATHTOOL'
   try {
     const src = (m.quoted && m.quoted.msg) ? m.quoted : m;
     if (src.type !== 'videoMessage' && src.type !== 'audioMessage') {
-      return reply(box('🎵 *TOMP3*', [
+      return reply(boxWithFooter('🎵 *TOMP3*', [
         { raw: '❌ *Utilisation :* réponds à une vidéo ou une note vocale avec .tomp3' },
         { raw: '✨ *Exemple :* .tomp3' },
       ]));
@@ -58,7 +58,7 @@ cmd({ pattern: 'tomp3', desc: 'Convert video/voice to mp3', category: 'MATHTOOL'
     fs.unlinkSync(inputPath);
     fs.unlinkSync(outputPath);
   } catch (err) {
-    reply(box('🎵 *TOMP3*', [
+    reply(boxWithFooter('🎵 *TOMP3*', [
       { raw: '⚠️ *Failed to convert:* ' + err.message },
     ]));
   }
@@ -68,7 +68,7 @@ cmd({ pattern: 'tovideo', desc: 'Convert animated sticker to video', category: '
   try {
     const src = (m.quoted && m.quoted.msg) ? m.quoted : m;
     if (src.type !== 'stickerMessage') {
-      return reply(box('🎬 *TOVIDEO*', [
+      return reply(boxWithFooter('🎬 *TOVIDEO*', [
         { raw: '❌ *Utilisation :* réponds à un sticker animé avec .tovideo' },
         { raw: '✨ *Exemple :* .tovideo' },
       ]));
@@ -78,7 +78,7 @@ cmd({ pattern: 'tovideo', desc: 'Convert animated sticker to video', category: '
       { raw: 'Here is your video!' },
     ]) }, { quoted: m });
   } catch (err) {
-    reply(box('🎬 *TOVIDEO*', [
+    reply(boxWithFooter('🎬 *TOVIDEO*', [
       { raw: '⚠️ *Failed to convert sticker to video:* ' + err.message },
     ]));
   }
@@ -88,7 +88,7 @@ cmd({ pattern: 'togif', desc: 'Convert animated sticker to gif', category: 'MATH
   try {
     const src = (m.quoted && m.quoted.msg) ? m.quoted : m;
     if (src.type !== 'stickerMessage') {
-      return reply(box('🎞️ *TOGIF*', [
+      return reply(boxWithFooter('🎞️ *TOGIF*', [
         { raw: '❌ *Utilisation :* réponds à un sticker animé avec .togif' },
         { raw: '✨ *Exemple :* .togif' },
       ]));
@@ -98,7 +98,7 @@ cmd({ pattern: 'togif', desc: 'Convert animated sticker to gif', category: 'MATH
       { raw: 'Here is your GIF!' },
     ]) }, { quoted: m });
   } catch (err) {
-    reply(box('🎞️ *TOGIF*', [
+    reply(boxWithFooter('🎞️ *TOGIF*', [
       { raw: '⚠️ *Failed to convert sticker to gif:* ' + err.message },
     ]));
   }
@@ -108,7 +108,7 @@ cmd({ pattern: 'toaudio', desc: 'Convert video to audio', category: 'MATHTOOL', 
   try {
     const src = (m.quoted && m.quoted.msg) ? m.quoted : m;
     if (src.type !== 'videoMessage') {
-      return reply(box('🔊 *TOAUDIO*', [
+      return reply(boxWithFooter('🔊 *TOAUDIO*', [
         { raw: '❌ *Utilisation :* réponds à une vidéo avec .toaudio' },
         { raw: '✨ *Exemple :* .toaudio' },
       ]));
@@ -123,7 +123,7 @@ cmd({ pattern: 'toaudio', desc: 'Convert video to audio', category: 'MATHTOOL', 
     fs.unlinkSync(inputPath);
     fs.unlinkSync(outputPath);
   } catch (err) {
-    reply(box('🔊 *TOAUDIO*', [
+    reply(boxWithFooter('🔊 *TOAUDIO*', [
       { raw: '⚠️ *Failed to convert video to audio:* ' + err.message },
     ]));
   }

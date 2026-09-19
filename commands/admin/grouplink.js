@@ -1,22 +1,22 @@
-module.exports = {
-  name: 'grouplink',
-  aliases: ['grouplink', 'glink'],
-  category: 'admin',
-  desc: 'Obtient le lien d\'invitation du groupe',
-  ownerOnly: false,
+const { cmd } = require('../command.cjs');
+const { boxWithFooter } = require('../lib/djousse-ui.cjs');
+
+cmd({
+  pattern: 'grouplink',
+  alias: ['glink'],
+  desc: 'Lien d\'invitation du groupe',
+  category: 'group',
+  filename: __filename,
   adminOnly: true,
   groupOnly: true,
   botAdminNeeded: true,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    try {
-      const code = await sock.groupInviteCode(ctx.from);
-      const link = `https://chat.whatsapp.com/${code}`;
-      await ctx.react('🔗');
-      return ctx.reply(`Lien d'invitation du groupe:\n${link}`);
-    } catch (err) {
-      return ctx.reply('Impossible de récupérer le lien. Vérifie que le bot est admin.');
-    }
+}, async (conn, m, args, { from, reply, react }) => {
+  try {
+    const code = await conn.groupInviteCode(from);
+    const link = `https://chat.whatsapp.com/${code}`;
+    await react('🔗');
+    return reply(boxWithFooter('GROUP LINK', [{ raw: `Lien d'invitation:\n${link}` }]));
+  } catch {
+    return reply(boxWithFooter('ERROR', [{ raw: 'Impossible de récupérer le lien. Vérifie que le bot est admin.' }]));
   }
-};
+});

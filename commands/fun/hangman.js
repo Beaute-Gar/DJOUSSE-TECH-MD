@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const games = new Map();
 
@@ -11,13 +12,17 @@ cmd({
   category: 'fun',
   filename: __filename,
 }, async (conn, m, args, config) => {
-  if (games.has(m.chat)) return m.reply('🤖 [SYSTEM] Un jeu est déjà en cours!');
+  if (games.has(m.chat)) return m.reply(boxWithFooter('ERREUR', [{ raw: '🤖 [SYSTEM] Un jeu est déjà en cours!' }]));
 
   const word = words[Math.floor(Math.random() * words.length)];
   const hidden = '_ '.repeat(word.length).trim();
   games.set(m.chat, { word, guessed: [], wrong: 0, maxWrong: 6 });
 
-  const text = `🎯 [ROBOT] HANGMAN INITIÉ!\n\nMot: ${hidden} (${word.length} lettres)\nVies: ${'❤️'.repeat(6)}\n\nTapez une lettre pour jouer.\n\n⚡ [ROBOT] Mot sélectionné aléatoirement.`;
+  const text = boxWithFooter('🎯 HANGMAN', [
+    { label: 'Mot', value: hidden + ` (${word.length} lettres)` },
+    { label: 'Vies', value: '❤️'.repeat(6) },
+    { raw: 'Tapez une lettre pour jouer.' },
+  ]);
   await m.reply(text);
 });
 
@@ -32,7 +37,7 @@ cmd({
   const game = games.get(m.chat);
   const letter = args[0].toUpperCase();
 
-  if (game.guessed.includes(letter)) return m.reply('🤖 [SYSTEM] Lettre déjà essayée!');
+  if (game.guessed.includes(letter)) return m.reply(boxWithFooter('ERREUR', [{ raw: '🤖 [SYSTEM] Lettre déjà essayée!' }]));
 
   game.guessed.push(letter);
 
@@ -40,10 +45,17 @@ cmd({
     game.wrong++;
     if (game.wrong >= game.maxWrong) {
       games.delete(m.chat);
-      return m.reply(`💀 [ROBOT] GAME OVER!\n\nMot: ${game.word}\nVous avez été pendu numériquement.`);
+      return m.reply(boxWithFooter('💀 GAME OVER', [
+        { label: 'Mot', value: game.word },
+        { raw: 'Vous avez été pendu numériquement.' },
+      ]));
     }
     const lives = '❤️'.repeat(game.maxWrong - game.wrong);
-    return m.reply(`❌ [SYSTEM] '${letter}' n'est pas dans le mot!\nVies: ${lives}\nLettres essayées: ${game.guessed.join(', ')}`);
+    return m.reply(boxWithFooter('❌ ERREUR', [
+      { raw: `'${letter}' n'est pas dans le mot!` },
+      { label: 'Vies', value: lives },
+      { label: 'Lettres essayées', value: game.guessed.join(', ') },
+    ]));
   }
 
   const display = game.word.split('').map(c => game.guessed.includes(c) ? c : '_').join(' ');
@@ -51,8 +63,17 @@ cmd({
 
   if (won) {
     games.delete(m.chat);
-    return m.reply(`🎉 [ROBOT] VICTOIRE!\n\nMot: ${game.word}\nErreurs: ${game.wrong}/${game.maxWrong}\n🏆 Félicitations!`);
+    return m.reply(boxWithFooter('🎉 VICTOIRE', [
+      { label: 'Mot', value: game.word },
+      { label: 'Erreurs', value: `${game.wrong}/${game.maxWrong}` },
+      { raw: '🏆 Félicitations!' },
+    ]));
   }
 
-  await m.reply(`✅ [SYSTEM] '${letter}' trouvé!\n\nMot: ${display}\nVies: ${'❤️'.repeat(game.maxWrong - game.wrong)}\nLettres: ${game.guessed.join(', ')}`);
+  await m.reply(boxWithFooter('✅ TROUVÉ', [
+    { raw: `'${letter}' trouvé!` },
+    { label: 'Mot', value: display },
+    { label: 'Vies', value: '❤️'.repeat(game.maxWrong - game.wrong) },
+    { label: 'Lettres', value: game.guessed.join(', ') },
+  ]));
 });

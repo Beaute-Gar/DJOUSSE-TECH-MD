@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { getLeaderboard } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'topcoins',
@@ -11,19 +12,13 @@ cmd({
   const top = getLeaderboard(10);
 
   if (top.length === 0) {
-    return m.reply(`⚙️ [SYSTEM] No users found in economy database. System needs data to process rankings.`);
+    return m.reply(boxWithFooter('ERROR', [{ raw: 'No users found in economy database. System needs data to process rankings.' }]));
   }
 
-  let text = '🤖 [DJOUSSE TECH LEADERBOARD] ═══════════════\n';
-  text += '🏆 Top 10 Richest Users:\n\n';
-
-  top.forEach((user, i) => {
+  const lines = top.map((user, i) => {
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
-    text += `${medal} @${user.id.split('@')[0]} - ${user.total} coins (Level ${user.level})\n`;
+    return { label: `${medal} @${user.id.split('@')[0]}`, value: `${user.total} coins (Level ${user.level})` };
   });
 
-  text += '═══════════════════\n';
-  text += '📊 Rankings updated in real-time!';
-
-  m.reply(text);
+  m.reply(boxWithFooter('LEADERBOARD', lines));
 });

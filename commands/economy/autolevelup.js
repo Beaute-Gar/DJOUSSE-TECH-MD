@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { getUser, updateUser } = require('./economy-db');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'autolevelup',
@@ -15,5 +16,8 @@ cmd({
   const status = user.autoLevelUp ? 'ENABLED' : 'DISABLED';
   const icon = user.autoLevelUp ? '🟢' : '🔴';
 
-  m.reply(`🤖 [AUTO LEVEL UP] ${icon} Status: ${status}. When enabled, system will automatically level up when sufficient funds detected. Configuration saved! ⚙️`);
+  m.reply(boxWithFooter('AUTO LEVEL UP', [
+    { label: 'Status', value: `${icon} ${status}` },
+    { raw: 'When enabled, system will automatically level up when sufficient funds detected.' },
+  ]));
 });

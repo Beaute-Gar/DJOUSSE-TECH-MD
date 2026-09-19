@@ -2,6 +2,7 @@
 
 const { cmd } = require('../command.cjs');
 const antiFlood = require('../../lib/anti-flood.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
     pattern: 'antiflood|af',
@@ -12,10 +13,15 @@ cmd({
 }, async (conn, m, commands, { reply }) => {
     const stats = antiFlood.getStats();
     await reply(
-        `🌊 *Anti-Flood Stats*\n\n` +
-        `📊 Utilisateurs suivis: ${stats.tracking}\n` +
-        `⚠️ Avertissements: ${stats.warned}\n` +
-        `🔇 Muets: ${stats.muted}\n\n` +
-        `Règles: 5 msgs/10s = avertissement\n3 avertissements = muet 5min`
+        box('ANTI-FLOOD STATS', [
+            '🌊 Anti-Flood Stats',
+            '',
+            '📊 Utilisateurs suivis: ' + stats.tracking,
+            '⚠️ Avertissements: ' + stats.warned,
+            '🔇 Muets: ' + stats.muted,
+            '',
+            'Règles: 5 msgs/10s = avertissement',
+            '3 avertissements = muet 5min'
+        ])
     );
 });

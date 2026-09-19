@@ -20,6 +20,7 @@
         "@bochilteam/scraper": "^5.0.1",
         "@bochilteam/scraper-facebook": "^5.0.0",
         "@bochilteam/scraper-tiktok": "^5.0.0",
+        "@distube/ytdl-core": "^4.16.12",
         "@ffmpeg-installer/ffmpeg": "^1.1.0",
         "@vitalets/google-translate-api": "^9.2.1",
         "@whiskeysockets/baileys": "^7.0.0-rc.14",

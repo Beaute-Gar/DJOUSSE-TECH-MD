@@ -1,26 +1,15 @@
-const afk = require('../../utils/afk');
+const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
-module.exports = {
-  name: 'afk',
-  aliases: ['afk'],
-  category: 'owner',
+cmd({
+  pattern: 'afk',
+  alias: [],
   desc: 'Mode AFK (absent)',
-  ownerOnly: false,
-  adminOnly: false,
-  groupOnly: false,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    if (afk.isEnabled()) {
-      afk.disable();
-      await ctx.react('✅');
-      ctx.reply('Tu n\'es plus AFK.');
-    } else {
-      const message = args.length > 0 ? args.join(' ') : 'Je suis pas là pour l\'instant.';
-      afk.enable(message);
-      await ctx.react('😴');
-      ctx.reply(`Mode AFK activé.\nMessage: ${message}`);
-    }
-  }
-};
+  category: 'owner',
+  filename: __filename,
+  fromMe: true,
+}, async (conn, m, args, { from, reply, react }) => {
+  const msg = args.length > 0 ? args.join(' ') : 'Je suis pas là.';
+  await react('😴');
+  return reply(boxWithFooter('AFK', ['Mode AFK activé.', 'Message: ' + msg]));
+});

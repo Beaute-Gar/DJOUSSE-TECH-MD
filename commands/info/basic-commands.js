@@ -1,5 +1,5 @@
 const { cmd } = require('../command.cjs');
-const { box } = require('../lib/djousse-ui.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 /* .code — Affiche le code de pairing/parrainage en cours */
 cmd({
@@ -12,7 +12,7 @@ cmd({
 }, async (conn, m, commands, { reply }) => {
     const pairingCode = global.pairingCode || 'Non généré';
     const server = global.currentServer || '1';
-    reply(box('📜 *CODE DE PAIRING*', [
+    reply(boxWithFooter('📜 *CODE DE PAIRING*', [
         { label: 'Code', value: pairingCode },
         { label: 'Serveur', value: server },
         { blank: true },
@@ -31,7 +31,7 @@ cmd({
 }, async (conn, m, commands, { reply }) => {
     const me = conn?.user || '';
     const jid = String(me).split('@')[0] || 'Non disponible';
-    reply(box('🆔 *TON JID*', [
+    reply(boxWithFooter('🆔 *TON JID*', [
         { label: 'JID', value: jid },
         { blank: true },
         { raw: 'Utilise ce ID pour les commandes @mention.' },

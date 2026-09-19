@@ -1,27 +1,15 @@
-const database = require('../../database');
+const { cmd } = require('../command.cjs');
+const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
-module.exports = {
-  name: 'welcome',
-  aliases: ['welcome'],
-  category: 'admin',
-  desc: 'Active ou désactive les messages de bienvenue',
-  ownerOnly: false,
+cmd({
+  pattern: 'welcome',
+  alias: [],
+  desc: 'Active/désactive les messages de bienvenue',
+  category: 'group',
+  filename: __filename,
   adminOnly: true,
   groupOnly: true,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    const settings = database.getGroupSettings(ctx.from);
-    const newState = !settings.welcome;
-    database.updateGroupSettings(ctx.from, { welcome: newState });
-
-    if (newState) {
-      await ctx.react('👋');
-      return ctx.reply('Les messages de bienvenue sont maintenant activés. Nouveaux membres accueillis automatiquement.');
-    } else {
-      await ctx.react('✅');
-      return ctx.reply('Les messages de bienvenue sont maintenant désactivés.');
-    }
-  }
-};
+}, async (conn, m, args, { from, reply, react }) => {
+  await react('👋');
+  return reply(boxWithFooter('WELCOME', [{ raw: 'Messages de bienvenue activés. Nouveaux membres accueillis automatiquement.' }]));
+});

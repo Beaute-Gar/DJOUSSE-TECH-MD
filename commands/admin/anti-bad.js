@@ -1,5 +1,6 @@
 const { cmd } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
+const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
     pattern: 'antibad|badwords',
@@ -7,10 +8,10 @@ cmd({
     category: 'group',
     filename: __filename,
 }, async (conn, m, commands, cfg) => {
-    if (!m.isGroup) return m.reply('❌ Groupe uniquement');
-    if (!m.isAdmin) return m.reply('❌ Admin uniquement');
+    if (!m.isGroup) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Groupe uniquement' }]));
+    if (!m.isAdmin) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Admin uniquement' }]));
     config.ANTI_BAD = !config.ANTI_BAD;
-    m.reply(`✅ Anti-mots interdits: ${config.ANTI_BAD ? 'activé' : 'désactivé'}`);
+    m.reply(boxWithFooter('SUCCESS', [{ raw: `✅ Anti-mots interdits: ${config.ANTI_BAD ? 'activé' : 'désactivé'}` }]));
 });
 
 cmd({
@@ -19,13 +20,13 @@ cmd({
     category: 'group',
     filename: __filename,
 }, async (conn, m, commands, cfg) => {
-    if (!m.isGroup) return m.reply('❌ Groupe uniquement');
-    if (!m.isAdmin) return m.reply('❌ Admin uniquement');
+    if (!m.isGroup) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Groupe uniquement' }]));
+    if (!m.isAdmin) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Admin uniquement' }]));
     const word = m.args.join(' ').trim().toLowerCase();
-    if (!word) return m.reply('❌ Usage: .addbad <mot>');
-    if (config.ANTI_BAD_WORDS.includes(word)) return m.reply('❌ Mot déjà interdit');
+    if (!word) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Usage: .addbad <mot>' }]));
+    if (config.ANTI_BAD_WORDS.includes(word)) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Mot déjà interdit' }]));
     config.ANTI_BAD_WORDS.push(word);
-    m.reply(`✅ Mot interdit ajouté: ${word}`);
+    m.reply(boxWithFooter('SUCCESS', [{ raw: `✅ Mot interdit ajouté: ${word}` }]));
 });
 
 cmd({
@@ -34,14 +35,14 @@ cmd({
     category: 'group',
     filename: __filename,
 }, async (conn, m, commands, cfg) => {
-    if (!m.isGroup) return m.reply('❌ Groupe uniquement');
-    if (!m.isAdmin) return m.reply('❌ Admin uniquement');
+    if (!m.isGroup) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Groupe uniquement' }]));
+    if (!m.isAdmin) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Admin uniquement' }]));
     const word = m.args.join(' ').trim().toLowerCase();
-    if (!word) return m.reply('❌ Usage: .delbad <mot>');
+    if (!word) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Usage: .delbad <mot>' }]));
     const idx = config.ANTI_BAD_WORDS.indexOf(word);
-    if (idx === -1) return m.reply('❌ Mot non trouvé');
+    if (idx === -1) return m.reply(boxWithFooter('ERROR', [{ raw: '❌ Mot non trouvé' }]));
     config.ANTI_BAD_WORDS.splice(idx, 1);
-    m.reply(`✅ Mot interdit supprimé: ${word}`);
+    m.reply(boxWithFooter('SUCCESS', [{ raw: `✅ Mot interdit supprimé: ${word}` }]));
 });
 
 cmd({
@@ -60,7 +61,7 @@ cmd({
         const m = ctx.m;
         await ctx.conn.sendMessage(m.chat, { delete: m.key });
         await ctx.conn.sendMessage(m.chat, {
-            text: `⚠️ @${m.sender.split('@')[0]}, message supprimé (mot interdit)`,
+            text: boxWithFooter('WARNING', [{ raw: `⚠️ @${m.sender.split('@')[0]}, message supprimé (mot interdit)` }]),
             mentions: [m.sender],
         });
     } catch (e) {}

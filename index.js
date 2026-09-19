@@ -31,6 +31,53 @@ const zlib = require('zlib');
 const processedMessages = new Set();
 setInterval(() => processedMessages.clear(), 5 * 60 * 1000);
 
+/* ═══════════════════════════════════════════════════════════════
+   FILTRE : Ignore les erreurs Bad MAC de libsignal
+   ═══════════════════════════════════════════════════════════════ */
+
+const IGNORED_ERRORS = [
+  'Bad MAC', 'Failed to decrypt', 'Session error', 'libsignal',
+  'session_cipher', 'decryptWithSessions', 'doDecryptWhisperMessage',
+  'MessageCounterError', 'Closing open session', 'Closing session',
+  'Key used already', 'Invalid PreKey', 'Duplicate Message',
+];
+
+function isIgnoredError(msg) {
+  if (!msg) return false;
+  const str = typeof msg === 'string' ? msg : (msg.message || JSON.stringify(msg));
+  return IGNORED_ERRORS.some(kw => str.includes(kw));
+}
+
+const originalConsoleError = console.error.bind(console);
+console.error = (...args) => {
+  if (isIgnoredError(args[0])) return;
+  originalConsoleError(...args);
+};
+
+const originalConsoleWarn = console.warn.bind(console);
+console.warn = (...args) => {
+  if (isIgnoredError(args[0])) return;
+  originalConsoleWarn(...args);
+};
+
+const originalConsoleLog = console.log.bind(console);
+console.log = (...args) => {
+  if (args[0] && typeof args[0] === 'object' && args[0].stack && isIgnoredError(args[0].stack)) return;
+  if (typeof args[0] === 'string' && isIgnoredError(args[0])) return;
+  originalConsoleLog(...args);
+};
+
+process.on('uncaughtException', (err) => {
+  if (isIgnoredError(err.message) || isIgnoredError(err.stack)) return;
+  originalConsoleError('[UNCAUGHT]', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  const msg = reason?.message || String(reason);
+  if (isIgnoredError(msg)) return;
+  originalConsoleError('[UNHANDLED]', msg);
+});
+
 const createSuppressedLogger = (level = 'silent') => {
   let logger;
   try {
@@ -304,6 +351,50 @@ async function startSession(sessionId, options = {}) {
 
   sock.ev.on('group-participants.update', async (update) => {
     await handler.handleGroupUpdate(sock, update);
+  });
+
+  // Anti-delete: intercepte les messages supprimés et les renvoie
+  sock.ev.on('messages.update', async (updates) => {
+    if (!config.ANTI_DELETE) return;
+    for (const update of updates) {
+      try {
+        if (!update.update?.message && !update.update?.message === null) continue;
+        const key = update.key;
+        if (!key?.id || !key?.remoteJid) continue;
+        if (key.remoteJid === 'status@broadcast') continue;
+        if (key.fromMe) continue;
+
+        const original = await store.loadMessage(key.remoteJid, key.id);
+        if (!original || !original.message) continue;
+
+        const sender = key.participant || key.remoteJid;
+        const chatJid = key.remoteJid;
+        const isGroup = chatJid.endsWith('@g.us');
+
+        const { getContentType } = require('@whiskeysockets/baileys');
+        const msgType = getContentType(original.message);
+        if (!msgType) continue;
+
+        const caption = original.message[msgType]?.caption || '';
+        const text = original.message.conversation || original.message.extendedTextMessage?.text || '';
+        const displayText = caption || text;
+
+        const tag = sender.split('@')[0];
+        const header = `🗑️ *Message supprimé détecté*\n👤 De: @${tag}\n⏰ Heure: ${new Date(original.messageTimestamp * 1000).toLocaleTimeString('fr-FR')}\n`;
+
+        if (['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'stickerMessage'].includes(msgType)) {
+          const buffer = await sock.downloadMediaMessage({ key: original.key, message: original.message });
+          if (buffer) {
+            const mediaType = msgType.replace('Message', '').toLowerCase();
+            const sendObj = { [mediaType]: buffer, caption: header + (caption ? `\n📝 ${caption}` : '') };
+            if (msgType === 'audioMessage') sendObj.mimetype = 'audio/mpeg';
+            await sock.sendMessage(chatJid, sendObj, { quoted: original });
+          }
+        } else if (displayText) {
+          await sock.sendMessage(chatJid, { text: header + `\n💬 ${displayText}`, mentions: [sender] }, { quoted: original });
+        }
+      } catch (e) {}
+    }
   });
 
   sock.ev.on('error', (error) => {

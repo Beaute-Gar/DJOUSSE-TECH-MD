@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 const horoscopes = {
   'bélier': 'Votre énergie est au maximun aujourd\'hui. Profitez-en pour commencer un nouveau projet.',
@@ -22,11 +23,14 @@ cmd({
   category: 'fun',
   filename: __filename,
 }, async (conn, m, args, config) => {
-  if (!args.length) return m.reply('🤖 [SYSTEM] Usage: .horoscope <signe>\n\nSignes: bélier, taureau, gémeaux, cancer, lion, vierge, balance, scorpion, sagittaire, capricorne, verseau, poisson');
+  if (!args.length) return m.reply(boxWithFooter('USAGE', [{ raw: '🤖 [SYSTEM] Usage: .horoscope <signe>\n\nSignes: bélier, taureau, gémeaux, cancer, lion, vierge, balance, scorpion, sagittaire, capricorne, verseau, poisson' }]));
 
   const sign = args[0].toLowerCase();
-  if (!horoscopes[sign]) return m.reply('🤖 [SYSTEM] Signe non reconnu. Vérifiez l\'orthographe.');
+  if (!horoscopes[sign]) return m.reply(boxWithFooter('ERREUR', [{ raw: '🤖 [SYSTEM] Signe non reconnu. Vérifiez l\'orthographe.' }]));
 
-  const text = `🔮 [ROBOT] HOROSCOPE DU JOUR!\n\n♈ Signe: ${sign.charAt(0).toUpperCase() + sign.slice(1)}\n\n${horoscopes[sign]}\n\n⚡ [ROBOT] Prédiction générée par algorithme astrologique.`;
+  const text = boxWithFooter('🔮 HOROSCOPE DU JOUR', [
+    { label: '♈ Signe', value: sign.charAt(0).toUpperCase() + sign.slice(1) },
+    { raw: horoscopes[sign] },
+  ]);
   await m.reply(text);
 });

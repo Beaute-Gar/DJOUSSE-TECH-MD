@@ -1,4 +1,5 @@
 const { cmd } = require('../command.cjs');
+const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'wanted',
@@ -26,6 +27,12 @@ cmd({
   const crime = crimes[Math.floor(Math.random() * crimes.length)];
   const reward = Math.floor(Math.random() * 1000000);
 
-  const text = `🚨 [ROBOT] AVIS DE RECHERCHE!\n\n👤 Suspect: ${target}\n🔍 Crime: ${crime}\n💰 Récompense: ${reward.toLocaleString()} €\n\n⚠️ Toute personne ayant des informations est priée de le signaler.\n\n⚡ [ROBOT] Avis généré par le système de police robotique.`;
+  const text = boxWithFooter('🚨 AVIS DE RECHERCHE', [
+    { label: '👤 Suspect', value: target },
+    { label: '🔍 Crime', value: crime },
+    { label: '💰 Récompense', value: `${reward.toLocaleString()} €` },
+    { blank: true },
+    { raw: '⚠️ Toute personne ayant des informations est priée de le signaler.' },
+  ]);
   await conn.sendMessage(m.chat, { text, mentions }, { quoted: m });
 });

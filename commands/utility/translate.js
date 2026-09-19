@@ -1,26 +1,29 @@
-const api = require('../../utils/api');
+const { cmd } = require('../command.cjs');
+const { box } = require('../lib/djousse-ui.cjs');
 
-module.exports = {
-  name: 'translate',
-  aliases: ['translate', 'traduire'],
-  category: 'utility',
+cmd({
+  pattern: 'translate',
+  alias: ['traduire'],
   desc: 'Traduit du texte',
-  ownerOnly: false,
-  adminOnly: false,
-  groupOnly: false,
-  botAdminNeeded: false,
-  modOnly: false,
-  privateOnly: false,
-  execute: async (sock, msg, args, ctx) => {
-    if (args.length < 2) return ctx.reply('Utilisation: .translate <langue> <texte>\nExemple: .translate en bonjour');
-    const lang = args[0].toLowerCase();
-    const text = args.slice(1).join(' ');
-    try {
-      await ctx.react('🌐');
-      const result = await api.translateText(text, lang);
-      ctx.reply(`Traduction (${lang}) :\n${result}`);
-    } catch (e) {
-      ctx.reply('Erreur lors de la traduction...');
+  category: 'util',
+  filename: __filename,
+}, async (conn, m, args, { from, reply, react }) => {
+  if (args.length < 2) return reply(box('TRADUCTION', [{ raw: 'Utilisation: .translate <langue> <texte>\nEx: .translate en bonjour' }]));
+  const lang = args[0].toLowerCase();
+  const text = args.slice(1).join(' ');
+  try {
+    await react('🌐');
+    const fetch = require('node-fetch');
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=fr|${lang}`);
+    const data = await res.json();
+    if (data.responseData && data.responseData.translatedText) {
+      return reply(box('TRADUCTION', [
+        { label: 'Langue', value: lang },
+        { label: 'Traduction', value: data.responseData.translatedText },
+      ]));
     }
+    return reply(box('ERROR', [{ raw: 'Traduction pas trouvée.' }]));
+  } catch {
+    return reply(box('ERROR', [{ raw: 'Erreur lors de la traduction...' }]));
   }
-};
+});
