@@ -28,6 +28,7 @@ const { premiumGate } = require('./commands/premium');
 const reactionAutomations = require('./lib/reaction-automations.cjs');
 const { isButtonResponse, handleButtonClick } = require('./commands/lib/buttons/buttonHandler');
 const { handlePendingInput } = require('./commands/lib/buttons/inputHandler');
+const { handleNumberInput } = require('./commands/lib/buttons/numberHandler');
 
 const commands = loadCommands();
 
@@ -434,6 +435,11 @@ const handleMessage = async (sock, msg) => {
 
     // Gestion des saisies en attente (menu interactif hybride)
     if (await handlePendingInput(sock, msg)) {
+      return;
+    }
+
+    // Interception des numéros pour les menus actifs
+    if (await handleNumberInput(sock, msg)) {
       return;
     }
 
