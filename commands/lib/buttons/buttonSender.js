@@ -254,12 +254,61 @@ async function sendQuickReply(sock, jid, options = {}) {
   return sendButtons(sock, jid, options);
 }
 
+// ─────────────────────────────────────────────────────────────
+// Envoi d'un message interactif NATIVE FLOW
+// Permet single_select jusqu'à 10 items
+// ─────────────────────────────────────────────────────────────
+async function sendInteractiveMessage(sock, jid, options = {}) {
+  const {
+    text = '',
+    footer = config.defaultFooter,
+    interactiveButtons = [],
+    quoted = null
+  } = options;
+
+  if (!sendInteractivePkg) {
+    console.warn('[BUTTONS] sendInteractiveMessage indisponible, fallback texte');
+    return fallbackText(sock, jid, {
+      title: '',
+      text,
+      footer,
+      buttons: interactiveButtons.map(b => ({ text: b.name }))
+    });
+  }
+
+  const privateChat = isPrivate(jid);
+  const aimode = privateChat ? config.aimodePrivate : config.aimodeGroup;
+
+  try {
+    await sendInteractivePkg(sock, jid, {
+      text,
+      footer,
+      aimode,
+      interactiveButtons
+    }, quoted ? { quoted } : undefined);
+
+    if (config.logClicks) {
+      console.log(`[BUTTONS] NativeFlow envoyé à ${jid} (aimode=${aimode})`);
+    }
+    return true;
+  } catch (err) {
+    console.error('[BUTTONS] sendInteractiveMessage échoué:', err.message);
+    return fallbackText(sock, jid, {
+      title: '',
+      text,
+      footer,
+      buttons: []
+    });
+  }
+}
+
 module.exports = {
   sendButtons,
   sendUrlButton,
   sendCopyButton,
   sendCallButton,
   sendQuickReply,
+  sendInteractiveMessage,
   fallbackText,
   isPrivate,
   isGroup,
