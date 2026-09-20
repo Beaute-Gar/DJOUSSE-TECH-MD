@@ -5,7 +5,7 @@
  * DJOUSSE-TECH-MD
  */
 
-const { sendButtons, fallbackText } = require('./buttonSender');
+const { sendButtons, fallbackText, isPrivate, isGroup } = require('./buttonSender');
 const sessionManager = require('./sessionManager');
 const menuConfig = require('./menuConfig');
 
@@ -140,7 +140,8 @@ async function handleCommandClick(sock, jid, message, commandId) {
       const ctx = {
         from: jid,
         sender: message.key.participant || jid,
-        isGroup: jid.endsWith('@g.us'),
+        isGroup: isGroup(jid),
+        isPrivate: isPrivate(jid),
         isOwner: false,
         isAdmin: false,
         isBotAdmin: false,

@@ -17,12 +17,21 @@ try {
   console.warn('[BUTTONS] gifted-btns introuvable, fallback texte');
 }
 
+const PRIVATE_SUFFIXES = ['@s.whatsapp.net', '@lid'];
+const GROUP_SUFFIXES = ['@g.us'];
+
 function isPrivate(jid) {
-  return typeof jid === 'string' && jid.endsWith('@s.whatsapp.net');
+  if (typeof jid !== 'string') return false;
+  return PRIVATE_SUFFIXES.some(s => jid.endsWith(s));
 }
 
 function isGroup(jid) {
-  return typeof jid === 'string' && jid.endsWith('@g.us');
+  if (typeof jid !== 'string') return false;
+  return GROUP_SUFFIXES.some(s => jid.endsWith(s));
+}
+
+function isLid(jid) {
+  return typeof jid === 'string' && jid.endsWith('@lid');
 }
 
 async function fallbackText(sock, jid, options) {
@@ -117,11 +126,15 @@ async function sendUrlButton(sock, jid, options = {}) {
     });
   }
 
+  const privateChat = isPrivate(jid);
+  const aimode = privateChat ? config.aimodePrivate : config.aimodeGroup;
+
   try {
     await sendInteractivePkg(sock, jid, {
       title,
       text,
       footer,
+      aimode,
       interactiveButtons: [
         {
           name: 'cta_url',
@@ -129,6 +142,10 @@ async function sendUrlButton(sock, jid, options = {}) {
         }
       ]
     }, quoted ? { quoted } : undefined);
+
+    if (config.logClicks) {
+      console.log(`[BUTTONS] URL envoyé à ${jid} (aimode=${aimode})`);
+    }
     return true;
   } catch (err) {
     console.error('[BUTTONS] sendUrlButton échoué:', err.message);
@@ -156,11 +173,15 @@ async function sendCopyButton(sock, jid, options = {}) {
     });
   }
 
+  const privateChat = isPrivate(jid);
+  const aimode = privateChat ? config.aimodePrivate : config.aimodeGroup;
+
   try {
     await sendInteractivePkg(sock, jid, {
       title,
       text,
       footer,
+      aimode,
       interactiveButtons: [
         {
           name: 'cta_copy',
@@ -168,6 +189,10 @@ async function sendCopyButton(sock, jid, options = {}) {
         }
       ]
     }, quoted ? { quoted } : undefined);
+
+    if (config.logClicks) {
+      console.log(`[BUTTONS] Copier envoyé à ${jid} (aimode=${aimode})`);
+    }
     return true;
   } catch (err) {
     console.error('[BUTTONS] sendCopyButton échoué:', err.message);
@@ -195,11 +220,15 @@ async function sendCallButton(sock, jid, options = {}) {
     });
   }
 
+  const privateChat = isPrivate(jid);
+  const aimode = privateChat ? config.aimodePrivate : config.aimodeGroup;
+
   try {
     await sendInteractivePkg(sock, jid, {
       title,
       text,
       footer,
+      aimode,
       interactiveButtons: [
         {
           name: 'cta_call',
@@ -207,6 +236,10 @@ async function sendCallButton(sock, jid, options = {}) {
         }
       ]
     }, quoted ? { quoted } : undefined);
+
+    if (config.logClicks) {
+      console.log(`[BUTTONS] Appel envoyé à ${jid} (aimode=${aimode})`);
+    }
     return true;
   } catch (err) {
     console.error('[BUTTONS] sendCallButton échoué:', err.message);
@@ -229,5 +262,8 @@ module.exports = {
   sendQuickReply,
   fallbackText,
   isPrivate,
-  isGroup
+  isGroup,
+  isLid,
+  PRIVATE_SUFFIXES,
+  GROUP_SUFFIXES
 };

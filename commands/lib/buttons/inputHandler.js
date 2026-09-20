@@ -7,7 +7,7 @@
 
 const sessionManager = require('./sessionManager');
 const { findCommandById } = require('./menuBuilder');
-const { sendButtons } = require('./buttonSender');
+const { sendButtons, isPrivate, isGroup } = require('./buttonSender');
 
 /**
  * Extrait le texte brut d'un message Baileys
@@ -111,7 +111,8 @@ async function handlePendingInput(sock, message) {
         const ctx = {
           from: jid,
           sender: message.key.participant || jid,
-          isGroup: jid.endsWith('@g.us'),
+          isGroup: isGroup(jid),
+          isPrivate: isPrivate(jid),
           isOwner: false,
           isAdmin: false,
           isBotAdmin: false,
@@ -174,7 +175,8 @@ async function handlePendingInput(sock, message) {
         const ctx = {
           from: jid,
           sender: message.key.participant || jid,
-          isGroup: jid.endsWith('@g.us'),
+          isGroup: isGroup(jid),
+          isPrivate: isPrivate(jid),
           isOwner: false,
           isAdmin: false,
           isBotAdmin: false,
