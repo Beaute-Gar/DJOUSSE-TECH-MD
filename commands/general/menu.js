@@ -3,8 +3,8 @@ const { buildMainMenu } = require('../lib/buttons/menuBuilder');
 
 cmd({
   pattern: 'interactive',
-  alias: ['imenu', 'ibtn', 'btnmenu'],
-  desc: 'Menu interactif à boutons multi-niveaux',
+  alias: ['imenu', 'ibtn', 'btnmenu', 'btn'],
+  desc: 'Menu interactif hybride boutons + saisie texte',
   category: 'general',
   filename: __filename,
 }, async (conn, m, args, ctx) => {

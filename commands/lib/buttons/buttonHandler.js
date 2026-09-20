@@ -6,6 +6,7 @@
 const config = require('./buttonConfig');
 const { sendButtons } = require('./buttonSender');
 const { routeMenuClick, isMenuButton } = require('./menuRouter');
+const { handlePendingInput } = require('./inputHandler');
 
 function extractButtonId(message) {
   const msg = message.message;
