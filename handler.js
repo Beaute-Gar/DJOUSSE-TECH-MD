@@ -26,6 +26,7 @@ const silentAutomations = require('./lib/silent-automations.cjs');
 const { pmGate } = require('./commands/pmguard');
 const { premiumGate } = require('./commands/premium');
 const reactionAutomations = require('./lib/reaction-automations.cjs');
+const { isButtonResponse, handleButtonClick } = require('./commands/lib/buttons/buttonHandler');
 
 const commands = loadCommands();
 
@@ -422,6 +423,12 @@ const handleMessage = async (sock, msg) => {
       } catch (e) {
         // Jeu non actif, on continue
       }
+    }
+
+    // Gestion des clics de boutons (AVANT le check préfixe)
+    if (isButtonResponse(msg)) {
+      await handleButtonClick(sock, msg);
+      return;
     }
 
     // Check prefix
