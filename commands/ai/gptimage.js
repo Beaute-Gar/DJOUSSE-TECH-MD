@@ -3,24 +3,29 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'gptimage',
-  alias: ['aiimg'],
-  desc: 'Génère une image avec l\'IA',
+  alias: ['aiimg', 'imagine', 'gen'],
+  desc: 'Génère une image avec l\'IA (gratuit, sans clé API)',
   category: 'ai',
   filename: __filename,
 }, async (conn, m, args, { from, reply, react }) => {
   const prompt = args.join(' ');
-  if (!prompt) return reply(boxWithFooter('GPTIMAGE', [{ cmd: 'gptimage', desc: 'un chat dans l\'espace' }]));
+  if (!prompt) return reply(boxWithFooter('GPTIMAGE', [
+    { cmd: 'gptimage', desc: 'un chat dans l\'espace' },
+  ]));
   try {
     await react('🎨');
-    const fetch = require('node-fetch');
-    const res = await fetch('https://api.ahmmk.cloud/v1/gptimg?prompt=' + encodeURIComponent(prompt));
-    const data = await res.json();
-    if (data.url) {
-      await conn.sendMessage(from, { image: { url: data.url }, caption: box('IMAGE', [{ label: 'Prompt', value: prompt }]) });
-    } else {
-      return reply(boxWithFooter('ERROR', [{ raw: 'Pas réussi à générer l\'image.' }]));
-    }
-  } catch {
-    return reply(boxWithFooter('ERROR', [{ raw: 'La génération a pas marché.' }]));
+    // Import dynamique car g4f-image est un package ESM
+    const g4f = await import('g4f-image');
+    const generate = g4f.generate || (g4f.default && g4f.default.generate);
+    if (!generate) throw new Error('Module g4f-image non disponible');
+    const imageUrl = await generate(prompt);
+    if (!imageUrl) throw new Error('Aucune image générée');
+    await conn.sendMessage(from, {
+      image: { url: imageUrl },
+      caption: box('IMAGE', [{ label: 'Prompt', value: prompt }]),
+    });
+  } catch (err) {
+    console.error('[GPTIMAGE]', err.message);
+    return reply(boxWithFooter('ERROR', [{ raw: '❌ Erreur de génération: ' + err.message }]));
   }
 });
