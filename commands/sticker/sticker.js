@@ -1,6 +1,7 @@
 const { cmd } = require('../command.cjs');
 const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 const { Sticker } = require('wa-sticker-kit');
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 
 cmd({
   pattern: 'sticker',
@@ -15,11 +16,11 @@ cmd({
     if (m.quoted && m.quoted.message) {
       const quotedMsg = m.quoted.message;
       if (quotedMsg.imageMessage || quotedMsg.videoMessage) {
-        media = await conn.downloadMediaMessage(m.quoted);
+        media = await downloadMediaMessage(m.quoted);
       }
     } else if (m.message) {
       if (m.message.imageMessage || m.message.videoMessage) {
-        media = await conn.downloadMediaMessage(m);
+        media = await downloadMediaMessage(m);
       }
     }
 

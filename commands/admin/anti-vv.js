@@ -1,6 +1,7 @@
 const { cmd } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
 const { boxWithFooter } = require('../lib/djousse-ui.cjs');
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 
 cmd({
     pattern: 'anticiponce|antiVV',
@@ -35,7 +36,7 @@ cmd({
         const mediaContent = inner[type];
         if (!mediaContent || !mediaContent.mimetype) return;
 
-        const buffer = await ctx.conn.downloadMediaMessage({ key: m.key, message: inner });
+        const buffer = await downloadMediaMessage({ key: m.key, message: inner });
         if (!buffer) return;
 
         const jid = m.isGroup ? m.chat : m.sender;

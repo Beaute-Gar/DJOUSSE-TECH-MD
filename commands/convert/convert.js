@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 ffmpeg.setFfmpegPath(ffmpegPath);
@@ -29,7 +30,7 @@ cmd({ pattern: 'toimg', desc: 'Convert sticker to image', category: 'convert', f
         { raw: '❌ *Utilisation :* réponds à un sticker avec .toimg' },
       ]));
     }
-    const media = await conn.downloadMediaMessage(src);
+    const media = await downloadMediaMessage(src);
     // Utiliser anyform si disponible, sinon ffmpeg
     if (anyform && anyform.convertImage) {
       const png = await anyform.convertImage(media, 'png');
@@ -60,7 +61,7 @@ cmd({ pattern: 'tomp3', desc: 'Convert video/voice to mp3', category: 'convert',
     }
     const inputPath = path.join(__dirname, '../tmp/input.mp4');
     const outputPath = path.join(__dirname, '../tmp/output.mp3');
-    const media = await conn.downloadMediaMessage(src);
+    const media = await downloadMediaMessage(src);
     fs.writeFileSync(inputPath, media);
     // Utiliser anyform si disponible
     if (anyform && anyform.convertAudio) {
@@ -86,7 +87,7 @@ cmd({ pattern: 'tovideo', desc: 'Convert animated sticker to video', category: '
         { raw: '❌ *Utilisation :* réponds à un sticker animé avec .tovideo' },
       ]));
     }
-    const media = await conn.downloadMediaMessage(src);
+    const media = await downloadMediaMessage(src);
     // Utiliser anyform si disponible
     if (anyform && anyform.convertImage) {
       const video = await anyform.convertImage(media, 'mp4');
@@ -107,7 +108,7 @@ cmd({ pattern: 'togif', desc: 'Convert animated sticker to gif', category: 'conv
         { raw: '❌ *Utilisation :* réponds à un sticker animé avec .togif' },
       ]));
     }
-    const media = await conn.downloadMediaMessage(src);
+    const media = await downloadMediaMessage(src);
     await conn.sendMessage(m.chat, { video: media, gifPlayback: true, caption: box('🎞️ *TOGIF*', [{ raw: 'GIF créé !' }]) }, { quoted: m });
   } catch (err) {
     reply(boxWithFooter('🎞️ *TOGIF*', [{ raw: '⚠️ *Erreur :* ' + err.message }]));
@@ -124,7 +125,7 @@ cmd({ pattern: 'toaudio', desc: 'Convert video to audio', category: 'convert', f
     }
     const inputPath = path.join(__dirname, '../tmp/input.mp4');
     const outputPath = path.join(__dirname, '../tmp/output.m4a');
-    const media = await conn.downloadMediaMessage(src);
+    const media = await downloadMediaMessage(src);
     fs.writeFileSync(inputPath, media);
     // Utiliser anyform si disponible
     if (anyform && anyform.convertAudio) {

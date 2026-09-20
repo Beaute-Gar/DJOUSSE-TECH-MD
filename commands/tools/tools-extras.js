@@ -3,6 +3,7 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 const axios = require('axios');
 const crypto = require('crypto');
 const FormData = require('form-data');
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const fs = require('fs');
 const path = require('path');
 
@@ -172,7 +173,7 @@ cmd({
   if (quoted) {
     buffer = quoted;
   } else if (imgMsg) {
-    buffer = await conn.downloadMediaMessage(msg);
+    buffer = await downloadMediaMessage(msg);
   }
   if (!buffer) {
     return conn.sendMessage(msg.key.remoteJid, {

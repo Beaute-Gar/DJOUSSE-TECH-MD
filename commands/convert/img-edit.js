@@ -3,6 +3,7 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const os = require('os');
 const path = require('path');
 
@@ -24,7 +25,7 @@ async function getSourceMedia(conn, m) {
   const src = m.quoted && m.quoted.msg ? m.quoted : m;
   const type = src.type || src.mtype;
   if (type !== 'imageMessage') return null;
-  return await conn.downloadMediaMessage(src);
+  return await downloadMediaMessage(src);
 }
 
 cmd({ pattern: 'blur', desc: 'Blur an image', category: 'convert', filename: __filename }, async (conn, m, args, { reply }) => {
