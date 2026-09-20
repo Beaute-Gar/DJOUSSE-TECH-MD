@@ -1,13 +1,17 @@
 /**
  * Constructeur de menus interactifs HYBRIDES
- * Texte (toutes les commandes) + Boutons (navigation)
+ * Texte numéroté + single_select (Native Flow) + boutons nav
  * Types : A = direct, B = saisie texte, C = envoi fichier
+ * Limite : 10 options par single_select, pagination au-delà
  * DJOUSSE-TECH-MD
  */
 
 const { sendButtons, fallbackText, isPrivate, isGroup } = require('./buttonSender');
 const sessionManager = require('./sessionManager');
 const menuConfig = require('./menuConfig');
+
+let sendInteractivePkg = null;
+try { sendInteractivePkg = require('gifted-btns').sendInteractiveMessage; } catch (_) {}
 
 const ITEMS_PER_PAGE = 8;
 
@@ -26,12 +30,52 @@ function paginate(items, page) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// Envoi single_select (Native Flow, jusqu'à 10 options)
+// ═══════════════════════════════════════════════════════════
+async function sendSingleSelect(sock, jid, options, quoted) {
+  const { title, text, footer, rows, buttonText } = options;
+
+  if (!sendInteractivePkg) {
+    // Fallback : texte numéroté
+    const lines = [text, ''];
+    rows.forEach((r, i) => { lines.push(`${i + 1}\uFE0F\u20E3 ${r.title}`); });
+    return sock.sendMessage(jid, { text: lines.join('\n') }, { quoted });
+  }
+
+  const privateChat = isPrivate(jid);
+  const aimode = privateChat ? true : false;
+
+  try {
+    await sendInteractivePkg(sock, jid, {
+      text,
+      footer,
+      aimode,
+      interactiveButtons: [{
+        name: 'single_select',
+        buttonParamsJson: JSON.stringify({
+          title: buttonText || 'Voir les options',
+          sections: [{ title: title || 'Options', rows }]
+        })
+      }]
+    }, quoted ? { quoted } : undefined);
+    return true;
+  } catch (e) {
+    console.error('[MENU] sendInteractiveMessage échoué:', e.message);
+    // Fallback : texte
+    const lines = [text, ''];
+    rows.forEach((r, i) => { lines.push(`${i + 1}\uFE0F\u20E3 ${r.title}`); });
+    return sock.sendMessage(jid, { text: lines.join('\n') }, { quoted });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // NIVEAU 1 : Menu principal (catégories)
 // ═══════════════════════════════════════════════════════════
 async function buildMainMenu(sock, jid, quoted, page = 1) {
   const cats = menuConfig.categories;
   const { items, total, hasNext, hasPrev, startIndex } = paginate(cats, page);
 
+  // ── Texte numéroté ──
   const lines = [];
   lines.push('👋 *MENU PRINCIPAL*');
   lines.push('');
@@ -44,18 +88,7 @@ async function buildMainMenu(sock, jid, quoted, page = 1) {
   lines.push('');
   lines.push('👉 Cliquez un *bouton* ou tapez un *numéro*');
 
-  const nav = [];
-  if (hasPrev) nav.push({ id: `page_main_${page - 1}`, text: '◀️ Préc' });
-  if (hasNext) nav.push({ id: `page_main_${page + 1}`, text: '▶️ Suivant' });
-  nav.push({ id: 'btn_help', text: '❓ Aide' });
-
-  let finalButtons;
-  if (nav.length === 1) {
-    finalButtons = items.slice(0, 3).map(c => ({ id: c.id, text: c.label }));
-  } else {
-    finalButtons = nav.slice(0, 3);
-  }
-
+  // ── Contexte pour interception numéro ──
   sessionManager.setMenuContext(jid, {
     type: 'main',
     page,
@@ -66,21 +99,50 @@ async function buildMainMenu(sock, jid, quoted, page = 1) {
     }))
   });
 
-  try {
-    await sendButtons(sock, jid, {
+  // ── Construction des boutons ──
+  const nav = [];
+  if (hasPrev) nav.push({ id: `page_main_${page - 1}`, text: '◀️ Préc' });
+  if (hasNext) nav.push({ id: `page_main_${page + 1}`, text: '▶️ Suivant' });
+
+  // Si ≤3 catégories sur cette page → boutons simples
+  if (items.length <= 3 && nav.length === 0) {
+    const btns = items.map(c => ({ id: c.id, text: c.label }));
+    return sendButtons(sock, jid, {
       title: '👋 MENU PRINCIPAL',
       text: lines.join('\n'),
       footer: 'DJOUSSE-TECH-MD',
-      buttons: finalButtons,
+      buttons: btns.slice(0, 3),
       quoted
     });
-  } catch (e) {
-    console.error('[MENU] Erreur buildMainMenu:', e.message);
-    await fallbackText(sock, jid, {
-      title: 'MENU PRINCIPAL',
-      text: lines.join('\n'),
+  }
+
+  // Si >3 catégories → single_select
+  const rows = items.map(c => ({
+    title: c.label,
+    description: `Ouvrir ${c.label}`,
+    id: c.id
+  }));
+
+  // Boutons nav en dessous du select
+  const navButtons = nav.slice(0, 2);
+  navButtons.push({ id: 'btn_help', text: '❓ Aide' });
+
+  await sendSingleSelect(sock, jid, {
+    title: '👋 MENU PRINCIPAL',
+    text: lines.join('\n'),
+    footer: 'DJOUSSE-TECH-MD',
+    rows,
+    buttonText: '📂 Choisir une catégorie'
+  }, quoted);
+
+  // Boutons de navigation séparés (si pagination)
+  if (nav.length > 0) {
+    await sendButtons(sock, jid, {
+      title: '',
+      text: `_Page ${page}/${total}_`,
       footer: 'DJOUSSE-TECH-MD',
-      buttons: []
+      buttons: navButtons,
+      quoted
     });
   }
 }
@@ -96,6 +158,7 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
 
   const { items, total, hasNext, hasPrev, startIndex } = paginate(cat.commands, page);
 
+  // ── Texte numéroté ──
   const lines = [];
   lines.push(`${cat.emoji || '📂'} *${cat.label}*`);
   lines.push('');
@@ -110,18 +173,7 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
   lines.push('✏️ = saisie texte • 📎 = envoi fichier');
   lines.push('👉 Cliquez un *bouton* ou tapez un *numéro*');
 
-  const nav = [];
-  if (hasPrev) nav.push({ id: `page_cat_${categoryId}_${page - 1}`, text: '◀️ Préc' });
-  if (hasNext) nav.push({ id: `page_cat_${categoryId}_${page + 1}`, text: '▶️ Suivant' });
-  nav.push({ id: 'back_menu', text: '🏠 Menu' });
-
-  let finalButtons;
-  if (total === 1 && items.length >= 3) {
-    finalButtons = items.slice(0, 3).map(c => ({ id: c.id, text: c.label }));
-  } else {
-    finalButtons = nav.slice(0, 3);
-  }
-
+  // ── Contexte pour interception numéro ──
   sessionManager.setMenuContext(jid, {
     type: 'category',
     categoryId,
@@ -134,23 +186,51 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
     }))
   });
 
-  try {
-    await sendButtons(sock, jid, {
+  // ── Construction des boutons ──
+  const nav = [];
+  if (hasPrev) nav.push({ id: `page_cat_${categoryId}_${page - 1}`, text: '◀️ Préc' });
+  if (hasNext) nav.push({ id: `page_cat_${categoryId}_${page + 1}`, text: '▶️ Suivant' });
+  nav.push({ id: 'back_menu', text: '🏠 Menu' });
+
+  // Si ≤3 commandes sur cette page → boutons simples
+  if (items.length <= 3 && !hasNext && !hasPrev) {
+    const btns = items.map(c => ({ id: c.id, text: c.label }));
+    btns.push({ id: 'back_menu', text: '🏠 Menu' });
+    return sendButtons(sock, jid, {
       title: cat.label,
       text: lines.join('\n'),
       footer: 'DJOUSSE-TECH-MD',
-      buttons: finalButtons,
+      buttons: btns.slice(0, 3),
       quoted
     });
-  } catch (e) {
-    console.error('[MENU] Erreur buildCategoryMenu:', e.message);
-    await fallbackText(sock, jid, {
-      title: cat.label,
-      text: lines.join('\n'),
-      footer: 'DJOUSSE-TECH-MD',
-      buttons: []
-    });
   }
+
+  // Si >3 commandes → single_select
+  const rows = items.map(c => {
+    const typeIcon = c.type === 'B' ? '✏️ ' : c.type === 'C' ? '📎 ' : '';
+    return {
+      title: `${typeIcon}${c.label}`,
+      description: c.prompt ? c.prompt.split('\n')[0] : `Exécuter ${c.label}`,
+      id: c.id
+    };
+  });
+
+  await sendSingleSelect(sock, jid, {
+    title: cat.label,
+    text: lines.join('\n'),
+    footer: 'DJOUSSE-TECH-MD',
+    rows,
+    buttonText: `📋 ${cat.label}`
+  }, quoted);
+
+  // Boutons de navigation séparés
+  await sendButtons(sock, jid, {
+    title: '',
+    text: '',
+    footer: 'DJOUSSE-TECH-MD',
+    buttons: nav.slice(0, 3),
+    quoted
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
