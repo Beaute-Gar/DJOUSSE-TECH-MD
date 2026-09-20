@@ -212,6 +212,17 @@ const handleMessage = async (sock, msg) => {
     // Security: validate JID
     if (!from || !from.includes('@')) return;
 
+    // ═══ DEBUG: confirmer réception ═══
+    const isGroupMsg = from.endsWith('@g.us');
+    if (isGroupMsg && !msg.key.fromMe) {
+      const dbgBody = (() => {
+        const c = getMessageContent(msg);
+        if (!c) return '(no content)';
+        return c.conversation || c.extendedTextMessage?.text || c.imageMessage?.caption || c.videoMessage?.caption || '(media)';
+      })();
+      console.log(`[GROUP-RECV] 📩 ${from} → "${dbgBody}"`);
+    }
+
     // Silent automation: auto-read (blue ticks, delayed)
     try { silentAutomations.autoRead(msg); } catch (_) {}
 
@@ -450,6 +461,11 @@ const handleMessage = async (sock, msg) => {
     // Check prefix
     if (!body.startsWith(config.prefix)) return;
 
+    // ═══ DEBUG LOG GROUPES ═══
+    if (isGroup) {
+      console.log(`[GROUP-CMD] 💬 ${commandName || '(vide)'} ← sender=${sender.split('@')[0]} from=${from}`);
+    }
+
     // Security: inject command rate limit check
     const rateCheck = security.checkRateLimit(sender);
     if (!rateCheck.allowed) {
@@ -478,18 +494,26 @@ const handleMessage = async (sock, msg) => {
     const args = sanitizedBody.slice(config.prefix.length).trim().split(/\s+/);
     const commandName = args.shift().toLowerCase();
     const command = commands.get(commandName);
-    if (!command) return;
+    if (!command) {
+      if (isGroup) console.log(`[GROUP-CMD] ❌ Commande "${commandName}" non trouvée dans la Map (${commands.size} commandes chargées)`);
+      return;
+    }
 
     // Permission checks
-    if (config.selfMode && !isOwner(sock, sender)) return; // ✅ CORRIGÉ
+    if (config.selfMode && !isOwner(sock, sender)) {
+      if (isGroup) console.log(`[GROUP-CMD] 🔒 selfMode bloque ${commandName}`);
+      return;
+    }
 
     if (command.ownerOnly && !isOwner(sock, sender)) { // ✅ CORRIGÉ
+      if (isGroup) console.log(`[GROUP-CMD] 👑 ownerOnly bloque ${commandName}`);
       return antiBan.queueMessage(async () => {
         await presence.simulateTyping(from);
         return safeSend(sock, from, { text: config.messages.ownerOnly }, { quoted: msg });
       });
     }
     if (command.fromMe && !isOwner(sock, sender)) {
+      if (isGroup) console.log(`[GROUP-CMD] 🔐 fromMe bloque ${commandName} (sender=${sender})`);
       return antiBan.queueMessage(async () => {
         await presence.simulateTyping(from);
         return safeSend(sock, from, { text: '❌ Cette commande est réservée au propriétaire du bot.' }, { quoted: msg });
