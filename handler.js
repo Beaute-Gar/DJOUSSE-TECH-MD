@@ -29,6 +29,7 @@ const reactionAutomations = require('./lib/reaction-automations.cjs');
 const { isButtonResponse, handleButtonClick } = require('./commands/lib/buttons/buttonHandler');
 const { handlePendingInput } = require('./commands/lib/buttons/inputHandler');
 const { handleNumberInput } = require('./commands/lib/buttons/numberHandler');
+const { autoReact } = require('./utils/autoReact');
 
 const commands = loadCommands();
 
@@ -276,7 +277,10 @@ const handleMessage = async (sock, msg) => {
       }
     }
 
-    // Auto-react messages (with 10min/user cooldown)
+    // Auto-réaction pour TOUS les messages (privés + groupes)
+    autoReact(sock, msg).catch(() => {});
+
+    // Auto-react messages groupes (with 10min/user cooldown)
     try {
       if (!msg.key.fromMe && isGroup) {
         const groupSettings = database.getGroupSettings(from);
