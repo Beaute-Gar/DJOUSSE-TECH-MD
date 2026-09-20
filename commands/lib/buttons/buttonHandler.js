@@ -5,6 +5,7 @@
 
 const config = require('./buttonConfig');
 const { sendButtons } = require('./buttonSender');
+const { routeMenuClick, isMenuButton } = require('./menuRouter');
 
 function extractButtonId(message) {
   const msg = message.message;
@@ -49,6 +50,11 @@ async function handleButtonClick(sock, message) {
   }
 
   try {
+    // Router les boutons du menu interactif AVANT le switch
+    if (isMenuButton(buttonId)) {
+      return await routeMenuClick(sock, message, buttonId);
+    }
+
     switch (buttonId) {
       case 'btn_ping':
       case 'btn_ping_again':
