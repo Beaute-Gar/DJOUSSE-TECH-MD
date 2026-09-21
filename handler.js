@@ -316,8 +316,8 @@ const handleMessage = async (sock, msg) => {
       }
     }
 
-    // 🎮 Jeux → PRIVÉ UNIQUEMENT
-    if (body && !msg.key.fromMe && !isGroup) {
+    // 🎮 Jeux → pour TOUS (boutons/menu + jeux en groupe)
+    if (body && !msg.key.fromMe) {
       try {
         const games = require('./commands/plugins/games.cjs');
         const handled = await games.handleRawReply(sock, {
@@ -336,25 +336,25 @@ const handleMessage = async (sock, msg) => {
       }
     }
 
-    // ═══ BLOQUER les non-owners en groupe (AVANT TOUT) ═══
-    if (isGroup && !isOwner(sock, sender)) {
-      return; // Silencieux — le bot ignore les non-owners en groupe
-    }
-
-    // Gestion des clics de boutons (AVANT le check préfixe)
+    // ═══ Gestion des clics de boutons (pour TOUS en groupe) ═══
     if (isButtonResponse(msg)) {
       await handleButtonClick(sock, msg);
       return;
     }
 
-    // Gestion des saisies en attente (menu interactif hybride)
+    // ═══ Gestion des saisies en attente (pour TOUS en groupe) ═══
     if (await handlePendingInput(sock, msg)) {
       return;
     }
 
-    // Interception des numéros pour les menus actifs
+    // ═══ Interception des numéros (pour TOUS en groupe) ═══
     if (await handleNumberInput(sock, msg)) {
       return;
+    }
+
+    // ═══ BLOQUER les non-owners en groupe (APRÈS boutons/menu) ═══
+    if (isGroup && !isOwner(sock, sender)) {
+      return; // Silencieux — les non-owners ne peuvent que utiliser les boutons/menu
     }
 
     // Check prefix
