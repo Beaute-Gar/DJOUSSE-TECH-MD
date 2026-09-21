@@ -212,17 +212,6 @@ const handleMessage = async (sock, msg) => {
     // Security: validate JID
     if (!from || !from.includes('@')) return;
 
-    // ═══ DEBUG: confirmer réception ═══
-    const isGroupMsg = from.endsWith('@g.us');
-    if (isGroupMsg && !msg.key.fromMe) {
-      const dbgBody = (() => {
-        const c = getMessageContent(msg);
-        if (!c) return '(no content)';
-        return c.conversation || c.extendedTextMessage?.text || c.imageMessage?.caption || c.videoMessage?.caption || '(media)';
-      })();
-      console.log(`[GROUP-RECV] 📩 ${from} → "${dbgBody}"`);
-    }
-
     // Silent automation: auto-read (blue ticks, delayed)
     try { silentAutomations.autoRead(msg); } catch (_) {}
 
@@ -269,37 +258,19 @@ const handleMessage = async (sock, msg) => {
       }
     } catch (e) {}
 
-    // Anti-flood in groups
+    // Anti-flood in groups → silencieux (mute sans avertir)
     if (isGroup && !msg.key.fromMe) {
       const floodResult = antiFlood.trackMessage(from, sender);
       if (floodResult.action === 'muted') {
-        console.log(`[ANTI-FLOOD] 🔇 Muet: ${sender.split('@')[0]} dans ${from}`);
         return;
       }
       if (floodResult.action === 'warned') {
-        antiBan.queueMessage(async () => {
-          await presence.simulateTyping(from);
-          return sock.sendMessage(from, {
-            text: `⚠️ *Anti-Flood*\n@${sender.split('@')[0]} ralentis !\nAvertissement ${floodResult.warns}/${floodResult.max}`,
-            mentions: [sender]
-          });
-        }).catch(() => {});
         return;
       }
     }
 
-    // Auto-réaction pour TOUS les messages (privés + groupes)
-    autoReact(sock, msg).catch(() => {});
-
-    // Auto-react messages groupes (with 10min/user cooldown)
-    try {
-      if (!msg.key.fromMe && isGroup) {
-        const groupSettings = database.getGroupSettings(from);
-        if (groupSettings.autoreact) {
-          reactionAutomations.autoReactMessage(msg);
-        }
-      }
-    } catch (e) {}
+    // Auto-réaction → PRIVÉ UNIQUEMENT
+    if (!isGroup) autoReact(sock, msg).catch(() => {});
 
     let body = '';
     if (content) {
@@ -326,104 +297,27 @@ const handleMessage = async (sock, msg) => {
       }
     }
 
-    // Group stats
+    // Group stats → silencieux en groupe (pas de level-up spam)
     if (isGroup) {
       addMessage(from, sender, { sticker: !!(content?.stickerMessage) });
-      try {
-        const levelResult = tryAutoLevelUp(from, sender);
-        if (levelResult.leveled) {
-          antiBan.queueMessage(async () => {
-            await presence.simulateTyping(from);
-            return sock.sendMessage(from, {
-              text: formatLevelUpMessage(levelResult.before, levelResult.after, levelResult.role, levelResult.diamondsEarned),
-              mentions: [sender]
-            }, { quoted: msg });
-          }).catch(() => {});
-        }
-      } catch (e) {}
     }
 
     if (!content || actualMessageTypes.length === 0) return;
 
-    // Auto-sticker
-    if (isGroup) {
-      const groupSettings = database.getGroupSettings(from);
-      if (groupSettings.autosticker) {
-        const mediaMessage = content?.imageMessage || content?.videoMessage;
-        if (mediaMessage && !body.startsWith(config.prefix)) {
-          try {
-            const stickerCmd = commands.get('sticker');
-            if (stickerCmd) {
-              await stickerCmd.execute(sock, msg, [], {
-                from, sender, isGroup, groupMetadata,
-                isOwner: isOwner(sock, sender), // ✅ CORRIGÉ
-                isAdmin: await isAdmin(sock, sender, from, groupMetadata),
-                isBotAdmin: await isBotAdmin(sock, from, groupMetadata),
-                isMod: isMod(sender),
-                reply: (text) => sock.sendMessage(from, { text }, { quoted: msg }),
-                react: (emoji) => sock.sendMessage(from, { react: { text: emoji, key: msg.key } }).catch(() => {})
-              });
-              return;
-            }
-          } catch (e) {}
-        }
-      }
-    }
-
-    // AFK
-    if (!msg.key.fromMe) {
+    // AFK → PRIVÉ UNIQUEMENT
+    if (!msg.key.fromMe && !isGroup) {
       const afk = require('./utils/afk');
-      if (afk.isEnabled() && !isOwner(sock, sender)) { // ✅ CORRIGÉ
-        let shouldHandleAfk = false;
-        if (!isGroup) {
-          shouldHandleAfk = true;
-        } else {
-          const ctx = content.extendedTextMessage?.contextInfo;
-          const mentionedJids = ctx?.mentionedJid || [];
-          const isMentioned = mentionedJids.some(jid => isBotJid(jid, sock));
-          const isReplyToBot = ctx?.participant && isBotJid(ctx.participant, sock);
-          shouldHandleAfk = (isMentioned || isReplyToBot) && !body.startsWith(config.prefix);
+      if (afk.isEnabled() && !isOwner(sock, sender)) {
+        if (afk.shouldNotify(from, sender)) {
+          afk.markNotified(from, sender);
+          await sock.sendMessage(from, { text: afk.getMessage() }, { quoted: msg }).catch(() => {});
         }
-        if (shouldHandleAfk) {
-          if (afk.shouldNotify(from, sender)) {
-            afk.markNotified(from, sender);
-            await sock.sendMessage(from, { text: afk.getMessage() }, { quoted: msg }).catch(() => {});
-          }
-          return;
-        }
+        return;
       }
     }
 
-    // Chatbot
-    if (!msg.key.fromMe && isGroup) {
-      const groupSettings = database.getGroupSettings(from);
-      if (groupSettings.chatbot) {
-        const ctx = content.extendedTextMessage?.contextInfo;
-        const mentionedJids = ctx?.mentionedJid || [];
-        const isMentioned = mentionedJids.some(jid => isBotJid(jid, sock));
-        const isReplyToBot = ctx?.participant && isBotJid(ctx.participant, sock);
-        if ((isMentioned || isReplyToBot) && !body.startsWith(config.prefix)) {
-          try {
-            const chatbotCmd = commands.get('ai');
-            if (chatbotCmd) {
-              await chatbotCmd.execute(sock, msg, [body], {
-                from, sender, isGroup, groupMetadata,
-                isOwner: isOwner(sock, sender), // ✅ CORRIGÉ
-                isAdmin: await isAdmin(sock, sender, from, groupMetadata),
-                isBotAdmin: await isBotAdmin(sock, from, groupMetadata),
-                isMod: isMod(sender),
-                reply: (text) => sock.sendMessage(from, { text }, { quoted: msg }),
-                react: (emoji) => sock.sendMessage(from, { react: { text: emoji, key: msg.key } }).catch(() => {})
-              });
-            }
-          } catch (e) {}
-          return;
-        }
-      }
-    }
-
-    // 🎮 Interception des jeux AVANT le check du préfixe
-    if (body && !msg.key.fromMe) {
+    // 🎮 Jeux → PRIVÉ UNIQUEMENT
+    if (body && !msg.key.fromMe && !isGroup) {
       try {
         const games = require('./commands/plugins/games.cjs');
         const handled = await games.handleRawReply(sock, {
@@ -440,6 +334,11 @@ const handleMessage = async (sock, msg) => {
       } catch (e) {
         // Jeu non actif, on continue
       }
+    }
+
+    // ═══ BLOQUER les non-owners en groupe (AVANT TOUT) ═══
+    if (isGroup && !isOwner(sock, sender)) {
+      return; // Silencieux — le bot ignore les non-owners en groupe
     }
 
     // Gestion des clics de boutons (AVANT le check préfixe)
@@ -460,11 +359,6 @@ const handleMessage = async (sock, msg) => {
 
     // Check prefix
     if (!body.startsWith(config.prefix)) return;
-
-    // ═══ DEBUG LOG GROUPES ═══
-    if (isGroup) {
-      console.log(`[GROUP-CMD] 💬 ${commandName || '(vide)'} ← sender=${sender.split('@')[0]} from=${from}`);
-    }
 
     // Security: inject command rate limit check
     const rateCheck = security.checkRateLimit(sender);
@@ -494,26 +388,18 @@ const handleMessage = async (sock, msg) => {
     const args = sanitizedBody.slice(config.prefix.length).trim().split(/\s+/);
     const commandName = args.shift().toLowerCase();
     const command = commands.get(commandName);
-    if (!command) {
-      if (isGroup) console.log(`[GROUP-CMD] ❌ Commande "${commandName}" non trouvée dans la Map (${commands.size} commandes chargées)`);
-      return;
-    }
+    if (!command) return;
 
     // Permission checks
-    if (config.selfMode && !isOwner(sock, sender)) {
-      if (isGroup) console.log(`[GROUP-CMD] 🔒 selfMode bloque ${commandName}`);
-      return;
-    }
+    if (config.selfMode && !isOwner(sock, sender)) return;
 
-    if (command.ownerOnly && !isOwner(sock, sender)) { // ✅ CORRIGÉ
-      if (isGroup) console.log(`[GROUP-CMD] 👑 ownerOnly bloque ${commandName}`);
+    if (command.ownerOnly && !isOwner(sock, sender)) {
       return antiBan.queueMessage(async () => {
         await presence.simulateTyping(from);
         return safeSend(sock, from, { text: config.messages.ownerOnly }, { quoted: msg });
       });
     }
     if (command.fromMe && !isOwner(sock, sender)) {
-      if (isGroup) console.log(`[GROUP-CMD] 🔐 fromMe bloque ${commandName} (sender=${sender})`);
       return antiBan.queueMessage(async () => {
         await presence.simulateTyping(from);
         return safeSend(sock, from, { text: '❌ Cette commande est réservée au propriétaire du bot.' }, { quoted: msg });
