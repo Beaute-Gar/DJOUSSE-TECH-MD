@@ -3,7 +3,6 @@ const { sendButtons } = require('../lib/buttons/buttonSender');
 
 cmd({
   pattern: 'menu-btn',
-  alias: ['mb', 'menubtn'],
   desc: 'Menu principal en boutons',
   category: 'general',
   filename: __filename,

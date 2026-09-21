@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'mine',
-  alias: ['dig'],
   desc: 'Mine for coins!',
   category: 'economy',
   filename: __filename,

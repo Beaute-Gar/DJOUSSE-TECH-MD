@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'afk',
-  alias: [],
   desc: 'Mode AFK (absent)',
   category: 'owner',
   filename: __filename,

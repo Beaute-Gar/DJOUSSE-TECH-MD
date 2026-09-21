@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'hidetag',
-  alias: ['ht'],
   desc: 'Mentionne tous les membres (message caché)',
   category: 'group',
   filename: __filename,

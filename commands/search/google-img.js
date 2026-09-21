@@ -8,7 +8,6 @@ try { llmSearch = require('llm-search'); } catch (_) {}
 
 cmd({
   pattern: 'img',
-  alias: ['googleimg', 'gimg', 'searchimg'],
   desc: 'Recherche Google Image',
   category: 'search',
   filename: __filename,

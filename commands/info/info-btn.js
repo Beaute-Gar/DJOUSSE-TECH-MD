@@ -3,7 +3,6 @@ const { sendButtons } = require('../lib/buttons/buttonSender');
 
 cmd({
   pattern: 'info-btn',
-  alias: ['infobtn', 'ib'],
   desc: 'Informations du bot en boutons',
   category: 'info',
   filename: __filename,

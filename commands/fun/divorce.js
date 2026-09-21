@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'divorce',
-  alias: ['divorcer'],
   desc: 'Divorce your married partner',
   category: 'fun',
   filename: __filename,

@@ -8,7 +8,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 cmd({
     pattern: 'securitestats',
-    alias: ['securitystats', 'antiban-stats'],
     desc: 'Afficher les stats de sécurité anti-ban',
     category: 'owner',
     filename: __filename,

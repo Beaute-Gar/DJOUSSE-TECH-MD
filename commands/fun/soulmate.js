@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'soulmate',
-  alias: ['ame'],
   desc: 'Find your soulmate percentage',
   category: 'fun',
   filename: __filename,

@@ -5,7 +5,6 @@ const { box, boxWithFooter, truncate } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'joke',
-  alias: ['blague'],
   react: '😂',
   desc: 'Blague aléatoire en anglais',
   category: 'fun',
@@ -30,7 +29,6 @@ cmd({
 
 cmd({
   pattern: 'memes',
-  alias: ['meme'],
   react: '🤣',
   desc: 'Meme aléatoire',
   category: 'fun',

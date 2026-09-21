@@ -67,7 +67,6 @@ async function analyzeLink(url) {
 // ─── .linkinfo <url> ─────────────────────────────────────────────
 cmd({
     pattern: 'linkinfo',
-    alias: ['link', 'urlinfo'],
     desc: 'Analyser un lien',
     category: 'security',
     filename: __filename

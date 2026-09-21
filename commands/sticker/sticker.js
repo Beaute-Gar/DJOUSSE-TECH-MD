@@ -5,7 +5,6 @@ const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 
 cmd({
   pattern: 'sticker',
-  alias: ['s', 'stiker', 'stk'],
   desc: 'Crée un sticker à partir d\'une image ou vidéo',
   category: 'sticker',
   filename: __filename,

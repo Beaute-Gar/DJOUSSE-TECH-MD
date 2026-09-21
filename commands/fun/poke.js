@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'poke',
-  alias: ['pousser'],
   desc: 'Poke someone',
   category: 'fun',
   filename: __filename,

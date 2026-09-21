@@ -5,7 +5,6 @@ const statusQuotes = require('../../utils/statusQuotes');
 
 cmd({
     pattern: 'statusquote',
-    alias: ['sq', 'pubstatus'],
     react: '📢',
     desc: 'Publier une citation en statut WhatsApp (test immédiat)',
     category: 'owner',

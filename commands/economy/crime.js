@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'crime',
-  alias: ['rob'],
   desc: 'Attempt a risky crime!',
   category: 'economy',
   filename: __filename,

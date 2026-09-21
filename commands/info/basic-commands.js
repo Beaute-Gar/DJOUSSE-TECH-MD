@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 /* .code — Affiche le code de pairing/parrainage en cours */
 cmd({
     pattern: 'code',
-    alias: ['pairing', 'codepair'],
     react: '📜',
     desc: 'Affiche le code de pairing',
     category: 'util',
@@ -23,7 +22,6 @@ cmd({
 /* .jid — Affiche ton JID WhatsApp */
 cmd({
     pattern: 'jid',
-    alias: ['id', 'monid'],
     react: '🆔',
     desc: 'Affiche ton JID WhatsApp',
     category: 'util',

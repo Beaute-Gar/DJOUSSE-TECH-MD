@@ -16,7 +16,6 @@ const moods = [
 
 cmd({
   pattern: 'mood',
-  alias: ['humeur'],
   desc: 'Random mood generator',
   category: 'fun',
   filename: __filename,

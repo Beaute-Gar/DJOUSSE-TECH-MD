@@ -4,7 +4,6 @@ const { lmna } = require('@lmna22/aio-downloader');
 
 cmd({
   pattern: 'instagram',
-  alias: ['ig', 'igdl', 'insta'],
   desc: 'Télécharge un média Instagram',
   category: 'download',
   filename: __filename,

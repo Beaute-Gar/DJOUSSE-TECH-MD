@@ -3,7 +3,6 @@ const { box } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'calc',
-  alias: ['calculator'],
   desc: 'Calculatrice',
   category: 'util',
   filename: __filename,

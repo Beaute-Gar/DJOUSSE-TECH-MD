@@ -6,7 +6,6 @@ const { box } = require('../lib/djousse-ui.cjs');
 
 cmd({
     pattern: "repo",
-    alias: ["sc", "sourcecode", "github"],
     desc: "Show the bot's repository link",
     category: "main",
     react: "📦",

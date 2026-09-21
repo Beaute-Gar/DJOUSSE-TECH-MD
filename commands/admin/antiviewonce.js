@@ -4,7 +4,6 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'antiviewonce',
-  alias: ['avv', 'autoviewonce'],
   desc: 'Active/désactive l\'interception des messages view-once',
   category: 'owner',
   filename: __filename,

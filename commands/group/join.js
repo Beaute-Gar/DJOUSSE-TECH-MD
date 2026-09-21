@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
     pattern: 'join',
-    alias: ['rejoindre'],
     desc: 'Rejoint un groupe via lien',
     category: 'admin',
     filename: __filename,

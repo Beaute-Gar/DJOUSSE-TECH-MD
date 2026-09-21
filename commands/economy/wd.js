@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'wd',
-  alias: ['withdraw'],
   desc: 'Withdraw coins from your bank!',
   category: 'economy',
   filename: __filename,

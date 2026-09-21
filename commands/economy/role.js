@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'role',
-  alias: ['rank'],
   desc: 'Check your role based on wealth!',
   category: 'economy',
   filename: __filename,

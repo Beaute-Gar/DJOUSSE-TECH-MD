@@ -5,7 +5,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'buy',
-  alias: ['purchase'],
   desc: 'Buy an item from the shop!',
   category: 'economy',
   filename: __filename,

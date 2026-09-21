@@ -126,7 +126,6 @@ setInterval(cleanupTemp, 5 * 60 * 1000).unref();
 
 cmd({
   pattern: 'cloneset',
-  alias: ['setvoicekey', 'elevenlabs'],
   category: 'owner',
   fromMe: true,
   desc: 'Configurer la clé API ElevenLabs pour le voice cloning',
@@ -141,7 +140,6 @@ cmd({
 
 cmd({
   pattern: 'clonevoice',
-  alias: ['voiceclone', 'clonemimic', 'clonage'],
   category: 'ai',
   desc: 'Cloner la voix d\'un message vocal et répondre avec cette voix',
   filename: __filename
@@ -252,7 +250,6 @@ cmd({
 
 cmd({
   pattern: 'voiceinfo',
-  alias: ['cloneinfo'],
   category: 'ai',
   desc: 'Informations sur le voice cloning',
   filename: __filename
@@ -287,7 +284,6 @@ cmd({
 
 cmd({
   pattern: 'clonevoicesave',
-  alias: ['savevoice', 'voiceperso'],
   category: 'ai',
   desc: 'Sauvegarder le clone vocal comme profil permanent',
   filename: __filename
@@ -360,7 +356,6 @@ cmd({
 
 cmd({
   pattern: 'voicedel',
-  alias: ['deletevoice', 'removevoice'],
   category: 'ai',
   desc: 'Supprimer le profil vocal sauvegardé',
   filename: __filename
@@ -378,7 +373,6 @@ cmd({
 
 cmd({
   pattern: 'myvoice',
-  alias: ['monvoice', 'monprofil'],
   category: 'ai',
   desc: 'Voir ton profil vocal sauvegardé',
   filename: __filename

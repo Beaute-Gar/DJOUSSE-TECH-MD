@@ -150,7 +150,6 @@ function buildMenuText(grouped) {
 
 cmd({
     pattern: 'menu',
-    alias: ['menuhacker', 'hackermenu', 'commands', 'cmd', 'help', 'h', 'm'],
     desc: 'Menu complet DJOUSSE TECH',
     category: 'MAIN',
     filename: __filename,
@@ -216,7 +215,6 @@ cmd({
 
 cmd({
     pattern: 'allmenu',
-    alias: ['fullmenu', 'allcmd'],
     desc: 'Affiche toutes les commandes par catégorie',
     category: 'MAIN',
     filename: __filename,

@@ -4,7 +4,6 @@ const { box, boxWithFooter, truncate } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'movie',
-  alias: ['film', 'movies'],
   react: '🎬',
   desc: 'Infos film/serie via OMDB',
   category: 'search',

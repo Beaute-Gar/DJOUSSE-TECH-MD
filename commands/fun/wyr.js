@@ -21,7 +21,6 @@ const questions = [
 
 cmd({
   pattern: 'wyr',
-  alias: ['wouldyourather'],
   desc: 'Would You Rather questions',
   category: 'fun',
   filename: __filename,

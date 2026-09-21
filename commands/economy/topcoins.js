@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'topcoins',
-  alias: ['rich'],
   desc: 'View top 10 richest users!',
   category: 'economy',
   filename: __filename,

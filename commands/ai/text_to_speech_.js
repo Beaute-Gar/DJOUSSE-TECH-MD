@@ -5,7 +5,6 @@ const { mp3ToVoiceNote } = require('../lib/voice.cjs');
 
 cmd({
   pattern: 'tts',
-  alias: ['say', 'speak', 'parler'],
   react: '🗣️',
   desc: 'Convertir un texte en voix (français)',
   category: 'convert',

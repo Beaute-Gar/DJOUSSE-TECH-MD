@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'daily',
-  alias: ['dl'],
   desc: 'Collect your daily coins!',
   category: 'economy',
   filename: __filename,

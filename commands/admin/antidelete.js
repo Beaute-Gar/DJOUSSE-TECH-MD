@@ -4,7 +4,6 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'antidelete',
-  alias: ['adel'],
   desc: 'Active/désactive l\'anti-suppression (renvoie les messages supprimés)',
   category: 'owner',
   filename: __filename,

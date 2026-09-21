@@ -51,7 +51,6 @@ function trackMessage(chat, sender, time) {
 // ─── .groupstats ─────────────────────────────────────────────────
 cmd({
     pattern: 'groupstats',
-    alias: ['gstats', 'statsgroupe'],
     desc: 'Statistiques du groupe',
     category: 'group',
     filename: __filename

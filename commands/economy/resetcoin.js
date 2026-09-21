@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'resetcoin',
-  alias: ['rc'],
   desc: 'Reset all balances (owner only)!',
   category: 'owner',
   filename: __filename,

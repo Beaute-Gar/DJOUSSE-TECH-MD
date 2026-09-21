@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'economy',
-  alias: ['ecostat'],
   desc: 'View economy statistics!',
   category: 'economy',
   filename: __filename,

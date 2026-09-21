@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'wanted',
-  alias: ['recherché'],
   desc: 'Wanted poster effect',
   category: 'fun',
   filename: __filename,

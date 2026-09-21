@@ -17,7 +17,6 @@ function progressBar(pct, len = 16) {
 
 cmd({
   pattern: 'emix',
-  alias: ['emojimix', 'emogimix'],
   desc: 'Combine two emojis into a sticker',
   category: 'fun',
   filename: __filename,
@@ -62,7 +61,6 @@ cmd({
 
 cmd({
   pattern: 'compatibility',
-  alias: ['compat', 'shiprate'],
   desc: 'Check compatibility between two users',
   category: 'fun',
   filename: __filename,
@@ -105,7 +103,6 @@ cmd({
 
 cmd({
   pattern: 'aura',
-  alias: ['aurascore'],
   desc: 'Check your aura score',
   category: 'fun',
   filename: __filename,
@@ -311,7 +308,6 @@ cmd({
 
 cmd({
   pattern: 'ship',
-  alias: ['match'],
   desc: 'Randomly pair two members in the group',
   category: 'fun',
   onlyGroup: true,

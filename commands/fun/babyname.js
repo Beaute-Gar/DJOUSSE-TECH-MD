@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'babyname',
-  alias: ['bébé'],
   desc: 'Generate a baby name from two names',
   category: 'fun',
   filename: __filename,

@@ -98,7 +98,6 @@ cmd({
 // ─── .memory clear ───────────────────────────────────────────────
 cmd({
     pattern: 'memory clear',
-    alias: ['clear memory', 'effacer mémoire'],
     desc: 'Effacer toute la mémoire',
     category: 'ainoria',
     filename: __filename

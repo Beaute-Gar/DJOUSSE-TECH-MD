@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'broadcast',
-  alias: ['bc'],
   desc: 'Envoie un message à tous les groupes',
   category: 'owner',
   filename: __filename,

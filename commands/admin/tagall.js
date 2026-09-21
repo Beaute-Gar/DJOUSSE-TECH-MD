@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'tagall',
-  alias: ['everyone'],
   desc: 'Mentionne tous les membres du groupe',
   category: 'group',
   filename: __filename,

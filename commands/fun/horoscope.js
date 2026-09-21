@@ -18,7 +18,6 @@ const horoscopes = {
 
 cmd({
   pattern: 'horoscope',
-  alias: ['horoscope', 'oscope'],
   desc: 'Daily horoscope',
   category: 'fun',
   filename: __filename,

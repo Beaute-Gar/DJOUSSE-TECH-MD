@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'weekly',
-  alias: ['wk'],
   desc: 'Collect your weekly coins!',
   category: 'economy',
   filename: __filename,

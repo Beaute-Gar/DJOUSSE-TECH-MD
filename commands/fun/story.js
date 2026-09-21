@@ -34,7 +34,6 @@ const stories = [
 
 cmd({
   pattern: 'story',
-  alias: ['histoire'],
   desc: 'Random story generation',
   category: 'fun',
   filename: __filename,

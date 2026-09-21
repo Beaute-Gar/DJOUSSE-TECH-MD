@@ -5,7 +5,6 @@ const games = new Map();
 
 cmd({
   pattern: 'guessnumber',
-  alias: ['devinette', 'guess'],
   desc: 'Number guessing game 1-10',
   category: 'fun',
   filename: __filename,

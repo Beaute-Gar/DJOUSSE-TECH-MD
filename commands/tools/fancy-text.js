@@ -65,7 +65,6 @@ function toFancy(text) {
 
 cmd({
   pattern: 'fancy',
-  alias: ['style'],
   desc: 'Convert text to fancy Unicode fonts',
   category: 'tools',
   filename: __filename,

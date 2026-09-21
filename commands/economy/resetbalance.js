@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'resetbalance',
-  alias: ['rb'],
   desc: 'Reset a user balance (owner only)!',
   category: 'owner',
   filename: __filename,

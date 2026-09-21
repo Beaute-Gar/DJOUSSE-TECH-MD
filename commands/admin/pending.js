@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'pending',
-  alias: ['request'],
   desc: 'Liste les demandes d\'adhésion en attente',
   category: 'group',
   filename: __filename,

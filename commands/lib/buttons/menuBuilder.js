@@ -200,7 +200,7 @@ async function handleCommandClick(sock, jid, message, commandId) {
     });
   }
 
-  const cmdName = cmd.alias ? cmd.alias[0] : commandId.replace('cmd_', '');
+  const cmdName = commandId.replace('cmd_', '');
 
   if (cmd.type === 'A') {
     try {

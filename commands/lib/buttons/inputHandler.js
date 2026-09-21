@@ -87,7 +87,7 @@ async function handlePendingInput(sock, message) {
       return true;
     }
 
-    const cmdName = cmd.alias ? cmd.alias[0] : session.commandId.replace('cmd_', '');
+    const cmdName = session.commandId.replace('cmd_', '');
 
     // Cherche et exécute la commande
     try {
@@ -162,7 +162,7 @@ async function handlePendingInput(sock, message) {
       return true;
     }
 
-    const cmdName = cmd.alias ? cmd.alias[0] : session.commandId.replace('cmd_', '');
+    const cmdName = session.commandId.replace('cmd_', '');
 
     try {
       const { commandMap } = require('../../command.cjs');

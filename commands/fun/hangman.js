@@ -7,7 +7,6 @@ const words = ['INFORMATIQUE', 'ROBOT', 'ALGORITHME', 'PROGRAMMATION', 'DISPONIB
 
 cmd({
   pattern: 'hangman',
-  alias: ['pendu'],
   desc: 'Hangman word game',
   category: 'fun',
   filename: __filename,

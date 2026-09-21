@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'unblock',
-  alias: [],
   desc: 'Débloque un utilisateur',
   category: 'owner',
   filename: __filename,

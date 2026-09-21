@@ -3,7 +3,6 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'welcome',
-  alias: [],
   desc: 'Active/désactive les messages de bienvenue',
   category: 'group',
   filename: __filename,

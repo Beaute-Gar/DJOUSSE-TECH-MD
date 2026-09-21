@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'transfer',
-  alias: ['send'],
   desc: 'Transfer coins to another user!',
   category: 'economy',
   filename: __filename,

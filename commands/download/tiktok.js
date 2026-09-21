@@ -4,7 +4,6 @@ const { lmna } = require('@lmna22/aio-downloader');
 
 cmd({
   pattern: 'tiktok',
-  alias: ['tt', 'ttdl'],
   desc: 'Télécharge une vidéo TikTok',
   category: 'download',
   filename: __filename,

@@ -22,7 +22,6 @@ const COUPLE_IMAGES = [
 
 cmd({
   pattern: 'ppcouple',
-  alias: ['couple', 'cpp', 'ppcauple'],
   react: '❤️',
   desc: 'Images de profil couple aléatoires',
   category: 'media',

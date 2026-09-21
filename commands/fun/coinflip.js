@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'coinflip',
-  alias: ['cf', 'pile'],
   desc: 'Flip a coin',
   category: 'fun',
   filename: __filename,

@@ -3,7 +3,6 @@ const { box } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'list',
-  alias: ['cmdlist'],
   desc: 'Liste toutes les commandes',
   category: 'main',
   filename: __filename,

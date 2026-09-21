@@ -3,7 +3,6 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'goodbye',
-  alias: ['bye'],
   desc: 'Active/désactive les messages d\'au revoir',
   category: 'group',
   filename: __filename,

@@ -21,7 +21,6 @@ const answers = [
 
 cmd({
   pattern: '8ball',
-  alias: ['huitball', 'boule8'],
   desc: 'Magic 8-ball answers',
   category: 'fun',
   filename: __filename,

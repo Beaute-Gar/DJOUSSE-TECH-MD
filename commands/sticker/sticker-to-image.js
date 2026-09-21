@@ -7,7 +7,6 @@ const { box } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'toimage',
-  alias: ['takepic'],
   react: '🖼️',
   desc: 'Convertir sticker en image',
   category: 'convert',

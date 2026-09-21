@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'autolevelup',
-  alias: ['alv'],
   desc: 'Toggle automatic level up!',
   category: 'economy',
   filename: __filename,

@@ -21,7 +21,6 @@ const characters = [
 
 cmd({
   pattern: 'character',
-  alias: ['caractère', 'trait'],
   desc: 'Random character trait',
   category: 'fun',
   filename: __filename,

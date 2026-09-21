@@ -3,7 +3,6 @@ const { box } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'translate',
-  alias: ['traduire'],
   desc: 'Traduit du texte',
   category: 'util',
   filename: __filename,

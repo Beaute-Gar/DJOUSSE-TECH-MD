@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'slap',
-  alias: ['gifle'],
   desc: 'Slap someone virtually',
   category: 'fun',
   filename: __filename,

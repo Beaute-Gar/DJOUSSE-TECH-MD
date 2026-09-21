@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'caption',
-  alias: ['légende'],
   desc: 'Generate funny caption for image',
   category: 'fun',
   filename: __filename,

@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'ai',
-  alias: ['gpt', 'chat'],
   desc: 'Pose une question à l\'IA',
   category: 'ai',
   filename: __filename,

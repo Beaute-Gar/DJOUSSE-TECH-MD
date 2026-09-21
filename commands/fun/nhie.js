@@ -21,7 +21,6 @@ const statements = [
 
 cmd({
   pattern: 'nhie',
-  alias: ['neverhaveiever'],
   desc: 'Never Have I Ever',
   category: 'fun',
   filename: __filename,

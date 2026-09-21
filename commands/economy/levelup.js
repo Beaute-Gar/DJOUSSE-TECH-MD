@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'levelup',
-  alias: ['lvl'],
   desc: 'Level up your profile!',
   category: 'economy',
   filename: __filename,

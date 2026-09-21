@@ -3,7 +3,6 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'grouplink',
-  alias: ['glink'],
   desc: 'Lien d\'invitation du groupe',
   category: 'group',
   filename: __filename,

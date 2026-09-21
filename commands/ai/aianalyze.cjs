@@ -6,7 +6,6 @@ const aiMedia = require('../../lib/ai-media.cjs');
 
 cmd({
     pattern: 'aianalyze|analyze|aiimg|aiimage',
-    alias: ['aianalyze', 'analyze'],
     react: '🔍',
     desc: 'Analyser un média avec IA (image, vidéo, audio)',
     category: 'ai',

@@ -5,7 +5,6 @@ const axios = require('axios');
 /* .hadith — Affiche un hadith aléatoire */
 cmd({
     pattern: 'hadith',
-    alias: ['hadiths'],
     react: '📖',
     desc: 'Affiche un hadith aléatoire du jour',
     category: 'info',
@@ -29,7 +28,6 @@ cmd({
 /* .bible <book> <chapter>:<verse> — Recherche un verset de la Bible */
 cmd({
     pattern: 'bible',
-    alias: ['verset', 'verse'],
     react: '✝️',
     desc: 'Affiche un verset de la Bible (ex: .bible Jean 3:16)',
     category: 'info',
@@ -68,7 +66,6 @@ cmd({
 /* .prayertime [city] — Affiche les heures de prière */
 cmd({
     pattern: 'prayertime',
-    alias: ['salat', 'prieres', 'prayer'],
     react: '🕌',
     desc: 'Affiche les heures de prière (ex: .prayertime Paris)',
     category: 'info',

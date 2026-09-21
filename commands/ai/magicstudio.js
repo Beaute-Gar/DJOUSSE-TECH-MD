@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'magic',
-  alias: ['magicstudio'],
   desc: 'Édite une image avec l\'IA',
   category: 'ai',
   filename: __filename,

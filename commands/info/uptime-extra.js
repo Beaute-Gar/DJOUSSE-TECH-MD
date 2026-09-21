@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
 
 cmd({
   pattern: 'alive',
-  alias: ['hansuptime', 'ping'],
   react: '⏱️',
   desc: 'Vérifier si le bot est en ligne',
   category: 'main',

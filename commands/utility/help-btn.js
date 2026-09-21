@@ -3,7 +3,6 @@ const { sendButtons } = require('../lib/buttons/buttonSender');
 
 cmd({
   pattern: 'help-btn',
-  alias: ['helpbtn', 'hb'],
   desc: 'Aide en boutons',
   category: 'utility',
   filename: __filename,

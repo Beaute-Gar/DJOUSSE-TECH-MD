@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'rps',
-  alias: ['pierre', 'feuille', 'ciseaux'],
   desc: 'Rock Paper Scissors',
   category: 'fun',
   filename: __filename,

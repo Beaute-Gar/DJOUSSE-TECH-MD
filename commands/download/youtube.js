@@ -4,7 +4,6 @@ const { lmna } = require('@lmna22/aio-downloader');
 
 cmd({
   pattern: 'song',
-  alias: ['youtube', 'ytmp3', 'ytaudio'],
   desc: 'Télécharge une audio YouTube',
   category: 'download',
   filename: __filename,
@@ -39,7 +38,6 @@ cmd({
 
 cmd({
   pattern: 'video',
-  alias: ['ytvideo', 'ytmp4'],
   desc: 'Télécharge une vidéo YouTube',
   category: 'download',
   filename: __filename,

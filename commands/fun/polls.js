@@ -21,7 +21,6 @@ function savePolls(data) {
 
 cmd({
   pattern: 'poll',
-  alias: ['sondage', 'vote'],
   desc: 'Créer un sondage',
   category: 'tools',
   filename: __filename,
@@ -105,7 +104,6 @@ cmd({
 
 cmd({
   pattern: 'pollresult',
-  alias: ['pollresults', 'resultpoll'],
   desc: 'Voir les résultats du sondage',
   category: 'tools',
   filename: __filename,

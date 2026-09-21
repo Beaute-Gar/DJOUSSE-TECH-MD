@@ -3,7 +3,6 @@ const { sendButtons } = require('../lib/buttons/buttonSender');
 
 cmd({
   pattern: 'ping-btn',
-  alias: ['pingbtn', 'pb'],
   desc: 'Ping avec bouton relance',
   category: 'tool',
   filename: __filename,

@@ -4,7 +4,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'balance',
-  alias: ['bal'],
   desc: 'Check your coin balance!',
   category: 'economy',
   filename: __filename,

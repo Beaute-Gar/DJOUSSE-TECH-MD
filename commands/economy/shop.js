@@ -10,7 +10,6 @@ const shopItems = [
 
 cmd({
   pattern: 'shop',
-  alias: ['store'],
   desc: 'View the economy shop!',
   category: 'economy',
   filename: __filename,

@@ -5,7 +5,6 @@ const axios = require('axios');
 /* .ringtone <query> — Recherche et envoie un ringtone aléatoire */
 cmd({
     pattern: 'ringtone',
-    alias: ['ringtones', 'ring'],
     react: '🎵',
     desc: 'Recherche un ringtone (ex: .ringtone iphone)',
     category: 'download',

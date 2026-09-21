@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'roulette',
-  alias: ['roue'],
   desc: 'Roulette wheel game',
   category: 'fun',
   filename: __filename,

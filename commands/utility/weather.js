@@ -3,7 +3,6 @@ const { box } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'weather',
-  alias: ['meteo'],
   desc: 'Météo d\'une ville',
   category: 'util',
   filename: __filename,

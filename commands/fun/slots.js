@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'slots',
-  alias: ['slot'],
   desc: 'Slot machine game',
   category: 'fun',
   filename: __filename,

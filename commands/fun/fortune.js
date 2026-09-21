@@ -21,7 +21,6 @@ const fortunes = [
 
 cmd({
   pattern: 'fortune',
-  alias: ['chance'],
   desc: 'Random fortune cookie',
   category: 'fun',
   filename: __filename,

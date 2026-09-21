@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'debate',
-  alias: ['débat'],
   desc: 'AI debate simulation',
   category: 'fun',
   filename: __filename,

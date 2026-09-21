@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'gptimage',
-  alias: ['aiimg', 'imagine', 'gen'],
   desc: 'Génère une image avec l\'IA (gratuit, sans clé API)',
   category: 'ai',
   filename: __filename,

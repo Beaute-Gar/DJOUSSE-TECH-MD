@@ -21,7 +21,6 @@ const professions = [
 
 cmd({
   pattern: 'profession',
-  alias: ['métier', 'metier'],
   desc: 'Random profession generator',
   category: 'fun',
   filename: __filename,

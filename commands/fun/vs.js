@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'vs',
-  alias: ['battle', 'combat'],
   desc: 'Battle between two users',
   category: 'fun',
   filename: __filename,

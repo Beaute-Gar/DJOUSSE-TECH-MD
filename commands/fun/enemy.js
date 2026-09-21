@@ -3,7 +3,6 @@ const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 cmd({
   pattern: 'enemy',
-  alias: ['ennemi'],
   desc: 'Calculate enemy percentage',
   category: 'fun',
   filename: __filename,

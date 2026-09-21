@@ -12,7 +12,6 @@ const VV_CAPTION = `╭───『 DJOUSSE TECH 』───●●►
 
 cmd({
     pattern: 'vv',
-    alias: ['sendme', 'viewonce', 'vu', 'once'],
     react: '👻',
     desc: 'Récupérer un média vue-unique et le renvoyer dans la discussion',
     category: 'tools',
@@ -88,7 +87,6 @@ cmd({
 
 cmd({
     pattern: 'tovv',
-    alias: ['toviewonce'],
     react: '📥',
     desc: 'Convertir un média cité en vue-unique',
     category: 'tools',
