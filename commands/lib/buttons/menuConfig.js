@@ -4,7 +4,17 @@
  * DJOUSSE-TECH-MD
  */
 
+const path = require('path');
+
+const ASSETS_DIR = path.join(__dirname, '..', '..', '..', 'assets');
+
 module.exports = {
+  // Image du menu principal
+  menuImage: path.join(ASSETS_DIR, 'menu.png'),
+
+  // Image par défaut si la catégorie n'en a pas
+  defaultImage: path.join(ASSETS_DIR, 'categories', 'default.png'),
+
   categories: [
     // ══════════════════════════════════════
     // GÉNÉRAL
@@ -13,8 +23,9 @@ module.exports = {
       id: 'cat_general',
       label: '🌐 Général',
       emoji: '🌐',
+      desc: 'Commandes de base',
+      image: path.join(ASSETS_DIR, 'categories', 'default.png'),
       commands: [
-        { id: 'cmd_menu', label: '📋 Menu', type: 'A' },
         { id: 'cmd_list', label: '📜 Liste', type: 'A' },
       ]
     },
@@ -25,6 +36,8 @@ module.exports = {
       id: 'cat_admin',
       label: '⚡ Admin',
       emoji: '⚡',
+      desc: 'Gestion du groupe',
+      image: path.join(ASSETS_DIR, 'categories', 'admin.png'),
       commands: [
         { id: 'cmd_antibad', label: '🚫 Anti-Mot', type: 'A' },
         { id: 'cmd_antivv', label: '👁️ Anti-VV', type: 'A' },
@@ -46,6 +59,8 @@ module.exports = {
       id: 'cat_ai',
       label: '🤖 IA',
       emoji: '🤖',
+      desc: 'Intelligence artificielle',
+      image: path.join(ASSETS_DIR, 'categories', 'ai.png'),
       commands: [
         { id: 'cmd_ai', label: '💬 ChatGPT', type: 'B', prompt: '💬 Posez votre *question* à ChatGPT.\n\n_Ex: Explique-moi la photosynthèse_' },
         { id: 'cmd_ainoria', label: '🧠 Ainoria', type: 'B', prompt: '🧠 Posez votre *question* à Ainoria :' },
@@ -67,6 +82,8 @@ module.exports = {
       id: 'cat_download',
       label: '⬇️ Téléchargement',
       emoji: '⬇️',
+      desc: 'Musique, vidéos, photos',
+      image: path.join(ASSETS_DIR, 'categories', 'download.png'),
       commands: [
         { id: 'cmd_youtube', label: '🎵 YouTube', type: 'B', prompt: '🎵 Envoyez le *lien YouTube* ou un *mot-clé*.\n\n_Ex: https://youtu.be/xxx_\n_ou: musique lome_' },
         { id: 'cmd_tiktok', label: '📱 TikTok', type: 'B', prompt: '📱 Envoyez le *lien TikTok* :' },
@@ -85,6 +102,8 @@ module.exports = {
       id: 'cat_fun',
       label: '🎮 Fun',
       emoji: '🎮',
+      desc: 'Jeux et divertissement',
+      image: path.join(ASSETS_DIR, 'categories', 'fun.png'),
       commands: [
         { id: 'cmd_8ball', label: '🎱 Boule Magique', type: 'B', prompt: '🎱 Posez votre *question* (oui/non) :' },
         { id: 'cmd_slots', label: '🎰 Slots', type: 'A' },
@@ -131,6 +150,8 @@ module.exports = {
       id: 'cat_media',
       label: '🎨 Stickers',
       emoji: '🎨',
+      desc: 'Stickers et vérification',
+      image: path.join(ASSETS_DIR, 'categories', 'media.png'),
       commands: [
         { id: 'cmd_sticker', label: '📸 Créer Sticker', type: 'C', prompt: '📸 Envoyez une *image* ou une *courte vidéo* pour créer un sticker.' },
         { id: 'cmd_sticker2img', label: '🖼️ Sticker → Image', type: 'C', prompt: '🖼️ Envoyez un *sticker* à convertir en image.' },
@@ -144,6 +165,8 @@ module.exports = {
       id: 'cat_convert',
       label: '🔄 Conversion',
       emoji: '🔄',
+      desc: 'Convertir fichiers et texte',
+      image: path.join(ASSETS_DIR, 'categories', 'tools.png'),
       commands: [
         { id: 'cmd_convert', label: '🔄 Convertir', type: 'C', prompt: '🔄 Envoyez un *fichier* à convertir :' },
         { id: 'cmd_base64', label: '🔐 Base64', type: 'B', prompt: '🔐 Tapez le *texte* à encoder/décoder :' },
@@ -158,6 +181,8 @@ module.exports = {
       id: 'cat_search',
       label: '🔍 Recherche',
       emoji: '🔍',
+      desc: 'Recherche sur le web',
+      image: path.join(ASSETS_DIR, 'categories', 'search.png'),
       commands: [
         { id: 'cmd_google', label: '🌐 Google Image', type: 'B', prompt: '🔍 Tapez votre *requête* Google Image :' },
       ]
@@ -169,6 +194,8 @@ module.exports = {
       id: 'cat_tools',
       label: '🛠️ Outils',
       emoji: '🛠️',
+      desc: 'Outils pratiques',
+      image: path.join(ASSETS_DIR, 'categories', 'tools.png'),
       commands: [
         { id: 'cmd_ping', label: '📊 Ping', type: 'A' },
         { id: 'cmd_calc', label: '🧮 Calculatrice', type: 'B', prompt: '🧮 Tapez votre *expression* mathématique.\n\n_Ex: 2 + 2 * 3_' },
@@ -187,6 +214,8 @@ module.exports = {
       id: 'cat_info',
       label: 'ℹ️ Info',
       emoji: 'ℹ️',
+      desc: 'Informations du bot',
+      image: path.join(ASSETS_DIR, 'categories', 'info.png'),
       commands: [
         { id: 'cmd_info', label: 'ℹ️ Infos Bot', type: 'A' },
         { id: 'cmd_stats', label: '📊 Statistiques', type: 'A' },
@@ -206,6 +235,8 @@ module.exports = {
       id: 'cat_economy',
       label: '💰 Économie',
       emoji: '💰',
+      desc: 'Argent et progression',
+      image: path.join(ASSETS_DIR, 'categories', 'economy.png'),
       commands: [
         { id: 'cmd_balance', label: '💵 Solde', type: 'A' },
         { id: 'cmd_daily', label: '📅 Quotidien', type: 'A' },
@@ -231,6 +262,8 @@ module.exports = {
       id: 'cat_group',
       label: '👥 Groupe',
       emoji: '👥',
+      desc: 'Gestion de groupe',
+      image: path.join(ASSETS_DIR, 'categories', 'group.png'),
       commands: [
         { id: 'cmd_create', label: '➕ Créer Groupe', type: 'B', prompt: '➕ Tapez le *nom* du groupe à créer :' },
         { id: 'cmd_delete', label: '🗑️ Supprimer', type: 'A' },
@@ -248,6 +281,8 @@ module.exports = {
       id: 'cat_owner',
       label: '👑 Owner',
       emoji: '👑',
+      desc: 'Commandes propriétaire',
+      image: path.join(ASSETS_DIR, 'categories', 'owner.png'),
       commands: [
         { id: 'cmd_broadcast', label: '📢 Broadcast', type: 'B', prompt: '📢 Tapez le *message* à broadcaster :' },
         { id: 'cmd_block', label: '🚫 Bloquer', type: 'B', prompt: '🚫 Envoyez le *numéro* à bloquer :' },
@@ -270,6 +305,8 @@ module.exports = {
       id: 'cat_security',
       label: '🔒 Sécurité',
       emoji: '🔒',
+      desc: 'Paramètres de sécurité',
+      image: path.join(ASSETS_DIR, 'categories', 'security.png'),
       commands: [
         { id: 'cmd_security', label: '🔒 Sécurité', type: 'A' },
         { id: 'cmd_securitystats', label: '📊 Stats Sécurité', type: 'A' },
@@ -283,6 +320,8 @@ module.exports = {
       id: 'cat_logo',
       label: '🎨 Logo',
       emoji: '🎨',
+      desc: 'Création de logos',
+      image: path.join(ASSETS_DIR, 'categories', 'settings.png'),
       commands: [
         { id: 'cmd_logomaker', label: '🎨 Créer Logo', type: 'B', prompt: '🎨 Décrivez le *logo* à créer.\n\n_Ex: logo gaming neon bleu_' },
       ]
