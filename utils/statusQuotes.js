@@ -7,12 +7,16 @@
  * - Anti-spam 30s entre publications
  * - Gestion robuste des erreurs socket
  * - Détection connection lost
+ * - Intégration anti-ban (warmup + quotas)
+ * - 12 templates variés
  */
 
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
+const antiBan = require('../lib/anti-ban.cjs');
+const { formatQuote } = require('../lib/templates.cjs');
 
 // ─── Paths ─────────────────────────────────────────────
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -611,15 +615,22 @@ async function publishStatus(sock, text) {
 // ═══════════════════════════════════════════════════════
 
 async function publishQuoteStatus(sock, sessionId, config) {
-  // ─── Anti-spam ───
+  // ─── Check anti-ban ───
+  const banCheck = antiBan.canPublishStatus();
+  if (!banCheck.ok) {
+    log(`⛔ Anti-ban: ${banCheck.reason}`);
+    return false;
+  }
+  
+  // ─── Anti-spam court terme ───
   const now = Date.now();
   const sinceLast = now - lastPublishTimestamp;
   if (sinceLast < MIN_PUBLISH_INTERVAL_MS) {
     const wait = Math.ceil((MIN_PUBLISH_INTERVAL_MS - sinceLast) / 1000);
-    log(`⏳ Anti-spam : attends encore ${wait}s avant la prochaine publication`);
+    log(`⏳ Anti-spam : attends encore ${wait}s`);
     return false;
   }
-
+  
   if (statusPublicationInProgress) {
     log('Publication déjà en cours, ignoré');
     return false;
@@ -635,59 +646,55 @@ async function publishQuoteStatus(sock, sessionId, config) {
       log('Aucune citation disponible');
       return false;
     }
-    log(`Citation sélectionnée: "${quote.text.substring(0, 50)}..." — ${quote.author}`);
+    log(`Citation: "${quote.text.substring(0, 50)}..." — ${quote.author}`);
     
-    // 2. Format status
+    // 2. Format avec template varié
     let botName = 'DJOUSSE TECH';
     try {
       botName = require('../config').botName || botName;
-    } catch {
-      // ignore
-    }
-    let statusText = formatStatus(quote, botName);
+    } catch {}
+    
+    let statusText = formatQuote(quote, botName);
     
     // 3. Check length
     const lengthCheck = validateStatusLength(statusText);
-    log(`Longueur: ${lengthCheck.length}/${lengthCheck.max}`);
-    
     if (!lengthCheck.valid) {
       log('Statut trop long, tentative citation plus courte...');
       const shorterQuote = selectShorterQuote(sessionId, config.noRepeatDays, 150);
       if (shorterQuote) {
-        statusText = formatStatus(shorterQuote, botName);
-        const newCheck = validateStatusLength(statusText);
-        if (!newCheck.valid) {
-          log('Impossible de respecter la limite de longueur');
+        statusText = formatQuote(shorterQuote, botName);
+        if (!validateStatusLength(statusText).valid) {
           return false;
         }
       } else {
-        log('Aucune citation plus courte disponible');
         return false;
       }
     }
     
-    // 4. Publish
+    // 4. Délai humain
+    await antiBan.randomDelay(3000, 10000);
+    
+    // 5. Publish
     log('Publication...');
     const result = await publishStatus(sock, statusText);
     
     if (result.success) {
+      antiBan.recordStatus();
       recordHistory(sessionId, quote, config.source);
-      log('Publication réussie ✅');
+      log('✅ Publication réussie');
+      
+      // ─── Post dans la chaîne (si configurée) ───
+      if (config.channelJid) {
+        await postToChannel(sock, config.channelJid, quote, botName);
+      }
+      
       return true;
     }
     
-    // ─── Gestion des échecs ───
+    // ─── Gestion échec ───
     if (result.reason === 'connection_lost' || result.reason === 'ws_closed') {
-      logError('🔌 Connexion perdue — le bot doit se reconnecter');
-      try {
-        process.emit('whatsapp:reconnect', { reason: result.reason });
-      } catch {
-        // ignore
-      }
-    } else if (result.reason === 'no_socket') {
-      logError('❌ Aucun socket fourni');
-    } else if (result.reason === 'not_connected') {
-      logError('❌ WhatsApp non connecté');
+      logError('🔌 Connexion perdue');
+      process.emit('whatsapp:reconnect', { reason: result.reason });
     }
     
     return false;
@@ -696,6 +703,27 @@ async function publishQuoteStatus(sock, sessionId, config) {
     return false;
   } finally {
     statusPublicationInProgress = false;
+  }
+}
+
+/**
+ * Publie une citation dans la chaîne WhatsApp
+ */
+async function postToChannel(sock, channelJid, quote, botName) {
+  const channelCheck = antiBan.canPublishChannel();
+  if (!channelCheck.ok) {
+    log(`⛔ Chaîne: ${channelCheck.reason}`);
+    return;
+  }
+  
+  const channelText = formatQuote(quote, botName);
+  
+  try {
+    await sock.sendMessage(channelJid, { text: channelText });
+    antiBan.recordChannelPost();
+    log(`✅ Post publié dans la chaîne`);
+  } catch (e) {
+    logError(`Erreur publication chaîne: ${e.message}`);
   }
 }
 

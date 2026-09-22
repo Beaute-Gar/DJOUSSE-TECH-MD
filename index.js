@@ -108,6 +108,16 @@ process.on('unhandledRejection', (reason) => {
   originalConsoleError('[UNHANDLED]', msg);
 });
 
+// ─── Arrêt auto des schedulers en cas de restriction ───
+process.on('whatsapp:stop-all', ({ reason } = {}) => {
+  console.log(`[SOCKET] 🛑 Arrêt de tous les schedulers — ${reason || 'inconnu'}`);
+  try {
+    const statusQuotes = require('./utils/statusQuotes');
+    statusQuotes.stopScheduler('default');
+    statusQuotes.stopCacheRefresh();
+  } catch {}
+});
+
 const createSuppressedLogger = (level = 'silent') => {
   let logger;
   try {
@@ -251,6 +261,16 @@ async function startSession(sessionId, options = {}) {
     if (connection === 'close') {
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+      // ─── Détection restriction WhatsApp ───
+      if (statusCode === 401 || statusCode === 403 || statusCode === 440) {
+        console.error(`🚨 COMPTE RESTREINT — code ${statusCode}`);
+        try {
+          const antiBan = require('./lib/anti-ban.cjs');
+          antiBan.setRestricted(`Connection closed with code ${statusCode}`, statusCode);
+          process.emit('whatsapp:stop-all', { reason: `restriction_${statusCode}` });
+        } catch {}
+      }
 
       if (statusCode === DisconnectReason.loggedOut) {
         sessionManager.setStatus(sessionId, 'LOGGED_OUT');
