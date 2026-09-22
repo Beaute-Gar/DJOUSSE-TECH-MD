@@ -1,6 +1,12 @@
 /**
  * AUTO STATUS QUOTES — DJOUSSE TECH
  * Système de publication automatique de citations sur les statuts WhatsApp
+ * 
+ * VERSION CORRIGÉE — 2026-09-22
+ * - Nettoyage auto des citations corrompues
+ * - Anti-spam 30s entre publications
+ * - Gestion robuste des erreurs socket
+ * - Détection connection lost
  */
 
 const fs = require('fs');
@@ -23,8 +29,10 @@ const ZENQUOTES_URL = 'https://zenquotes.io/api/quotes';
 const ZENQUOTES_TODAY_URL = 'https://zenquotes.io/api/today';
 const QUOTABLE_URL = 'https://api.quotable.io/quotes/random?maxLength=250&limit=20';
 
-// ─── Anti-spam lock ────────────────────────────────────
+// ─── Anti-spam globals ─────────────────────────────────
 let statusPublicationInProgress = false;
+let lastPublishTimestamp = 0;
+const MIN_PUBLISH_INTERVAL_MS = 30 * 1000; // 30 secondes minimum entre 2 publications
 
 // ─── Scheduler state ───────────────────────────────────
 let schedulerTimers = new Map(); // sessionId -> timer
@@ -140,11 +148,94 @@ function fetchJSON(url, timeoutMs = 10000) {
 }
 
 // ═══════════════════════════════════════════════════════
+// CACHE CLEANING (NEW)
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Nettoie les citations corrompues :
+ * - Caractères Unicode cassés (�)
+ * - Citations coupées en deux (text + author qui forment une phrase)
+ * - Guillemets parasites
+ * - Entrées vides / trop courtes
+ */
+function cleanCorruptedQuotes(quotes) {
+  if (!Array.isArray(quotes)) return [];
+  
+  const BAD_CHARS = /[\uFFFD\u0000-\u001F]/g;
+
+  // Étape 1 : fusionner les citations coupées en deux
+  const merged = [];
+  let i = 0;
+  while (i < quotes.length) {
+    const q = { ...quotes[i] };
+    const next = quotes[i + 1];
+
+    const looksCut = (
+      q.author &&
+      q.author.length > 10 &&
+      /^[a-z]/.test(q.author) &&
+      next && 
+      next.text
+    );
+
+    if (looksCut) {
+      q.text = `${q.text} ${q.author}`.trim();
+      q.author = next.author || 'Inconnu';
+      merged.push(q);
+      i += 2;
+    } else {
+      merged.push(q);
+      i += 1;
+    }
+  }
+
+  // Étape 2 : nettoyer les caractères + filtrer
+  const cleaned = merged
+    .map(q => ({
+      ...q,
+      text: (q.text || '').replace(BAD_CHARS, '').trim(),
+      author: (q.author || '').replace(BAD_CHARS, '').trim(),
+    }))
+    .filter(q => {
+      if (!q.text || q.text.length < 15) return false;
+      if (!q.author || q.author.length < 2) return false;
+      if (q.text === q.author) return false;
+      if (/[,;:]\s*$/.test(q.text)) return false;
+      if (q.text === 'undefined' || q.text === 'null') return false;
+      if (q.author === 'undefined' || q.author === 'null') return false;
+      return true;
+    });
+
+  // Étape 3 : déduplication finale
+  const seen = new Set();
+  return cleaned.filter(q => {
+    const key = q.text.toLowerCase().slice(0, 50);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
 // CACHE MANAGEMENT
 // ═══════════════════════════════════════════════════════
 
 function loadCache() {
   const cache = readJSON(CACHE_FILE, { quotes: [], lastUpdated: null, source: 'unknown' });
+  
+  if (!Array.isArray(cache.quotes)) {
+    cache.quotes = [];
+  }
+  
+  const before = cache.quotes.length;
+  const cleaned = cleanCorruptedQuotes(cache.quotes);
+  
+  if (cleaned.length !== before) {
+    log(`Cache nettoyé : ${before} → ${cleaned.length} citations`);
+    cache.quotes = cleaned;
+    saveCache(cache);
+  }
+  
   log(`Cache chargé : ${cache.quotes.length} citations`);
   return cache;
 }
@@ -228,16 +319,15 @@ async function fetchFromQuotable() {
 
 function loadLocalQuotes() {
   const local = readJSON(LOCAL_QUOTES_FILE, []);
-  const legacy = local.filter(isValidQuote).map(normalizeQuote);
+  const legacy = Array.isArray(local) ? local.filter(isValidQuote).map(normalizeQuote) : [];
   
-  // Load collected quotes (from scripts/collectors)
   const collected = readJSON(COLLECTED_QUOTES_FILE, []);
-  const mapped = collected.filter(isValidQuote).map(q => ({
+  const mapped = Array.isArray(collected) ? collected.filter(isValidQuote).map(q => ({
     text: (q.text || '').trim(),
     author: (q.author || 'Inconnu').trim(),
     source: 'collector',
     category: q.categories ? q.categories[0] : (q.category || null),
-  }));
+  })) : [];
   
   return [...legacy, ...mapped];
 }
@@ -261,13 +351,11 @@ async function refreshCache() {
   const cache = loadCache();
   let allQuotes = [...cache.quotes];
   
-  // 1. Try ZenQuotes API
   const zenQuotes = await fetchFromZenQuotes();
   if (zenQuotes && zenQuotes.length > 0) {
     allQuotes = deduplicateQuotes([...allQuotes, ...zenQuotes]);
   }
   
-  // 2. Try Quotable API
   if (allQuotes.length < 100) {
     const quotableQuotes = await fetchFromQuotable();
     if (quotableQuotes && quotableQuotes.length > 0) {
@@ -275,12 +363,14 @@ async function refreshCache() {
     }
   }
   
-  // 3. Load all local sources (collector + legacy proverbs)
   const localQuotes = loadLocalQuotes();
   if (localQuotes.length > 0) {
     allQuotes = deduplicateQuotes([...allQuotes, ...localQuotes]);
     log(`Sources locales chargées: ${localQuotes.length} citations`);
   }
+  
+  // Nettoyage final
+  allQuotes = cleanCorruptedQuotes(allQuotes);
   
   if (allQuotes.length > 0) {
     saveCache({ quotes: allQuotes, lastUpdated: new Date().toISOString(), source: 'mixed' });
@@ -314,7 +404,6 @@ function recordHistory(sessionId, quote, source) {
     publishedAt: new Date().toISOString(),
     sessionId: sessionId,
   });
-  // Keep only last 100 entries
   if (history.length > 100) history.length = 100;
   saveHistory(sessionId, history);
 }
@@ -341,7 +430,6 @@ function isDuplicate(quote, sessionId, noRepeatDays = 30) {
 
 function getTimeCategory() {
   try {
-    // Use Africa/Douala timezone
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-GB', {
       hour: '2-digit',
@@ -366,7 +454,6 @@ function selectQuote(sessionId, noRepeatDays = 30) {
   const cache = loadCache();
   let quotes = cache.quotes;
   
-  // Add local quotes
   const localQuotes = loadLocalQuotes();
   if (localQuotes.length > 0) {
     quotes = deduplicateQuotes([...quotes, ...localQuotes]);
@@ -377,17 +464,14 @@ function selectQuote(sessionId, noRepeatDays = 30) {
     return null;
   }
   
-  // Filter out duplicates
   const available = quotes.filter(q => !isDuplicate(q, sessionId, noRepeatDays));
   
   if (available.length === 0) {
     log('Toutes les citations ont été utilisées récemment');
-    // Fall back to any quote from cache
     const fallback = quotes[Math.floor(Math.random() * quotes.length)];
     return fallback;
   }
   
-  // Prefer time-appropriate categories
   const timeCats = getTimeCategory();
   const categorized = available.filter(q => 
     q.category && timeCats.includes(q.category)
@@ -450,63 +534,99 @@ function updateSessionConfig(sessionId, updates) {
 }
 
 // ═══════════════════════════════════════════════════════
-// WHATSAPP STATUS PUBLICATION
+// WHATSAPP STATUS PUBLICATION (CORRIGÉ)
 // ═══════════════════════════════════════════════════════
 
 function checkWhatsAppConnection(sock) {
   if (!sock) {
     logError('Socket absent');
-    return false;
+    return { ok: false, reason: 'no_socket' };
   }
-  if (!sock.user) {
+  if (!sock.user || !sock.user.id) {
     logError('Socket non connecté (pas de user)');
-    return false;
+    return { ok: false, reason: 'not_connected' };
   }
-  if (sock.ws && sock.ws.readyState !== 1) {
-    logError('Socket WebSocket non ouvert');
-    return false;
+  
+  // Check WebSocket state (protégé contre undefined)
+  const wsState = sock.ws?.readyState ?? sock.ws?.socket?.readyState;
+  if (wsState !== undefined && wsState !== 1) {
+    logError(`WebSocket non ouvert (state=${wsState})`);
+    return { ok: false, reason: 'ws_closed' };
   }
-  return true;
+  
+  return { ok: true };
 }
 
+/**
+ * Publie un statut texte sur WhatsApp
+ * @returns {Promise<{success: boolean, id?: string, reason?: string, error?: string}>}
+ */
 async function publishStatus(sock, text) {
-  if (!checkWhatsAppConnection(sock)) {
-    log('Impossible de publier le statut: Session WhatsApp non connectée');
-    return false;
+  const check = checkWhatsAppConnection(sock);
+  if (!check.ok) {
+    return { success: false, reason: check.reason };
   }
 
   try {
+    log('Envoi du statut...');
+
     const result = await sock.sendMessage('status@broadcast', {
       text: text,
+    }, {
       backgroundColor: '#0A0A0A',
       font: 3,
+      statusJidList: [],
     });
 
-    if (result && result.key && result.key.id) {
-      log(`Publication réussie (ID: ${result.key.id})`);
-      return true;
+    if (result?.key?.id) {
+      log(`✅ Publication réussie (ID: ${result.key.id})`);
+      return { success: true, id: result.key.id };
     }
 
-    log('Publication envoyée (pas de confirmation ID)');
-    return true;
+    log('⚠️ Publication envoyée sans confirmation ID');
+    return { success: true, id: null };
+
   } catch (e) {
     logError(`Échec publication: ${e.message}`);
-    console.error(e);
-    return false;
+
+    const msg = (e.message || '').toLowerCase();
+    if (
+      msg.includes('connection') ||
+      msg.includes('closed') ||
+      msg.includes('socket') ||
+      msg.includes('not open') ||
+      msg.includes('timeout') ||
+      msg.includes('stream')
+    ) {
+      logError('→ Erreur de connexion détectée, le socket doit être reconnecté');
+      return { success: false, reason: 'connection_lost', error: e.message };
+    }
+
+    return { success: false, reason: 'unknown', error: e.message };
   }
 }
 
 // ═══════════════════════════════════════════════════════
-// MAIN PUBLISH PIPELINE
+// MAIN PUBLISH PIPELINE (CORRIGÉ)
 // ═══════════════════════════════════════════════════════
 
 async function publishQuoteStatus(sock, sessionId, config) {
+  // ─── Anti-spam ───
+  const now = Date.now();
+  const sinceLast = now - lastPublishTimestamp;
+  if (sinceLast < MIN_PUBLISH_INTERVAL_MS) {
+    const wait = Math.ceil((MIN_PUBLISH_INTERVAL_MS - sinceLast) / 1000);
+    log(`⏳ Anti-spam : attends encore ${wait}s avant la prochaine publication`);
+    return false;
+  }
+
   if (statusPublicationInProgress) {
     log('Publication déjà en cours, ignoré');
     return false;
   }
   
   statusPublicationInProgress = true;
+  lastPublishTimestamp = now;
   
   try {
     // 1. Select quote
@@ -518,7 +638,12 @@ async function publishQuoteStatus(sock, sessionId, config) {
     log(`Citation sélectionnée: "${quote.text.substring(0, 50)}..." — ${quote.author}`);
     
     // 2. Format status
-    const botName = require('../config').botName || 'DJOUSSE TECH';
+    let botName = 'DJOUSSE TECH';
+    try {
+      botName = require('../config').botName || botName;
+    } catch {
+      // ignore
+    }
     let statusText = formatStatus(quote, botName);
     
     // 3. Check length
@@ -527,7 +652,6 @@ async function publishQuoteStatus(sock, sessionId, config) {
     
     if (!lengthCheck.valid) {
       log('Statut trop long, tentative citation plus courte...');
-      // Try to find a shorter quote
       const shorterQuote = selectShorterQuote(sessionId, config.noRepeatDays, 150);
       if (shorterQuote) {
         statusText = formatStatus(shorterQuote, botName);
@@ -544,15 +668,29 @@ async function publishQuoteStatus(sock, sessionId, config) {
     
     // 4. Publish
     log('Publication...');
-    const success = await publishStatus(sock, statusText);
+    const result = await publishStatus(sock, statusText);
     
-    if (success) {
-      // 5. Record history
+    if (result.success) {
       recordHistory(sessionId, quote, config.source);
       log('Publication réussie ✅');
+      return true;
     }
     
-    return success;
+    // ─── Gestion des échecs ───
+    if (result.reason === 'connection_lost' || result.reason === 'ws_closed') {
+      logError('🔌 Connexion perdue — le bot doit se reconnecter');
+      try {
+        process.emit('whatsapp:reconnect', { reason: result.reason });
+      } catch {
+        // ignore
+      }
+    } else if (result.reason === 'no_socket') {
+      logError('❌ Aucun socket fourni');
+    } else if (result.reason === 'not_connected') {
+      logError('❌ WhatsApp non connecté');
+    }
+    
+    return false;
   } catch (e) {
     logError(`Erreur pipeline: ${e.message}`);
     return false;
@@ -599,7 +737,6 @@ function getNextScheduleTime(schedule) {
       return h * 60 + m;
     }).sort((a, b) => a - b);
     
-    // Find next time today
     for (const time of times) {
       if (time > currentMinutes) {
         const h = Math.floor(time / 60);
@@ -610,7 +747,6 @@ function getNextScheduleTime(schedule) {
       }
     }
     
-    // Next time is tomorrow
     const firstTime = times[0];
     const h = Math.floor(firstTime / 60);
     const m = firstTime % 60;
@@ -619,7 +755,6 @@ function getNextScheduleTime(schedule) {
     target.setHours(h, m, 0, 0);
     return target;
   } catch {
-    // Fallback: 6 hours from now
     return new Date(Date.now() + 6 * 60 * 60 * 1000);
   }
 }
@@ -649,7 +784,7 @@ function startScheduler(sock, sessionId) {
     if (conf.schedule && conf.schedule.includes(':')) {
       const nextTime = getNextScheduleTime(conf.schedule);
       delay = nextTime.getTime() - Date.now();
-      if (delay < 0) delay = 60000; // min 1 min
+      if (delay < 60000) delay = 60000;
       log(`Prochaine publication: ${nextTime.toLocaleTimeString('fr-FR', { timeZone: 'Africa/Douala' })}`);
     } else {
       delay = conf.intervalHours * 60 * 60 * 1000;
@@ -658,7 +793,11 @@ function startScheduler(sock, sessionId) {
     
     const timer = setTimeout(async () => {
       schedulerTimers.delete(sessionId);
-      await publishQuoteStatus(sock, sessionId, conf);
+      try {
+        await publishQuoteStatus(sock, sessionId, conf);
+      } catch (e) {
+        logError(`Erreur scheduler: ${e.message}`);
+      }
       scheduleNext();
     }, delay);
     
@@ -686,10 +825,10 @@ function startCacheRefresh(intervalHours = 6) {
     clearInterval(cacheRefreshTimer);
   }
   
-  refreshCache(); // Initial refresh
+  refreshCache().catch(e => logError(`Erreur refresh initial: ${e.message}`));
   
   cacheRefreshTimer = setInterval(() => {
-    refreshCache();
+    refreshCache().catch(e => logError(`Erreur refresh: ${e.message}`));
   }, intervalHours * 60 * 60 * 1000);
   
   log(`Cache refresh démarré (toutes les ${intervalHours}h)`);
@@ -731,6 +870,7 @@ module.exports = {
   saveCache,
   refreshCache,
   isCacheValid,
+  cleanCorruptedQuotes,
   
   // History
   loadHistory,
@@ -749,16 +889,19 @@ module.exports = {
   
   // Connection check
   checkWhatsAppConnection,
+  publishStatus,
   
   // Constants
   MAX_STATUS_LENGTH,
   MAX_QUOTE_LENGTH,
+  MIN_PUBLISH_INTERVAL_MS,
   TEMPLATES,
   TIME_CATEGORIES,
   
   // State
   getStatus: () => ({
     publicationInProgress: statusPublicationInProgress,
+    lastPublishTimestamp,
     activeSchedulers: Array.from(schedulerTimers.keys()),
     cacheRefreshActive: cacheRefreshTimer !== null,
   }),
