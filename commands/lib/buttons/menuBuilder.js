@@ -75,14 +75,14 @@ async function buildMainMenu(sock, jid, quoted, page = 1) {
   items.forEach((c, i) => {
     const num = startIndex + i + 1;
     const cmdCount = c.commands ? c.commands.length : 0;
-    lines.push(`  ${c.emoji}  ${c.label}  ·  ${cmdCount} commande(s)`);
+    // label contient déjà l'emoji — ne pas le préfixer une 2e fois
+    lines.push(`  ${num}. ${c.label}  ·  ${cmdCount} commande(s)`);
   });
   lines.push('');
   lines.push(`  Page ${page}/${total}`);
   lines.push('');
-  lines.push('  👇 Choisis une catégorie');
+  lines.push('  👇 Choisis une catégorie (bouton ou numéro)');
   lines.push('✦ ─────────────── ✦');
-  lines.push('> ✦ DJOUSSE TECH ✦');
 
   const caption = lines.join('\n');
 
@@ -125,8 +125,9 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
 
   // ── Texte numéroté ──
   const lines = [];
+  const catName = cat.label.replace(cat.emoji, '').trim().toUpperCase();
   lines.push('✦ ─────────────── ✦');
-  lines.push(`   ${cat.emoji}  ${cat.label.toUpperCase().split('').join(' ')}`);
+  lines.push(`   ${cat.emoji}  ${catName.split('').join(' ')}`);
   lines.push('✦ ─────────────── ✦');
   lines.push('');
   items.forEach((c, i) => {
@@ -140,7 +141,6 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
   lines.push('  ✏️ texte • 📎 fichier');
   lines.push('  👇 Cliquez un bouton ou tapez un numéro');
   lines.push('✦ ─────────────── ✦');
-  lines.push('> ✦ DJOUSSE TECH ✦');
 
   const caption = lines.join('\n');
 
