@@ -61,16 +61,19 @@ async function sendButtons(sock, jid, options = {}) {
     text = '',
     footer = cfg.defaultFooter,
     buttons = [],
-    quoted = null
+    quoted = null,
+    image = null
   } = options;
 
   if (!cfg.enabled) {
-    return fallbackText(sock, jid, { title, text, footer, buttons });
+    await fallbackText(sock, jid, { title, text, footer, buttons });
+    return true;
   }
 
   let btns = Array.isArray(buttons) ? buttons : [];
   if (!btns.length) {
-    return fallbackText(sock, jid, { title, text, footer, buttons: [] });
+    await fallbackText(sock, jid, { title, text, footer, buttons: [] });
+    return true;
   }
 
   if (btns.length > cfg.maxButtons) {
@@ -91,6 +94,7 @@ async function sendButtons(sock, jid, options = {}) {
         text,
         footer,
         aimode,
+        ...(image ? { image } : {}),
         buttons: formattedButtons
       }, quoted ? { quoted } : undefined);
 
@@ -104,7 +108,8 @@ async function sendButtons(sock, jid, options = {}) {
   }
 
   if (cfg.fallbackToText) {
-    return fallbackText(sock, jid, { title, text, footer, buttons: formattedButtons });
+    await fallbackText(sock, jid, { title, text, footer, buttons: formattedButtons });
+    return true;
   }
   return false;
 }

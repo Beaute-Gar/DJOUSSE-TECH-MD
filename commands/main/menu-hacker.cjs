@@ -150,15 +150,16 @@ function buildMenuText(grouped) {
 
 cmd({
     pattern: 'menu',
-    desc: 'Menu complet DJOUSSE TECH',
+    desc: 'Menu interactif DJOUSSE TECH (boutons + navigation)',
     category: 'MAIN',
     filename: __filename,
 }, async (conn, m, cmdList, ctx) => {
     try {
         const args = (ctx.args || []).map(a => a.toLowerCase());
-        const grouped = buildCommandsGroup(commandMap);
 
+        // Recherche texte : .menu <module> → liste texte du module
         if (args.length > 0) {
+            const grouped = buildCommandsGroup(commandMap);
             const query = args[0].replace(/^\./, '').toUpperCase();
             let cat = Object.keys(grouped).find(c => c === query)
                 || Object.keys(grouped).find(c => c.startsWith(query) || query.startsWith(c));
@@ -185,28 +186,9 @@ cmd({
             return ctx.reply(catLines.join('\n'));
         }
 
-        const menuText = buildMenuText(grouped);
-
-        if (!validateMenu(menuText)) {
-            console.error('[MENU] Validation failed — menu contient des valeurs invalides');
-            return ctx.reply('⚠️ Erreur de génération du menu.');
-        }
-
-        const imgPath = getNextMenuImage();
-        if (imgPath) {
-            try {
-                await conn.sendMessage(m.chat, {
-                    image: { url: imgPath },
-                    caption: menuText,
-                    mentions: [m.sender]
-                }, { quoted: m });
-                return;
-            } catch (e) {
-                // fallback vers texte brut
-            }
-        }
-
-        await ctx.reply(menuText);
+        // Menu principal : HYBRIDE interactif (image + texte numéroté + boutons)
+        const { buildMainMenu } = require('../lib/buttons/menuBuilder');
+        await buildMainMenu(conn, m.chat, m, 1);
     } catch (e) {
         console.error('[MENU]', e.message);
         return ctx.reply('⚠️ Erreur menu: ' + safeStr(e.message, 'inconnue'));

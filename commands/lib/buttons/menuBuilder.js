@@ -1,15 +1,17 @@
 /**
- * Constructeur de menus interactifs - Version NATIVE FLOW
- * Utilise single_select pour afficher jusqu'à 10 boutons
+ * Constructeur de menus interactifs HYBRIDES
+ * Texte numéroté (TOUT visible) + Boutons (navigation)
  * Types : A = direct, B = saisie texte, C = envoi fichier
+ * WhatsApp limite : 3 boutons max par message
  * DJOUSSE-TECH-MD
  */
 
-const { sendButtons, sendInteractiveMessage, fallbackText, isPrivate, isGroup } = require('./buttonSender');
+const fs = require('fs');
+const { sendButtons, fallbackText, isPrivate, isGroup } = require('./buttonSender');
 const sessionManager = require('./sessionManager');
 const menuConfig = require('./menuConfig');
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 8;
 
 function paginate(items, page) {
   const total = Math.ceil(items.length / ITEMS_PER_PAGE);
@@ -25,133 +27,138 @@ function paginate(items, page) {
   };
 }
 
-function typeIcon(type) {
-  if (type === 'B') return ' ✏️';
-  if (type === 'C') return ' 📎';
-  return '';
+// ═══════════════════════════════════════════════
+// ENVOI AVEC IMAGE (si disponible)
+// ═══════════════════════════════════════════════
+async function sendWithImage(sock, jid, imagePath, caption, buttons, quoted) {
+  // Vérifier si l'image existe — envoyer via gifted-btns (header image + nativeFlow buttons)
+  if (imagePath && fs.existsSync(imagePath)) {
+    try {
+      const imageBuffer = fs.readFileSync(imagePath);
+      const ok = await sendButtons(sock, jid, {
+        title: '',
+        text: caption,
+        footer: '✦ DJOUSSE TECH ✦',
+        image: { buffer: imageBuffer },
+        buttons: buttons || [],
+        quoted
+      });
+      if (ok) return true;
+    } catch (e) {
+      console.warn('[MENU] Image échouée, fallback texte:', e.message);
+    }
+  }
+  // Fallback : texte seul avec boutons
+  await sendButtons(sock, jid, {
+    title: '',
+    text: caption,
+    footer: '✦ DJOUSSE TECH ✦',
+    buttons: buttons || [],
+    quoted
+  });
+  return true;
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // NIVEAU 1 : Menu principal (catégories)
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 async function buildMainMenu(sock, jid, quoted, page = 1) {
   const cats = menuConfig.categories;
-  const { items, total, hasNext, hasPrev } = paginate(cats, page);
+  const { items, total, hasNext, hasPrev, startIndex } = paginate(cats, page);
 
-  const text = `👋 *MENU PRINCIPAL*\n\nChoisissez une catégorie :\n_Page ${page}/${total}_`;
+  // ── Texte numéroté avec TOUTES les catégories de la page ──
+  const lines = [];
+  lines.push('✦ ─────────────── ✦');
+  lines.push('   📋  M E N U  P R I N C I P A L');
+  lines.push('✦ ─────────────── ✦');
+  lines.push('');
+  items.forEach((c, i) => {
+    const num = startIndex + i + 1;
+    const cmdCount = c.commands ? c.commands.length : 0;
+    lines.push(`  ${c.emoji}  ${c.label}  ·  ${cmdCount} commande(s)`);
+  });
+  lines.push('');
+  lines.push(`  Page ${page}/${total}`);
+  lines.push('');
+  lines.push('  👇 Choisis une catégorie');
+  lines.push('✦ ─────────────── ✦');
+  lines.push('> ✦ DJOUSSE TECH ✦');
 
-  // ── Si ≤3 catégories et 1 seule page → boutons simples ──
-  if (items.length <= 3 && total === 1) {
-    const buttons = items.map(c => ({ id: c.id, text: c.label }));
-    return sendButtons(sock, jid, {
-      title: '👋 MENU PRINCIPAL',
-      text,
-      footer: 'DJOUSSE-TECH-MD',
-      buttons,
-      quoted
-    });
-  }
+  const caption = lines.join('\n');
 
-  // ── Sinon → single_select (jusqu'à 10 catégories) ──
-  const rows = items.map(c => ({
-    title: c.label,
-    description: `${c.commands.length} commande(s)`,
-    id: c.id
-  }));
+  // ── Boutons de navigation (max 3) ──
+  const nav = [];
+  if (hasPrev) nav.push({ id: `page_main_${page - 1}`, text: '◀️' });
+  if (hasNext) nav.push({ id: `page_main_${page + 1}`, text: '▶️' });
+  nav.push({ id: 'btn_help', text: '❓' });
 
-  const sections = [{ title: '📂 Catégories', rows }];
+  const finalButtons = nav.slice(0, 3);
 
-  if (hasNext || hasPrev) {
-    const navRows = [];
-    if (hasPrev) navRows.push({ title: '◀️ Page précédente', description: 'Revenir en arrière', id: `page_main_${page - 1}` });
-    if (hasNext) navRows.push({ title: '▶️ Page suivante', description: 'Voir plus de catégories', id: `page_main_${page + 1}` });
-    navRows.push({ title: '❓ Aide', description: 'Comment utiliser le menu', id: 'btn_help' });
-    sections.push({ title: '🧭 Navigation', rows: navRows });
-  }
-
+  // ── Contexte pour interception numéro ──
   sessionManager.setMenuContext(jid, {
     type: 'main',
     page,
     items: items.map((c, i) => ({
-      num: (page - 1) * ITEMS_PER_PAGE + i + 1,
+      num: startIndex + i + 1,
       id: c.id,
       label: c.label
     }))
   });
 
   try {
-    await sendInteractiveMessage(sock, jid, {
-      text,
-      footer: 'DJOUSSE-TECH-MD',
-      interactiveButtons: [{
-        name: 'single_select',
-        buttonParamsJson: JSON.stringify({
-          title: '📂 Voir les catégories',
-          sections
-        })
-      }],
-      quoted
-    });
+    await sendWithImage(sock, jid, menuConfig.menuImage, caption, finalButtons, quoted);
   } catch (e) {
-    console.error('[MENU] single_select échoué, fallback:', e.message);
-    const fallbackBtns = items.slice(0, 3).map(c => ({ id: c.id, text: c.label }));
-    if (hasNext) fallbackBtns.push({ id: `page_main_${page + 1}`, text: '▶️ Suivant' });
-    await sendButtons(sock, jid, {
-      title: '👋 MENU PRINCIPAL',
-      text,
-      footer: 'DJOUSSE-TECH-MD',
-      buttons: fallbackBtns.slice(0, 3),
-      quoted
-    });
+    console.error('[MENU] Erreur:', e.message);
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // NIVEAU 2 : Catégorie (commandes)
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
   const cat = menuConfig.categories.find(c => c.id === categoryId);
   if (!cat) {
-    return sock.sendMessage(jid, { text: '❌ Catégorie introuvable.' }, { quoted });
+    return sock.sendMessage(jid, { text: 'Catégorie introuvable.' }, { quoted });
   }
 
-  const { items, total, hasNext, hasPrev } = paginate(cat.commands, page);
+  const { items, total, hasNext, hasPrev, startIndex } = paginate(cat.commands, page);
 
-  const text = `${cat.emoji || '📂'} *${cat.label}*\n\nChoisissez une commande :\n_Page ${page}/${total}_`;
+  // ── Texte numéroté ──
+  const lines = [];
+  lines.push('✦ ─────────────── ✦');
+  lines.push(`   ${cat.emoji}  ${cat.label.toUpperCase().split('').join(' ')}`);
+  lines.push('✦ ─────────────── ✦');
+  lines.push('');
+  items.forEach((c, i) => {
+    const num = startIndex + i + 1;
+    const typeIcon = c.type === 'B' ? ' ✏️' : c.type === 'C' ? ' 📎' : '';
+    lines.push(`  ${num}. ${c.label}${typeIcon}`);
+  });
+  lines.push('');
+  lines.push(`  Page ${page}/${total}`);
+  lines.push('');
+  lines.push('  ✏️ texte • 📎 fichier');
+  lines.push('  👇 Cliquez un bouton ou tapez un numéro');
+  lines.push('✦ ─────────────── ✦');
+  lines.push('> ✦ DJOUSSE TECH ✦');
 
-  // ── Si ≤3 commandes et 1 seule page → boutons simples ──
-  if (items.length <= 3 && total === 1) {
-    const buttons = items.map(c => ({ id: c.id, text: c.label }));
-    return sendButtons(sock, jid, {
-      title: cat.label,
-      text,
-      footer: 'DJOUSSE-TECH-MD',
-      buttons,
-      quoted
-    });
-  }
+  const caption = lines.join('\n');
 
-  // ── Sinon → single_select (jusqu'à 10 commandes) ──
-  const rows = items.map(c => ({
-    title: c.label,
-    description: c.prompt ? c.prompt.substring(0, 60) : `Commande ${c.type}`,
-    id: c.id
-  }));
+  // ── Boutons de navigation (max 3) ──
+  const nav = [];
+  if (hasPrev) nav.push({ id: `page_cat_${categoryId}_${page - 1}`, text: '◀️' });
+  if (hasNext) nav.push({ id: `page_cat_${categoryId}_${page + 1}`, text: '▶️' });
+  nav.push({ id: 'back_menu', text: '🏠' });
 
-  const sections = [{ title: `${cat.emoji || '📂'} ${cat.label}`, rows }];
+  const finalButtons = nav.slice(0, 3);
 
-  const navRows = [];
-  if (hasPrev) navRows.push({ title: '◀️ Page précédente', description: 'Revenir en arrière', id: `page_cat_${categoryId}_${page - 1}` });
-  if (hasNext) navRows.push({ title: '▶️ Page suivante', description: 'Voir plus de commandes', id: `page_cat_${categoryId}_${page + 1}` });
-  navRows.push({ title: '🏠 Menu principal', description: 'Retour au menu', id: 'back_menu' });
-  sections.push({ title: '🧭 Navigation', rows: navRows });
-
+  // ── Contexte pour interception numéro ──
   sessionManager.setMenuContext(jid, {
     type: 'category',
     categoryId,
     page,
     items: items.map((c, i) => ({
-      num: (page - 1) * ITEMS_PER_PAGE + i + 1,
+      num: startIndex + i + 1,
       id: c.id,
       label: c.label,
       commandId: c.id
@@ -159,43 +166,24 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
   });
 
   try {
-    await sendInteractiveMessage(sock, jid, {
-      text,
-      footer: 'DJOUSSE-TECH-MD',
-      interactiveButtons: [{
-        name: 'single_select',
-        buttonParamsJson: JSON.stringify({
-          title: `${cat.emoji || '📂'} Voir les commandes`,
-          sections
-        })
-      }],
-      quoted
-    });
+    const catImage = cat.image || menuConfig.menuImage || menuConfig.defaultImage;
+    await sendWithImage(sock, jid, catImage, caption, finalButtons, quoted);
   } catch (e) {
-    console.error('[MENU] single_select catégorie échoué:', e.message);
-    const fallbackBtns = items.slice(0, 3).map(c => ({ id: c.id, text: c.label }));
-    if (hasNext) fallbackBtns.push({ id: `page_cat_${categoryId}_${page + 1}`, text: '▶️ Suivant' });
-    await sendButtons(sock, jid, {
-      title: cat.label,
-      text,
-      footer: 'DJOUSSE-TECH-MD',
-      buttons: fallbackBtns.slice(0, 3),
-      quoted
-    });
+    console.error('[MENU] Erreur:', e.message);
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // NIVEAU 3 : Exécution selon le TYPE
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 async function handleCommandClick(sock, jid, message, commandId) {
   const cmd = findCommandById(commandId);
   if (!cmd) {
     return sendButtons(sock, jid, {
       title: '⚠️ ERREUR',
       text: `Commande *${commandId}* introuvable.`,
-      footer: 'DJOUSSE-TECH-MD',
-      buttons: [{ id: 'back_menu', text: '🏠 Menu' }],
+      footer: '✦ DJOUSSE TECH ✦',
+      buttons: [{ id: 'back_menu', text: '🏠' }],
       quoted: message
     });
   }
@@ -213,7 +201,6 @@ async function handleCommandClick(sock, jid, message, commandId) {
           }
         }
       };
-      const args = [];
       const ctx = {
         from: jid,
         sender: message.key.participant || jid,
@@ -228,30 +215,29 @@ async function handleCommandClick(sock, jid, message, commandId) {
       const { commandMap } = require('../../command.cjs');
       const cmdObj = commandMap.get(cmdName);
       if (cmdObj && cmdObj.execute) {
-        return await cmdObj.execute(sock, fakeMsg, args, ctx);
+        return await cmdObj.execute(sock, fakeMsg, [], ctx);
       }
 
       return sock.sendMessage(jid, {
-        text: `Exécutez .${cmdName} en tapant la commande.`
+        text: `Tapez .${cmdName}`
       }, { quoted: message });
     } catch (e) {
-      console.error(`[MENU] Erreur TYPE A ${cmdName}:`, e.message);
+      console.error(`[MENU] Erreur ${cmdName}:`, e.message);
       return sock.sendMessage(jid, {
-        text: `❌ Erreur: ${e.message}\nTapez .${cmdName} manuellement.`
+        text: `Erreur: ${e.message}`
       }, { quoted: message });
     }
   }
 
   if (cmd.type === 'B') {
     sessionManager.setWaiting(jid, commandId, 'waiting_input');
-    const prompt = cmd.prompt || `✏️ Envoyez le texte pour *${cmd.label}* :`;
     return sendButtons(sock, jid, {
       title: cmd.label,
-      text: prompt,
-      footer: '⏱️ Vous avez 5 minutes pour répondre',
+      text: cmd.prompt || `Envoyez le texte pour *${cmd.label}* :`,
+      footer: '⏱️ 5 minutes',
       buttons: [
-        { id: 'cancel_wait', text: '❌ Annuler' },
-        { id: 'back_menu', text: '🏠 Menu' }
+        { id: 'cancel_wait', text: '❌' },
+        { id: 'back_menu', text: '🏠' }
       ],
       quoted: message
     });
@@ -259,22 +245,19 @@ async function handleCommandClick(sock, jid, message, commandId) {
 
   if (cmd.type === 'C') {
     sessionManager.setWaiting(jid, commandId, 'waiting_file');
-    const prompt = cmd.prompt || `📎 Envoyez un fichier pour *${cmd.label}* :`;
     return sendButtons(sock, jid, {
       title: cmd.label,
-      text: prompt,
-      footer: '⏱️ Vous avez 5 minutes pour envoyer',
+      text: cmd.prompt || `Envoyez un fichier pour *${cmd.label}* :`,
+      footer: '⏱️ 5 minutes',
       buttons: [
-        { id: 'cancel_wait', text: '❌ Annuler' },
-        { id: 'back_menu', text: '🏠 Menu' }
+        { id: 'cancel_wait', text: '❌' },
+        { id: 'back_menu', text: '🏠' }
       ],
       quoted: message
     });
   }
 
-  return sock.sendMessage(jid, {
-    text: `❌ Type de commande inconnu: ${cmd.type}`
-  }, { quoted: message });
+  return sock.sendMessage(jid, { text: `Type inconnu: ${cmd.type}` }, { quoted: message });
 }
 
 function findCommandById(cmdId) {
@@ -291,5 +274,6 @@ module.exports = {
   handleCommandClick,
   findCommandById,
   paginate,
+  sendWithImage,
   ITEMS_PER_PAGE
 };

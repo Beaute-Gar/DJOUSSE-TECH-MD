@@ -388,7 +388,22 @@ const handleMessage = async (sock, msg) => {
     const args = sanitizedBody.slice(config.prefix.length).trim().split(/\s+/);
     const commandName = args.shift().toLowerCase();
     const command = commands.get(commandName);
-    if (!command) return;
+
+    // ═══ CATCH-ALL : Commandes désactivées → rediriger vers .menu ═══
+    if (!command) {
+      if (commandName === 'menu') return; // .menu est la seule commande publique
+      if (isOwner(sock, sender)) return; // Les owners gardent l'accès complet
+
+      const djousseUI = require('./commands/lib/djousse-ui.cjs');
+      const redirectText = djousseUI.boxWithFooter('COMMANDE DÉSACTIVÉE', [
+        { label: 'Statut', value: "Cette commande n'est plus disponible" },
+        { label: 'Solution', value: 'Tapez .menu pour accéder à tout' },
+      ]);
+      return antiBan.queueMessage(async () => {
+        await presence.simulateTyping(from);
+        return safeSend(sock, from, { text: redirectText }, { quoted: msg });
+      });
+    }
 
     // Permission checks
     if (config.selfMode && !isOwner(sock, sender)) return;

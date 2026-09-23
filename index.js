@@ -31,6 +31,12 @@ const zlib = require('zlib');
 const processedMessages = new Set();
 setInterval(() => processedMessages.clear(), 5 * 60 * 1000);
 
+// ─── Anti-boucle reconnexion (440 CONFLICT) + timers une seule fois ───
+let conflictCount = 0;
+const CONFLICT_MAX_RETRIES = 8;
+let weeklyStatsInterval = null;
+let statusTestRan = false;
+
 /* ═══════════════════════════════════════════════════════════════
    FILTRE : Ignore les erreurs Bad MAC de libsignal
    ═══════════════════════════════════════════════════════════════ */
@@ -263,7 +269,7 @@ async function startSession(sessionId, options = {}) {
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       // ─── Détection restriction WhatsApp ───
-      // 440 = conflict (session remplacée) → reconnexion uniquement, PAS restriction
+      // 440 = conflict (session remplacée / autre instance) → reconnexion avec backoff, PAS restriction
       // 401 = logged out, 403 = banned → restriction
       if (statusCode === 401 || statusCode === 403) {
         console.error(`🚨 COMPTE RESTREINT — code ${statusCode}`);
@@ -272,8 +278,6 @@ async function startSession(sessionId, options = {}) {
           antiBan.setRestricted(`Connection closed with code ${statusCode}`, statusCode);
           process.emit('whatsapp:stop-all', { reason: `restriction_${statusCode}` });
         } catch {}
-      } else if (statusCode === 440) {
-        console.log(`⚠️ CONFLICT (440) — reconnexion dans 5s...`);
       }
 
       if (statusCode === DisconnectReason.loggedOut) {
@@ -283,12 +287,27 @@ async function startSession(sessionId, options = {}) {
         sessionManager.setStatus(sessionId, 'DISCONNECTED');
         bus.emit('session:disconnected', { sessionId, statusCode });
         if (shouldReconnect) {
+          // Backoff exponentiel sur CONFLICT (440)
+          let delay = 3000;
+          if (statusCode === 440) {
+            conflictCount++;
+            delay = Math.min(60000, 3000 * Math.pow(2, Math.min(conflictCount, 5)));
+            console.log(`⚠️ CONFLICT (440) — tentative ${conflictCount}/${CONFLICT_MAX_RETRIES} — reconnexion dans ${delay / 1000}s...`);
+            if (conflictCount >= CONFLICT_MAX_RETRIES) {
+              console.error('🛑 CONFLICT (440) persistant — un autre appareil ou une autre instance détient la session.');
+              console.error('   → Fermez l\'autre session/instance, puis redémarrer le bot.');
+              sessionManager.setStatus(sessionId, 'CONFLICT');
+              bus.emit('session:disconnected', { sessionId, statusCode, fatal: true });
+              return;
+            }
+          }
           sessionManager.setStatus(sessionId, 'RECONNECTING');
           bus.emit('session:reconnecting', { sessionId, statusCode });
-          setTimeout(() => startSession(sessionId, options), 3000);
+          setTimeout(() => startSession(sessionId, options), delay);
         }
       }
     } else if (connection === 'open') {
+      conflictCount = 0;
       const phone = sock.user.id.split(':')[0];
       sessionManager.updateSession(sessionId, { phone, status: 'CONNECTED' });
       sessionManager.setStatus(sessionId, 'CONNECTED');
@@ -330,10 +349,11 @@ async function startSession(sessionId, options = {}) {
         statusRotator.startRotator(() => sock);
       } catch (e) {}
 
-      // Initialize weekly stats check
+      // Initialize weekly stats check (timer unique — pas de fuite à chaque reconnexion)
       try {
         const { sendWeeklyStats } = require('./lib/weekly-stats.cjs');
-        setInterval(() => sendWeeklyStats(sock), 300000); // Check every 5 min
+        if (weeklyStatsInterval) clearInterval(weeklyStatsInterval);
+        weeklyStatsInterval = setInterval(() => sendWeeklyStats(sock), 300000); // Check every 5 min
       } catch (e) {}
 
       // Initialize reminder scheduler
@@ -365,18 +385,22 @@ async function startSession(sessionId, options = {}) {
         statusQuotes.updateSessionConfig(sessionId, { enabled: true });
         console.log('[STATUS-QUOTE] ✅ Config session forcée: enabled=true');
 
-        // Démarre le scheduler quoi qu'il arrive
+        // Redémarre le scheduler avec le socket courant (l'ancien timer tient un sock mort après reconnexion)
+        statusQuotes.stopScheduler(sessionId);
         statusQuotes.startScheduler(sock, sessionId);
 
-        // BONUS : publie une citation 2 min après connexion (test visuel)
-        setTimeout(async () => {
-          try {
-            console.log('[STATUS-QUOTE] 🧪 Test de publication automatique…');
-            await statusQuotes.forcePublishNow(sock, sessionId);
-          } catch (e) {
-            console.error('[STATUS-QUOTE] Test échoué:', e.message);
-          }
-        }, 2 * 60 * 1000); // 2 minutes
+        // Test de publication une seule fois par processus (pas à chaque reconnexion)
+        if (!statusTestRan) {
+          statusTestRan = true;
+          setTimeout(async () => {
+            try {
+              console.log('[STATUS-QUOTE] 🧪 Test de publication automatique…');
+              await statusQuotes.forcePublishNow(sock, sessionId);
+            } catch (e) {
+              console.error('[STATUS-QUOTE] Test échoué:', e.message);
+            }
+          }, 2 * 60 * 1000); // 2 minutes
+        }
 
       } catch (e) {
         console.error('[STATUS-QUOTE] Init error:', e.message, e.stack);
