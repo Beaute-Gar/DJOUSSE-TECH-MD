@@ -284,6 +284,7 @@ async function startSession(sessionId, options = {}) {
     if (connection === 'close') {
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+      console.log(`[SOCKET] 🔌 Fermeture (code=${statusCode ?? 'inconnu'}${lastDisconnect?.error?.message ? ` — ${lastDisconnect.error.message}` : ''})`);
 
       // La connexion n'a pas tenu 60s → on n'autorise pas le reset du compteur 440
       if (conflictStableTimer) {
@@ -326,10 +327,12 @@ async function startSession(sessionId, options = {}) {
           }
           sessionManager.setStatus(sessionId, 'RECONNECTING');
           bus.emit('session:reconnecting', { sessionId, statusCode });
+          console.log(`[SOCKET] 🔁 Reconnexion dans ${delay / 1000}s...`);
           setTimeout(() => startSession(sessionId, options), delay);
         }
       }
     } else if (connection === 'open') {
+      console.log('[SOCKET] ✅ CONNECTÉ —', sock.user?.id || 'session active');
       // Reset du compteur 440 UNIQUEMENT après 60s de connexion stable
       // (un open immédiat suivi d'un 440 ne doit pas remettre le compteur à zéro)
       if (conflictStableTimer) clearTimeout(conflictStableTimer);
