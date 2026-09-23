@@ -438,6 +438,35 @@ async function startSession(sessionId, options = {}) {
         console.error('[STATUS-QUOTE] Init error:', e.message, e.stack);
       }
 
+      // 🧪 Auto-test .menu : si le fichier database/SELF_TEST existe → simule ".menu" envoyé par le owner
+      try {
+        const selfTestTrigger = path.join(__dirname, 'database', 'SELF_TEST');
+        if (fs.existsSync(selfTestTrigger)) {
+          fs.unlinkSync(selfTestTrigger);
+          console.log('[SELF-TEST] 🧪 Déclenchement — simulation de ".menu" (owner)…');
+          setTimeout(async () => {
+            try {
+              const selfJid = `${sock.user?.id?.split(':')[0]}@s.whatsapp.net`;
+              const fakeMsg = {
+                key: {
+                  remoteJid: selfJid,
+                  fromMe: false,
+                  id: `SELFTEST${Date.now().toString(36).toUpperCase()}`
+                },
+                message: { conversation: `${config.prefix}menu` },
+                messageTimestamp: Math.floor(Date.now() / 1000)
+              };
+              await handler.handleMessage(sock, fakeMsg);
+              console.log('[SELF-TEST] ✅ .menu exécuté — la réponse doit arriver dans le chat "vous-même"');
+            } catch (e) {
+              console.error('[SELF-TEST] ❌', e.message);
+            }
+          }, 5000);
+        }
+      } catch (e) {
+        console.error('[SELF-TEST] ❌', e.message);
+      }
+
       // Clean old messages
       const now = Date.now();
       for (const [jid, chatMsgs] of store.messages.entries()) {
@@ -475,6 +504,12 @@ async function startSession(sessionId, options = {}) {
 
       processedMessages.add(msgId);
       sessionManager.incrementStat(sessionId, 'messagesReceived');
+
+      // Diagnostic : tracer chaque message reçu
+      try {
+        const preview = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').slice(0, 60);
+        console.log(`[MSG] ${msg.key.fromMe ? 'fromMe' : 'REÇU'} → ${from}${preview ? ` :: ${preview}` : ''}`);
+      } catch {}
 
       bus.emit('message:received', {
         sessionId,
