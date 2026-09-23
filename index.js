@@ -256,7 +256,7 @@ async function startSession(sessionId, options = {}) {
   sock.ev.on('messages.upsert', () => { lastActivity = Date.now(); });
 
   const watchdogInterval = setInterval(async () => {
-    if (Date.now() - lastActivity > INACTIVITY_TIMEOUT && sock.ws.readyState === 1) {
+    if (Date.now() - lastActivity > INACTIVITY_TIMEOUT && (sock.ws?.isOpen === true || sock.ws?.socket?.readyState === 1)) {
       bus.emit('session:reconnecting', { sessionId, reason: 'inactivity' });
       await sock.end(undefined, undefined, { reason: 'inactive' });
       clearInterval(watchdogInterval);

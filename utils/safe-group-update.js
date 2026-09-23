@@ -44,7 +44,7 @@ function resolveTarget(target, meta) {
 async function waitForConnection(conn, maxWaitMs = 5000) {
     const start = Date.now();
     while (Date.now() - start < maxWaitMs) {
-        if (conn?.ws?.readyState === 1 && conn?.user?.id) {
+        if ((conn?.ws?.isOpen === true || conn?.ws?.socket?.readyState === 1) && conn?.user?.id) {
             return true;
         }
         await new Promise(r => setTimeout(r, 300));
