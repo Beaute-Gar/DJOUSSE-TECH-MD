@@ -33,9 +33,12 @@ setInterval(() => processedMessages.clear(), 5 * 60 * 1000);
 
 // ─── Anti-boucle reconnexion (440 CONFLICT) + timers une seule fois ───
 let conflictCount = 0;
+let conflictStableTimer = null;
 const CONFLICT_MAX_RETRIES = 8;
 let weeklyStatsInterval = null;
 let statusTestRan = false;
+let activeSock = null;
+let activeWatchdog = null;
 
 /* ═══════════════════════════════════════════════════════════════
    FILTRE : Ignore les erreurs Bad MAC de libsignal
@@ -194,6 +197,18 @@ async function startSession(sessionId, options = {}) {
   sessionManager.setStatus(sessionId, 'CONNECTING');
   bus.emit('session:connecting', { sessionId });
 
+  // Détruire l'ancien socket AVANT d'en créer un nouveau (évite les conflits 440 internes)
+  if (activeWatchdog) {
+    clearInterval(activeWatchdog);
+    activeWatchdog = null;
+  }
+  if (activeSock) {
+    try { activeSock.ev.removeAllListeners(); } catch {}
+    try { activeSock.end(undefined); } catch {}
+    try { activeSock.ws?.close(); } catch {}
+    activeSock = null;
+  }
+
   const sock = makeWASocket({
     version,
     logger: suppressedLogger,
@@ -204,6 +219,7 @@ async function startSession(sessionId, options = {}) {
     markOnlineOnConnect: false,
     getMessage: async () => undefined
   });
+  activeSock = sock;
 
   store.bind(sock.ev);
   sessionManager.setSocket(sessionId, sock);
@@ -247,6 +263,7 @@ async function startSession(sessionId, options = {}) {
       setTimeout(() => startSession(sessionId, options), 5000);
     }
   }, 5 * 60 * 1000);
+  activeWatchdog = watchdogInterval;
 
   sock.ev.on('connection.update', (update) => {
     if (update.connection === 'open') lastActivity = Date.now();
@@ -267,6 +284,12 @@ async function startSession(sessionId, options = {}) {
     if (connection === 'close') {
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+      // La connexion n'a pas tenu 60s → on n'autorise pas le reset du compteur 440
+      if (conflictStableTimer) {
+        clearTimeout(conflictStableTimer);
+        conflictStableTimer = null;
+      }
 
       // ─── Détection restriction WhatsApp ───
       // 440 = conflict (session remplacée / autre instance) → reconnexion avec backoff, PAS restriction
@@ -307,7 +330,13 @@ async function startSession(sessionId, options = {}) {
         }
       }
     } else if (connection === 'open') {
-      conflictCount = 0;
+      // Reset du compteur 440 UNIQUEMENT après 60s de connexion stable
+      // (un open immédiat suivi d'un 440 ne doit pas remettre le compteur à zéro)
+      if (conflictStableTimer) clearTimeout(conflictStableTimer);
+      conflictStableTimer = setTimeout(() => {
+        conflictCount = 0;
+        conflictStableTimer = null;
+      }, 60 * 1000);
       const phone = sock.user.id.split(':')[0];
       sessionManager.updateSession(sessionId, { phone, status: 'CONNECTED' });
       sessionManager.setStatus(sessionId, 'CONNECTED');
