@@ -284,7 +284,10 @@ function deduplicateQuotes(quotes) {
   });
 }
 
-async function fetchFromZenQuotes() {
+async function fetchFromZenQuotes(retryCount = 0) {
+  const MAX_RETRIES = 2;
+  const RETRY_DELAY = 5000; // 5 secondes
+
   try {
     log('Tentative ZenQuotes...');
     const data = await fetchJSON(ZENQUOTES_URL, 15000);
@@ -295,6 +298,17 @@ async function fetchFromZenQuotes() {
     log(`ZenQuotes: ${valid.length} citations récupérées`);
     return valid;
   } catch (e) {
+    const msg = (e.message || '').toLowerCase();
+
+    // Retry sur 429 (rate limit)
+    if (msg.includes('429') || msg.includes('rate limited')) {
+      if (retryCount < MAX_RETRIES) {
+        log(`⏳ ZenQuotes 429 — retry ${retryCount + 1}/${MAX_RETRIES} dans ${RETRY_DELAY / 1000}s`);
+        await new Promise(r => setTimeout(r, RETRY_DELAY));
+        return fetchFromZenQuotes(retryCount + 1);
+      }
+    }
+
     logError(`API ZenQuotes indisponible: ${e.message}`);
     return null;
   }

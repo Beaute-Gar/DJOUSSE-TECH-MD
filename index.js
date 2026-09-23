@@ -263,13 +263,17 @@ async function startSession(sessionId, options = {}) {
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       // ─── Détection restriction WhatsApp ───
-      if (statusCode === 401 || statusCode === 403 || statusCode === 440) {
+      // 440 = conflict (session remplacée) → reconnexion uniquement, PAS restriction
+      // 401 = logged out, 403 = banned → restriction
+      if (statusCode === 401 || statusCode === 403) {
         console.error(`🚨 COMPTE RESTREINT — code ${statusCode}`);
         try {
           const antiBan = require('./lib/anti-ban.cjs');
           antiBan.setRestricted(`Connection closed with code ${statusCode}`, statusCode);
           process.emit('whatsapp:stop-all', { reason: `restriction_${statusCode}` });
         } catch {}
+      } else if (statusCode === 440) {
+        console.log(`⚠️ CONFLICT (440) — reconnexion dans 5s...`);
       }
 
       if (statusCode === DisconnectReason.loggedOut) {
