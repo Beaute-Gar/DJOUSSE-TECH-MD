@@ -161,7 +161,7 @@ async function generatePairCode(phoneNumber, sessionId) {
       sock.ev.on('creds.update', saveCreds);
 
       sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
+        const { connection, lastDisconnect } = update;
 
         if (connection === 'open') {
           // Successfully connected!
@@ -207,37 +207,39 @@ async function generatePairCode(phoneNumber, sessionId) {
             }, 3000);
           }
         }
-
-        // Generate pair code when requested
-        if (qr) {
-          console.log(`[Pairing] QR reçu pour ${phoneNumber}, génération du code...`);
-
-          try {
-            const code = await sock.requestPairingCode(phoneNumber);
-            console.log(`[Pairing] Code généré: ${code}`);
-
-            pairingSessions.set(sessionId, {
-              ...pairingSessions.get(sessionId),
-              status: 'code_ready',
-              pairCode: code,
-            });
-
-            io.emit('pair:' + sessionId, {
-              status: 'code_ready',
-              pairCode: code,
-            });
-
-          } catch (err) {
-            console.error('[Pairing] Erreur génération code:', err.message);
-            clearTimeout(timeout);
-            resolve({ error: 'Erreur génération code: ' + err.message });
-          }
-        }
       });
 
       sock.ev.on('error', (err) => {
         console.error('[Pairing] Socket error:', err.message);
       });
+
+      // ─── PAIRING CODE — appel DIRECT (référence Baileys) ─────────
+      // APRÈS tous les listeners : waitForSocketOpen peut bloquer.
+      // Pas dans l'event qr : il se régénère et invalide le code précédent.
+      if (!state.creds.registered) {
+        try {
+          const cleanPhone = String(phoneNumber).replace(/\D/g, '');
+          await sock.waitForSocketOpen();
+          const code = await sock.requestPairingCode(cleanPhone);
+          console.log(`[Pairing] Code généré: ${code}`);
+
+          pairingSessions.set(sessionId, {
+            ...pairingSessions.get(sessionId),
+            status: 'code_ready',
+            pairCode: code,
+          });
+
+          io.emit('pair:' + sessionId, {
+            status: 'code_ready',
+            pairCode: code,
+          });
+        } catch (err) {
+          console.error('[Pairing] Erreur génération code:', err.message);
+          clearTimeout(timeout);
+          resolve({ error: 'Erreur génération code: ' + err.message });
+          return;
+        }
+      }
 
     } catch (err) {
       clearTimeout(timeout);

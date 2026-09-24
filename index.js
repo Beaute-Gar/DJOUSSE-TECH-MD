@@ -225,32 +225,7 @@ async function startSession(sessionId, options = {}) {
 
   store.bind(sock.ev);
   sessionManager.setSocket(sessionId, sock);
-
-  // Pairing code: écouter l'event qr (se déclenche même en mode pairing)
-  if (isPairing && options.pairingPhone) {
-    sock.ev.on('connection.update', async (update) => {
-      const { qr } = update;
-      // L'event qr se déclenche même en mode pairing — c'est le signal pour demander le code
-      if (qr && !sock.authState.creds.registered) {
-        try {
-          let code = await sock.requestPairingCode(options.pairingPhone);
-          code = code?.match(/.{1,4}/g)?.join('-') || code;
-          console.log('\n╔══════════════════════════════════════════════╗');
-          console.log('║         CODE DE PAIRING WHATSAPP            ║');
-          console.log('╠══════════════════════════════════════════════╣');
-          console.log(`║  Code: ${code}                         ║`);
-          console.log('║                                              ║');
-          console.log('║  1. WhatsApp > Appareils lies                ║');
-          console.log('║  2. "Connecter un appareil"                  ║');
-          console.log('║  3. "Lier avec un numero"                    ║');
-          console.log('║  4. Entrez le code ci-dessus                 ║');
-          console.log('╚══════════════════════════════════════════════╝\n');
-        } catch (e) {
-          console.error('[PAIRING] Erreur:', e.message);
-        }
-      }
-    });
-  }
+  sock.ev.on('creds.update', saveCreds);
 
   let lastActivity = Date.now();
   const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
@@ -276,9 +251,12 @@ async function startSession(sessionId, options = {}) {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
-      sessionManager.setStatus(sessionId, 'WAITING_FOR_QR');
-      bus.emit('session:qr', { sessionId });
-      if (!isPairing) {
+      // En mode pairing : ignorer l'event qr (le code est déjà demandé en direct)
+      if (isPairing) {
+        sessionManager.setStatus(sessionId, 'WAITING_FOR_PAIRING');
+      } else {
+        sessionManager.setStatus(sessionId, 'WAITING_FOR_QR');
+        bus.emit('session:qr', { sessionId });
         qrcode.generate(qr, { small: true });
       }
     }
@@ -482,8 +460,6 @@ async function startSession(sessionId, options = {}) {
     }
   });
 
-  sock.ev.on('creds.update', saveCreds);
-
   const isSystemJid = (jid) => {
     if (!jid) return true;
     return jid.includes('@broadcast') || jid.includes('status.broadcast') || jid.includes('@newsletter');
@@ -600,14 +576,56 @@ async function startSession(sessionId, options = {}) {
     bus.emit('system:error', { source: 'socket', sessionId, error: error.message || String(error) });
   });
 
+  // ─── PAIRING CODE — appel DIRECT (référence Baileys) ─────────────
+  // Placé APRÈS tous les listeners : waitForSocketOpen peut bloquer,
+  // et connection.update doit être prêt pendant l'attente.
+  // Ne PAS attendre l'event qr : il se régénère toutes les ~20s et
+  // invalide le code précédent avant que l'utilisateur puisse l'entrer.
+  if (!state.creds.registered && isPairing && options.pairingPhone) {
+    try {
+      const phoneNumber = String(options.pairingPhone).replace(/\D/g, '');
+      if (!phoneNumber || phoneNumber.length < 8) {
+        console.error(`[PAIRING] ❌ Numéro invalide: ${options.pairingPhone}`);
+      } else {
+        await sock.waitForSocketOpen();
+        const rawCode = await sock.requestPairingCode(phoneNumber);
+        const code = rawCode?.match(/.{1,4}/g)?.join('-') || rawCode;
+        sessionManager.setStatus(sessionId, 'WAITING_FOR_PAIRING');
+        bus.emit('session:pairing-code', { sessionId });
+        console.log('\n╔══════════════════════════════════════════════╗');
+        console.log('║         CODE DE PAIRING WHATSAPP            ║');
+        console.log('╠══════════════════════════════════════════════╣');
+        console.log(`║  Code: ${code}                         ║`);
+        console.log('║                                              ║');
+        console.log('║  1. WhatsApp > Appareils lies                ║');
+        console.log('║  2. "Connecter un appareil"                  ║');
+        console.log('║  3. "Lier avec un numero"                    ║');
+        console.log('║  4. Entrez le code ci-dessus                 ║');
+        console.log('╚══════════════════════════════════════════════╝\n');
+      }
+    } catch (e) {
+      console.error('[PAIRING] Erreur requestPairingCode:', e.message);
+    }
+  }
+
   return sock;
 }
 
 async function main() {
-  // Vérifier si déjà connecté (session existante avec creds)
+  // Vérifier si déjà ENREGISTRÉ (registered: true) — un creds.json vide
+  // avec registered:false ne doit pas être considéré comme une session valide
   const sessionId = config.sessionName || 'session';
   const sessionDir = path.join(__dirname, sessionId);
-  const hasCreds = fs.existsSync(path.join(sessionDir, 'creds.json'));
+  let hasCreds = false;
+  try {
+    const credsPath = path.join(sessionDir, 'creds.json');
+    if (fs.existsSync(credsPath)) {
+      const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+      hasCreds = !!creds.registered;
+    }
+  } catch {
+    hasCreds = false;
+  }
 
   let connectMethod = 'qr';
   let pairingPhone = null;
