@@ -28,6 +28,13 @@ function cmd(opts, handler) {
     onlyGroup: opts.onlyGroup || false,
     admin: opts.admin || false,
     botAdmin: opts.botAdmin || false,
+    // Flags lus par handler.js — sans ça, adminOnly/groupOnly/botAdminNeeded sont perdus
+    adminOnly: opts.adminOnly || opts.admin || false,
+    groupOnly: opts.groupOnly || opts.onlyGroup || false,
+    botAdminNeeded: opts.botAdminNeeded || opts.botAdmin || false,
+    ownerOnly: opts.ownerOnly || false,
+    modOnly: opts.modOnly || false,
+    privateOnly: opts.privateOnly || false,
     on: opts.on || null,
     filename: opts.filename || '',
     execute: async (sock, msg, args, ctx) => {
