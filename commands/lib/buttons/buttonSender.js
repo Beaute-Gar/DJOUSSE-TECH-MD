@@ -34,6 +34,41 @@ function isLid(jid) {
   return typeof jid === 'string' && jid.endsWith('@lid');
 }
 
+// ─────────────────────────────────────────────────────────────
+// Socket vivant : Baileys 7 ws = wrapper (isOpen) ; en cas de
+// reconnexion, global.__activeSock pointe sur la NOUVELLE instance
+// ─────────────────────────────────────────────────────────────
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function isSockOpen(s) {
+  try {
+    return !!(s && ((s.ws && s.ws.isOpen === true) || (s.ws && s.ws.socket && s.ws.socket.readyState === 1)));
+  } catch {
+    return false;
+  }
+}
+
+function pickLiveSock(preferred) {
+  if (isSockOpen(preferred)) return preferred;
+  const live = global.__activeSock;
+  if (live && live !== preferred && isSockOpen(live)) return live;
+  return null;
+}
+
+async function waitForOpenSock(preferred, timeoutMs = 30000, intervalMs = 800) {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const s = pickLiveSock(preferred);
+    if (s) return s;
+    if (Date.now() >= deadline) return null;
+    await sleep(intervalMs);
+  }
+}
+
+const CONN_ERR = /connection|closed|terminat|stream|writ(e|ing)|socket/i;
+
 async function fallbackText(sock, jid, options) {
   const { title = '', text = '', footer = '', buttons = [] } = options;
   const lines = [];
@@ -48,9 +83,12 @@ async function fallbackText(sock, jid, options) {
     lines.push(`_${footer}_`);
   }
   try {
-    await sock.sendMessage(jid, { text: lines.join('\n') });
+    const live = (await waitForOpenSock(sock, 20000)) || sock;
+    await live.sendMessage(jid, { text: lines.join('\n') });
+    return true;
   } catch (err) {
     console.error('[BUTTONS] Fallback texte échoué:', err.message);
+    return false;
   }
 }
 
@@ -66,14 +104,12 @@ async function sendButtons(sock, jid, options = {}) {
   } = options;
 
   if (!cfg.enabled) {
-    await fallbackText(sock, jid, { title, text, footer, buttons });
-    return true;
+    return fallbackText(sock, jid, { title, text, footer, buttons });
   }
 
   let btns = Array.isArray(buttons) ? buttons : [];
   if (!btns.length) {
-    await fallbackText(sock, jid, { title, text, footer, buttons: [] });
-    return true;
+    return fallbackText(sock, jid, { title, text, footer, buttons: [] });
   }
 
   if (btns.length > cfg.maxButtons) {
@@ -89,7 +125,7 @@ async function sendButtons(sock, jid, options = {}) {
 
   try {
     if (sendButtonsPkg) {
-      await sendButtonsPkg(sock, jid, {
+      const doSend = async (target) => sendButtonsPkg(target, jid, {
         title,
         text,
         footer,
@@ -97,6 +133,19 @@ async function sendButtons(sock, jid, options = {}) {
         ...(image ? { image } : {}),
         buttons: formattedButtons
       }, quoted ? { quoted } : undefined);
+
+      let live = await waitForOpenSock(sock);
+      if (!live) throw new Error('Socket fermé — pas de reconnexion disponible');
+
+      try {
+        await doSend(live);
+      } catch (err) {
+        if (!CONN_ERR.test(err.message || '')) throw err;
+        console.warn(`[BUTTONS] Envoi interrompu (${err.message}) — attente reconnexion…`);
+        live = await waitForOpenSock(live, 30000);
+        if (!live) throw err;
+        await doSend(live);
+      }
 
       if (cfg.logClicks) {
         console.log(`[BUTTONS] Envoyé à ${jid} (${formattedButtons.length} boutons)`);
@@ -108,8 +157,7 @@ async function sendButtons(sock, jid, options = {}) {
   }
 
   if (cfg.fallbackToText) {
-    await fallbackText(sock, jid, { title, text, footer, buttons: formattedButtons });
-    return true;
+    return fallbackText(sock, jid, { title, text, footer, buttons: formattedButtons });
   }
   return false;
 }

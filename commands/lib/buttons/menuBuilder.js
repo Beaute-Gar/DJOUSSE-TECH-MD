@@ -31,32 +31,31 @@ function paginate(items, page) {
 // ENVOI AVEC IMAGE (si disponible)
 // ═══════════════════════════════════════════════
 async function sendWithImage(sock, jid, imagePath, caption, buttons, quoted) {
-  // Vérifier si l'image existe — envoyer via gifted-btns (header image + nativeFlow buttons)
-  if (imagePath && fs.existsSync(imagePath)) {
-    try {
-      const imageBuffer = fs.readFileSync(imagePath);
-      const ok = await sendButtons(sock, jid, {
-        title: '',
-        text: caption,
-        footer: '✦ DJOUSSE TECH ✦',
-        image: { buffer: imageBuffer },
-        buttons: buttons || [],
-        quoted
-      });
-      if (ok) return true;
-    } catch (e) {
-      console.warn('[MENU] Image échouée, fallback texte:', e.message);
-    }
-  }
-  // Fallback : texte seul avec boutons
-  await sendButtons(sock, jid, {
+  const base = {
     title: '',
     text: caption,
     footer: '✦ DJOUSSE TECH ✦',
     buttons: buttons || [],
     quoted
-  });
-  return true;
+  };
+  // Vérifier si l'image existe — envoyer via gifted-btns (header image + nativeFlow buttons)
+  if (imagePath && fs.existsSync(imagePath)) {
+    try {
+      const imageBuffer = fs.readFileSync(imagePath);
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const ok = await sendButtons(sock, jid, { ...base, image: { buffer: imageBuffer } });
+        if (ok) return true;
+        if (attempt < 2) {
+          console.warn('[MENU] Envoi image échoué — nouvelle tentative dans 3s…');
+          await new Promise(r => setTimeout(r, 3000));
+        }
+      }
+    } catch (e) {
+      console.warn('[MENU] Image échouée, fallback texte:', e.message);
+    }
+  }
+  // Fallback : texte seul avec boutons
+  return sendButtons(sock, jid, base);
 }
 
 // ═══════════════════════════════════════════════

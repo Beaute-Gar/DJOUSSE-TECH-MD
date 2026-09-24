@@ -207,6 +207,7 @@ async function startSession(sessionId, options = {}) {
     try { activeSock.end(undefined); } catch {}
     try { activeSock.ws?.close(); } catch {}
     activeSock = null;
+    global.__activeSock = null;
   }
 
   const sock = makeWASocket({
@@ -220,6 +221,7 @@ async function startSession(sessionId, options = {}) {
     getMessage: async () => undefined
   });
   activeSock = sock;
+  global.__activeSock = sock;
 
   store.bind(sock.ev);
   sessionManager.setSocket(sessionId, sock);
