@@ -357,6 +357,8 @@ async function startSession(sessionId, options = {}) {
       try {
         const antiBan = require('./lib/anti-ban.cjs');
         antiBan.init(sock);
+        // Connexion réussie → la restriction précédente (401/403) est levée
+        antiBan.clearRestricted();
       } catch (e) {}
 
       // Initialize human presence simulation
