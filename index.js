@@ -614,9 +614,23 @@ async function main() {
 
   // Demander la méthode AVANT le TUI (évite conflit stdin)
   if (!hasCreds) {
-    const choice = await askConnectionMethod();
-    connectMethod = choice.method;
-    pairingPhone = choice.phone || null;
+    if (process.stdin.isTTY && process.stdout.isTTY) {
+      const choice = await askConnectionMethod();
+      connectMethod = choice.method;
+      pairingPhone = choice.phone || null;
+    } else {
+      // Non-interactif (PM2) : pas de readline — utiliser env ou fallback pairing auto
+      const envMethod = (process.env.CONNECT_METHOD || '').toLowerCase();
+      const envPhone = (process.env.PAIRING_PHONE || '').replace(/[^0-9]/g, '');
+      const ownerPhone = String(config.ownerNumber?.[0] || '').replace(/[^0-9]/g, '');
+      connectMethod = envMethod === 'qr' ? 'qr' : 'pairing';
+      pairingPhone = connectMethod === 'pairing' ? (envPhone || ownerPhone || null) : null;
+      if (connectMethod === 'pairing' && !pairingPhone) {
+        connectMethod = 'qr';
+      }
+      console.log(`[SESSION] Mode non-interactif → ${connectMethod}${pairingPhone ? ` (téléphone: ${pairingPhone})` : ''}`);
+      console.log('[SESSION] Le code de pairing s\'affichera dans les logs PM2.');
+    }
   } else {
     console.log('[SESSION] Session existante détectée, reconnexion automatique...');
   }
