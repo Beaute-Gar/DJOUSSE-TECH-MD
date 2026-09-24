@@ -38,7 +38,7 @@ async function sendWithImage(sock, jid, imagePath, caption, buttons, quoted) {
     buttons: buttons || [],
     quoted
   };
-  // Vérifier si l'image existe — envoyer via gifted-btns (header image + nativeFlow buttons)
+  // Image en header nativeFlow si le fichier existe
   if (imagePath && fs.existsSync(imagePath)) {
     try {
       const imageBuffer = fs.readFileSync(imagePath);
@@ -63,51 +63,64 @@ async function sendWithImage(sock, jid, imagePath, caption, buttons, quoted) {
 // ═══════════════════════════════════════════════
 async function buildMainMenu(sock, jid, quoted, page = 1) {
   const cats = menuConfig.categories;
-  const { items, total, hasNext, hasPrev, startIndex } = paginate(cats, page);
 
-  // ── Texte numéroté avec TOUTES les catégories de la page ──
+  // ── Texte numéroté avec TOUTES les catégories (une seule page) ──
   const lines = [];
   lines.push('✦ ─────────────── ✦');
   lines.push('   📋  M E N U  P R I N C I P A L');
   lines.push('✦ ─────────────── ✦');
   lines.push('');
-  items.forEach((c, i) => {
-    const num = startIndex + i + 1;
+  cats.forEach((c, i) => {
     const cmdCount = c.commands ? c.commands.length : 0;
     // label contient déjà l'emoji — ne pas le préfixer une 2e fois
-    lines.push(`  ${num}. ${c.label}  ·  ${cmdCount} commande(s)`);
+    lines.push(`  ${i + 1}. ${c.label}  ·  ${cmdCount} commande(s)`);
   });
   lines.push('');
-  lines.push(`  Page ${page}/${total}`);
+  lines.push(`  ${cats.length} catégories au total`);
   lines.push('');
-  lines.push('  👇 Choisis une catégorie (bouton ou numéro)');
+  lines.push('  👇 Ouvre la liste, ou tape un numéro');
   lines.push('✦ ─────────────── ✦');
 
   const caption = lines.join('\n');
 
-  // ── Boutons de navigation (max 3) ──
-  const nav = [];
-  if (hasPrev) nav.push({ id: `page_main_${page - 1}`, text: '◀️' });
-  if (hasNext) nav.push({ id: `page_main_${page + 1}`, text: '▶️' });
-  nav.push({ id: 'btn_help', text: '❓' });
-
-  const finalButtons = nav.slice(0, 3);
+  // ── Boutons : liste déroulante (toutes catégories) + aide ──
+  const nav = [
+    {
+      type: 'list',
+      text: '📂 Ouvrir le Menu',
+      list: {
+        title: '📋 Catégories',
+        sections: [
+          {
+            title: 'Catégories',
+            rows: cats.map(c => ({
+              title: c.label,
+              description: `${c.commands ? c.commands.length : 0} commande(s)${c.desc ? ' — ' + c.desc : ''}`,
+              id: c.id
+            }))
+          }
+        ]
+      }
+    },
+    { id: 'btn_help', text: '❓' }
+  ];
 
   // ── Contexte pour interception numéro ──
   sessionManager.setMenuContext(jid, {
     type: 'main',
-    page,
-    items: items.map((c, i) => ({
-      num: startIndex + i + 1,
+    page: 1,
+    items: cats.map((c, i) => ({
+      num: i + 1,
       id: c.id,
       label: c.label
     }))
   });
 
   try {
-    await sendWithImage(sock, jid, menuConfig.menuImage, caption, finalButtons, quoted);
+    return await sendWithImage(sock, jid, menuConfig.menuImage, caption, nav, quoted);
   } catch (e) {
     console.error('[MENU] Erreur:', e.message);
+    return false;
   }
 }
 
@@ -122,7 +135,7 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
 
   const { items, total, hasNext, hasPrev, startIndex } = paginate(cat.commands, page);
 
-  // ── Texte numéroté ──
+  // ── Texte numéroté (page courante) ──
   const lines = [];
   const catName = cat.label.replace(cat.emoji, '').trim().toUpperCase();
   lines.push('✦ ─────────────── ✦');
@@ -135,21 +148,35 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
     lines.push(`  ${num}. ${c.label}${typeIcon}`);
   });
   lines.push('');
-  lines.push(`  Page ${page}/${total}`);
+  lines.push(`  Page ${page}/${total}  ·  ✏️ texte • 📎 fichier`);
   lines.push('');
-  lines.push('  ✏️ texte • 📎 fichier');
-  lines.push('  👇 Cliquez un bouton ou tapez un numéro');
+  lines.push('  👇 Ouvre la liste, ou tape un numéro');
   lines.push('✦ ─────────────── ✦');
 
   const caption = lines.join('\n');
 
-  // ── Boutons de navigation (max 3) ──
-  const nav = [];
-  if (hasPrev) nav.push({ id: `page_cat_${categoryId}_${page - 1}`, text: '◀️' });
-  if (hasNext) nav.push({ id: `page_cat_${categoryId}_${page + 1}`, text: '▶️' });
-  nav.push({ id: 'back_menu', text: '🏠' });
-
-  const finalButtons = nav.slice(0, 3);
+  // ── Boutons : liste déroulante (TOUTES les commandes) + retour ──
+  const typeDesc = t => (t === 'B' ? '✏️ saisie texte' : t === 'C' ? '📎 envoie un fichier' : '⚡ direct');
+  const nav = [
+    {
+      type: 'list',
+      text: '📋 Commandes',
+      list: {
+        title: cat.label,
+        sections: [
+          {
+            title: cat.label,
+            rows: cat.commands.map(c => ({
+              title: `${c.label}${c.type === 'B' ? ' ✏️' : c.type === 'C' ? ' 📎' : ''}`,
+              description: typeDesc(c.type),
+              id: c.id
+            }))
+          }
+        ]
+      }
+    },
+    { id: 'back_menu', text: '🏠' }
+  ];
 
   // ── Contexte pour interception numéro ──
   sessionManager.setMenuContext(jid, {
@@ -166,9 +193,10 @@ async function buildCategoryMenu(sock, jid, categoryId, page = 1, quoted) {
 
   try {
     const catImage = cat.image || menuConfig.menuImage || menuConfig.defaultImage;
-    await sendWithImage(sock, jid, catImage, caption, finalButtons, quoted);
+    return await sendWithImage(sock, jid, catImage, caption, nav, quoted);
   } catch (e) {
     console.error('[MENU] Erreur:', e.message);
+    return false;
   }
 }
 
