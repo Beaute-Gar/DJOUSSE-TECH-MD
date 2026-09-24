@@ -263,7 +263,9 @@ async function startSession(sessionId, options = {}) {
 
     if (connection === 'close') {
       const statusCode = lastDisconnect?.error?.output?.statusCode;
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+      const wasRegisteredClose = !!(state?.creds?.registered);
+      // 401 pendant pairing (non-enregistré) → on autorise le retry pour un nouveau code
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut || !wasRegisteredClose;
       console.log(`[SOCKET] 🔌 Fermeture (code=${statusCode ?? 'inconnu'}${lastDisconnect?.error?.message ? ` — ${lastDisconnect.error.message}` : ''})`);
 
       // La connexion n'a pas tenu 60s → on n'autorise pas le reset du compteur 440
@@ -274,17 +276,26 @@ async function startSession(sessionId, options = {}) {
 
       // ─── Détection restriction WhatsApp ───
       // 440 = conflict (session remplacée / autre instance) → reconnexion avec backoff, PAS restriction
-      // 401 = logged out, 403 = banned → restriction
-      if (statusCode === 401 || statusCode === 403) {
+      // 401 = logged out, 403 = banned → restriction UNIQUEMENT si la session était enregistrée.
+      // En pairing (registered: false), un 401 = rejet du pairing (rate-limit / code expiré),
+      // PAS une restriction de compte → ne pas poser le flag.
+      const wasRegistered = !!(state?.creds?.registered);
+      if ((statusCode === 401 || statusCode === 403) && wasRegistered) {
         console.error(`🚨 COMPTE RESTREINT — code ${statusCode}`);
         try {
           const antiBan = require('./lib/anti-ban.cjs');
           antiBan.setRestricted(`Connection closed with code ${statusCode}`, statusCode);
           process.emit('whatsapp:stop-all', { reason: `restriction_${statusCode}` });
         } catch {}
+      } else if (statusCode === 401 && !wasRegistered) {
+        console.error(`[PAIRING] ❌ Pairing rejeté (code 401) — session non enregistrée. Retry possible.`);
+        try {
+          const antiBan = require('./lib/anti-ban.cjs');
+          antiBan.clearRestricted();
+        } catch {}
       }
 
-      if (statusCode === DisconnectReason.loggedOut) {
+      if (statusCode === DisconnectReason.loggedOut && wasRegisteredClose) {
         sessionManager.setStatus(sessionId, 'LOGGED_OUT');
         bus.emit('session:logged-out', { sessionId });
       } else {
@@ -304,6 +315,10 @@ async function startSession(sessionId, options = {}) {
               bus.emit('session:disconnected', { sessionId, statusCode, fatal: true });
               return;
             }
+          } else if (statusCode === 401 && !wasRegisteredClose) {
+            // Pairing rejeté → délai plus long pour éviter le rate-limit WhatsApp
+            delay = 15000;
+            console.log(`[PAIRING] 🔁 Retry pairing dans ${delay / 1000}s...`);
           }
           sessionManager.setStatus(sessionId, 'RECONNECTING');
           bus.emit('session:reconnecting', { sessionId, statusCode });
