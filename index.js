@@ -35,6 +35,7 @@ setInterval(() => processedMessages.clear(), 5 * 60 * 1000);
 let conflictCount = 0;
 let conflictStableTimer = null;
 const CONFLICT_MAX_RETRIES = 8;
+let pairingRetryCount = 0;
 let weeklyStatsInterval = null;
 let statusTestRan = false;
 let activeSock = null;
@@ -316,9 +317,16 @@ async function startSession(sessionId, options = {}) {
               return;
             }
           } else if (statusCode === 401 && !wasRegisteredClose) {
-            // Pairing rejeté → délai plus long pour éviter le rate-limit WhatsApp
-            delay = 15000;
-            console.log(`[PAIRING] 🔁 Retry pairing dans ${delay / 1000}s...`);
+            // Pairing rejeté → cooldown long pour éviter le rate-limit WhatsApp
+            pairingRetryCount = (pairingRetryCount || 0) + 1;
+            if (pairingRetryCount >= 3) {
+              console.error(`[PAIRING] 🛑 ${pairingRetryCount} rejets consécutifs — pause de 120s avant nouveau essai.`);
+              delay = 120000;
+              pairingRetryCount = 0;
+            } else {
+              delay = 30000;
+            }
+            console.log(`[PAIRING] 🔁 Retry pairing dans ${delay / 1000}s... (tentative ${pairingRetryCount || 1}/3)`);
           }
           sessionManager.setStatus(sessionId, 'RECONNECTING');
           bus.emit('session:reconnecting', { sessionId, statusCode });
