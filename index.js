@@ -195,6 +195,26 @@ async function startSession(sessionId, options = {}) {
   const connectMethod = options.connectMethod || 'qr';
   const isPairing = connectMethod === 'pairing';
 
+  // Pairing mode + creds.me présent mais registered:false → Baileys appellera
+  // generateLoginNode au lieu de generateRegistrationNode → rejet 401 en boucle.
+  // Purge me/pairingCode pour repartir d'une registration propre.
+  if (isPairing && !state.creds.registered && state.creds.me) {
+    try {
+      const credsPath = path.join(sessionDir, 'creds.json');
+      const raw = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+      delete raw.me;
+      delete raw.pairingCode;
+      raw.registered = false;
+      fs.writeFileSync(credsPath, JSON.stringify(raw, null, 2));
+      delete state.creds.me;
+      delete state.creds.pairingCode;
+      state.creds.registered = false;
+      console.log('[PAIRING] 🧹 Ancien creds.me purgé (retry après échec) — registration propre.');
+    } catch (e) {
+      console.error('[PAIRING] Erreur purge creds:', e.message);
+    }
+  }
+
   sessionManager.setStatus(sessionId, 'CONNECTING');
   bus.emit('session:connecting', { sessionId });
 
@@ -289,11 +309,28 @@ async function startSession(sessionId, options = {}) {
           process.emit('whatsapp:stop-all', { reason: `restriction_${statusCode}` });
         } catch {}
       } else if (statusCode === 401 && !wasRegistered) {
-        console.error(`[PAIRING] ❌ Pairing rejeté (code 401) — session non enregistrée. Retry possible.`);
+        console.error(`[PAIRING] ❌ Pairing rejeté (code 401) — session non enregistrée. Reset creds.me pour retry propre.`);
         try {
           const antiBan = require('./lib/anti-ban.cjs');
           antiBan.clearRestricted();
         } catch {}
+        // BUG Baileys: requestPairingCode sauvegarde creds.me → au retry,
+        // validateConnection appelle generateLoginNode au lieu de
+        // generateRegistrationNode → WhatsApp rejette en 401 en boucle.
+        // Fix: retirer me/pairingCode pour repartir de l'état "non connecté".
+        try {
+          const credsPath = path.join(sessionDir, 'creds.json');
+          if (fs.existsSync(credsPath)) {
+            const raw = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+            delete raw.me;
+            delete raw.pairingCode;
+            raw.registered = false;
+            fs.writeFileSync(credsPath, JSON.stringify(raw, null, 2));
+            console.log('[PAIRING] 🧹 creds.me/pairingCode purgés — prochaine tentative = registration propre.');
+          }
+        } catch (e) {
+          console.error('[PAIRING] Erreur reset creds:', e.message);
+        }
       }
 
       if (statusCode === DisconnectReason.loggedOut && wasRegisteredClose) {
