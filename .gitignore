@@ -1,47 +1,28 @@
+# Dépendances
 node_modules/
-session/
-session-*/
-sessions/
-database/
-data/
-logs/
-tmp/
-temp/
 
+# Secrets (jamais commités)
 .env
 .env.*
 
-*.log
-*.db
-*.db-shm
-*.db-wal
-*.lock
-
-plugins.zip
-packages/
-
-# Old files
-core-server/
-android/
-www/
-docs/
-media/
-public/
-!pairing-server/public/
-scripts/
-.artifacts/
-inconnu/
-
-# Build files
-*.apk
-*.keystore
-*.jks
-android.zip
-
-# Session files
+# Session WhatsApp + état dynamique du bot
+session/
+sessions/
+session-*/
 creds.json
 lid-mapping-*.json
+state.json
 
-# Keep collector scripts
-!scripts/collectors/
-!data/status/
+# Logs / temporaires
+logs/
+tmp/
+temp/
+*.log
+
+# Divers
+.DS_Store
+Thumbs.db
+
+# Binaires externes (auto-téléchargés par handler.js)
+vendor/yt-dlp.exe
+vendor/yt-dlp

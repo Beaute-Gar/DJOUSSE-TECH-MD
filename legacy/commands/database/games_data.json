@@ -1,0 +1,28 @@
+{
+  "112588910280832@lid": {
+    "type": "avt",
+    "chatId": "112588910280832@lid",
+    "startedAt": 1789531708550,
+    "state": {
+      "type": "avt",
+      "phase": "round",
+      "registered": [
+        "112588910280832@lid"
+      ],
+      "scores": [],
+      "completed": [],
+      "pendingChallenge": [],
+      "roundNumber": 1,
+      "startedBy": "112588910280832@lid",
+      "registrationTimer": null,
+      "roundTimer": null,
+      "chat": "112588910280832@lid",
+      "choices": [],
+      "guesses": [],
+      "guessedLetters": [],
+      "contributors": [],
+      "votes": []
+    },
+    "lastUpdate": 1789622370268
+  }
+}

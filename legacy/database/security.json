@@ -1,0 +1,7 @@
+{
+  "antiLink": true,
+  "antiSpam": true,
+  "spamThreshold": 5,
+  "antiBadWord": false,
+  "antiCall": true
+}
