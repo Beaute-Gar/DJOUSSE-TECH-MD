@@ -40,6 +40,16 @@ module.exports = {
   autoRead: bool(process.env.AUTO_READ, true),
   autoBio: bool(process.env.AUTO_BIO, false),
 
+  // Moteurs temps réel (Baileys)
+  autoTyping: bool(process.env.AUTO_TYPING, false),
+  alwaysOnline: bool(process.env.ALWAYS_ONLINE, false),
+  autoReact: bool(process.env.AUTO_REACT, false),
+  autoStatusSeen: bool(process.env.AUTO_STATUS_SEEN, false),
+  autoStatusReact: bool(process.env.AUTO_STATUS_REACT, false),
+  autoReplyStatus: bool(process.env.AUTO_REPLY_STATUS, false),
+  likeEmoji: process.env.AUTOLIKE_EMOJI || '👍',
+  statusReadMsg: process.env.STATUS_READ_MSG || '',
+
   // IA (optionnelle : sans clé, la commande .ai répond avec un message explicite)
   geminiKey: process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || '',
 

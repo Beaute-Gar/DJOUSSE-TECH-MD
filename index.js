@@ -218,7 +218,7 @@ async function startSession(options = {}) {
     auth: state,
     syncFullHistory: false,
     downloadHistory: false,
-    markOnlineOnConnect: false,
+    markOnlineOnConnect: !!config.alwaysOnline,
     getMessage: async () => undefined,
   });
   activeSock = sock;

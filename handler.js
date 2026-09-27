@@ -261,6 +261,14 @@ function guardAllows(chat, who) {
   return true;
 }
 
+/* Présence Baileys : indicateur « écrit... » pendant l'exécution d'une commande */
+function typingOn(sock, jid) {
+  if (config.autoTyping && jid) sock.sendPresenceUpdate('composing', jid).catch(() => {});
+}
+function typingOff(sock, jid) {
+  if (config.autoTyping && jid) sock.sendPresenceUpdate('paused', jid).catch(() => {});
+}
+
 /* Téléchargement de média (cible = message cité ou message courant) */
 function mediaInfo(msg) {
   const content = unwrap(msg.message);
@@ -354,6 +362,15 @@ async function askGemini(prompt) {
 const commands = new Map();
 
 function cmd(names, opts, handler) {
+  /* Formes acceptées :
+     cmd(['nom', 'alias'], opts, fn)
+     cmd('nom', ['alias'], opts, fn)  ← réalignement des arguments */
+  if (Array.isArray(opts)) {
+    const aliases = opts;
+    opts = handler;
+    handler = arguments[3];
+    names = Array.isArray(names) ? names : [names, ...aliases];
+  }
   const arr = Array.isArray(names) ? names : [names];
   const entry = {
     name: arr[0].toLowerCase(),
@@ -605,6 +622,18 @@ cmd('revoke', { cat: 2, desc: 'Révoquer le lien', group: true, admin: true, bot
   } catch (e) {
     await ctx.reply(`❌ Échec : ${e.message}`);
   }
+});
+
+cmd('poll', ['sondage'], { cat: 2, desc: 'Créer un sondage', usage: 'poll Question | option1 | option2', group: true }, async (ctx) => {
+  const parts = ctx.q.split('|').map((s) => s.trim()).filter(Boolean);
+  if (parts.length < 3) {
+    return ctx.reply(`❌ Usage : ${config.prefix}poll Préfères-tu la plage ? | Oui | Non`);
+  }
+  const question = parts[0].slice(0, 200);
+  const values = parts.slice(1, 11).map((v) => v.slice(0, 80));
+  await ctx.sock.sendMessage(ctx.from, {
+    poll: { name: question, values, selectableCount: 1 },
+  });
 });
 
 /* ── 3. PROTECTION ────────────────────────────────────────── */
@@ -1070,6 +1099,19 @@ cmd('unblock', { cat: 9, desc: 'Débloquer un numéro', usage: 'unblock <numéro
   await ctx.reply(`✅ +${raw[0]} débloqué.`);
 });
 
+cmd('statut', ['status'], { cat: 9, desc: 'Publier un texte en statut WhatsApp', usage: 'statut <texte>', owner: true }, async (ctx) => {
+  if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}statut Bonjour le monde`);
+  const list = Object.keys(state.users)
+    .filter((n) => /^\d{5,}$/.test(n))
+    .map((n) => `${n}@s.whatsapp.net`);
+  await ctx.sock.sendMessage(
+    'status@broadcast',
+    { text: ctx.q.slice(0, 500) },
+    { statusJidList: list }
+  );
+  await ctx.reply(`✅ Statut publié${list.length ? ` vers ${list.length} contacts` : ''}.`);
+});
+
 /* ── 10. DIVERS ───────────────────────────────────────────── */
 
 cmd('afk', { cat: 10, desc: 'Se déclarer AFK', usage: 'afk [raison]' }, async (ctx) => {
@@ -1414,12 +1456,14 @@ async function executeCommand(sock, msg, name, args, base) {
   state.stats.commands += 1;
   saveState();
 
+  typingOn(sock, base.from);
   try {
     await entry.handler(ctx);
   } catch (e) {
     console.error(`[CMD] ${entry.name}:`, e.message);
     await ctx.reply(`${config.messages.error}\n\`[${e.message}]\``).catch(() => {});
   }
+  typingOff(sock, base.from);
   return true;
 }
 
@@ -1523,6 +1567,8 @@ const INTENTS = [
   { cmd: 'antilink', keys: ['interdit les liens', 'bloque les liens', 'anti lien', 'antilink'] },
   { cmd: 'antidelete', keys: ['renvoie les messages supprimes', 'anti suppression', 'antidelete'] },
   { cmd: 'warn', keys: ['avertis', 'avertissement'] },
+  { cmd: 'poll', keys: ['sondage', 'question au groupe', 'un vote'] },
+  { cmd: 'statut', keys: ['publie un statut', 'mets un statut', 'publier un status'] },
 ];
 
 function stripIntentKey(text, key) {
@@ -1653,10 +1699,35 @@ async function runProtections(sock, msg, base, text) {
 const isSystemJid = (jid) =>
   !jid || jid.includes('@broadcast') || jid.includes('status@') || jid.includes('@newsletter');
 
+/* Moteur STATUTS (stories) : vu auto + réaction auto + réponse auto */
+async function handleStatus(sock, msg) {
+  try {
+    if (msg.key.fromMe) return;
+    if (config.autoStatusSeen) {
+      await sock.readMessages([msg.key]).catch(() => {});
+    }
+    if (config.autoStatusReact) {
+      await sock.sendMessage('status@broadcast', {
+        react: { text: config.likeEmoji || '👍', key: msg.key },
+      }).catch(() => {});
+    }
+    if (config.autoReplyStatus && config.statusReadMsg && msg.key.participant) {
+      await sock.sendMessage(msg.key.participant, { text: config.statusReadMsg }).catch(() => {});
+    }
+  } catch (e) {}
+}
+
 async function handleMessage(sock, msg) {
   try {
     if (!msg?.message || !msg.key?.id) return;
     const from = msg.key.remoteJid;
+
+    /* ── Statuts reçus → moteur STATUTS (avant tout filtre) ── */
+    if (from === 'status@broadcast') {
+      await handleStatus(sock, msg);
+      return;
+    }
+
     if (isSystemJid(from)) return;
     if (msg.messageTimestamp && Date.now() - Number(msg.messageTimestamp) * 1000 > 5 * 60 * 1000) return;
 
@@ -1670,6 +1741,17 @@ async function handleMessage(sock, msg) {
     state.stats.messages += 1;
     saveState();
     putCache(from, msg.key.id, msg);
+
+    /* ── Auto-réaction aux messages entrants (flag AUTO_REACT) ── */
+    if (
+      config.autoReact &&
+      !fromMe &&
+      !content?.reactionMessage &&
+      !content?.protocolMessage &&
+      !text.startsWith(config.prefix)
+    ) {
+      sock.sendMessage(from, { react: { text: config.likeEmoji || '👍', key: msg.key } }).catch(() => {});
+    }
 
     /* Base de contexte partagée */
     const base = {
