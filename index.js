@@ -399,6 +399,15 @@ async function startSession(options = {}) {
     }
   });
 
+  /* ── Métadonnées de groupe (nom, description, ouverture) → journal .glog ── */
+  sock.ev.on('groups.update', async (updates) => {
+    try {
+      for (const u of updates || []) await handler.handleGroupInfo(sock, u);
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error('[SOCKET] groups.update:', err?.message || err);
+    }
+  });
+
   sock.ev.on('error', (error) => {
     const code = error?.output?.statusCode;
     if (code === 515 || code === 503 || code === 408) return;

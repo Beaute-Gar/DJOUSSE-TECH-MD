@@ -269,6 +269,36 @@ function typingOff(sock, jid) {
   if (config.autoTyping && jid) sock.sendPresenceUpdate('paused', jid).catch(() => {});
 }
 
+/* ════════════════════════════════════════════════════════════
+   2bis. MÉMOIRE CONTEXTUELLE — derniers messages par chat (RAM)
+   ════════════════════════════════════════════════════════════ */
+
+const history = new Map(); // jid → [{ s, t, ts }] (max 10/chat, 300 chats)
+
+function remember(jid, senderNum, text) {
+  if (!jid || !text) return;
+  let arr = history.get(jid);
+  if (arr) {
+    history.delete(jid); // refresh pour l'ordre d'éviction
+  } else {
+    arr = [];
+    if (history.size >= 300) history.delete(history.keys().next().value);
+  }
+  history.set(jid, arr);
+  arr.push({ s: senderNum, t: text.slice(0, 200), ts: Date.now() });
+  if (arr.length > 10) arr.shift();
+}
+
+/* Date française « JJ/MM/AAAA [HH:MM] » → Date locale (défaut 18h) */
+function parseFrDate(s) {
+  const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ ,]+(\d{1,2})[:hH](\d{2}))?/);
+  if (!m) return null;
+  const dd = +m[1], mo = +m[2], yyyy = +m[3];
+  if (mo < 1 || mo > 12 || dd < 1 || dd > 31) return null;
+  const d = new Date(yyyy, mo - 1, dd, m[4] ? +m[4] : 18, m[5] ? +m[5] : 0);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 /* Téléchargement de média (cible = message cité ou message courant) */
 function mediaInfo(msg) {
   const content = unwrap(msg.message);
@@ -1112,6 +1142,80 @@ cmd('statut', ['status'], { cat: 9, desc: 'Publier un texte en statut WhatsApp',
   await ctx.reply(`✅ Statut publié${list.length ? ` vers ${list.length} contacts` : ''}.`);
 });
 
+cmd('location', ['position', 'localisation'], { cat: 5, desc: 'Envoyer un point GPS', usage: 'location <lat>, <lng> [nom]' }, async (ctx) => {
+  const m = ctx.q.match(/(-?\d{1,3}(?:\.\d+)?)[,\s]+(-?\d{1,3}(?:\.\d+)?)/);
+  if (!m) return ctx.reply(`❌ Usage : ${config.prefix}location 3.8480, 11.5020 Douala`);
+  const lat = parseFloat(m[1]);
+  const lng = parseFloat(m[2]);
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+    return ctx.reply('❌ Coordonnées invalides (latitude -90..90, longitude -180..180).');
+  }
+  const name = ctx.q.replace(m[0], '').trim().slice(0, 80);
+  await ctx.sock.sendMessage(ctx.from, {
+    location: { degreesLatitude: lat, degreesLongitude: lng, ...(name ? { name } : {}) },
+  }, { quoted: ctx.msg });
+});
+
+cmd('vcard', ['contact', 'carte'], { cat: 10, desc: 'Envoyer une carte de contact', usage: 'vcard <numéro> [@mention] [nom]' }, async (ctx) => {
+  const ci = ctxInfo(ctx.content);
+  const number =
+    (ci?.mentionedJid || []).map((j) => num(j)).find(Boolean) ||
+    (ctx.q.match(/\d{5,}/) || [])[0];
+  if (!number) return ctx.reply(`❌ Usage : ${config.prefix}vcard 237690000000 Nom`);
+  const name = ctx.q.replace(/\d{5,}/, '').replace(/@\d+/g, '').trim() || `+${number}`;
+  const vcard =
+    `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\n` +
+    `TEL;type=CELL;type=VOICE;waid=${number}:+${number}\nEND:VCARD`;
+  await ctx.sock.sendMessage(ctx.from, {
+    contacts: { displayName: name, contacts: [{ vcard }] },
+  }, { quoted: ctx.msg });
+});
+
+cmd('event', ['rdv', 'rendezvous'], { cat: 10, desc: 'Créer un événement WhatsApp', usage: 'event <titre> | <lieu> | <JJ/MM/AAAA HH:MM> | <description>' }, async (ctx) => {
+  const parts = ctx.q.split('|').map((s) => s.trim()).filter(Boolean);
+  if (!parts.length) {
+    return ctx.reply(`❌ Usage : ${config.prefix}event Réunion | Salle A | 28/09/2026 18:00 | Ordre du jour`);
+  }
+  const name = parts.shift().slice(0, 100);
+  let startSec = null;
+  for (let i = 0; i < parts.length; i++) {
+    const d = parseFrDate(parts[i]);
+    if (d) {
+      startSec = Math.floor(d.getTime() / 1000);
+      parts.splice(i, 1);
+      break;
+    }
+  }
+  const place = parts.shift() || '';
+  const description = [place ? `📍 ${place}` : '', parts.join('\n')]
+    .filter(Boolean)
+    .join('\n')
+    .slice(0, 300);
+  if (startSec == null) startSec = Math.floor(Date.now() / 1000) + 86400;
+  await ctx.sock.sendMessage(ctx.from, {
+    event: { name, description, startTime: startSec },
+  }, { quoted: ctx.msg });
+  const when = new Date(startSec * 1000).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+  await ctx.reply(`📅 Événement « ${name} » créé pour le ${when}.`);
+});
+
+cmd('derniers', ['historique'], { cat: 9, desc: 'Mémoire : derniers messages du chat', usage: 'derniers [1-10]', owner: true }, async (ctx) => {
+  const arr = history.get(ctx.from) || [];
+  if (!arr.length) return ctx.reply('📭 Aucun message en mémoire pour ce chat.');
+  const n = Math.max(1, Math.min(parseInt(ctx.args[0], 10) || 10, 10));
+  const lines = arr.slice(-n).map((e, i) =>
+    `${i + 1}. [${new Date(e.ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}] +${e.s} : ${e.t}`
+  );
+  await ctx.reply(`🧠 *Mémoire — ${arr.length} message(s)*\n${lines.join('\n')}`);
+});
+
+cmd('glog', { cat: 2, desc: 'Annoncer les changements du groupe', usage: 'glog on|off', group: true, admin: true }, async (ctx) => {
+  const g = getGroup(ctx.from);
+  if (ctx.args[0]) g.glog = ['on', 'true'].includes(ctx.args[0].toLowerCase());
+  saveState();
+  await ctx.reply(toggleReply(g, 'glog', 'Journal du groupe'));
+});
+
 /* ── 10. DIVERS ───────────────────────────────────────────── */
 
 cmd('afk', { cat: 10, desc: 'Se déclarer AFK', usage: 'afk [raison]' }, async (ctx) => {
@@ -1569,6 +1673,9 @@ const INTENTS = [
   { cmd: 'warn', keys: ['avertis', 'avertissement'] },
   { cmd: 'poll', keys: ['sondage', 'question au groupe', 'un vote'] },
   { cmd: 'statut', keys: ['publie un statut', 'mets un statut', 'publier un status'] },
+  { cmd: 'location', keys: ['envoie une position', 'partage une position'] },
+  { cmd: 'vcard', keys: ['carte de contact', 'envoie un contact'] },
+  { cmd: 'event', keys: ['creer un rendez vous', 'programme un evenement', 'un rendez vous'] },
 ];
 
 function stripIntentKey(text, key) {
@@ -1799,6 +1906,9 @@ async function handleMessage(sock, msg) {
 
     if (!text) return;
 
+    /* ── Mémoire contextuelle : on garde les 10 derniers messages du chat ── */
+    remember(from, senderNum, text);
+
     /* ── AFK : sortie + notifications ── */
     const u = getUser(senderNum);
     if (u.afk && !fromMe) {
@@ -1896,9 +2006,32 @@ async function handleGroupUpdate(sock, update) {
   }
 }
 
+/* ════════════════════════════════════════════════════════════
+   10. MÉTADONNÉES DE GROUPE — journal .glog (groups.update)
+   ════════════════════════════════════════════════════════════ */
+
+async function handleGroupInfo(sock, update) {
+  try {
+    if (!update?.id?.endsWith('@g.us')) return;
+    const g = getGroup(update.id);
+    if (!g.glog) return;
+    const lines = [];
+    if (update.subject) lines.push(`📝 Nom → *${update.subject}*`);
+    if (update.desc !== undefined && update.desc !== null) lines.push('📄 Description modifiée');
+    if (update.announcement !== undefined) {
+      lines.push(update.announcement ? '🔒 Groupe fermé (admins seulement)' : '🔓 Groupe ouvert à tous');
+    }
+    if (!lines.length) return;
+    await sock.sendMessage(update.id, { text: `📢 *Groupe mis à jour*\n${lines.join('\n')}` }).catch(() => {});
+  } catch (e) {
+    console.error('[HANDLER] group-info:', e.message);
+  }
+}
+
 module.exports = {
   handleMessage,
   handleGroupUpdate,
+  handleGroupInfo,
   commands,
   CATEGORIES,
   renderMainMenu,
