@@ -3,10 +3,10 @@
  * handler.js — Cerveau unique de DJOUSSE TECH MD
  * ────────────────────────────────────────────────
  * • Menu interactif par chiffres de 1 à 10 (navigation par catégories)
- * • Commandes textuelles (.prefix + nom) — ~65 commandes dans 11 catégories
+ * • Commandes textuelles (.prefix + nom) — 73 commandes dans 11 catégories
  * • Protections de groupe : antilink, antibad, antidelete, warns, blacklist,
  *   welcome/goodbye
- * • État persistant : session/state.json
+ * • État persistant : session/state.json + mémoire session/history.json
  *
  * index.js délègue ici : messages.upsert → handleMessage(),
  * group-participants.update → handleGroupUpdate().
@@ -274,6 +274,8 @@ function typingOff(sock, jid) {
    ════════════════════════════════════════════════════════════ */
 
 const history = new Map(); // jid → [{ s, t, ts }] (max 10/chat, 300 chats)
+const HISTORY_FILE = path.join(path.dirname(STATE_FILE), 'history.json');
+let historyDirty = false;
 
 function remember(jid, senderNum, text) {
   if (!jid || !text) return;
@@ -287,7 +289,36 @@ function remember(jid, senderNum, text) {
   history.set(jid, arr);
   arr.push({ s: senderNum, t: text.slice(0, 200), ts: Date.now() });
   if (arr.length > 10) arr.shift();
+  historyDirty = true;
 }
+
+function loadHistory() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf8'));
+    if (raw && typeof raw === 'object') {
+      for (const [k, v] of Object.entries(raw)) {
+        if (Array.isArray(v) && v.length) history.set(k, v.slice(-10));
+      }
+    }
+  } catch (e) { /* premier lancement : pas d'historique */ }
+}
+
+function flushHistory(force = false) {
+  if (!historyDirty && !force) return;
+  if (!history.size) return;
+  try {
+    const tmp = HISTORY_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(Object.fromEntries(history)));
+    fs.renameSync(tmp, HISTORY_FILE);
+    historyDirty = false;
+  } catch (e) {
+    console.error('[HISTORY] Écriture impossible:', e.message);
+  }
+}
+
+loadHistory();
+setInterval(() => flushHistory(), 15000).unref();
+process.on('exit', () => flushHistory(true));
 
 /* Date française « JJ/MM/AAAA [HH:MM] » → Date locale (défaut 18h) */
 function parseFrDate(s) {
@@ -371,13 +402,18 @@ function streamToBuffer(stream, maxMB) {
   });
 }
 
-async function askGemini(prompt) {
+async function askGemini(prompt, media = null) {
   if (!config.geminiKey) return null;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.geminiKey}`;
+  /* gemini-flash-latest : alias maintenu par Google (gemini-2.0-flash retiré) */
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${config.geminiKey}`;
+  const parts = [{ text: prompt }];
+  if (media?.data?.length) {
+    parts.push({ inline_data: { mime_type: media.mime, data: media.data.toString('base64') } });
+  }
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] }),
+    body: JSON.stringify({ contents: [{ role: 'user', parts }] }),
   });
   const json = await res.json();
   const text = json?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('').trim();
@@ -943,7 +979,12 @@ cmd('ai', ['gemini', 'bot'], { cat: 6, desc: 'Pose une question à l’IA', usag
   if (!config.geminiKey) return ctx.reply('🔑 Clé IA manquante : ajoute GEMINI_KEY dans le fichier .env puis relance le bot.');
   await ctx.reply(config.messages.wait);
   try {
-    const answer = await askGemini(prompt.slice(0, 2000));
+    /* Contexte : 5 derniers messages du chat (mémoire persistante) */
+    const mem = (history.get(ctx.from) || []).slice(-5);
+    const block = mem.length
+      ? `Conversation récente :\n${mem.map((e) => `+${e.s}: ${e.t}`).join('\n')}\n\nQuestion : `
+      : '';
+    const answer = await askGemini((block + prompt).slice(0, 2500));
     await ctx.reply(answer.slice(0, 4000));
   } catch (e) {
     await ctx.reply(`❌ IA indisponible : ${e.message}`);
@@ -962,6 +1003,47 @@ cmd('summarize', ['resume'], { cat: 6, desc: 'Résumer un texte cité', usage: '
     await ctx.reply(`📋 *Résumé*\n\n${answer.slice(0, 3500)}`);
   } catch (e) {
     await ctx.reply(`❌ Résumé impossible : ${e.message}`);
+  }
+});
+
+cmd('analyse', ['ocr', 'transcrire', 'decrit'], { cat: 6, desc: 'IA : lire une image, transcrire un vocal, résumer un document', usage: 'analyse [question] (réponds à un média)' }, async (ctx) => {
+  const info = mediaInfo(ctx.msg);
+  if (!info) return ctx.reply(`❌ Réponds à une image, un vocal ou un document.\nUsage : ${config.prefix}analyse`);
+  if (!config.geminiKey) return ctx.reply('🔑 Clé IA manquante : ajoute GEMINI_KEY dans le fichier .env.');
+
+  const kind = info.type;
+  const prompts = {
+    imageMessage: 'Transcris tout le texte visible en français. S’il n’y a pas de texte, décris l’image en 3 phrases.',
+    audioMessage: 'Transcris cet audio en français, fidèlement, avec la ponctuation.',
+    documentMessage: 'Résume ce document en 5 points maximum, en français.',
+    videoMessage: 'Décris brièvement cette vidéo en 3 phrases.',
+  };
+  if (!prompts[kind]) return ctx.reply('❌ Média non pris en charge (image, vocal, document, vidéo).');
+
+  const mime = (info.mimetype || '').split(';')[0].trim().toLowerCase();
+  if (kind === 'documentMessage' && !/pdf|text\/plain/.test(mime)) {
+    return ctx.reply('❌ Documents pris en charge : PDF et texte brut seulement.');
+  }
+  if (kind === 'videoMessage' && !/^video\/(mp4|webm)$/.test(mime)) {
+    return ctx.reply('❌ Vidéo prise en charge : MP4 seulement.');
+  }
+
+  await ctx.reply(config.messages.wait);
+  let buf;
+  try {
+    buf = await downloadFrom(ctx.sock, info);
+  } catch (e) {
+    return ctx.reply(`❌ Téléchargement du média impossible : ${e.message}`);
+  }
+  if (!buf?.length) return ctx.reply('❌ Média vide ou expiré (reproduis le message).');
+  if (buf.length > 12 * 1024 * 1024) return ctx.reply('❌ Fichier trop volumineux (> 12 Mo).');
+
+  const prompt = (ctx.q || prompts[kind]).slice(0, 1500);
+  try {
+    const answer = await askGemini(prompt, { mime: mime || 'application/octet-stream', data: buf });
+    await ctx.reply(`🧠 *Analyse IA*\n\n${answer.slice(0, 4000)}`);
+  } catch (e) {
+    await ctx.reply(`❌ IA indisponible : ${e.message}`);
   }
 });
 
@@ -1676,6 +1758,7 @@ const INTENTS = [
   { cmd: 'location', keys: ['envoie une position', 'partage une position'] },
   { cmd: 'vcard', keys: ['carte de contact', 'envoie un contact'] },
   { cmd: 'event', keys: ['creer un rendez vous', 'programme un evenement', 'un rendez vous'] },
+  { cmd: 'analyse', keys: ['fais un ocr', 'transcris ce vocal', 'analyse cette image', 'decrit cette image'] },
 ];
 
 function stripIntentKey(text, key) {
@@ -2037,4 +2120,5 @@ module.exports = {
   renderMainMenu,
   state,
   saveState,
+  askGemini,
 };
