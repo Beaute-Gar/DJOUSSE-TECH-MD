@@ -1,6 +1,6 @@
 const {
     proto, getContentType, jidNormalizedUser, downloadContentFromMessage
-} = require('@whiskeysockets/baileys');
+} = require('@itsukichan/baileys');
 
 const sms = (conn, m) => {
     if (!m) return m;

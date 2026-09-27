@@ -9,7 +9,7 @@ const database = require('./database');
 const { loadCommands } = require('./utils/commandLoader');
 const { addMessage } = require('./utils/groupstats');
 const { tryAutoLevelUp, formatLevelUpMessage } = require('./utils/economy');
-const { jidDecode, jidEncode } = require('@whiskeysockets/baileys');
+const { jidDecode, jidEncode } = require('@itsukichan/baileys');
 const fs = require('fs');
 const path = require('path');
 const bus = require('./src/core/eventBus');
@@ -26,9 +26,6 @@ const silentAutomations = require('./lib/silent-automations.cjs');
 const { pmGate } = require('./commands/pmguard');
 const { premiumGate } = require('./commands/premium');
 const reactionAutomations = require('./lib/reaction-automations.cjs');
-const { isButtonResponse, handleButtonClick } = require('./commands/lib/buttons/buttonHandler');
-const { handlePendingInput } = require('./commands/lib/buttons/inputHandler');
-const { handleNumberInput } = require('./commands/lib/buttons/numberHandler');
 const { autoReact } = require('./utils/autoReact');
 
 const commands = loadCommands();
@@ -336,25 +333,19 @@ const handleMessage = async (sock, msg) => {
       }
     }
 
-    // ═══ Gestion des clics de boutons (pour TOUS en groupe) ═══
-    if (isButtonResponse(msg)) {
-      await handleButtonClick(sock, msg);
-      return;
+    // ═══ Menu numérique : "1-10" = catégorie, "0" = menu principal ═══
+    if (body && /^\d{1,2}$/.test(body.trim())) {
+      const { handleCommandSelection, handleNumericReply } = require('./commands/general/numberRouter.cjs');
+      await handleCommandSelection(sock, msg, body);
+      const handled = await handleNumericReply(sock, msg, body);
+      if (handled) return;
     }
 
-    // ═══ Gestion des saisies en attente (pour TOUS en groupe) ═══
-    if (await handlePendingInput(sock, msg)) {
-      return;
-    }
-
-    // ═══ Interception des numéros (pour TOUS en groupe) ═══
-    if (await handleNumberInput(sock, msg)) {
-      return;
-    }
-
-    // ═══ BLOQUER les non-owners en groupe (APRÈS boutons/menu) ═══
-    if (isGroup && !isOwner(sock, sender)) {
-      return; // Silencieux — les non-owners ne peuvent que utiliser les boutons/menu
+    // ═══ BLOQUER les non-owners en groupe (APRÈS le menu) ═══
+    // Accès maintenu : .menu, réponses numériques et sélections venues du menu
+    const isMenuAccess = body.startsWith(config.prefix) && body.slice(config.prefix.length).toLowerCase() === 'menu';
+    if (isGroup && !isOwner(sock, sender) && !msg.__fromMenu && !isMenuAccess) {
+      return; // Silencieux — les non-owners n'utilisent que le menu
     }
 
     // Check prefix
@@ -530,7 +521,7 @@ const handleMessage = async (sock, msg) => {
             return qMsg[qType];
           },
           download: async () => {
-            const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+            const { downloadContentFromMessage } = require('@itsukichan/baileys');
             const typeMap = {
               imageMessage: 'image',
               videoMessage: 'video',

@@ -1,11 +1,11 @@
 const { cmd } = require('../command.cjs');
 const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');;
-const { isLidUser } = require('@whiskeysockets/baileys');
+const { isLidUser } = require('@itsukichan/baileys');
 
 /*
  * DJOUSSE TECH — CREATEGROUP v3
  *
- * Réalité Baileys 7 (@whiskeysockets/baileys ^7.0.0-rc14) :
+ * Built with Baileys (@itsukichan/baileys 7.3.x) :
  * - groupFetchAllParticipating() retourne des @lid pour les groupes LID mode
  * - groupParticipantsUpdate() exige des @s.whatsapp.net
  * - Aucune fonction native pour convertir @lid → @s.whatsapp.net

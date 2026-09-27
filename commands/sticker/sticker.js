@@ -1,7 +1,7 @@
 const { cmd } = require('../command.cjs');
 const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 const { Sticker } = require('wa-sticker-kit');
-const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { downloadMediaMessage } = require('@itsukichan/baileys');
 
 cmd({
   pattern: 'sticker',

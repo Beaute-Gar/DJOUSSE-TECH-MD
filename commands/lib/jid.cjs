@@ -1,6 +1,6 @@
 'use strict';
 
-const { jidNormalizedUser } = require('@whiskeysockets/baileys');
+const { jidNormalizedUser } = require('@itsukichan/baileys');
 
 function normalizeJid(jid) {
     if (!jid) return '';

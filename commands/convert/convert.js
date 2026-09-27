@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { downloadMediaMessage } = require('@itsukichan/baileys');
 const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
 
 ffmpeg.setFfmpegPath(ffmpegPath);

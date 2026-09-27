@@ -61,34 +61,18 @@ function cmd(opts, handler) {
         if (!msg.quoted) msg.quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage || null;
         if (!ctx.conn) ctx.conn = sock;
 
-        // ✅ INJECTION STYLE HACKER GLOBAL
-        const { boxWithFooter, FOOTER } = require('../lib/djousse-ui.cjs');
-
-        // ✅ Wrapper reply : ajoute automatiquement le footer
+        // ✅ Wrappers reply SANS footer automatique (système de menu unifié)
         const originalReply = ctx.reply;
         ctx.reply = (text, mentions) => {
-          let finalText = typeof text === 'string' ? text : String(text || '');
-
-          // Ajouter le footer si absent
-          if (!finalText.includes('ᴘᴏᴡᴇʀᴇᴅ ʙʏ')) {
-            finalText += `\n> ${FOOTER}`;
-          }
-
-          // Si mentions fournies
           if (mentions) {
-            return sock.sendMessage(from, { text: finalText, mentions }, { quoted: msg });
+            return sock.sendMessage(from, { text, mentions }, { quoted: msg });
           }
-          return originalReply(finalText);
+          return originalReply(text);
         };
 
-        // ✅ Wrapper m.reply : même chose
         const originalMsgReply = msg.reply;
         msg.reply = (text, chatId = from, options = {}) => {
-          let finalText = typeof text === 'string' ? text : String(text || '');
-          if (!finalText.includes('ᴘᴏᴡᴇʀᴇᴅ ʙʏ')) {
-            finalText += `\n> ${FOOTER}`;
-          }
-          return sock.sendMessage(chatId, { text: finalText, ...options }, { quoted: msg });
+          return sock.sendMessage(chatId, { text, ...options }, { quoted: msg });
         };
 
         const fullText = args.join(' ');

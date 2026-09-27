@@ -1,31 +1,23 @@
 @echo off
 chcp 65001 >nul
-title DJOUSSE-TECH-MD Bot
+title DJOUSSE-TECH-MD - Bot WhatsApp
 color 0A
 cd /d "%~dp0"
+set NODE_ENV=production
 
 if not exist "node_modules" (
     echo [!] node_modules introuvable. Installation en cours...
-    npm install
+    call npm install
     echo.
 )
 
-:start
-cls
 echo.
 echo   ================================================================
-echo     DJOUSSE-TECH-MD  -  WhatsApp Bot
-echo   ================================================================
-echo     Date    : %date% %time%
-echo     Dossier : %cd%
+echo     DJOUSSE-TECH-MD - Demarrage du bot (npm start)
 echo   ================================================================
 echo.
-
-node --max-old-space-size=2048 index.js
+call npm start
 
 echo.
-echo   ----------------------------------------------------------------
-echo     Le bot s'est arrete. Redemarrage dans 5s... (Ctrl+C pour quitter)
-echo   ----------------------------------------------------------------
-timeout /t 5 /nobreak >nul
-goto start
+echo   [i] Bot arrete. Appuyez sur une touche pour fermer.
+pause >nul

@@ -1,4 +1,4 @@
-const { jidDecode, jidEncode } = require('@whiskeysockets/baileys');
+const { jidDecode, jidEncode } = require('@itsukichan/baileys');
 
 const normalizeJid = (jid) => {
   if (!jid) return null;

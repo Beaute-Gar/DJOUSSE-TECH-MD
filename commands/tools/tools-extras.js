@@ -3,7 +3,7 @@ const { boxWithFooter } = require('../lib/djousse-ui.cjs');
 const axios = require('axios');
 const crypto = require('crypto');
 const FormData = require('form-data');
-const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { downloadMediaMessage } = require('@itsukichan/baileys');
 const fs = require('fs');
 const path = require('path');
 

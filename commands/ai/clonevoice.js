@@ -1,6 +1,6 @@
 const { cmd } = require('../command.cjs');
 const { box, boxWithFooter } = require('../lib/djousse-ui.cjs');
-const baileysDl = (() => { try { return require('@whiskeysockets/baileys').downloadMediaMessage; } catch { return null; } })();
+const baileysDl = (() => { try { return require('@itsukichan/baileys').downloadMediaMessage; } catch { return null; } })();
 const fallbackDl = require('../lib/msg.cjs').downloadMediaMessage;
 const axios = require('axios');
 const fs = require('fs');

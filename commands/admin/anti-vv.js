@@ -1,7 +1,7 @@
 const { cmd } = require('../command.cjs');
 const config = require('../config-djousse.cjs');
 const { boxWithFooter } = require('../lib/djousse-ui.cjs');
-const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { downloadMediaMessage } = require('@itsukichan/baileys');
 
 cmd({
     pattern: 'anticiponce|antiVV',

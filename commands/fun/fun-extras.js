@@ -174,42 +174,32 @@ cmd({
 
   for (const stage of stages) {
     await sleep(1000);
-    await conn.relayMessage(from, {
-      protocolMessage: {
-        key: msgId,
-        type: 14,
-        editedMessage: {
-          conversation: boxWithFooter('HACK', [
-            { raw: stage.text },
-            { raw: '' },
-            { label: 'Target', value: '@owner' },
-            { label: 'Status', value: 'RUNNING' },
-            { label: 'Progress', value: progressBar(stage.pct) },
-            { raw: '' },
-            { label: 'Percentage', value: `${stage.pct}%` },
-          ]),
-        },
-      },
-    }, {});
+    await conn.sendMessage(from, {
+      text: boxWithFooter('HACK', [
+        { raw: stage.text },
+        { raw: '' },
+        { label: 'Target', value: '@owner' },
+        { label: 'Status', value: 'RUNNING' },
+        { label: 'Progress', value: progressBar(stage.pct) },
+        { raw: '' },
+        { label: 'Percentage', value: `${stage.pct}%` },
+      ]),
+      edit: msgId,
+    });
   }
 
   await sleep(1000);
-  await conn.relayMessage(from, {
-    protocolMessage: {
-      key: msgId,
-      type: 14,
-      editedMessage: {
-        conversation: boxWithFooter('HACK', [
-          { raw: '✅ Hack completed successfully!' },
-          { raw: '' },
-          { label: 'Target', value: '@owner' },
-          { label: 'Status', value: 'COMPLETE' },
-          { label: 'Progress', value: progressBar(100) },
-          { raw: '' },
-          { label: 'Result', value: 'All data extracted' },
-        ]),
-      },
-    },
+  await conn.sendMessage(from, {
+    text: boxWithFooter('HACK', [
+      { raw: '✅ Hack completed successfully!' },
+      { raw: '' },
+      { label: 'Target', value: '@owner' },
+      { label: 'Status', value: 'COMPLETE' },
+      { label: 'Progress', value: progressBar(100) },
+      { raw: '' },
+      { label: 'Result', value: 'All data extracted' },
+    ]),
+    edit: msgId,
   });
 });
 
@@ -226,15 +216,10 @@ async function animatedEmojiEdit(conn, from, m, emoji, phrases) {
 
   for (let i = 1; i < phrases.length; i++) {
     await sleep(1500);
-    await conn.relayMessage(from, {
-      protocolMessage: {
-        key: msgId,
-        type: 14,
-        editedMessage: {
-          conversation: boxWithFooter(emoji + ' REACTION', [{ raw: phrases[i] }]),
-        },
-      },
-    }, {});
+    await conn.sendMessage(from, {
+      text: boxWithFooter(emoji + ' REACTION', [{ raw: phrases[i] }]),
+      edit: msgId,
+    });
   }
 }
 

@@ -6,7 +6,8 @@
     "type": "commonjs",
     "scripts": {
         "start": "node index.js",
-        "dev": "nodemon index.js"
+        "dev": "node index.js --dev",
+        "check": "node --check index.js && node --check handler.js"
     },
     "keywords": [
         "whatsapp bot",
@@ -24,6 +25,7 @@
         "@distube/ytdl-core": "^4.16.12",
         "@ffmpeg-installer/ffmpeg": "^1.1.0",
         "@hapi/boom": "^10.0.1",
+        "@itsukichan/baileys": "file:vendor/itsuki-baileys",
         "@lmna22/aio-downloader": "^2.0.3",
         "@qadeerxtech/qadeer-btns": "^1.0.2",
         "@supabase/supabase-js": "^2.116.0",

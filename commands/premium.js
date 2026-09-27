@@ -224,7 +224,7 @@ async function analyze(buf) {
 
 async function download(conn, msgObj) {
   let lib = null;
-  for (const name of [process.env.BAILEYS_PKG, '@whiskeysockets/baileys', 'baileys'].filter(Boolean)) {
+  for (const name of [process.env.BAILEYS_PKG, '@itsukichan/baileys', 'baileys'].filter(Boolean)) {
     try { lib = await import(name); break; } catch {}
   }
   const dl = lib?.downloadMediaMessage || lib?.default?.downloadMediaMessage;
