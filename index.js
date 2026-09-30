@@ -7,8 +7,9 @@
  *   2. Sauvegarde des credentials (session/)
  *   3. Délégation de TOUS le traitement métier à handler.js
  *
- * Architecture : 7 fichiers seulement.
- *   .env · .gitignore · config.js · handler.js · index.js · package.json · session/
+ * Architecture :
+ *   .env · .gitignore · config.js · style.js · handler.js · index.js · package.json · session/
+ *   guard/ (moteur de protections de groupe)
  */
 
 const fs = require('fs');
@@ -19,15 +20,21 @@ const qrTerminal = require('qrcode-terminal');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
+  makeCacheableSignalKeyStore,
   DisconnectReason,
-} = require('@itsukichan/baileys');
-const {
   fetchLatestBaileysVersion,
   fetchLatestWaWebVersion,
+  downloadMediaMessage,
 } = require('@whiskeysockets/baileys');
 
 const config = require('./config');
 const handler = require('./handler');
+/* Cadres de la console : source unique du style (style.js) */
+const { box, banner } = require('./style');
+/* Extraction du texte : parseur unique du projet (G4) */
+const { textOf } = require('./guard/src/utils/message');
+const guardPerms = require('./guard/src/utils/perms');
+const guardNight = require('./guard/src/nightmode');
 
 /* ══════════════════════════════════════════════════════════════
    0. FILTRES — ignore les erreurs bruyantes de libsignal / réseau
@@ -64,6 +71,14 @@ process.on('unhandledRejection', (reason) => {
   if (isIgnored(reason?.message) || isIgnored(String(reason))) return;
   rawError('[UNHANDLED]', reason?.message || reason);
 });
+
+/* ── DJOUSSE GUARD : flush de la base de protections à l'arrêt
+      (écriture atomique, debounce 300 ms → rien ne se perd) ── */
+const guardDb = require('./guard/src/db');
+const flushGuard = () => { try { guardDb.db().flush(); } catch (e) { /* non initialisée */ } };
+process.on('SIGINT', () => { flushGuard(); process.exit(0); });
+process.on('SIGTERM', () => { flushGuard(); process.exit(0); });
+process.on('exit', flushGuard);
 
 /* ══════════════════════════════════════════════════════════════
    1. LOGGER SILENCIEUX — aucun pino-pretty (7 fichiers, zéro dépendance)
@@ -118,8 +133,8 @@ async function resolveWAVersion() {
 const processedMessages = new Set();
 setInterval(() => processedMessages.clear(), 5 * 60 * 1000).unref();
 
-const isSystemJid = (jid) =>
-  !jid || jid.includes('@broadcast') || jid.includes('status.broadcast') || jid.includes('@newsletter');
+const STATUS_JID = 'status@broadcast';
+const skipJid = (jid) => handler.isSystemJid(jid) && jid !== STATUS_JID; // source unique : handler.isSystemJid
 
 /* ══════════════════════════════════════════════════════════════
    4. ÉTAT DE CONNEXION (un seul socket à la fois)
@@ -148,12 +163,10 @@ const ask = (query) => new Promise((resolve) => {
 });
 
 async function askConnectionMethod() {
-  rawLog('\n╔══════════════════════════════════════════════╗');
-  rawLog('║       DJOUSSE TECH — CONNEXION WHATSAPP     ║');
-  rawLog('╠══════════════════════════════════════════════╣');
-  rawLog('║  1 │ QR Code      — Scanner avec le téléphone║');
-  rawLog('║  2 │ Pairing Code — Saisir un code 8 chiffres║');
-  rawLog('╚══════════════════════════════════════════════╝\n');
+  rawLog('\n' + box('DJOUSSE TECH — CONNEXION WHATSAPP', [
+    '1. QR Code      — Scanner avec le téléphone',
+    '2. Pairing Code — Saisir un code 8 chiffres',
+  ]) + '\n');
   const choice = await ask('Choix [1/2]: ');
   if (choice === '2') {
     const phone = await ask('Numéro WhatsApp (ex: 237693978044): ');
@@ -215,11 +228,22 @@ async function startSession(options = {}) {
     logger,
     browser: ['DJOUSSE TECH', 'Chrome', '1.0'],
     printQRInTerminal: false,
-    auth: state,
+    /* Clés mises en cache par signal-key : évite de relire le disque
+       à chaque chiffrage et accélère les envois en rafale (voir
+       lib/Utils/auth-utils.d.ts → makeCacheableSignalKeyStore) */
+    auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, logger) },
     syncFullHistory: false,
     downloadHistory: false,
     markOnlineOnConnect: !!config.alwaysOnline,
-    getMessage: async () => undefined,
+    generateHighQualityLinkPreview: !!config.linkPreview,
+    // Critiques pour retry, édition, votes de sondages, antidelete fiable
+    getMessage: async (key) => {
+      try {
+        return await handler.getMessageForBaileys(key);
+      } catch {
+        return undefined;
+      }
+    },
   });
   activeSock = sock;
 
@@ -258,17 +282,16 @@ async function startSession(options = {}) {
         // En pairing, l'évent qr ne sert pas : le code est demandé en direct plus bas
         rawLog('[AUTH] Pairing en cours — QR ignoré.');
       } else {
-        rawLog('\n╔══════════════════════════════════════════════╗');
-        rawLog('║       DJOUSSE TECH — CONNEXION QR            ║');
-        rawLog('╠══════════════════════════════════════════════╣');
-        rawLog('║ WhatsApp → Appareils liés → Connecter        ║');
-        rawLog('║ un appareil → Scanner le QR                  ║');
-        rawLog('╚══════════════════════════════════════════════╝');
+        rawLog('\n' + box('DJOUSSE TECH — CONNEXION QR', [
+          'WhatsApp → Appareils liés → Connecter',
+          'un appareil → Scanner le QR',
+        ]));
         qrTerminal.generate(qr, { small: true });
       }
     }
 
     if (connection === 'close') {
+      guardNight.stop();
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const wasRegistered = !!state?.creds?.registered;
 
@@ -348,6 +371,38 @@ async function startSession(options = {}) {
         }
       }
 
+      // ── AUTO-OWNER : le numéro qui se connecte devient OWNER + session ──
+      // Désactivable : AUTO_OWNER=false dans .env
+      // sock.user.id = "237659809751:xx@s.whatsapp.net" → on extrait les chiffres.
+      // Ce numéro est TOUJOURS owner (en plus de OWNER_NUMBER du .env s'il diffère).
+      try {
+        if (config.autoOwner === false) {
+          rawLog('[OWNER] AUTO_OWNER désactivé — owners = .env uniquement');
+        } else {
+          const rawId = String(sock.user?.id || '');
+          const connectedNum = rawId.replace(/:\d+/, '').replace(/\D/g, '');
+          if (connectedNum && connectedNum.length >= 8) {
+            const owners = new Set(
+              (config.ownerNumber || []).map((n) => String(n).replace(/\D/g, '')).filter(Boolean)
+            );
+            owners.add(connectedNum);
+            config.ownerNumber = [...owners];
+            if (handler.state) {
+              handler.state.settings = handler.state.settings || {};
+              handler.state.settings.sessionOwner = connectedNum;
+              handler.state.settings.owners = config.ownerNumber;
+              if (handler.state.settings.selfMode === undefined) {
+                handler.state.settings.selfMode = false;
+              }
+              if (typeof handler.saveState === 'function') handler.saveState(true);
+            }
+            rawLog(`[OWNER] Session = +${connectedNum} → owner(s): ${config.ownerNumber.map((n) => '+' + n).join(', ')}`);
+          }
+        }
+      } catch (e) {
+        console.error('[OWNER] Auto-owner impossible:', e.message);
+      }
+
       // Connexion stable → compteurs d'échec à zéro
       pairingAttempts = 0;
       handshakeFailCount = 0;
@@ -359,27 +414,58 @@ async function startSession(options = {}) {
         await sock.updateProfileStatus(`${config.botName} | En ligne`).catch(() => {});
       }
 
+      guardNight.start(sock); // mode nuit : ferme/rouvre les groupes configurés
+      try {
+        const sch = handler.getScheduler && handler.getScheduler();
+        if (sch) sch.start(sock);
+      } catch (e) {
+        console.error('[SCHED] start:', e.message);
+      }
+
       rawLog(`[BOT] ${config.botName} v${config.version} — prefix "${config.prefix}" — owner +${config.ownerNumber[0]}`);
       rawLog(`[BOT] ${handler.commands.size} commandes chargées · tapez ${config.prefix}menu dans WhatsApp\n`);
     }
   });
 
-  /* ── Messages entrants → handler (tout le métier est dans handler.js) ── */
+  /* ── Messages entrants → handler
+        Aligné sur le style « Guard » : on accepte notify + append sans filtre agressif.
+        Si aucun [MSG] n'apparaît quand tu envoies .ping, Baileys ne reçoit PAS le DM
+        (mauvais destinataire ou session à rescanner). ── */
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
-    if (type !== 'notify') return;
+    const list = messages || [];
+    // Log brut de TOUT ce que Baileys envoie (même types inhabituels)
+    rawLog(`[UPSERT] type=${type} count=${list.length}`);
 
-    for (const msg of messages) {
+    if (type !== 'notify' && type !== 'append') return;
+
+    for (const msg of list) {
       try {
-        if (!msg.message || !msg.key?.id) continue;
-        const from = msg.key.remoteJid;
-        if (isSystemJid(from)) continue;
+        if (!msg?.key?.id) continue;
 
-        // Ne jamais traiter un doublon ni un vieux message (redémarrage, backlog)
-        if (processedMessages.has(msg.key.id)) continue;
-        if (msg.messageTimestamp && Date.now() - Number(msg.messageTimestamp) * 1000 > 5 * 60 * 1000) continue;
-        processedMessages.add(msg.key.id);
+        const from = msg.key.remoteJid || '';
+        // Statuts : on laisse passer (handleMessage gère status@broadcast)
+        // On ne drop plus les append non-fromMe (comme Guard) — certains DM arrivent en append
 
-        if (config.autoRead && !msg.key.fromMe) {
+        // Anti-doublon souple
+        const dedupKey = `${from}|${msg.key.id}`;
+        if (processedMessages.has(dedupKey)) continue;
+        processedMessages.add(dedupKey);
+
+        const m = msg.message || {};
+        const text = textOf(m);
+
+        const who = msg.key.fromMe
+          ? 'moi'
+          : (msg.key.participant || msg.key.participantAlt || msg.key.remoteJid || '?');
+
+        if (!msg.message) {
+          rawLog(`[MSG] type=${type} ${from} ← ${who} [sans message.body — ignoré]`);
+          continue;
+        }
+
+        rawLog(`[MSG] type=${type} fromMe=${!!msg.key.fromMe} ${from} ← ${who}${text ? ` : ${String(text).slice(0, 80)}` : ' [média/autre]'}`);
+
+        if (config.autoRead && !msg.key.fromMe && from !== STATUS_JID) {
           await sock.readMessages([msg.key]).catch(() => {});
         }
 
@@ -390,9 +476,21 @@ async function startSession(options = {}) {
     }
   });
 
-  /* ── Arrivées / départs de membres → welcome & goodbye ── */
+  /* ── messages.update : éditions, votes de sondages, statut de livraison ── */
+  sock.ev.on('messages.update', async (updates) => {
+    try {
+      await handler.handleMessagesUpdate(sock, updates);
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error('[SOCKET] messages.update:', err?.message || err);
+    }
+  });
+
+  /* ── Arrivées / départs de membres → welcome & goodbye
+        + invalidation du cache permissions guard (reprise auto
+        des protections dès que le bot est promu admin) ── */
   sock.ev.on('group-participants.update', async (update) => {
     try {
+      guardPerms.invalidate(update.id);
       await handler.handleGroupUpdate(sock, update);
     } catch (err) {
       if (!isIgnored(err?.message)) console.error('[SOCKET] group-participants:', err?.message || err);
@@ -402,7 +500,10 @@ async function startSession(options = {}) {
   /* ── Métadonnées de groupe (nom, description, ouverture) → journal .glog ── */
   sock.ev.on('groups.update', async (updates) => {
     try {
-      for (const u of updates || []) await handler.handleGroupInfo(sock, u);
+      for (const u of updates || []) {
+        if (u?.id) guardPerms.invalidate(u.id);
+        await handler.handleGroupInfo(sock, u);
+      }
     } catch (err) {
       if (!isIgnored(err?.message)) console.error('[SOCKET] groups.update:', err?.message || err);
     }
@@ -434,15 +535,13 @@ async function startSession(options = {}) {
           const rawCode = await sock.requestPairingCode(phoneNumber);
           const code = rawCode?.match(/.{1,4}/g)?.join('-') || rawCode;
           rawLog(`[PAIRING] Code généré : ${code} (tentative ${pairingAttempts}/${MAX_PAIRING_ATTEMPTS})`);
-          rawLog('\n╔══════════════════════════════════════════════╗');
-          rawLog('║         CODE DE PAIRING WHATSAPP             ║');
-          rawLog('╠══════════════════════════════════════════════╣');
-          rawLog(`║  Code : ${code}`);
-          rawLog('║                                              ║');
-          rawLog('║  WhatsApp → Appareils liés → Connecter un    ║');
-          rawLog('║  appareil → Lier avec un numéro → saisir     ║');
-          rawLog('║  le code ci-dessus                           ║');
-          rawLog('╚══════════════════════════════════════════════╝\n');
+          rawLog('\n' + box('CODE DE PAIRING WHATSAPP', [
+            `Code : ${code}`,
+            '',
+            'WhatsApp → Appareils liés → Connecter un',
+            'appareil → Lier avec un numéro → saisir',
+            'le code ci-dessus',
+          ]) + '\n');
           setTimeout(() => {
             if (!state.creds.registered) {
               rawError('\n[PAIRING] ⏱️ Le code a expiré — relancez le bot pour en obtenir un nouveau.\n');
@@ -522,16 +621,18 @@ async function main() {
     }
   }
 
-  rawLog('┌──────────────────────────────────────────────┐');
-  rawLog(`│   ${config.botName} v${config.version} — DJOUSSE TECH MD`.padEnd(47) + '│');
-  rawLog('└──────────────────────────────────────────────┘');
+  rawLog(banner(`   ${config.botName} v${config.version} — DJOUSSE TECH MD`));
 
   await startSession({ connectMethod, pairingPhone });
 }
 
-main().catch((err) => {
-  rawError('Fatal:', err?.message || err);
-  process.exit(1);
-});
+/* Lancement direct (node index.js / npm start) — require() reste sans effet
+   pour les tests E2E qui appellent startSession() eux-mêmes */
+if (require.main === module) {
+  main().catch((err) => {
+    rawError('Fatal:', err?.message || err);
+    process.exit(1);
+  });
+}
 
-module.exports = { startSession, resolveWAVersion };
+module.exports = { startSession, resolveWAVersion, main };

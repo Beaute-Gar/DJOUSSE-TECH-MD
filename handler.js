@@ -17,7 +17,7 @@ const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 const config = require('./config');
-const { downloadMediaMessage } = require('@itsukichan/baileys');
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 // ATTENTION : sharp DOIT être chargé AVANT wa-sticker-formatter.
 // wsf embarque son propre sharp@0.30 (dossier imbriqué) : s'il est chargé en
 // premier, ses DLL libvips entrent en conflit avec sharp@0.32 du projet →
@@ -30,6 +30,33 @@ const { translate } = require('@vitalets/google-translate-api');
 const yts = require('yt-search');
 const https = require('https');
 const ffmpegPath = require('ffmpeg-static');
+const { initStore, getStore } = require('./lib/store');
+const { initScheduler, getScheduler } = require('./lib/scheduler');
+const { registerExtras } = require('./lib/extras');
+const { registerTools } = require('./lib/tools');
+const { registerMissing } = require('./lib/missing');
+/* Service unique d'envoi WhatsApp (G2) : tout envoi passe par send() */
+const { send } = require('./lib/wa-send');
+
+/* ── DJOUSSE GUARD — moteur de protections de groupe (dossier guard/) ── */
+const guardDb = require('./guard/src/db');
+const guardEngine = require('./guard/src/engine');
+const { parse: guardParse, unwrap, textOf, ctxInfo } = require('./guard/src/utils/message');
+const guardPerms = require('./guard/src/utils/perms');
+const guardEvents = require('./guard/src/events');
+const guardUi = require('./guard/src/ui');
+const { findLinks } = require('./guard/src/utils/links');
+const { formatDuration } = require('./guard/src/utils/time');
+const {
+  toUnicode, frameFooter, buildFrame, listHeader, listItem, bullet, signature,
+  renderInfo, renderSuccess, renderError, renderSaisie, nowTime, nowDate,
+  row, blank, title, note,
+} = require('./style');
+const guardSanctions = require('./guard/src/sanctions');
+const guardRegistry = require('./guard/src/commands');
+const guardProtections = require('./guard/src/protections');
+/* Base du moteur : initialisation paresseuse (tests locaux sans index.js) */
+try { guardDb.db(); } catch (e) { guardDb.init(path.join(__dirname, config.sessionDir, config.guard.dbFile)); }
 
 /* ════════════════════════════════════════════════════════════
    1. ÉTAT PERSISTANT — session/state.json
@@ -42,7 +69,6 @@ function defaultState() {
     settings: { selfMode: config.selfMode },
     groups: {},
     users: {},
-    warns: {},
     blacklist: [],
     stats: { messages: 0, commands: 0, since: Date.now() },
   };
@@ -59,7 +85,6 @@ function loadState() {
       stats: { ...base.stats, ...(raw.stats || {}) },
       groups: raw.groups || {},
       users: raw.users || {},
-      warns: raw.warns || {},
       blacklist: Array.isArray(raw.blacklist) ? raw.blacklist : [],
     };
   } catch (e) {
@@ -68,6 +93,55 @@ function loadState() {
 }
 
 const state = loadState();
+try {
+  initStore(path.join(__dirname, config.sessionDir));
+  initScheduler(path.join(__dirname, config.sessionDir));
+} catch (e) {
+  console.error('[INIT] store/scheduler:', e.message);
+}
+// Secours : si FORCE_PUBLIC=1 dans .env, on force le mode public à chaque démarrage
+if (process.env.FORCE_PUBLIC === '1' || process.env.FORCE_PUBLIC === 'true') {
+  state.settings.selfMode = false;
+  console.log('[STATE] FORCE_PUBLIC=1 → selfMode désactivé');
+}
+
+/* welcome / goodbye OFF pour TOUS les groupes (défaut + state existant) */
+{
+  state.groups = state.groups || {};
+  let n = 0;
+  for (const gid of Object.keys(state.groups)) {
+    const g = state.groups[gid];
+    if (!g) continue;
+    if (g.welcome) { g.welcome = false; n++; }
+    if (g.goodbye) { g.goodbye = false; n++; }
+  }
+  config.defaultGroupSettings.welcome = false;
+  config.defaultGroupSettings.goodbye = false;
+  if (n) console.log(`[STATE] welcome/goodbye forcés OFF (${n} drapeaux)`);
+  else console.log('[STATE] welcome/goodbye OFF (tous les groupes)');
+  // Écriture directe : saveState() n'est pas encore initialisé ici
+  try {
+    fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+    const tmp = STATE_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
+    fs.renameSync(tmp, STATE_FILE);
+  } catch (e) {
+    console.error('[STATE] Écriture impossible:', e.message);
+  }
+}
+
+// Restaurer les owners découverts à la connexion précédente (session = owner)
+if (Array.isArray(state.settings?.owners) && state.settings.owners.length) {
+  const merged = new Set([
+    ...(config.ownerNumber || []).map((n) => String(n).replace(/\D/g, '')),
+    ...state.settings.owners.map((n) => String(n).replace(/\D/g, '')),
+  ].filter(Boolean));
+  config.ownerNumber = [...merged];
+}
+if (state.settings?.sessionOwner) {
+  const so = String(state.settings.sessionOwner).replace(/\D/g, '');
+  if (so && !config.ownerNumber.includes(so)) config.ownerNumber.push(so);
+}
 let saveTimer = null;
 
 function saveState(immediate = false) {
@@ -110,128 +184,88 @@ process.on('exit', () => saveState(true));
    2. UTILITAIRES
    ════════════════════════════════════════════════════════════ */
 
-const num = (jid) => String(jid || '').split('@')[0].split(':')[0];
-const isOwnerJid = (jid) => config.ownerNumber.includes(num(jid));
-
-const escRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-function unwrap(message) {
-  let m = message || {};
-  for (let i = 0; i < 5; i++) {
-    const inner =
-      m.ephemeralMessage?.message ||
-      m.viewOnceMessage?.message ||
-      m.viewOnceMessageV2?.message ||
-      m.viewOnceMessageV2Extension?.message ||
-      m.documentWithCaptionMessage?.message;
-    if (!inner) break;
-    m = inner;
-  }
-  return m;
+const num = guardPerms.jidNum;
+/** Owners fixes (.env + session) + sudo autorisés (state.settings.sudo) */
+function getSudoList() {
+  const fromEnv = (process.env.SUDO_NUMBER || '')
+    .split(/[,\s]+/)
+    .map((x) => String(x).replace(/\D/g, ''))
+    .filter(Boolean);
+  const fromState = Array.isArray(state.settings?.sudo)
+    ? state.settings.sudo.map((x) => String(x).replace(/\D/g, '')).filter(Boolean)
+    : [];
+  return [...new Set([...fromEnv, ...fromState])];
 }
 
-function textOf(content) {
-  if (!content) return '';
-  return (
-    content.conversation ||
-    content.extendedTextMessage?.text ||
-    content.imageMessage?.caption ||
-    content.videoMessage?.caption ||
-    content.documentMessage?.caption ||
-    content.buttonsResponseMessage?.selectedDisplayText ||
-    content.buttonsResponseMessage?.selectedButtonId ||
-    content.listResponseMessage?.title ||
-    content.listResponseMessage?.singleSelectReply?.selectedRowId ||
-    content.templateButtonReplyMessage?.selectedDisplayText ||
-    content.templateButtonReplyMessage?.selectedId ||
-    ''
+function isPrimaryOwner(n) {
+  const num_ = String(n || '').replace(/\D/g, '');
+  return config.ownerNumber.some((o) => o === num_ || num_.endsWith(o) || o.endsWith(num_));
+}
+
+function isSudoNumber(n) {
+  const num_ = String(n || '').replace(/\D/g, '');
+  if (!num_) return false;
+  return getSudoList().some((o) => o === num_ || num_.endsWith(o) || o.endsWith(num_));
+}
+
+const isOwnerJid = (jid) => {
+  if (!jid) return false;
+  const n = num(jid);
+  if (!n) return false;
+  if (isPrimaryOwner(n) || isSudoNumber(n)) return true;
+  return config.ownerNumber.some((o) => o === n || n.endsWith(o) || o.endsWith(n));
+};
+
+/* Message « vue unique » (view once) — détection sur le brut,
+   AVANT unwrap (les wrappers portent l'information) */
+function isOnceContent(raw) {
+  return !!(
+    raw &&
+    (raw.viewOnceMessage || raw.viewOnceMessageV2 || raw.viewOnceMessageV2Extension)
   );
 }
 
-function ctxInfo(content) {
-  if (!content) return null;
-  return (
-    content.extendedTextMessage?.contextInfo ||
-    content.imageMessage?.contextInfo ||
-    content.videoMessage?.contextInfo ||
-    content.documentMessage?.contextInfo ||
-    content.stickerMessage?.contextInfo ||
-    content.audioMessage?.contextInfo ||
-    null
-  );
-}
+/* textOf() et ctxInfo() ne sont plus définis ici : implementations uniques
+   du projet, déplacées dans guard/src/utils/message.js (G4 « parseurs »).
+   handler.js les importe en tête de fichier, comme unwrap/parse. */
 
-function formatDuration(ms) {
-  const s = Math.floor(ms / 1000);
-  const d = Math.floor(s / 86400);
-  const h = Math.floor((s % 86400) / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  const parts = [];
-  if (d) parts.push(`${d}j`);
-  if (h) parts.push(`${h}h`);
-  if (m) parts.push(`${m}m`);
-  parts.push(`${sec}s`);
-  return parts.join(' ');
-}
-
-const LINK_RE =
-  /https?:\/\/|www\.|chat\.whatsapp\.com\/|wa\.me\/|t\.me\/|\b[a-z0-9-]+\.(?:com|net|org|io|me|xyz|link|app|site|online|shop|top|club|co|tv|fr)\b/i;
-
-const BAD_WORDS = [
-  'fuck', 'shit', 'bitch', 'asshole', 'motherfucker', 'nigga', 'nigger',
-  'puta', 'enculeur', 'enculé', 'connard', 'connasse', 'salope', 'enculé',
-  'fdp', 'ntm', 'tafiole', 'pédé', 'enculer', 'bite', 'pute',
-];
-
-/* Cache des messages (antidelete) : `${chat}|${id}` → message complet */
+/* Cache des messages (antidelete / getMessage / edit / pin) : `${chat}|${id}` → message complet
+   Branché sur makeWASocket({ getMessage }) pour retry, polls, édition. */
 const msgCache = new Map();
 function putCache(jid, id, msg) {
-  if (!jid || !id) return;
+  if (!jid || !id || !msg) return;
   msgCache.set(`${jid}|${id}`, { msg, ts: Date.now() });
-  if (msgCache.size > 400) {
+  const max = config.msgCacheMax || 800;
+  while (msgCache.size > max) {
     const oldest = msgCache.keys().next().value;
     msgCache.delete(oldest);
   }
+  try {
+    const st = getStore();
+    if (st) st.put(jid, id, msg);
+  } catch (_) {}
 }
 function getCache(jid, id) {
   return msgCache.get(`${jid}|${id}`) || null;
 }
-
-/* Métadonnées de groupe en cache (60 s) */
-const metaCache = new Map();
-async function groupMeta(sock, jid) {
-  const hit = metaCache.get(jid);
-  if (hit && Date.now() - hit.ts < 60000) return hit.data;
+/** Callback Baileys getMessage — retourne le message brut (proto) ou undefined */
+async function getMessageForBaileys(key) {
+  if (!key?.remoteJid || !key?.id) return undefined;
+  const hit = getCache(key.remoteJid, key.id);
+  if (hit?.msg?.message) return hit.msg.message;
   try {
-    const data = await sock.groupMetadata(jid);
-    metaCache.set(jid, { data, ts: Date.now() });
-    return data;
-  } catch (e) {
-    return hit ? hit.data : null;
-  }
+    const st = getStore();
+    if (st) return await st.getMessage(key);
+  } catch (_) {}
+  return undefined;
 }
 
-function participantNumbers(p) {
-  return [p.id, p.lid, p.phoneNumber, p.jid].filter(Boolean).map(num);
-}
-
-function findParticipant(meta, jid) {
-  if (!meta?.participants) return null;
-  const target = num(jid);
-  return meta.participants.find((p) => participantNumbers(p).includes(target)) || null;
-}
-
-function isAdminIn(meta, jid) {
-  const p = findParticipant(meta, jid);
-  return p?.admin === 'admin' || p?.admin === 'superadmin';
-}
-
-function botIsAdmin(sock, meta) {
-  if (!meta) return false;
-  const refs = [sock.user?.id, sock.user?.lid].filter(Boolean);
-  return refs.some((ref) => isAdminIn(meta, ref));
-}
+/* Métadonnées + rôles : UNE seule implémentation (guard/src/utils/perms) et UN seul cache,
+   invalidé par index.js (group-participants.update) → reprise immédiate quand le bot est promu. */
+const groupMeta = guardPerms.groupMeta;
+const findParticipant = guardPerms.findParticipant;
+const isAdminIn = guardPerms.isParticipantAdmin;
+const botIsAdmin = guardPerms.botIsAdmin;
 
 /* Limitation de débit : 10 commandes / 10 s par expéditeur */
 const rateMap = new Map();
@@ -249,17 +283,6 @@ setInterval(() => {
   const now = Date.now();
   for (const [k, r] of rateMap) if (now - r.ts > 30000) rateMap.delete(k);
 }, 30000).unref();
-
-/* Cooldown des avertissements de protection (évite le spam) */
-const guardCooldown = new Map();
-function guardAllows(chat, who) {
-  const key = `${chat}|${who}`;
-  const now = Date.now();
-  const last = guardCooldown.get(key) || 0;
-  if (now - last < 5000) return false;
-  guardCooldown.set(key, now);
-  return true;
-}
 
 /* Présence Baileys : indicateur « écrit... » pendant l'exécution d'une commande */
 function typingOn(sock, jid) {
@@ -366,6 +389,34 @@ async function downloadFrom(sock, info) {
   });
 }
 
+/* ════════════════════════════════════════════════════════════
+   AUTO-SAUVEGARDE VUE UNIQUE (.autonce on)
+   WhatsApp interdit de conserver un média « vue unique » :
+   quand l'option est active sur un chat, chaque média vue unique
+   reçu est téléchargé et envoyé en privé au propriétaire.
+   ════════════════════════════════════════════════════════════ */
+async function autoSaveOnce(sock, msg, content, from, sender) {
+  try {
+    const isVideo = !!content.videoMessage;
+    if (!isVideo && !content.imageMessage) return;
+    state.onceCd = state.onceCd || {};
+    if (state.onceCd[from] && Date.now() - state.onceCd[from] < 60000) return;
+    state.onceCd[from] = Date.now();
+    const ownerJid = `${config.ownerNumber[0]}@s.whatsapp.net`;
+    const buffer = await downloadFrom(sock, { target: msg });
+    const chatLabel = from.endsWith('@g.us') ? `GROUPE ${num(from)}` : 'CHAT PRIVÉ';
+    const caption = renderSuccess([
+      'VUE UNIQUE RÉCUPÉRÉE',
+      `DE: +${num(sender)}`,
+      `CHAT: ${chatLabel}`,
+    ]);
+    const payload = isVideo ? { video: buffer, caption } : { image: buffer, caption };
+    await send(sock, ownerJid, payload);
+  } catch (e) {
+    console.error('[AUTONCE]', e.message);
+  }
+}
+
 async function toAudioBuffer(input, ext) {
   const base = path.join(os.tmpdir(), `dj_${Date.now()}_${Math.floor(Math.random() * 1e5)}`);
   const inFile = `${base}.${ext || 'mp4'}`;
@@ -384,22 +435,6 @@ async function toAudioBuffer(input, ext) {
     try { fs.unlinkSync(inFile); } catch (e) {}
     try { fs.unlinkSync(outFile); } catch (e) {}
   }
-}
-
-function streamToBuffer(stream, maxMB) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    let size = 0;
-    stream.on('data', (c) => {
-      size += c.length;
-      if (size > maxMB * 1024 * 1024) {
-        stream.destroy();
-        reject(new Error(`Fichier trop volumineux (> ${maxMB} MB)`));
-      } else chunks.push(c);
-    });
-    stream.on('end', () => resolve(Buffer.concat(chunks)));
-    stream.on('error', reject);
-  });
 }
 
 async function askGemini(prompt, media = null) {
@@ -448,11 +483,27 @@ function cmd(names, opts, handler) {
     admin: !!opts.admin,
     botAdmin: !!opts.botAdmin,
     owner: !!opts.owner,
+    /* Métadonnées registre (menus dynamiques) */
+    icon: opts.icon || '',
+    enabled: opts.enabled !== false,
+    requiresInput: !!opts.requiresInput,
+    permission: opts.owner ? 'OWNER'
+      : opts.admin ? 'GROUP_ADMIN'
+      : opts.botAdmin ? 'BOT_ADMIN'
+      : opts.group ? 'GROUP'
+      : 'PUBLIC',
     handler,
   };
   commands.set(entry.name, entry);
   for (const a of entry.aliases) commands.set(a, entry);
 }
+
+/* ════════════════════════════════════════════════════════════
+   3bis. STYLE DJOUSSE TECH — voir style.js (source unique du design,
+   partagée avec guard/) : toute modification s'y fait, puis se propage.
+   ════════════════════════════════════════════════════════════ */
+
+/* Le moteur de rendu (toUnicode, buildFrame, bullet, render*) vit dans style.js — importé en tête de fichier. */
 
 const CATEGORIES = [
   { n: 1, label: 'GÉNÉRAL', emoji: '🌟' },
@@ -468,52 +519,65 @@ const CATEGORIES = [
   { n: 11, label: 'TÉLÉCHARGEMENT', emoji: '⬇️' },
 ];
 
-function categoryCommands(cat) {
+/* Commandes VISIBLES d'une catégorie pour un profil donné :
+   existante + activée + permissions suffisantes (§13/§15).
+   Une catégorie sans aucune commande visible n'est jamais affichée. */
+function visibleCommands(cat, base) {
   const seen = new Set();
   const list = [];
+  const isOwner = !!base?.isOwner;
+  const isAdmin = !!base?.isAdmin || isOwner;
   for (const c of commands.values()) {
-    if (c.cat !== cat || seen.has(c.name)) continue;
+    if (c.cat !== cat || seen.has(c.name) || c.enabled === false) continue;
+    // OWNER : uniquement owners / sudo
+    if (c.owner && !isOwner) continue;
+    // ADMIN groupe : uniquement admin du groupe ou owner/sudo
+    if (c.admin && !isAdmin) continue;
+    // Catégorie 9 entière réservée owner (sécurité menu)
+    if (cat === 9 && !isOwner) continue;
     seen.add(c.name);
     list.push(c);
   }
   return list.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function renderMainMenu() {
-  const lines = [
-    `╭─────────────────────────────`,
-    `│  *${config.botName} — MENU*`,
-    `│  Préfixe : ${config.prefix}  ·  v${config.version}`,
-    `│`,
-  ];
-  for (const c of CATEGORIES) {
-    lines.push(`│  ${String(c.n).padStart(2, ' ')}. ${c.emoji} *${c.label}*`);
-  }
-  lines.push(`│`);
-  lines.push(`│  Réponds avec un chiffre *1 à ${CATEGORIES.length}*`);
-  lines.push(`│  🧠 Ou écris ton intention en clair :`);
-  lines.push(`│  « télécharge … », « bienvenue à … », « météo à … »`);
-  lines.push(`╰─────────────────────────────`);
-  return lines.join('\n');
+/* ── MENU PRINCIPAL : en-tête + CADRAN DES CATÉGORIES uniquement ── */
+function renderMainMenu(base) {
+  const header = buildFrame('INFO BOT', [
+    bullet('PREFIX', `〔${config.prefix}〕`),
+    bullet('BOT', config.botName),
+    bullet('TIME', nowTime()),
+    bullet('DATE', nowDate()),
+    title(toUnicode('STATUS PANEL')),
+    row(toUnicode('REPLY WITH A NUMBER')),
+  ]);
+
+  const cats = CATEGORIES
+    .map((c) => ({ ...c, list: visibleCommands(c.n, base) }))
+    .filter((c) => c.list.length > 0); // jamais de catégorie vide (§1)
+
+  const catLines = cats.map((c) => listItem(c.n, `${c.emoji} ${toUnicode(`${c.label} MENU`)}`));
+  const list = [listHeader('CATEGORIES'), ...catLines, frameFooter()].join('\n');
+
+  return `${header}\n\n${list}\n\n${signature()}`;
 }
 
-function renderCategory(catNum) {
+/* ── SOUS-MENU : les SEULES commandes de la catégorie ── */
+function renderCategory(catNum, base) {
   const cat = CATEGORIES.find((c) => c.n === catNum);
-  const list = categoryCommands(catNum);
-  const lines = [
-    `╭─────────────────────────────`,
-    `│  *${cat.emoji} ${cat.label}* (${list.length} commandes)`,
-    `│`,
-  ];
-  list.forEach((c, i) => {
-    const usage = c.usage ? ` — \`${config.prefix}${c.usage}\`` : '';
-    lines.push(`│  ${String(i + 1).padStart(2, ' ')}. *.${c.name}* — ${c.desc}${usage}`);
-  });
-  lines.push(`│`);
-  lines.push(`│  *0* — ↩️ Retour au menu`);
-  lines.push(`│  Ou tape : ${config.prefix}nom`);
-  lines.push(`╰─────────────────────────────`);
-  return lines.join('\n');
+  const list = visibleCommands(catNum, base);
+
+  const header = buildFrame(`${cat.label} MENU`, [
+    bullet('PREFIX', `〔${config.prefix}〕`),
+    bullet('COMMANDS', String(list.length)),
+    title(toUnicode('REPLY WITH A NUMBER')),
+  ]);
+
+  const items = list.map((c, i) => listItem(i + 1, `${c.icon || cat.emoji} ${toUnicode(c.name.toUpperCase())}`));
+  const listBlock = [listHeader('COMMANDS'), ...items, frameFooter()].join('\n');
+  const back = listItem(0, `⬅️ ${toUnicode('RETOUR')}`);
+
+  return `${header}\n\n${listBlock}\n\n${back}\n\n${signature()}`;
 }
 
 /* État du menu par chat : { cat: 0|1..10, ts } — TTL 5 minutes */
@@ -528,40 +592,165 @@ function setMenu(chat, cat) {
   menuState.set(chat, { cat, ts: Date.now() });
 }
 
+/* ── Saisie en attente (§9) : commande « requiresInput » appelée sans
+     argument → le PROCHAIN message texte du même chat devient l'argument.
+     TTL 2 minutes, « annuler » abandonne, jamais hors du chat d'origine. */
+const pendingInput = new Map();
+const INPUT_TTL = 2 * 60 * 1000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of pendingInput) if (now - v.ts > INPUT_TTL) pendingInput.delete(k);
+}, 60000).unref();
+
+function setInput(chat, cmdName, usage) {
+  pendingInput.set(chat, { cmd: cmdName, usage: usage || cmdName, ts: Date.now() });
+}
+function peekInput(chat) {
+  const st = pendingInput.get(chat);
+  if (!st) return null;
+  if (Date.now() - st.ts > INPUT_TTL) { pendingInput.delete(chat); return null; }
+  return st;
+}
+function clearInput(chat) {
+  pendingInput.delete(chat);
+}
+
 /* ════════════════════════════════════════════════════════════
    4. DÉFINITION DES COMMANDES (~65)
    ════════════════════════════════════════════════════════════ */
 
 /* ── 1. GÉNÉRAL ───────────────────────────────────────────── */
 
-cmd('menu', { cat: 1, desc: 'Menu interactif par chiffres' }, async (ctx) => {
+
+/* ── Image du menu (légère < ~200 Ko) ── */
+const MENU_IMG_PATHS = [
+  path.join(__dirname, 'assets', 'menu.jpg'),
+  path.join(__dirname, 'assets', 'menu.png'),
+  path.join(__dirname, 'assets', 'bot.jpg'),
+  path.join(__dirname, 'assets', 'bot.png'),
+];
+
+let _menuImgCache = null;
+let _menuImgTs = 0;
+
+async function getMenuImageBuffer() {
+  // Cache 5 min
+  if (_menuImgCache && Date.now() - _menuImgTs < 5 * 60 * 1000) return _menuImgCache;
+
+  for (const p of MENU_IMG_PATHS) {
+    try {
+      if (fs.existsSync(p)) {
+        const raw = fs.readFileSync(p);
+        // Compresser si trop lourd (> 400 Ko)
+        if (raw.length > 400 * 1024) {
+          _menuImgCache = await sharp(raw)
+            .resize(800, 450, { fit: 'cover' })
+            .jpeg({ quality: 72, mozjpeg: true })
+            .toBuffer();
+        } else if (p.endsWith('.png')) {
+          _menuImgCache = await sharp(raw)
+            .resize(800, 450, { fit: 'inside' })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+        } else {
+          _menuImgCache = raw;
+        }
+        _menuImgTs = Date.now();
+        return _menuImgCache;
+      }
+    } catch (_) {}
+  }
+
+  // Bannière générée (très légère) — style DJOUSSE
+  const name = (config.botName || 'DJOUSSE-TECH-MD').slice(0, 22);
+  const svg = Buffer.from(`<svg width="800" height="450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f0c29"/>
+      <stop offset="50%" stop-color="#302b63"/>
+      <stop offset="100%" stop-color="#24243e"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#g)"/>
+  <rect x="24" y="24" width="752" height="402" rx="16" fill="none" stroke="#00d2ff" stroke-width="3"/>
+  <text x="400" y="180" text-anchor="middle" font-family="Arial,sans-serif" font-size="42" font-weight="bold" fill="#00d2ff">${name.replace(/[<>&]/g,'')}</text>
+  <text x="400" y="240" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" fill="#ffffff">MULTI-DEVICE WHATSAPP BOT</text>
+  <text x="400" y="300" text-anchor="middle" font-family="Arial,sans-serif" font-size="22" fill="#a0aec0">MADE BY DJOUSSE TECH</text>
+  <text x="400" y="360" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#718096">prefix  ${config.prefix || '.'}menu</text>
+</svg>`);
+  _menuImgCache = await sharp(svg).jpeg({ quality: 78 }).toBuffer();
+  _menuImgTs = Date.now();
+  return _menuImgCache;
+}
+
+async function sendMenu(sock, jid, text, quoted) {
+  try {
+    const img = await getMenuImageBuffer();
+    await send(sock, jid, { image: img, caption: text }, quoted ? { quoted } : undefined);
+  } catch (e) {
+    console.error('[MENU] image:', e.message);
+    await send(sock, jid, { text }, quoted ? { quoted } : undefined);
+  }
+}
+
+cmd('menu', { cat: 1, desc: 'Menu interactif par chiffres', icon: '📋' }, async (ctx) => {
   setMenu(ctx.from, 0);
-  await ctx.reply(renderMainMenu());
+  await sendMenu(ctx.sock, ctx.from, renderMainMenu(ctx), ctx.msg);
 });
 
-cmd('ping', { cat: 1, desc: 'Latence du bot' }, async (ctx) => {
+cmd('setmenuimg', ['menupic'], {
+  cat: 9, desc: 'Définir l’image du .menu (répondre à une photo)', usage: 'setmenuimg', owner: true, icon: '🖼️',
+}, async (ctx) => {
+  const info = mediaInfo(ctx.msg);
+  if (!info || !String(info.mimetype || '').startsWith('image/')) {
+    return ctx.error(['RÉPONDS À UNE IMAGE LÉGÈRE', 'IDÉAL < 500 KO']);
+  }
+  try {
+    const buf = await downloadFrom(ctx.sock, info);
+    const out = await sharp(buf)
+      .resize(800, 450, { fit: 'cover' })
+      .jpeg({ quality: 75, mozjpeg: true })
+      .toBuffer();
+    const dir = path.join(__dirname, 'assets');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'menu.jpg'), out);
+    _menuImgCache = out;
+    _menuImgTs = Date.now();
+    await ctx.success(['IMAGE MENU ENREGISTRÉE', `${Math.round(out.length / 1024)} KO`, 'RELANCER .MENU POUR VOIR']);
+  } catch (e) {
+    await ctx.error(['SETMENUIMG', e.message]);
+  }
+});
+
+
+cmd('ping', { cat: 1, desc: 'Latence du bot', icon: '🏓' }, async (ctx) => {
   const latency = ctx.msg.messageTimestamp
     ? Date.now() - Number(ctx.msg.messageTimestamp) * 1000
     : 0;
-  await ctx.reply(`🏓 Pong !\nLatence : ${Math.max(0, latency)} ms\nUptime : ${formatDuration(process.uptime() * 1000)}`);
+  await ctx.reply(buildFrame('PING', [
+    bullet('STATUT', `${toUnicode('ONLINE')} ✅`),
+    bullet('LATENCE', `${Math.max(0, latency)} ms`),
+    bullet('UPTIME', formatDuration(process.uptime() * 1000)),
+    bullet('NODE', process.version),
+  ]));
 });
 
-cmd('info', { cat: 1, desc: 'Informations du bot' }, async (ctx) => {
-  await ctx.reply(
-    `╭─────────────────────────────\n` +
-    `│  *${config.botName} — INFOS*\n│\n` +
-    `│  Version : ${config.version}\n` +
-    `│  Préfixe : ${config.prefix}\n` +
-    `│  Owner : ${config.botOwnerName} (+${config.ownerNumber[0]})\n` +
-    `│  Node : ${process.version}\n` +
-    `│  Uptime : ${formatDuration(process.uptime() * 1000)}\n` +
-    `│  Mode : ${state.settings.selfMode ? 'SELF (owner seul)' : 'PUBLIC'}\n` +
-    `╰─────────────────────────────`
-  );
+cmd('info', { cat: 1, desc: 'Informations du bot', icon: 'ℹ️' }, async (ctx) => {
+  await ctx.reply(buildFrame('INFO', [
+    bullet('NOM', config.botName),
+    bullet('VERSION', config.version),
+    bullet('PREFIX', `〔${config.prefix}〕`),
+    bullet('OWNER', `${config.botOwnerName} (+${config.ownerNumber[0]})`),
+    bullet('NODE', process.version),
+    bullet('UPTIME', formatDuration(process.uptime() * 1000)),
+    bullet('MODE', state.settings.selfMode ? toUnicode('SELF') : toUnicode('PUBLIC')),
+  ]));
 });
 
-cmd('uptime', { cat: 1, desc: 'Temps de fonctionnement' }, async (ctx) => {
-  await ctx.reply(`⏱️ En ligne depuis ${formatDuration(process.uptime() * 1000)}`);
+cmd('uptime', { cat: 1, desc: 'Temps de fonctionnement', icon: '⏱️' }, async (ctx) => {
+  await ctx.reply(buildFrame('UPTIME', [
+    bullet('EN LIGNE DEPUIS', formatDuration(process.uptime() * 1000)),
+  ]));
 });
 
 cmd('owner', { cat: 1, desc: 'Contacter le propriétaire' }, async (ctx) => {
@@ -569,7 +758,7 @@ cmd('owner', { cat: 1, desc: 'Contacter le propriétaire' }, async (ctx) => {
   const vcard =
     `BEGIN:VCARD\nVERSION:3.0\nFN:${config.botOwnerName}\n` +
     `TEL;type=CELL;type=VOICE;waid=${n}:+${n}\nEND:VCARD`;
-  await ctx.sock.sendMessage(ctx.from, {
+  await send(ctx.sock, ctx.from, {
     contacts: { displayName: config.botOwnerName, contacts: [{ vcard }] },
   }, { quoted: ctx.msg });
 });
@@ -578,17 +767,17 @@ cmd('source', { cat: 1, desc: 'Code source du bot' }, async (ctx) => {
   await ctx.reply(`📂 Code source :\n${config.social.github}`);
 });
 
-cmd('list', { cat: 1, desc: 'Toutes les commandes' }, async (ctx) => {
-  const lines = [`╭─────────────────────────────`, `│  *TOUTES LES COMMANDES*`, `│`];
+cmd('list', { cat: 1, desc: 'Toutes les commandes', icon: '📜' }, async (ctx) => {
+  const blocks = [listHeader('ALL COMMANDS')];
   for (const cat of CATEGORIES) {
-    const list = categoryCommands(cat.n);
+    const list = visibleCommands(cat.n, ctx);
     if (!list.length) continue;
-    lines.push(`│  *${cat.emoji} ${cat.label}*`);
-    lines.push(`│  ${list.map((c) => `.${c.name}`).join('  ')}`);
-    lines.push(`│`);
+    blocks.push(`${cat.emoji} ${toUnicode(cat.label)}`);
+    blocks.push(list.map((c) => `.${c.name}`).join('  '));
+    blocks.push('');
   }
-  lines.push(`╰─────────────────────────────`);
-  await ctx.reply(lines.join('\n'));
+  blocks.push(frameFooter());
+  await ctx.reply(`${blocks.join('\n').trimEnd()}\n\n${signature()}`);
 });
 
 /* ── 2. GROUPE ────────────────────────────────────────────── */
@@ -626,13 +815,13 @@ cmd('tagall', { cat: 2, desc: 'Mentionner tout le groupe', usage: 'tagall [messa
   const ids = meta.participants.map((p) => p.id).filter(Boolean);
   const mentions = meta.participants.map((p) => p.phoneNumber || p.id).filter(Boolean);
   const text = `${ctx.q ? ctx.q + '\n\n' : ''}${mentions.map((j) => `@${num(j)}`).join(' ')}`;
-  await ctx.sock.sendMessage(ctx.from, { text, mentions: ids }, { quoted: ctx.msg });
+  await send(ctx.sock, ctx.from, { text, mentions: ids }, { quoted: ctx.msg });
 });
 
 cmd('hidetag', { cat: 2, desc: 'Mention invisible', usage: 'hidetag [message]', group: true, admin: true }, async (ctx) => {
   const meta = await groupMeta(ctx.sock, ctx.from);
   const ids = meta.participants.map((p) => p.id).filter(Boolean);
-  await ctx.sock.sendMessage(ctx.from, { text: ctx.q || '👋', mentions: ids }, { quoted: ctx.msg });
+  await send(ctx.sock, ctx.from, { text: ctx.q || '👋', mentions: ids }, { quoted: ctx.msg });
 });
 
 cmd('groupinfo', { cat: 2, desc: 'Infos du groupe', group: true }, async (ctx) => {
@@ -640,13 +829,14 @@ cmd('groupinfo', { cat: 2, desc: 'Infos du groupe', group: true }, async (ctx) =
   if (!meta) return ctx.reply('❌ Groupe introuvable.');
   const admins = meta.participants.filter((p) => p.admin).length;
   await ctx.reply(
-    `╭─────────────────────────────\n` +
-    `│  *${meta.subject || 'Groupe'}*\n│\n` +
-    `│  ID : ${meta.id}\n` +
-    `│  Membres : ${meta.participants.length}\n` +
-    `│  Admins : ${admins}\n` +
-    `│  Créé : ${meta.creation ? new Date(meta.creation * 1000).toLocaleDateString('fr-FR') : '?'}\n` +
-    `╰─────────────────────────────`
+    buildFrame('GROUP INFO', [
+      row(`*${meta.subject || 'Groupe'}*`),
+      blank(),
+      row(`ID : ${meta.id}`),
+      row(`Membres : ${meta.participants.length}`),
+      row(`Admins : ${admins}`),
+      row(`Créé : ${meta.creation ? new Date(meta.creation * 1000).toLocaleDateString('fr-FR') : '?'}`),
+    ])
   );
 });
 
@@ -697,95 +887,103 @@ cmd('poll', ['sondage'], { cat: 2, desc: 'Créer un sondage', usage: 'poll Quest
   }
   const question = parts[0].slice(0, 200);
   const values = parts.slice(1, 11).map((v) => v.slice(0, 80));
-  await ctx.sock.sendMessage(ctx.from, {
+  await send(ctx.sock, ctx.from, {
     poll: { name: question, values, selectableCount: 1 },
   });
 });
 
 /* ── 3. PROTECTION ────────────────────────────────────────── */
 
-function toggleReply(g, key, label) {
-  return `${g[key] ? '✅' : '❌'} *${label}* : ${g[key] ? 'activée' : 'désactivée'}\nTape à nouveau pour basculer.`;
+/* Interrupteur unique : on/off explicite ; SANS argument = bascule. Retourne false si argument invalide. */
+async function setSwitch(ctx, g, key, name) {
+  const arg = ctx.args[0];
+  let val = guardUi.parseSwitch(arg);
+  if (arg && val === null) { await ctx.reply(`❌ Utilisation : ${config.prefix}${name} on|off`); return false; }
+  if (val === null) val = !g[key];
+  g[key] = val;
+  return true;
 }
 
-cmd('antilink', { cat: 3, desc: 'Supprimer les liens', usage: 'antilink on|off', group: true, admin: true }, async (ctx) => {
-  const g = getGroup(ctx.from);
-  if (ctx.args[0]) g.antilink = ['on', 'true', 'activer', 'activate'].includes(ctx.args[0].toLowerCase());
-  saveState();
-  await ctx.reply(toggleReply(g, 'antilink', 'Anti-lien'));
-});
+const toggleReply = (g, key, label) =>
+  buildFrame(label, [note(`${toUnicode('ÉTAT')}: ${g[key] ? 'ACTIVÉ ✅' : 'DÉSACTIVÉ ❌'}`)]);
 
-cmd('antibad', { cat: 3, desc: 'Filtrer les gros mots', usage: 'antibad on|off', group: true, admin: true }, async (ctx) => {
-  const g = getGroup(ctx.from);
-  if (ctx.args[0]) g.antibad = ['on', 'true'].includes(ctx.args[0].toLowerCase());
-  saveState();
-  await ctx.reply(toggleReply(g, 'antibad', 'Anti-gros mots'));
-});
+/* Interrupteurs propres au bot (état state.json) — une table, une boucle */
+const SWITCHES = [
+  { key: 'antidelete', label: 'Anti-suppression', desc: 'Renvoyer les messages supprimés', cat: 3 },
+  { key: 'welcome', label: 'Bienvenue', desc: 'Message de bienvenue', cat: 3 },
+  { key: 'goodbye', label: 'Au revoir', desc: 'Message de départ', cat: 3 },
+  { key: 'glog', label: 'Journal du groupe', desc: 'Annoncer les changements du groupe', cat: 2 },
+];
+for (const sw of SWITCHES) {
+  cmd(sw.key, {
+    cat: sw.cat,
+    desc: sw.desc,
+    usage: `${sw.key} on|off | ${sw.key} off all`,
+    group: true,
+    admin: true,
+  }, async (ctx) => {
+    const arg0 = (ctx.args[0] || '').toLowerCase();
+    const arg1 = (ctx.args[1] || '').toLowerCase();
+    const isAll = arg1 === 'all' || arg1 === 'global' || arg0 === 'all' || arg0 === 'global';
 
-cmd('antidelete', { cat: 3, desc: 'Renvoyer les messages supprimés', usage: 'antidelete on|off', group: true, admin: true }, async (ctx) => {
-  const g = getGroup(ctx.from);
-  if (ctx.args[0]) g.antidelete = ['on', 'true'].includes(ctx.args[0].toLowerCase());
-  saveState();
-  await ctx.reply(toggleReply(g, 'antidelete', 'Anti-suppression'));
-});
+    if (isAll) {
+      const turnOn = arg0 === 'on' || arg0 === 'true';
+      const turnOff = !turnOn;
+      if (turnOn && !ctx.isOwner) {
+        return ctx.error(['OWNER REQUIS POUR ON ALL']);
+      }
+      if (!ctx.isOwner && !ctx.isAdmin) {
+        return ctx.error(['ADMIN OU OWNER REQUIS']);
+      }
+      state.groups = state.groups || {};
+      let n = 0;
+      for (const gid of Object.keys(state.groups)) {
+        state.groups[gid][sw.key] = turnOn;
+        n++;
+      }
+      if (sw.key === 'welcome') config.defaultGroupSettings.welcome = turnOn;
+      if (sw.key === 'goodbye') config.defaultGroupSettings.goodbye = turnOn;
+      saveState();
+      return ctx.success([
+        `${sw.label.toUpperCase()} ${turnOn ? 'ACTIVÉ' : 'DÉSACTIVÉ'} PARTOUT`,
+        `${n} GROUPE(S)`,
+      ]);
+    }
 
-cmd('welcome', { cat: 3, desc: 'Message de bienvenue', usage: 'welcome on|off', group: true, admin: true }, async (ctx) => {
-  const g = getGroup(ctx.from);
-  if (ctx.args[0]) g.welcome = ['on', 'true'].includes(ctx.args[0].toLowerCase());
-  saveState();
-  await ctx.reply(toggleReply(g, 'welcome', 'Bienvenue'));
-});
-
-cmd('goodbye', { cat: 3, desc: 'Message de départ', usage: 'goodbye on|off', group: true, admin: true }, async (ctx) => {
-  const g = getGroup(ctx.from);
-  if (ctx.args[0]) g.goodbye = ['on', 'true'].includes(ctx.args[0].toLowerCase());
-  saveState();
-  await ctx.reply(toggleReply(g, 'goodbye', 'Au revoir'));
-});
-
-function warnCount(chat, who) {
-  const key = `${chat}|${who}`;
-  return state.warns[key] || 0;
+    const g = getGroup(ctx.from);
+    if (!(await setSwitch(ctx, g, sw.key, sw.key))) return;
+    saveState();
+    await ctx.reply(toggleReply(g, sw.key, sw.label));
+  });
 }
-function setWarns(chat, who, n) {
-  const key = `${chat}|${who}`;
-  if (n <= 0) delete state.warns[key];
-  else state.warns[key] = n;
-}
 
-cmd('warn', { cat: 3, desc: 'Avertir un membre', usage: 'warn @user [raison]', group: true, admin: true }, async (ctx) => {
+/* ── Avertissements — table guard (session/guard.json) : limites,
+      escalade kick/mute et compteurs suivent la config du groupe ── */
+cmd('warn', { cat: 3, desc: 'Avertir un membre', usage: 'warn @user [raison]', group: true, admin: true, icon: '⚠️' }, async (ctx) => {
   const target = targetFrom(ctx);
   if (!target) return ctx.reply(`❌ ${config.prefix}warn @user [raison]`);
-  const who = num(target);
-  const count = warnCount(ctx.from, who) + 1;
+  const g = guardDb.db().getGroup(ctx.from);
   const reason = ctx.q.replace(/@\d+/g, '').trim() || 'raison non précisée';
-  if (count >= config.messages.maxWarnings) {
-    setWarns(ctx.from, who, 0);
-    await ctx.reply(`🚫 *@${who}* a atteint ${count} avertissements → expulsion.\nRaison : ${reason}`, [target]);
-    try {
-      const meta = await groupMeta(ctx.sock, ctx.from);
-      const p = findParticipant(meta, target);
-      await ctx.sock.groupParticipantsUpdate(ctx.from, [p?.id || target], 'remove');
-    } catch (e) {}
-  } else {
-    setWarns(ctx.from, who, count);
-    saveState();
-    await ctx.reply(`⚠️ *@${who}* averti (${count}/3)\nRaison : ${reason}`, [target]);
-  }
+  const r = await guardSanctions.warn(ctx.sock, ctx.from, target, g, ctx.isBotAdmin);
+  let txt = `⚠️ @${num(target)} : avertissement *${Math.min(r.count, r.limit)}/${r.limit}*\nRaison : ${reason}`;
+  if (r.escalated === 'kick') txt += '\n🚫 Limite atteinte : expulsion.';
+  else if (r.escalated === 'mute') txt += `\n🔇 Limite atteinte : muet ${g.muteMinutes} min.`;
+  else if (r.count >= r.limit) txt += '\n⚠️ Limite atteinte mais le bot n\u2019est pas admin : pas d\u2019expulsion.';
+  await ctx.reply(txt, [target]);
 });
 
-cmd('unwarn', { cat: 3, desc: 'Retirer un avertissement', usage: 'unwarn @user', group: true, admin: true }, async (ctx) => {
+cmd('unwarn', ['resetwarn'], { cat: 3, desc: 'Retirer les avertissements', usage: 'unwarn @user', group: true, admin: true, icon: '♻️' }, async (ctx) => {
   const target = targetFrom(ctx);
   if (!target) return ctx.reply(`❌ ${config.prefix}unwarn @user`);
-  setWarns(ctx.from, num(target), 0);
-  saveState();
+  guardDb.db().setWarns(ctx.from, num(target), 0);
   await ctx.reply(`✅ Avertissements remis à zéro pour +${num(target)}.`);
 });
 
-cmd('warnings', { cat: 3, desc: 'Voir les avertissements', usage: 'warnings @user', group: true, admin: true }, async (ctx) => {
+cmd('warnings', { cat: 3, desc: 'Voir les avertissements', usage: 'warnings @user', group: true, admin: true, icon: '📋' }, async (ctx) => {
   const target = targetFrom(ctx);
   if (!target) return ctx.reply(`❌ ${config.prefix}warnings @user`);
-  await ctx.reply(`⚠️ +${num(target)} : *${warnCount(ctx.from, num(target))}/3* avertissements.`);
+  const g = guardDb.db().getGroup(ctx.from);
+  await ctx.reply(`⚠️ +${num(target)} : *${guardDb.db().getWarns(ctx.from, num(target))}/${g.warnLimit}* avertissements.`);
 });
 
 cmd('blacklist', { cat: 3, desc: 'Ajouter au blacklist (mute total)', usage: 'blacklist @user', group: true, owner: true }, async (ctx) => {
@@ -806,6 +1004,61 @@ cmd('unblacklist', { cat: 3, desc: 'Retirer du blacklist', usage: 'unblacklist @
   await ctx.reply(`✅ +${who} retiré du blacklist.`);
 });
 
+/* ── Commandes guard branchées sur NOTRE registre cmd() (aucun
+      routeur dupliqué) : le run() guard reçoit son contexte adapté. */
+async function guardCommandCtx(ctx) {
+  const meta = await guardPerms.groupMeta(ctx.sock, ctx.from);
+  const ci = ctxInfo(ctx.content);
+  return {
+    sock: ctx.sock,
+    from: ctx.from,
+    args: ctx.args,
+    prefix: config.prefix,
+    reply: ctx.reply,
+    mentions: ci?.mentionedJid || [],
+    quotedParticipant: ci?.participant || null,
+    botAdmin: ctx.isBotAdmin,
+    isAdmin: ctx.isAdmin,
+    isOwner: ctx.isOwner,
+    meta,
+    isTargetAdmin: (jid) => guardPerms.isParticipantAdmin(meta, jid),
+  };
+}
+function guardCmd(names, opts) {
+  const list = Array.isArray(names) ? names : [names];
+  const def = guardRegistry.get(list[0]);
+  if (!def) { console.warn(`[GUARD] commande absente du registre : ${list[0]}`); return; }
+  cmd(list, opts, async (ctx) => { await def.run(await guardCommandCtx(ctx)); });
+}
+/* Une commande par protection (générée depuis le registre guard : ajouter un fichier
+   dans guard/src/protections = une nouvelle commande, sans toucher à handler.js) */
+const PROTECTION_DESC = { antilink: 'Supprimer les liens', antibad: 'Filtrer les gros mots' };
+for (const p of guardProtections) {
+  guardCmd(p.key, {
+    cat: 3, desc: PROTECTION_DESC[p.key] || `${p.label} on/off`, usage: `${p.key} on|off`,
+    group: true, admin: true, icon: guardUi.ICONS[p.key] || '🛡️',
+  });
+}
+guardCmd('security', { cat: 3, desc: 'Pack sécurité on/off', usage: 'security on|off', group: true, admin: true, icon: '🛡️' });
+guardCmd(['settings', 'config'], { cat: 3, desc: 'Configuration du groupe', usage: 'settings', group: true, admin: true, icon: '⚙️' });
+guardCmd('sanction', { cat: 3, desc: 'Sanction sur infraction', usage: 'sanction delete|warn|kick', group: true, admin: true, icon: '⚖️' });
+guardCmd('warnlimit', { cat: 3, desc: "Limite d'avertissements", usage: 'warnlimit <1-20>', group: true, admin: true, icon: '🔢' });
+guardCmd('onwarnlimit', { cat: 3, desc: 'Action au seuil de warns', usage: 'onwarnlimit kick|mute', group: true, admin: true, icon: '🎯' });
+guardCmd('muteminutes', { cat: 3, desc: 'Durée de mute (min)', usage: 'muteminutes <min>', group: true, admin: true, icon: '🔇' });
+guardCmd('floodset', { cat: 3, desc: 'Réglage anti-flood', usage: 'floodset <msgs> <sec>', group: true, admin: true, icon: '🌊' });
+guardCmd('tagmax', { cat: 3, desc: 'Mentions max par message', usage: 'tagmax <n>', group: true, admin: true, icon: '📢' });
+guardCmd('addbad', { cat: 3, desc: 'Ajouter un mot interdit', usage: 'addbad <mot>', group: true, admin: true, icon: '➕' });
+guardCmd('delbad', { cat: 3, desc: 'Retirer un mot interdit', usage: 'delbad <mot>', group: true, admin: true, icon: '➖' });
+guardCmd('linkallow', { cat: 3, desc: 'Domaines de liens autorisés', usage: 'linkallow add|del|list <domaine>', group: true, admin: true, icon: '🔗' });
+guardCmd('mute', { cat: 3, desc: 'Rendre muet un membre', usage: 'mute @user 30m', group: true, admin: true, botAdmin: true, icon: '🔇' });
+guardCmd('unmute', { cat: 3, desc: 'Rétablir un membre', usage: 'unmute @user', group: true, admin: true, icon: '🔊' });
+guardCmd('antifake', { cat: 3, desc: 'Expulser les indicatifs non autorisés', usage: 'antifake on|off', group: true, admin: true, icon: '🧬' });
+guardCmd('allowcodes', { cat: 3, desc: 'Indicatifs pays autorisés', usage: 'allowcodes 237 33', group: true, admin: true, icon: '🌍' });
+guardCmd('maxtext', { cat: 3, desc: 'Taille max des messages (anti-virtex)', usage: 'maxtext <500-20000>', group: true, admin: true, icon: '💣' });
+guardCmd(['nightmode', 'modenuit'], { cat: 3, desc: 'Fermer le groupe la nuit', usage: 'nightmode on|off', group: true, admin: true, icon: '🌙' });
+guardCmd('nightset', { cat: 3, desc: 'Horaires du mode nuit', usage: 'nightset 22:00 06:00', group: true, admin: true, icon: '⏰' });
+guardCmd('groupstats', { cat: 3, desc: 'Statistiques de protection', usage: 'groupstats', group: true, admin: true, icon: '📊' });
+
 /* ── 4. STICKER & MEDIA ───────────────────────────────────── */
 
 cmd('sticker', ['s'], { cat: 4, desc: 'Image/vidéo → sticker', usage: 'sticker (réponds à une image)' }, async (ctx) => {
@@ -823,7 +1076,7 @@ cmd('sticker', ['s'], { cat: 4, desc: 'Image/vidéo → sticker', usage: 'sticke
       type: StickerTypes.FULL,
       quality: 75,
     });
-    await ctx.sock.sendMessage(ctx.from, { sticker: await sticker.toBuffer() }, { quoted: ctx.msg });
+    await send(ctx.sock, ctx.from, { sticker: await sticker.toBuffer() }, { quoted: ctx.msg });
   } catch (e) {
     await ctx.reply(`❌ Sticker impossible : ${e.message}`);
   }
@@ -841,7 +1094,7 @@ cmd('take', { cat: 4, desc: 'Re-sticker avec ton pack', usage: 'take [pack|autho
       type: StickerTypes.FULL,
       quality: 75,
     });
-    await ctx.sock.sendMessage(ctx.from, { sticker: await sticker.toBuffer() }, { quoted: ctx.msg });
+    await send(ctx.sock, ctx.from, { sticker: await sticker.toBuffer() }, { quoted: ctx.msg });
   } catch (e) {
     await ctx.reply(`❌ Échec : ${e.message}`);
   }
@@ -853,7 +1106,7 @@ cmd('toimg', { cat: 4, desc: 'Sticker → image', usage: 'toimg (réponds à un 
   try {
     const buffer = await downloadFrom(ctx.sock, info);
     const png = await sharp(buffer).png().toBuffer();
-    await ctx.sock.sendMessage(ctx.from, { image: png, caption: '🖼️' }, { quoted: ctx.msg });
+    await send(ctx.sock, ctx.from, { image: png, caption: '🖼️' }, { quoted: ctx.msg });
   } catch (e) {
     await ctx.reply(`❌ Conversion impossible : ${e.message}`);
   }
@@ -869,10 +1122,74 @@ cmd('toaudio', { cat: 4, desc: 'Vidéo → mp3', usage: 'toaudio (réponds à un
     const buffer = await downloadFrom(ctx.sock, info);
     const ext = (info.mimetype.split('/')[1] || 'mp4').split(';')[0];
     const mp3 = await toAudioBuffer(buffer, ext);
-    await ctx.sock.sendMessage(ctx.from, { audio: mp3, mimetype: 'audio/mpeg' }, { quoted: ctx.msg });
+    await send(ctx.sock, ctx.from, { audio: mp3, mimetype: 'audio/mpeg' }, { quoted: ctx.msg });
   } catch (e) {
     await ctx.reply(`❌ Conversion impossible : ${e.message}`);
   }
+});
+
+/* ── VUE UNIQUE (view once) — au-delà de WhatsApp ──────────── */
+
+cmd('viewonce', ['vo', 'vueonce'], {
+  cat: 4, desc: 'Renvoyer un média en vue unique',
+  usage: 'viewonce (réponds à une image/vidéo)', icon: '👁️',
+}, async (ctx) => {
+  const info = mediaInfo(ctx.msg);
+  if (!info || !['imageMessage', 'videoMessage'].includes(info.type)) {
+    return ctx.reply(`❌ Réponds à une image ou une vidéo.\nUsage : ${config.prefix}viewonce`);
+  }
+  await ctx.reply(config.messages.wait);
+  try {
+    const buffer = await downloadFrom(ctx.sock, info);
+    const payload = info.type === 'videoMessage'
+      ? { video: buffer, viewOnce: true }
+      : { image: buffer, viewOnce: true };
+    await send(ctx.sock, ctx.from, payload, { quoted: ctx.msg });
+  } catch (e) {
+    await ctx.reply(`❌ Envoi impossible : ${e.message}`);
+  }
+});
+
+cmd('getonce', ['recuponce', 'sauveonce'], {
+  cat: 4, desc: 'Récupérer un média en vue unique',
+  usage: 'getonce (réponds à un média vue unique)', icon: '🔓',
+}, async (ctx) => {
+  const info = mediaInfo(ctx.msg);
+  if (!info) return ctx.reply(`❌ Réponds à un média en vue unique.\nUsage : ${config.prefix}getonce`);
+  const ci = ctxInfo(ctx.content);
+  if (!ci?.quotedMessage || !isOnceContent(ci.quotedMessage)) {
+    return ctx.error(['CE MESSAGE N’EST PAS EN VUE UNIQUE', 'RÉPONDS À UNE PHOTO OU VIDÉO VUE UNIQUE']);
+  }
+  if (!['imageMessage', 'videoMessage'].includes(info.type)) {
+    return ctx.error(['SEULES IMAGES ET VIDÉOS SONT ACCEPTÉES']);
+  }
+  await ctx.reply(config.messages.wait);
+  try {
+    const buffer = await downloadFrom(ctx.sock, info);
+    const caption = renderSuccess(['VUE UNIQUE RÉCUPÉRÉE', 'MÉDIA CONVERTI EN CLASSIQUE']);
+    const payload = info.type === 'videoMessage' ? { video: buffer, caption } : { image: buffer, caption };
+    await send(ctx.sock, ctx.from, payload, { quoted: ctx.msg });
+  } catch (e) {
+    await ctx.error(['MÉDIA INDISPONIBLE OU EXPIRÉ', `[${e.message}]`]);
+  }
+});
+
+cmd('autonce', ['autoonce', 'saveonce'], {
+  cat: 4, desc: 'Sauvegarde auto des vue uniques',
+  usage: 'autonce on|off', icon: '📥',
+}, async (ctx) => {
+  const arg = (ctx.args[0] || '').toLowerCase();
+  if (!['on', 'off', 'true', 'false'].includes(arg)) {
+    return ctx.saisie(`POUR COMPLÉTER : ${config.prefix}AUTONCE ON|OFF`);
+  }
+  const on = ['on', 'true'].includes(arg);
+  state.once = state.once || {};
+  if (on) state.once[ctx.from] = true;
+  else delete state.once[ctx.from];
+  saveState();
+  await ctx.success(on
+    ? ['AUTO-SAUVEGARDE VUE UNIQUE ACTIVÉE', 'LES MÉDIAS VUE UNIQUE REÇUS ICI', 'TOMBERONT EN PRIVÉ CHEZ LE PROPRIÉTAIRE']
+    : ['AUTO-SAUVEGARDE VUE UNIQUE DÉSACTIVÉE']);
 });
 
 /* ── 5. OUTILS ────────────────────────────────────────────── */
@@ -913,7 +1230,7 @@ cmd('qr', { cat: 5, desc: 'Générer un QR code', usage: 'qr <texte>' }, async (
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}qr https://...`);
   try {
     const png = await QRCode.toBuffer(ctx.q.slice(0, 800), { type: 'png', margin: 1, width: 500 });
-    await ctx.sock.sendMessage(ctx.from, { image: png, caption: `🔲 QR : ${ctx.q.slice(0, 100)}` }, { quoted: ctx.msg });
+    await send(ctx.sock, ctx.from, { image: png, caption: `🔲 QR : ${ctx.q.slice(0, 100)}` }, { quoted: ctx.msg });
   } catch (e) {
     await ctx.reply(`❌ QR impossible : ${e.message}`);
   }
@@ -1171,7 +1488,7 @@ cmd('broadcast', ['bc'], { cat: 9, desc: 'Diffuser un message', usage: 'broadcas
   let ok = 0;
   for (const jid of chats) {
     try {
-      await ctx.sock.sendMessage(jid, { text: `📢 *${config.botName}*\n\n${ctx.q}` });
+      await send(ctx.sock, jid, { text: `📢 *${config.botName}*\n\n${ctx.q}` });
       ok++;
       await new Promise((r) => setTimeout(r, 900));
     } catch (e) {}
@@ -1216,7 +1533,7 @@ cmd('statut', ['status'], { cat: 9, desc: 'Publier un texte en statut WhatsApp',
   const list = Object.keys(state.users)
     .filter((n) => /^\d{5,}$/.test(n))
     .map((n) => `${n}@s.whatsapp.net`);
-  await ctx.sock.sendMessage(
+  await send(ctx.sock, 
     'status@broadcast',
     { text: ctx.q.slice(0, 500) },
     { statusJidList: list }
@@ -1233,7 +1550,7 @@ cmd('location', ['position', 'localisation'], { cat: 5, desc: 'Envoyer un point 
     return ctx.reply('❌ Coordonnées invalides (latitude -90..90, longitude -180..180).');
   }
   const name = ctx.q.replace(m[0], '').trim().slice(0, 80);
-  await ctx.sock.sendMessage(ctx.from, {
+  await send(ctx.sock, ctx.from, {
     location: { degreesLatitude: lat, degreesLongitude: lng, ...(name ? { name } : {}) },
   }, { quoted: ctx.msg });
 });
@@ -1248,7 +1565,7 @@ cmd('vcard', ['contact', 'carte'], { cat: 10, desc: 'Envoyer une carte de contac
   const vcard =
     `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\n` +
     `TEL;type=CELL;type=VOICE;waid=${number}:+${number}\nEND:VCARD`;
-  await ctx.sock.sendMessage(ctx.from, {
+  await send(ctx.sock, ctx.from, {
     contacts: { displayName: name, contacts: [{ vcard }] },
   }, { quoted: ctx.msg });
 });
@@ -1274,7 +1591,7 @@ cmd('event', ['rdv', 'rendezvous'], { cat: 10, desc: 'Créer un événement What
     .join('\n')
     .slice(0, 300);
   if (startSec == null) startSec = Math.floor(Date.now() / 1000) + 86400;
-  await ctx.sock.sendMessage(ctx.from, {
+  await send(ctx.sock, ctx.from, {
     event: { name, description, startTime: startSec },
   }, { quoted: ctx.msg });
   const when = new Date(startSec * 1000).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
@@ -1289,13 +1606,6 @@ cmd('derniers', ['historique'], { cat: 9, desc: 'Mémoire : derniers messages du
     `${i + 1}. [${new Date(e.ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}] +${e.s} : ${e.t}`
   );
   await ctx.reply(`🧠 *Mémoire — ${arr.length} message(s)*\n${lines.join('\n')}`);
-});
-
-cmd('glog', { cat: 2, desc: 'Annoncer les changements du groupe', usage: 'glog on|off', group: true, admin: true }, async (ctx) => {
-  const g = getGroup(ctx.from);
-  if (ctx.args[0]) g.glog = ['on', 'true'].includes(ctx.args[0].toLowerCase());
-  saveState();
-  await ctx.reply(toggleReply(g, 'glog', 'Journal du groupe'));
 });
 
 /* ── 10. DIVERS ───────────────────────────────────────────── */
@@ -1325,7 +1635,7 @@ cmd('level', { cat: 10, desc: 'Niveau et expérience', usage: 'level [@user]' },
 cmd('report', { cat: 10, desc: 'Signaler un problème au owner', usage: 'report <message>' }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}report problème...`);
   const ownerJid = `${config.ownerNumber[0]}@s.whatsapp.net`;
-  await ctx.sock.sendMessage(ownerJid, {
+  await send(ctx.sock, ownerJid, {
     text: `📬 *REPORT* de +${num(ctx.sender)} (${ctx.from})\n\n${ctx.q}`,
   });
   await ctx.reply('✅ Signalement envoyé au propriétaire. Merci !');
@@ -1342,6 +1652,346 @@ cmd('stats', { cat: 10, desc: 'Statistiques du bot' }, async (ctx) => {
     `Depuis : ${new Date(s.since).toLocaleDateString('fr-FR')}`
   );
 });
+
+/* ── 9bis / 10bis. AMÉLIORATIONS BAILEYS (sans boutons) ────── */
+
+/** Récupère la clé du message cité (pour edit / pin / delete) */
+function quotedKey(msg, content) {
+  const ci = ctxInfo(content || unwrap(msg.message));
+  if (!ci?.stanzaId) return null;
+  return {
+    remoteJid: msg.key.remoteJid,
+    id: ci.stanzaId,
+    fromMe: !!ci.participant ? false : !!msg.key.fromMe,
+    participant: ci.participant || undefined,
+  };
+}
+
+cmd('edit', { cat: 5, desc: 'Modifier un message envoyé par le bot', usage: 'edit <nouveau texte> (répondre au message)', icon: '✏️' }, async (ctx) => {
+  const key = quotedKey(ctx.msg, ctx.content);
+  if (!key) return ctx.reply(`❌ Réponds à un message du bot puis : ${config.prefix}edit nouveau texte`);
+  if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}edit <nouveau texte>`);
+  try {
+    await send(ctx.sock, ctx.from, { text: ctx.q.slice(0, 4000), edit: key });
+    await ctx.react('✅');
+  } catch (e) {
+    await ctx.reply(`❌ Impossible de modifier : ${e.message}`);
+  }
+});
+
+cmd('pin', { cat: 2, desc: 'Épingler un message (24h)', usage: 'pin (répondre au message)', group: true, admin: true, botAdmin: true, icon: '📌' }, async (ctx) => {
+  const key = quotedKey(ctx.msg, ctx.content);
+  if (!key) return ctx.reply(`❌ Réponds au message à épingler.`);
+  try {
+    await send(ctx.sock, ctx.from, { pin: { type: 1, time: 86400, key } });
+    await ctx.success(['MESSAGE ÉPINGLÉ 24H']);
+  } catch (e) {
+    await ctx.reply(`❌ Pin impossible : ${e.message}`);
+  }
+});
+
+cmd('unpin', { cat: 2, desc: 'Désépingler un message', usage: 'unpin (répondre au message)', group: true, admin: true, botAdmin: true, icon: '📍' }, async (ctx) => {
+  const key = quotedKey(ctx.msg, ctx.content);
+  if (!key) return ctx.reply(`❌ Réponds au message à désépingler.`);
+  try {
+    await send(ctx.sock, ctx.from, { pin: { type: 0, time: 0, key } });
+    await ctx.success(['MESSAGE DÉSÉPINGLÉ']);
+  } catch (e) {
+    await ctx.reply(`❌ Unpin impossible : ${e.message}`);
+  }
+});
+
+cmd('disappear', ['ephemeral', 'efemere'], {
+  cat: 2, desc: 'Messages éphémères du chat', usage: 'disappear off|24h|7d|90d',
+  group: true, admin: true, botAdmin: true, icon: '⏱️',
+}, async (ctx) => {
+  const map = {
+    off: 0, '0': 0, disable: 0,
+    '24h': 86400, '1d': 86400, jour: 86400,
+    '7d': 604800, '7j': 604800, semaine: 604800,
+    '90d': 7776000, '90j': 7776000,
+  };
+  const arg = (ctx.args[0] || '').toLowerCase();
+  if (!(arg in map)) {
+    return ctx.reply(`❌ Usage : ${config.prefix}disappear off|24h|7d|90d`);
+  }
+  const seconds = map[arg];
+  try {
+    await send(ctx.sock, ctx.from, { disappearingMessagesInChat: seconds });
+    await ctx.success([
+      seconds === 0 ? 'MESSAGES ÉPHÉMÈRES DÉSACTIVÉS' : `MESSAGES ÉPHÉMÈRES : ${arg.toUpperCase()}`,
+    ]);
+  } catch (e) {
+    await ctx.reply(`❌ Éphémère impossible : ${e.message}`);
+  }
+});
+
+cmd('mutechat', ['mutec'], {
+  cat: 9, desc: 'Mettre le chat en sourdine (8h)', usage: 'mutechat [heures]', owner: true, icon: '🔇',
+}, async (ctx) => {
+  const hours = Math.min(168, Math.max(1, parseInt(ctx.args[0] || '8', 10) || 8));
+  const muteEnd = Math.floor(Date.now() / 1000) + hours * 3600;
+  try {
+    await ctx.sock.chatModify({ mute: muteEnd }, ctx.from);
+    await ctx.success([`CHAT EN SOURDINE ${hours}H`]);
+  } catch (e) {
+    await ctx.reply(`❌ Mute chat impossible : ${e.message}`);
+  }
+});
+
+cmd('unmutechat', ['unmutec'], {
+  cat: 9, desc: 'Retirer la sourdine du chat', owner: true, icon: '🔊',
+}, async (ctx) => {
+  try {
+    await ctx.sock.chatModify({ mute: null }, ctx.from);
+    await ctx.success(['SOURDINE RETIRÉE']);
+  } catch (e) {
+    await ctx.reply(`❌ Unmute chat impossible : ${e.message}`);
+  }
+});
+
+cmd('archive', {
+  cat: 9, desc: 'Archiver / désarchiver le chat', usage: 'archive [on|off]', owner: true, icon: '📦',
+}, async (ctx) => {
+  const on = !/^(off|0|false|no)$/i.test(ctx.args[0] || 'on');
+  try {
+    // lastMessages requis par Baileys pour archive
+    const last = getCache(ctx.from, ctx.msg.key.id);
+    const lastMessages = last?.msg ? [{ key: last.msg.key, messageTimestamp: last.msg.messageTimestamp }] : [];
+    await ctx.sock.chatModify({ archive: on, lastMessages }, ctx.from);
+    await ctx.success([on ? 'CHAT ARCHIVÉ' : 'CHAT DÉSARCHIVÉ']);
+  } catch (e) {
+    await ctx.reply(`❌ Archive impossible : ${e.message}`);
+  }
+});
+
+cmd('setpp', ['setpic', 'botpp'], {
+  cat: 9, desc: 'Changer la photo de profil du bot', usage: 'setpp (répondre à une image)', owner: true, icon: '🖼️',
+}, async (ctx) => {
+  const info = mediaInfo(ctx.msg);
+  if (!info || !info.mimetype?.startsWith('image/')) {
+    return ctx.reply(`❌ Réponds à une image ou envoie une image avec ${config.prefix}setpp`);
+  }
+  try {
+    const buffer = await downloadFrom(ctx.sock, info);
+    await ctx.sock.updateProfilePicture(ctx.sock.user.id, buffer);
+    await ctx.success(['PHOTO DE PROFIL MISE À JOUR']);
+  } catch (e) {
+    await ctx.reply(`❌ setpp impossible : ${e.message}`);
+  }
+});
+
+cmd('setbotname', ['botname'], {
+  cat: 9, desc: 'Changer le nom affiché du bot', usage: 'setbotname <nom>', owner: true, icon: '📝',
+}, async (ctx) => {
+  if (!ctx.q || ctx.q.length < 2) return ctx.reply(`❌ Usage : ${config.prefix}setbotname Nouveau Nom`);
+  try {
+    await ctx.sock.updateProfileName(ctx.q.slice(0, 25));
+    await ctx.success([`NOM → ${ctx.q.slice(0, 25)}`]);
+  } catch (e) {
+    await ctx.reply(`❌ setbotname impossible : ${e.message}`);
+  }
+});
+
+cmd('setbio', ['botbio'], {
+  cat: 9, desc: 'Changer la bio (status) du bot', usage: 'setbio <texte>', owner: true, icon: '💬',
+}, async (ctx) => {
+  if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}setbio En ligne`);
+  try {
+    await ctx.sock.updateProfileStatus(ctx.q.slice(0, 139));
+    await ctx.success(['BIO MISE À JOUR']);
+  } catch (e) {
+    await ctx.reply(`❌ setbio impossible : ${e.message}`);
+  }
+});
+
+cmd('react', {
+  cat: 5, desc: 'Réagir à un message', usage: 'react 🔥 (répondre au message)', icon: '👍',
+}, async (ctx) => {
+  const key = quotedKey(ctx.msg, ctx.content);
+  if (!key) return ctx.reply(`❌ Réponds au message puis : ${config.prefix}react 🔥`);
+  const emoji = (ctx.args[0] || config.likeEmoji || '👍').slice(0, 8);
+  try {
+    await send(ctx.sock, ctx.from, { react: { text: emoji, key } });
+  } catch (e) {
+    await ctx.reply(`❌ Réaction impossible : ${e.message}`);
+  }
+});
+
+cmd('del', ['delete', 'suppr'], {
+  cat: 5, desc: 'Supprimer un message (pour tous si admin/bot)', usage: 'del (répondre au message)', icon: '🗑️',
+}, async (ctx) => {
+  const key = quotedKey(ctx.msg, ctx.content);
+  if (!key) return ctx.reply(`❌ Réponds au message à supprimer.`);
+  try {
+    await send(ctx.sock, ctx.from, { delete: key });
+    await ctx.react('✅');
+  } catch (e) {
+    await ctx.reply(`❌ Suppression impossible : ${e.message}`);
+  }
+});
+
+cmd('read', ['markread'], {
+  cat: 9, desc: 'Marquer le message cité comme lu', usage: 'read (répondre)', owner: true, icon: '👁️',
+}, async (ctx) => {
+  const key = quotedKey(ctx.msg, ctx.content) || ctx.msg.key;
+  try {
+    await ctx.sock.readMessages([key]);
+    await ctx.success(['MARQUÉ COMME LU']);
+  } catch (e) {
+    await ctx.reply(`❌ read impossible : ${e.message}`);
+  }
+});
+
+
+
+/* ── AUTORISATIONS OWNER / SUDO (pas tout le monde owner) ── */
+cmd('sudo', {
+  cat: 9, desc: 'Gérer les sudo (co-owners autorisés)', usage: 'sudo add|del|list <numéro>', owner: true, icon: '🔑',
+}, async (ctx) => {
+  const sub = (ctx.args[0] || '').toLowerCase();
+  state.settings.sudo = Array.isArray(state.settings.sudo) ? state.settings.sudo : [];
+  if (sub === 'list') {
+    const primary = config.ownerNumber.map((n) => `👑 +${n}`).join('\n') || '—';
+    const sudo = state.settings.sudo.length
+      ? state.settings.sudo.map((n) => `🔑 +${n}`).join('\n')
+      : 'Aucun sudo';
+    return ctx.reply(
+      buildFrame('AUTORISATIONS', [
+        title(toUnicode('OWNERS PRINCIPAUX')),
+        primary,
+        title(toUnicode('SUDO')),
+        sudo,
+        bullet('AIDE', `${config.prefix}sudo add 2376...`),
+      ])
+    );
+  }
+  if (sub === 'add' || sub === 'del' || sub === 'remove') {
+    let n = (ctx.args[1] || '').replace(/\D/g, '');
+    if (!n && ctx.msg) {
+      const t = targetFrom(ctx);
+      if (t) n = num(t);
+    }
+    if (!n || n.length < 8) {
+      return ctx.error(['USAGE', `${config.prefix}SUDO ADD 2376XXXXXXX`, 'OU MENTIONNE LA PERSONNE']);
+    }
+    if (sub === 'add') {
+      if (isPrimaryOwner(n)) return ctx.error(['DÉJÀ OWNER PRINCIPAL']);
+      if (!state.settings.sudo.includes(n)) state.settings.sudo.push(n);
+      saveState();
+      return ctx.success(['SUDO AJOUTÉ', `+${n}`, 'PEUT UTILISER LES COMMANDES OWNER']);
+    }
+    state.settings.sudo = state.settings.sudo.filter((x) => x !== n);
+    saveState();
+    return ctx.success(['SUDO RETIRÉ', `+${n}`]);
+  }
+  return ctx.error([
+    'USAGE',
+    `${config.prefix}SUDO LIST`,
+    `${config.prefix}SUDO ADD <NUMÉRO>`,
+    `${config.prefix}SUDO DEL <NUMÉRO>`,
+    `${config.prefix}AUTHCODE  (code à usage unique)`,
+  ]);
+});
+
+cmd('authcode', ['codeowner', 'codeauth'], {
+  cat: 9, desc: 'Générer un code pour activer un sudo', usage: 'authcode', owner: true, icon: '🎫',
+}, async (ctx) => {
+  // Seul un owner PRINCIPAL (pas sudo) peut générer — sécurité
+  const me = num(ctx.sender);
+  if (!isPrimaryOwner(me) && !ctx.isBotSelf) {
+    return ctx.error(['RÉSERVÉ AUX OWNERS PRINCIPAUX', 'PAS AUX SUDO']);
+  }
+  const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  state.settings.authCodes = state.settings.authCodes || {};
+  // purge codes > 1h
+  const now = Date.now();
+  for (const [k, v] of Object.entries(state.settings.authCodes)) {
+    if (!v?.exp || v.exp < now) delete state.settings.authCodes[k];
+  }
+  state.settings.authCodes[code] = { exp: now + 60 * 60 * 1000, by: me };
+  saveState();
+  await ctx.success([
+    'CODE CRÉÉ (1 HEURE)',
+    code,
+    `L’AUTRE PERSONNE TAPE : ${config.prefix}CLAIM ${code}`,
+  ]);
+});
+
+cmd('claim', ['claimsudo', 'activer'], {
+  cat: 1, desc: 'Activer un accès sudo avec un code', usage: 'claim <CODE>', icon: '🎫',
+}, async (ctx) => {
+  const code = (ctx.args[0] || ctx.q || '').trim().toUpperCase();
+  if (!code) return ctx.error(['USAGE', `${config.prefix}CLAIM ABC123`]);
+  state.settings.authCodes = state.settings.authCodes || {};
+  const entry = state.settings.authCodes[code];
+  if (!entry || entry.exp < Date.now()) {
+    delete state.settings.authCodes[code];
+    saveState();
+    return ctx.error(['CODE INVALIDE OU EXPIRÉ']);
+  }
+  const n = num(ctx.sender);
+  if (!n) return ctx.error(['NUMÉRO INTROUVABLE']);
+  if (isPrimaryOwner(n) || isSudoNumber(n)) {
+    delete state.settings.authCodes[code];
+    saveState();
+    return ctx.success(['TU ES DÉJÀ AUTORISÉ']);
+  }
+  state.settings.sudo = state.settings.sudo || [];
+  if (!state.settings.sudo.includes(n)) state.settings.sudo.push(n);
+  delete state.settings.authCodes[code];
+  saveState();
+  await ctx.success([
+    'ACCÈS SUDO ACTIVÉ',
+    `+${n}`,
+    'COMMANDES OWNER / MENU OWNER VISIBLES',
+  ]);
+});
+
+/* ── EXTRAS Baileys (communities, channels, album, store-backed, scheduler…) ── */
+try {
+  registerExtras(cmd, {
+    config,
+    mediaInfo,
+    downloadFrom,
+    sharp,
+    Sticker,
+    StickerTypes,
+    renderSuccess,
+    renderError,
+    buildFrame,
+    bullet,
+    toUnicode,
+    note,
+    ctxInfo,
+    unwrap,
+  });
+  registerTools(cmd, {
+    config,
+    mediaInfo,
+    downloadFrom,
+    sharp,
+    Sticker,
+    StickerTypes,
+    buildFrame,
+    bullet,
+  });
+  registerMissing(cmd, {
+    config,
+    mediaInfo,
+    downloadFrom,
+    sharp,
+    Sticker,
+    StickerTypes,
+    buildFrame,
+    bullet,
+    toUnicode,
+    note,
+  });
+  console.log('[EXTRAS] avancés + outils + missing Baileys (messages texte uniquement)');
+} catch (e) {
+  console.error('[EXTRAS] enregistrement:', e.message);
+}
 
 /* ── 11. TÉLÉCHARGEMENT ───────────────────────────────────── */
 
@@ -1534,7 +2184,7 @@ async function ytDownloadVideo(url) {
 
 const ytFail = (e) => `❌ Échec du téléchargement : ${e.message}\nRéessaie avec un autre titre, ou plus tard.`;
 
-cmd(['yt', 'yts', 'ytsearch'], { cat: 11, desc: 'Rechercher une vidéo YouTube', usage: 'yt <titre>' }, async (ctx) => {
+cmd(['yt', 'yts', 'ytsearch'], { cat: 11, desc: 'Rechercher une vidéo YouTube', usage: 'yt <titre>', requiresInput: true }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}yt <titre>`);
   await ctx.react('⏳');
   const r = await yts(ctx.q);
@@ -1547,7 +2197,7 @@ cmd(['yt', 'yts', 'ytsearch'], { cat: 11, desc: 'Rechercher une vidéo YouTube',
   await ctx.react('✅');
 });
 
-cmd(['play', 'mp3', 'yta'], { cat: 11, desc: 'Télécharger une musique en MP3', usage: 'play <titre ou lien>' }, async (ctx) => {
+cmd(['play', 'mp3', 'yta'], { cat: 11, desc: 'Télécharger une musique en MP3', usage: 'play <titre ou lien>', requiresInput: true }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}play <titre ou lien YouTube>`);
   await ctx.react('⏳');
   await ctx.reply(`${config.messages.wait}\n🎵 Recherche de *${ctx.q}*...`);
@@ -1562,7 +2212,7 @@ cmd(['play', 'mp3', 'yta'], { cat: 11, desc: 'Télécharger une musique en MP3',
   if (meta.seconds > 15 * 60) return ctx.reply(`❌ Durée trop longue (${formatDuration(meta.seconds * 1000)}) — limite 15 min.`);
   try {
     const audio = await ytDownloadAudio(meta.url);
-    await ctx.sock.sendMessage(ctx.from, {
+    await send(ctx.sock, ctx.from, {
       audio,
       mimetype: 'audio/mpeg',
       ptt: false,
@@ -1577,7 +2227,7 @@ cmd(['play', 'mp3', 'yta'], { cat: 11, desc: 'Télécharger une musique en MP3',
   }
 });
 
-cmd(['video', 'ytv', 'ytmp4'], { cat: 11, desc: 'Télécharger une vidéo YouTube', usage: 'video <titre ou lien>' }, async (ctx) => {
+cmd(['video', 'ytv', 'ytmp4'], { cat: 11, desc: 'Télécharger une vidéo YouTube', usage: 'video <titre ou lien>', requiresInput: true }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}video <titre ou lien YouTube>`);
   await ctx.react('⏳');
   await ctx.reply(`${config.messages.wait}\n🎬 Recherche de *${ctx.q}*...`);
@@ -1592,7 +2242,7 @@ cmd(['video', 'ytv', 'ytmp4'], { cat: 11, desc: 'Télécharger une vidéo YouTub
   if (meta.seconds > 20 * 60) return ctx.reply(`❌ Durée trop longue (${formatDuration(meta.seconds * 1000)}) — limite 20 min.`);
   try {
     const buf = await ytDownloadVideo(meta.url);
-    await ctx.sock.sendMessage(ctx.from, {
+    await send(ctx.sock, ctx.from, {
       video: buf,
       mimetype: 'video/mp4',
       caption: `🎬 *${meta.title}*\n👤 ${meta.author}\n⏱ ${formatDuration(meta.seconds * 1000)} · ${(buf.length / 1048576).toFixed(1)} Mo`,
@@ -1610,6 +2260,17 @@ cmd(['video', 'ytv', 'ytmp4'], { cat: 11, desc: 'Télécharger une vidéo YouTub
    5. EXÉCUTION DES COMMANDES
    ════════════════════════════════════════════════════════════ */
 
+/* ── LUDO : module externe (dossier ludo/ + plugins/ludo.js) ────────────
+   Le moteur (règles, salons, rendu PNG) est dans ludo/src et n'a aucune
+   dépendance à handler.js — seules les 3 commandes sont branchées ici.
+   try/catch : un module absent ou une dépendance manquante (canvas) ne
+   doit jamais empêcher le bot de démarrer. ── */
+try {
+  require('./plugins/ludo')(cmd, commands);
+} catch (e) {
+  console.error('[LUDO] module non chargé :', e.message);
+}
+
 async function executeCommand(sock, msg, name, args, base) {
   const entry = commands.get(String(name).toLowerCase());
   if (!entry) return false;
@@ -1621,12 +2282,30 @@ async function executeCommand(sock, msg, name, args, base) {
     content: base.content,
     args,
     q: args.join(' '),
-    reply: async (text, mentions) =>
-      sock.sendMessage(base.from, mentions ? { text, mentions } : { text }, { quoted: msg }),
+    /* Réponses : tout ce qui commence par ❌ est automatiquement
+       encadré dans le style ERREUR officiel (rendu centralisé) ;
+       les cadres (╭…) sont transmis tels quels. */
+    reply: async (text, mentions) => {
+      let body = text;
+      if (typeof body === 'string' && body.startsWith('❌')) {
+        body = renderError([body.slice(1).trim()]);
+      }
+      return send(sock, base.from, mentions ? { text: body, mentions } : { text: body }, { quoted: msg });
+    },
+    error: async (lines) =>
+      send(sock, base.from, { text: renderError(Array.isArray(lines) ? lines : [lines]) }, { quoted: msg }),
+    info: async (lines) =>
+      send(sock, base.from, { text: renderInfo(Array.isArray(lines) ? lines : [lines]) }, { quoted: msg }),
+    success: async (lines) =>
+      send(sock, base.from, { text: renderSuccess(Array.isArray(lines) ? lines : [lines]) }, { quoted: msg }),
+    saisie: async (hint) =>
+      send(sock, base.from, { text: renderSaisie(hint) }, { quoted: msg }),
     react: async (emoji) => {
       try {
-        await sock.sendMessage(base.from, { react: { text: emoji, key: msg.key } });
-      } catch (e) {}
+        await send(sock, base.from, { react: { text: emoji, key: msg.key } });
+      } catch (e) {
+        console.error('[CMD] react:', e.message);
+      }
     },
   };
 
@@ -1634,10 +2313,18 @@ async function executeCommand(sock, msg, name, args, base) {
   if (config.selfMode || state.settings.selfMode) {
     if (!ctx.isOwner && !msg.key.fromMe) return true; // silencieux
   }
-  if (entry.owner && !ctx.isOwner) return ctx.reply(config.messages.ownerOnly), true;
-  if (entry.group && !ctx.isGroup) return ctx.reply(config.messages.groupOnly), true;
-  if (entry.admin && ctx.isGroup && !ctx.isAdmin && !ctx.isOwner) return ctx.reply(config.messages.adminOnly), true;
-  if (entry.botAdmin && ctx.isGroup && !ctx.isBotAdmin) return ctx.reply(config.messages.botAdminNeeded), true;
+  if (entry.owner && !ctx.isOwner) return ctx.error([config.messages.ownerOnly.toUpperCase()]), true;
+  if (entry.group && !ctx.isGroup) return ctx.error([config.messages.groupOnly.toUpperCase()]), true;
+  if (entry.admin && ctx.isGroup && !ctx.isAdmin && !ctx.isOwner) return ctx.error([config.messages.adminOnly.toUpperCase()]), true;
+  if (entry.botAdmin && ctx.isGroup && !ctx.isBotAdmin) return ctx.error([config.messages.botAdminNeeded.toUpperCase()]), true;
+
+  /* Saisie en attente (§9) : argument requis absent → on invite à
+     répondre ; le prochain message texte sera passé en argument. */
+  if (entry.requiresInput && !args.length) {
+    setInput(base.from, entry.name, entry.usage || entry.name);
+    await ctx.saisie(`POUR COMPLÉTER : ${config.prefix}${(entry.usage || entry.name).toUpperCase()}`);
+    return true;
+  }
 
   state.stats.commands += 1;
   saveState();
@@ -1647,7 +2334,7 @@ async function executeCommand(sock, msg, name, args, base) {
     await entry.handler(ctx);
   } catch (e) {
     console.error(`[CMD] ${entry.name}:`, e.message);
-    await ctx.reply(`${config.messages.error}\n\`[${e.message}]\``).catch(() => {});
+    await ctx.error([config.messages.error.replace(/^❌\s*/, '').toUpperCase(), `[${e.message}]`]).catch(() => {});
   }
   typingOff(sock, base.from);
   return true;
@@ -1672,27 +2359,34 @@ async function handleNumeric(sock, msg, text, base) {
 
   if (n === 0) {
     setMenu(chat, 0);
-    await sock.sendMessage(chat, { text: renderMainMenu() }, { quoted: msg });
+    await sendMenu(sock, chat, renderMainMenu(base), msg);
     return true;
   }
 
   if (st.cat === 0) {
-    if (n >= 1 && n <= CATEGORIES.length) {
-      setMenu(chat, n);
-      await sock.sendMessage(chat, { text: renderCategory(n) }, { quoted: msg });
+    const cats = CATEGORIES
+      .map((c) => ({ ...c, list: visibleCommands(c.n, base) }))
+      .filter((c) => c.list.length > 0);
+    const hit = cats.find((c) => c.n === n);
+    if (!hit) {
+      await send(sock, chat, {
+        text: renderError(['CHIFFRE INVALIDE', 'REPONDEZ 0 POUR LE MENU PRINCIPAL']),
+      }, { quoted: msg });
       return true;
     }
-    return false;
+    setMenu(chat, hit.n);
+    await sendMenu(sock, chat, renderCategory(hit.n, base), msg);
+    return true;
   }
 
-  const list = categoryCommands(st.cat);
+  const list = visibleCommands(st.cat, base);
   if (n >= 1 && n <= list.length) {
     await executeCommand(sock, msg, list[n - 1].name, [], base);
     return true;
   }
-  await sock.sendMessage(
+  await send(sock, 
     chat,
-    { text: `❌ Chiffre invalide (1-${list.length}). Réponds *0* pour le menu.` },
+    { text: renderError([`CHIFFRE INVALIDE (1-${list.length})`, 'REPONDEZ 0 POUR LE MENU PRINCIPAL']) },
     { quoted: msg }
   );
   return true;
@@ -1826,60 +2520,54 @@ async function runIntent(sock, msg, text, base) {
   const entry = commands.get(matched.cmd);
 
   st.ts = Date.now();
-  await sock.sendMessage(chat, {
-    text: `🧠 *AINORIA* → \`${config.prefix}${entry.name}\`${args.length ? `\n💬 ${args.join(' ')}` : ''}`,
+  await send(sock, chat, {
+    text: buildFrame('AINORIA', [
+      note(`${toUnicode('INTENTION')}: ${config.prefix}${entry.name}`),
+      ...(args.length ? [note(`${toUnicode('ARGS')}: ${args.join(' ')}`)] : []),
+    ]),
   }, { quoted: msg });
   await executeCommand(sock, msg, entry.name, args, base);
   return true;
 }
 
 /* ════════════════════════════════════════════════════════════
-   7. PROTECTIONS DE GROUPE (avant toute commande)
+   7. PROTECTIONS DE GROUPE — moteur DJOUSSE GUARD (guard/)
+   blacklist maison → exemptions → mute → 8 protections → sanction
    ════════════════════════════════════════════════════════════ */
 
-async function guardDelete(sock, msg, base, warning) {
+async function guardDelete(sock, msg, base) {
   try {
-    await sock.sendMessage(base.from, { delete: msg.key });
-  } catch (e) {}
-  if (warning && guardAllows(base.from, base.senderNum)) {
-    await sock
-      .sendMessage(base.from, {
-        text: warning,
-        mentions: [base.from.endsWith('@g.us') ? base.sender : base.from],
-      })
-      .catch(() => {});
+    await send(sock, base.from, { delete: msg.key });
+  } catch (e) {
+    console.error('[GUARD] suppression impossible:', e.message);
   }
 }
 
-async function runProtections(sock, msg, base, text) {
-  const g = getGroup(base.from);
-  const meta = await groupMeta(sock, base.from);
-
-  // Blacklist : suppression systématique
+async function runGroupProtections(sock, msg, base, text, meta) {
+  /* 1) Blacklist maison (owner) : au-dessus de tout, suppression muette */
   if (state.blacklist.includes(base.senderNum)) {
-    await guardDelete(sock, msg, base, null);
+    guardEngine.markDeleted(msg.key.id);
+    await guardDelete(sock, msg, base);
     return true;
   }
 
-  if (base.isAdmin || base.isOwner || base.isBotSelf) return false;
-
-  if (!botIsAdmin(sock, meta)) return false; // sans admin, rien à supprimer
-
-  if (g.antilink && LINK_RE.test(text)) {
-    await guardDelete(sock, msg, base, `🚫 Liens interdits ici, @${base.senderNum} !`);
-    return true;
-  }
-
-  if (g.antibad && text) {
-    const lower = text.toLowerCase();
-    const hit = BAD_WORDS.find((w) => new RegExp(`\\b${escRegExp(w)}\\b`, 'i').test(lower));
-    if (hit) {
-      await guardDelete(sock, msg, base, `🚫 Langage interdit, @${base.senderNum} !`);
-      return true;
-    }
-  }
-
-  return false;
+  /* 2) MOTEUR DJOUSSE GUARD : passifs → exemptions → mute → protections → sanction.
+        Un seul point d'appel ; reçoit le parse COMPLET (statut, transfert, contact, sondage…)
+        et les métadonnées déjà chargées (une seule requête groupMetadata). */
+  const gp = guardParse(msg);
+  const r = await guardEngine.runProtections({
+    ...gp,
+    sock,
+    msg,
+    meta,
+    from: base.from,
+    sender: base.sender,
+    senderNum: base.senderNum,
+    text: gp.text || text,
+    isBotSelf: base.isBotSelf,
+    isOwner: base.isOwner,
+  });
+  return !!r.handled;
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1897,12 +2585,12 @@ async function handleStatus(sock, msg) {
       await sock.readMessages([msg.key]).catch(() => {});
     }
     if (config.autoStatusReact) {
-      await sock.sendMessage('status@broadcast', {
+      await send(sock, 'status@broadcast', {
         react: { text: config.likeEmoji || '👍', key: msg.key },
       }).catch(() => {});
     }
     if (config.autoReplyStatus && config.statusReadMsg && msg.key.participant) {
-      await sock.sendMessage(msg.key.participant, { text: config.statusReadMsg }).catch(() => {});
+      await send(sock, msg.key.participant, { text: config.statusReadMsg }).catch(() => {});
     }
   } catch (e) {}
 }
@@ -1919,7 +2607,12 @@ async function handleMessage(sock, msg) {
     }
 
     if (isSystemJid(from)) return;
-    if (msg.messageTimestamp && Date.now() - Number(msg.messageTimestamp) * 1000 > 5 * 60 * 1000) return;
+    // Horloge téléphone / serveur parfois décalée : 30 min, et on ne drop jamais fromMe
+    const ageMs = msg.messageTimestamp ? Date.now() - Number(msg.messageTimestamp) * 1000 : 0;
+    if (ageMs > 30 * 60 * 1000 && !msg.key.fromMe) {
+      console.log(`[HANDLER] message trop ancien ignoré (${from}) age=${Math.round(ageMs/1000)}s`);
+      return;
+    }
 
     const content = unwrap(msg.message);
     const text = textOf(content).trim();
@@ -1927,6 +2620,13 @@ async function handleMessage(sock, msg) {
     const fromMe = !!msg.key.fromMe;
     const sender = fromMe ? sock.user?.id || from : msg.key.participant || from;
     const senderNum = num(sender);
+    const senderAlt = msg.key.participantAlt || msg.key.senderPn || null; // numéro réel quand l'ID est un LID
+
+    // Ignore les échos de nos propres messages (sauf commandes owner testées en « moi-même »)
+    if (fromMe && text && !text.startsWith(config.prefix)) {
+      putCache(from, msg.key.id, msg);
+      return;
+    }
 
     state.stats.messages += 1;
     saveState();
@@ -1940,16 +2640,22 @@ async function handleMessage(sock, msg) {
       !content?.protocolMessage &&
       !text.startsWith(config.prefix)
     ) {
-      sock.sendMessage(from, { react: { text: config.likeEmoji || '👍', key: msg.key } }).catch(() => {});
+      send(sock, from, { react: { text: config.likeEmoji || '👍', key: msg.key } }).catch(() => {});
     }
 
     /* Base de contexte partagée */
+    const botNum = num(sock.user?.id);
     const base = {
       from,
       sender,
       senderNum,
       isGroup,
-      isOwner: fromMe || isOwnerJid(sender) || senderNum === num(sock.user?.id),
+      isOwner:
+        fromMe ||
+        isOwnerJid(sender) ||
+        isOwnerJid(senderAlt) ||
+        (senderNum && botNum && senderNum === botNum) ||
+        (senderNum && config.ownerNumber.some((o) => senderNum === o || senderNum.endsWith(o) || o.endsWith(senderNum))),
       isBotSelf: fromMe,
       isAdmin: false,
       isBotAdmin: false,
@@ -1965,8 +2671,21 @@ async function handleMessage(sock, msg) {
       base.isBotAdmin = botIsAdmin(sock, meta);
     }
 
+    /* ── PROTECTIONS DE GROUPE
+          Les commandes (préfixe) passent TOUJOURS : on ne laisse pas le guard
+          « avaler » .menu / .ping avant le moteur de commandes. ── */
+    const isCommandText = !!(text && text.startsWith(config.prefix));
+    if (isGroup && !fromMe && !isCommandText) {
+      if (await runGroupProtections(sock, msg, base, text, meta)) return;
+    }
+
     /* Mode self : les non-owners sont ignorés totalement */
-    if ((config.selfMode || state.settings.selfMode) && !base.isOwner && !fromMe) return;
+    if ((config.selfMode || state.settings.selfMode) && !base.isOwner && !fromMe) {
+      if (text && text.startsWith(config.prefix)) {
+        console.log(`[HANDLER] SELF MODE — ignore ${senderNum} (owner: ${config.ownerNumber.join(',')})`);
+      }
+      return;
+    }
 
     /* ── Suppression détectée → renvoi (antidelete) ── */
     const proto = content?.protocolMessage;
@@ -1975,16 +2694,25 @@ async function handleMessage(sock, msg) {
       if (key?.remoteJid && key?.id) {
         const cached = getCache(key.remoteJid, key.id);
         const g = getGroup(key.remoteJid);
-        if (cached && g.antidelete && !cached.msg.key.fromMe) {
+        const gg = guardDb.db().getGroup(key.remoteJid);
+        const byBot = msg.key.fromMe || guardEngine.wasDeleted(key.id); // supprimé par le bot / le guard
+        const leaksLink = cached && gg.antilink &&
+          findLinks(textOf(unwrap(cached.msg.message)), gg.linkWhitelist).length > 0;
+        if (cached && g.antidelete && !cached.msg.key.fromMe && !byBot && !leaksLink) {
           const author = key.participant || key.remoteJid;
-          await sock.sendMessage(key.remoteJid, {
+          await send(sock, key.remoteJid, {
             text: `♻️ *Message supprimé détecté*\nDe : +${num(author)}`,
             mentions: [author],
           }).catch(() => {});
-          await sock.sendMessage(key.remoteJid, cached.msg.message, { quoted: cached.msg }).catch(() => {});
+          await send(sock, key.remoteJid, cached.msg.message, { quoted: cached.msg }).catch(() => {});
         }
       }
       return;
+    }
+
+    /* ── Vue unique reçue → auto-sauvegarde (.autonce on) ── */
+    if (!fromMe && !isOwnerJid(sender) && state.once?.[from] && isOnceContent(msg.message)) {
+      await autoSaveOnce(sock, msg, content, from, sender);
     }
 
     if (!text) return;
@@ -1998,7 +2726,7 @@ async function handleMessage(sock, msg) {
       const d = Date.now() - u.afk.ts;
       u.afk = null;
       saveState();
-      await sock.sendMessage(from, {
+      await send(sock, from, {
         text: `👋 Bienvenue, +${senderNum} ! Tu étais AFK ${formatDuration(d)}.`,
       }, { quoted: msg }).catch(() => {});
     }
@@ -2009,7 +2737,7 @@ async function handleMessage(sock, msg) {
         .filter((n) => state.users[n]?.afk);
       if (afkMentions.length) {
         const lines = afkMentions.map((n) => `💤 +${n} est AFK : ${state.users[n].afk.reason || 'sans raison'}`);
-        await sock.sendMessage(from, { text: lines.join('\n'), mentions: ci.mentionedJid }, { quoted: msg }).catch(() => {});
+        await send(sock, from, { text: lines.join('\n'), mentions: ci.mentionedJid }, { quoted: msg }).catch(() => {});
       }
     }
 
@@ -2019,13 +2747,28 @@ async function handleMessage(sock, msg) {
       if (state.stats.messages % 20 === 0) saveState();
     }
 
+    /* ── Saisie en attente (§9) : le message devient l'argument ── */
+    const pending = peekInput(from);
+    if (pending) {
+      const trimmed = text.trim();
+      if (/^annuler$/i.test(trimmed)) {
+        clearInput(from);
+        await send(sock, from, { text: renderSuccess(['SAISIE ANNULÉE']) }, { quoted: msg }).catch(() => {});
+        return;
+      }
+      if (trimmed.startsWith(config.prefix)) {
+        clearInput(from); // l'utilisateur a changé d'avis → on laisse passer la commande
+      } else {
+        clearInput(from);
+        if (commands.has(pending.cmd)) {
+          await executeCommand(sock, msg, pending.cmd, trimmed.split(/\s+/), base);
+        }
+        return;
+      }
+    }
+
     /* ── Menu interactif par chiffres ── */
     if (await handleNumeric(sock, msg, text, base)) return;
-
-    /* ── Protégions de groupe (suppression) ── */
-    if (isGroup && !fromMe) {
-      if (await runProtections(sock, msg, base, text)) return;
-    }
 
     /* ── AINORIA : intention en langage naturel (menu ouvert) ── */
     if (await runIntent(sock, msg, text, base)) return;
@@ -2039,53 +2782,242 @@ async function handleMessage(sock, msg) {
     const args = body.split(/\s+/);
     const name = args.shift();
 
-    if (!rateOk(sender)) return;
+    console.log(`[CMD] ${from} → ${prefix}${name} | owner=${base.isOwner} self=${!!(config.selfMode || state.settings.selfMode)} args=${args.length} text=${JSON.stringify(text.slice(0, 80))}`);
 
-    if (!commands.has(name.toLowerCase())) {
-      await sock.sendMessage(from, { text: config.messages.unknown }, { quoted: msg }).catch(() => {});
+    if (!rateOk(sender)) {
+      console.log('[CMD] rate-limit', senderNum);
       return;
     }
 
-    await executeCommand(sock, msg, name, args, base);
+    const cmdName = name.toLowerCase();
+    if (!commands.has(cmdName)) {
+      console.log(`[CMD] inconnue: ${name} (total commandes: ${commands.size})`);
+      try {
+        await send(sock, from, {
+          text: renderError(['COMMANDE INVALIDE', 'UTILISEZ LE MENU POUR CONTINUER']),
+        }, { quoted: msg });
+      } catch (e) {
+        console.error('[CMD] envoi erreur commande invalide:', e.message);
+      }
+      return;
+    }
+
+    try {
+      await executeCommand(sock, msg, name, args, base);
+      console.log(`[CMD] OK ${cmdName}`);
+    } catch (e) {
+      console.error(`[CMD] ÉCHEC ${cmdName}:`, e.message);
+      if (e.stack) console.error(e.stack.split('\n').slice(0, 6).join('\n'));
+      // Secours : au moins répondre pour ping/menu
+      try {
+        await send(sock, from, {
+          text: `⚠️ Erreur commande ${cmdName}: ${e.message}`,
+        }, { quoted: msg });
+      } catch (e2) {
+        console.error('[CMD] envoi secours impossible:', e2.message);
+      }
+    }
   } catch (e) {
     console.error('[HANDLER]', e.message);
+    if (e.stack) console.error(e.stack.split('\n').slice(0, 5).join('\n'));
   }
 }
 
 /* ════════════════════════════════════════════════════════════
-   9. ARRIVÉES / DÉPARTS — welcome & goodbye
+   9. ÉVÉNEMENTS DE GROUPE — source de vérité UNIQUE
+   (index.js → sock.ev.on('group-participants.update') → ici)
+
+   RÈGLES ABSOLUES :
+     add       → BIENVENUE
+     remove    → DÉPART
+     promote   → PROMOTION ADMIN
+     demote    → RÉTROGRADATION
+     toute autre action ('modify', inconnue, communauté…) → IGNORÉE
+       (journalisée en debug, JAMAIS interprétée comme un départ)
+
+   Drapeaux projet conservés : .welcome / .goodbye pilotent
+   add / remove. promote et demote sont toujours annoncés.
    ════════════════════════════════════════════════════════════ */
+
+/* — Le style (toUnicode, frameHeader, frameFooter, buildFrame) est
+     centralisé en section 3bis — un seul endroit à modifier. — */
+
+/* — Anti-doublon des événements de groupe —
+   Baileys n'envoie PAS d'identifiant d'événement : on construit une
+   empreinte groupe|action|participants(triés)|auteur. Le rejeu d'un
+   même événement (re-stream, redémarrage) est ignoré pendant TTL. */
+const groupEventCache = new Map();
+const GROUP_EVENT_TTL = 10 * 60 * 1000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, ts] of groupEventCache) if (now - ts > GROUP_EVENT_TTL) groupEventCache.delete(k);
+}, 60000).unref();
 
 async function handleGroupUpdate(sock, update) {
   try {
-    const { id, participants, action } = update;
-    if (!id || !id.endsWith('@g.us') || !participants?.length) return;
-    const g = getGroup(id);
+    const { id, action } = update || {};
+    if (!id || !id.endsWith('@g.us')) return;
 
-    if (action === 'add' && g.welcome) {
-      const meta = await groupMeta(sock, id).catch(() => null);
-      for (const p of participants) {
-        const jid = typeof p === 'string' ? p : p?.id;
-        if (!jid) continue;
-        const text = (g.welcomeMessage || 'Bienvenue @user !')
-          .replace(/@user/g, `@${num(jid)}`)
-          .replace(/@group/g, meta?.subject || 'ce groupe')
-          .replace(/#memberCount/g, String(meta?.participants?.length || '?'));
-        await sock.sendMessage(id, { text, mentions: [jid] }).catch(() => {});
-        await new Promise((r) => setTimeout(r, 700));
-      }
-      saveState();
-    } else if ((action === 'remove' || action === 'leave') && g.goodbye) {
-      for (const p of participants) {
-        const jid = typeof p === 'string' ? p : p?.id;
-        if (!jid || jid === sock.user?.id) continue;
-        const text = (g.goodbyeMessage || '@user a quitté le groupe.').replace(/@user/g, `@${num(jid)}`);
-        await sock.sendMessage(id, { text, mentions: [jid] }).catch(() => {});
-        await new Promise((r) => setTimeout(r, 700));
+    /* NORMALISATION (cas réel Baileys) : messageStubParameters est
+       JSON.parse → les participants arrivent parfois en OBJETS
+       ({ id, phoneNumber… }), jamais uniquement en chaînes. On exige
+       des JID strings avant toute empreinte, mention ou envoi. */
+    const normJid = (p) => {
+      if (typeof p === 'string' && p) return p;
+      if (p && typeof p === 'object') return p.id || p.jid || p.phoneNumber || null;
+      return null;
+    };
+    let participants = (Array.isArray(update.participants) ? update.participants : [])
+      .map(normJid)
+      .filter((j) => typeof j === 'string' && j.length);
+    const author = normJid(update.author ?? update.authorPn) || '-';
+
+    if (!participants.length) return;
+
+    /* Événement inconnu → journalisé, AUCUN message utilisateur */
+    if (action !== 'add' && action !== 'remove' && action !== 'promote' && action !== 'demote') {
+      console.log(`⚠️ GROUP EVENT IGNORED\nACTION: ${action}\nREASON: UNSUPPORTED_ACTION`);
+      return;
+    }
+
+    /* Empreinte anti-doublon */
+    const eventId = [id, action, [...participants].sort().join(','), author || '-'].join('|');
+    if (groupEventCache.has(eventId)) {
+      console.log(`[GROUPE] doublon ignoré — ${eventId}`);
+      return;
+    }
+    groupEventCache.set(eventId, Date.now());
+
+    /* Anti-fake (guard) : expulse les indicatifs non autorisés AVANT le message de bienvenue */
+    if (action === 'add') {
+      const fakes = await guardEvents.enforceAntiFake(sock, { id, participants, action });
+      if (fakes.length) {
+        participants = participants.filter((p) => !fakes.includes(p));
+        if (!participants.length) return;
       }
     }
-  } catch (e) {
-    console.error('[HANDLER] group-update:', e.message);
+
+    const g = getGroup(id);
+    const wantsMessage =
+      action === 'promote' || action === 'demote' ||
+      (action === 'add' && g.welcome) ||
+      (action === 'remove' && g.goodbye);
+
+    /* Nom du groupe : TOUJOURS dynamique depuis les métadonnées */
+    const meta = await groupMeta(sock, id);
+    if (!meta) console.log(`[GROUPE] métadonnées indisponibles (${id}) → nom par défaut`);
+    const groupName = meta?.subject || 'CE GROUPE';
+
+    /* Photo de profil du groupe — échec = simple message texte,
+       jamais bloquant (test : groupe sans photo) */
+    let groupProfilePicture = null;
+    if (wantsMessage) {
+      try {
+        groupProfilePicture = await sock.profilePictureUrl(id);
+      } catch (error) {
+        console.log(`[GROUPE] photo indisponible (${id}): ${error.message}`);
+      }
+    }
+
+    /* Log de diagnostic — reflette la réalité (après les appels réseau) */
+    console.log(
+      '========== GROUP EVENT ==========\n' +
+      `GROUP: ${id}\n` +
+      `ACTION: ${action}\n` +
+      `PARTICIPANTS: ${participants.join(', ')}\n` +
+      `AUTHOR: ${author || '-'}\n` +
+      `GROUP NAME: ${groupName}\n` +
+      `PROFILE PICTURE: ${groupProfilePicture || 'aucune'}\n` +
+      `EVENT ID: ${eventId}\n` +
+      '================================='
+    );
+
+    if (!wantsMessage) {
+      console.log(`[GROUPE] message non demandé — ${action} désactivé (${action === 'add' ? '.welcome off' : '.goodbye off'})`);
+      return;
+    }
+
+    /* Style officiel DJOUSSE TECH — STRATÉGIE MULTI-PARTICIPANTS :
+       UN SEUL message par événement, une ligne ✦ par participant
+       (zéro spam, zéro doublon). Mentions réelles transmises à Baileys. */
+    const mentionLines = participants
+      .map((p) => note(`👤 @${num(p)}`))
+      .join('\n');
+    const groupLine = note(`${toUnicode('GROUPE')}: ${groupName}`);
+
+    const textByAction = {
+      add: buildFrame('BIENVENUE', [
+        mentionLines,
+        note(toUnicode('BIENVENUE DANS LE GROUPE')),
+        groupLine,
+      ]),
+      remove: buildFrame('DÉPART', [
+        mentionLines,
+        note(toUnicode('VIENT DE QUITTER LE GROUPE')),
+        groupLine,
+      ]),
+      promote: buildFrame('ADMIN PROMOTION', [
+        mentionLines,
+        note(toUnicode('NOUVEAU ADMINISTRATEUR')),
+        groupLine,
+      ]),
+      demote: buildFrame('RÉTROGRADATION', [
+        mentionLines,
+        note(toUnicode("N'EST PLUS ADMINISTRATEUR")),
+        groupLine,
+      ]),
+    };
+    const text = textByAction[action];
+
+    /* Photo + légende = UN seul message WhatsApp ; sans photo → texte.
+       ✅ logué seulement APRÈS un await réussi. */
+    try {
+      if (groupProfilePicture) {
+        await send(sock, id, {
+          image: { url: groupProfilePicture },
+          caption: text,
+          mentions: participants,
+        });
+      } else {
+        await send(sock, id, { text, mentions: participants });
+      }
+      console.log(`[GROUPE] ✅ ${action} envoyé → ${id} (${participants.length} participant(s))`);
+    } catch (error) {
+      console.error('[GROUPE] envoi impossible:', error.message);
+    }
+  } catch (error) {
+    console.error('[GROUPE] group-update:', error.message);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   9bis. messages.update — éditions, votes de sondages, status
+   ════════════════════════════════════════════════════════════ */
+
+async function handleMessagesUpdate(sock, updates) {
+  if (!Array.isArray(updates) || !updates.length) return;
+  for (const u of updates) {
+    try {
+      const key = u?.key;
+      const update = u?.update;
+      if (!key?.id || !update) continue;
+
+      // Garder le cache à jour si le message est édité
+      if (update.message) {
+        const cached = getCache(key.remoteJid, key.id);
+        if (cached?.msg) {
+          cached.msg.message = update.message;
+          cached.ts = Date.now();
+        }
+      }
+
+      // Votes de sondage (log léger — le reste est géré par Baileys si getMessage est branché)
+      if (update.pollUpdates?.length) {
+        console.log(`[POLL] vote reçu sur ${key.remoteJid} / ${key.id} (${update.pollUpdates.length})`);
+      }
+    } catch (e) {
+      console.error('[HANDLER] messages.update:', e.message);
+    }
   }
 }
 
@@ -2105,20 +3037,27 @@ async function handleGroupInfo(sock, update) {
       lines.push(update.announcement ? '🔒 Groupe fermé (admins seulement)' : '🔓 Groupe ouvert à tous');
     }
     if (!lines.length) return;
-    await sock.sendMessage(update.id, { text: `📢 *Groupe mis à jour*\n${lines.join('\n')}` }).catch(() => {});
+    await send(sock, update.id, { text: `📢 *Groupe mis à jour*\n${lines.join('\n')}` }).catch(() => {});
   } catch (e) {
     console.error('[HANDLER] group-info:', e.message);
   }
 }
 
 module.exports = {
+  isSystemJid,
   handleMessage,
   handleGroupUpdate,
   handleGroupInfo,
+  handleMessagesUpdate,
   commands,
   CATEGORIES,
   renderMainMenu,
   state,
   saveState,
   askGemini,
+  getMessageForBaileys,
+  putCache,
+  getCache,
+  getScheduler,
+  getStore,
 };

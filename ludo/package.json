@@ -1,0 +1,14 @@
+{
+  "name": "djousse-ludo",
+  "version": "1.0.0",
+  "description": "LUDO multijoueur pour groupes WhatsApp (Baileys) et autres plateformes - DJOUSSE TECH EVOLUTION",
+  "main": "src/index.js",
+  "license": "UNLICENSED",
+  "scripts": {
+    "test": "node test/simulate.js",
+    "preview": "node test/preview.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65"
+  }
+}

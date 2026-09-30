@@ -22,7 +22,10 @@ module.exports = {
   // Identité du bot
   botName: process.env.BOT_NAME || 'DJOUSSE TECH',
   botOwnerName: process.env.OWNER_NAME || 'Beaute Gar',
+  // Numéros owner (.env). Au connect, le numéro de la session est AJOUTÉ automatiquement.
   ownerNumber: numbers(process.env.OWNER_NUMBER, '237693978044'),
+  // true = le numéro scanné (QR/pairing) devient toujours owner (défaut)
+  autoOwner: process.env.AUTO_OWNER !== '0' && process.env.AUTO_OWNER !== 'false',
 
   // Commandes
   prefix: process.env.PREFIX || '.',
@@ -50,6 +53,15 @@ module.exports = {
   likeEmoji: process.env.AUTOLIKE_EMOJI || '👍',
   statusReadMsg: process.env.STATUS_READ_MSG || '',
 
+  // Aperçus de liens haute qualité (Baileys)
+  linkPreview: bool(process.env.LINK_PREVIEW, true),
+
+  // Cache messages (getMessage / antidelete / edit / pin) — max entrées en RAM
+  msgCacheMax: Math.max(100, parseInt(process.env.MSG_CACHE_MAX || '800', 10) || 800),
+
+  // Durée éphémère par défaut (secondes) : 0 | 86400 (24h) | 604800 (7j) | 7776000 (90j)
+  defaultEphemeral: parseInt(process.env.DEFAULT_EPHEMERAL || '0', 10) || 0,
+
   // IA (optionnelle : sans clé, la commande .ai répond avec un message explicite)
   geminiKey: process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || '',
 
@@ -60,7 +72,7 @@ module.exports = {
   // Version WhatsApp de repli si toutes les sources échouent
   stableWaVersion: [2, 3000, 1043857760],
 
-  // Réglages appliqués à chaque nouveau groupe (surchageables par .env)
+  // Réglages appliqués à chaque nouveau groupe (surchargeables par .env)
   defaultGroupSettings: {
     antilink: bool(process.env.ANTILINK, false),
     antidelete: bool(process.env.ANTI_DELETE, false),
@@ -68,6 +80,14 @@ module.exports = {
     goodbye: bool(process.env.ANTI_LEFT, false),
     welcomeMessage: 'Hey @user, bienvenue dans @group !\nMembres: #memberCount',
     goodbyeMessage: '@user a quitté le groupe. Salut !',
+  },
+
+  // Moteur DJOUSSE GUARD (dossier guard/) — protections de groupe
+  guard: {
+    dbFile: process.env.GUARD_DB || 'guard.json',              // dans sessionDir
+    timezone: process.env.GUARD_TZ || 'Africa/Douala',          // fuseau du mode nuit
+    log: bool(process.env.GUARD_LOG, false),                    // journal des expulsions → DM owner
+    notifyCooldownMs: 10 * 60 * 1000,                           // avis « bot non admin » : 1 / 10 min / groupe
   },
 
   // Messages système
@@ -81,7 +101,6 @@ module.exports = {
     botAdminNeeded: '🤖 Je dois être admin du groupe pour faire ça.',
     privateOnly: '📩 Utilise ça en privé.',
     unknown: '❓ Commande inconnue. Tape .menu pour voir tout.',
-    maxWarnings: 3,
   },
 
   // Réseaux
@@ -89,5 +108,8 @@ module.exports = {
     github: 'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD',
   },
 
-  version: require('./package.json').version,
+  version: (() => {
+    try { return require('./package.json').version; } catch { return '1.0.0'; }
+  })(),
 };
+
