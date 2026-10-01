@@ -186,6 +186,44 @@ L'ordre du tableau = **ordre de priorité d'évaluation**.
 - Un seul **cache de permissions**, invalidé quand le bot est promu admin.
 - Le owner est reconnu même quand WhatsApp renvoie un **LID**.
 
+### 🔌 Pont vers Vigil (optionnel)
+
+`guard/src/vigil.js` demande un **second avis** à [Vigil](https://github.com/Beaute-Gar/vigil),
+la console de modération, quand une protection de contenu se déclenche :
+
+| Étape | Qui | Question |
+|---|---|---|
+| 1 | GUARD (local) | *« y a-t-il un lien ? »* — décision immédiate, sans réseau |
+| 2 | Vigil | *« cette règle est-elle déclenchée ? »* → nom, sévérité, action |
+| 3 | GUARD | admin ⇒ suppression · **sans admin ⇒ annonce de la règle dans le groupe** |
+
+**Trois garanties, vérifiées par `tests/vigil.test.js` :**
+
+1. **Sans `VIGIL_URL`, le pont est inert** — zéro requête, comportement strictement identique à avant.
+2. **Un échec garde l'avis local** — Vigil hors ligne n'affaiblit *jamais* une protection ; après un
+   échec, un cooldown de 1 min évite de marteler un serveur déjà mort.
+3. **Un seul appel réseau par message**, même quand plusieurs protections se déclenchent.
+
+**Le mode** :
+
+- `enrich` *(défaut)* — Vigil informe (nom de règle, sévérité) mais **ne peut pas** déclarer
+  « propre » et annuler une protection. Brancher Vigil ne rend donc jamais la modération plus faible.
+- `veto` — Vigil a le dernier mot sur le contenu. À n'utiliser que si des règles existent côté Vigil.
+
+```env
+# ── Pont Vigil (optionnel) ───────────────────────
+# Vide = pont coupé, le bot fonctionne comme avant.
+VIGIL_URL=http://localhost:3120
+VIGIL_EMAIL=demo@vigil.app
+VIGIL_PASSWORD=
+VIGIL_TIMEOUT_MS=1200
+VIGIL_MODE=enrich
+```
+
+> **Sans admin, le bot peut prévenir mais pas faire taire.** WhatsApp interdit la suppression d'un
+> message par un non-admin *côté serveur* : l'avis signale alors l'infraction et invite à promouvoir
+> le bot. C'est une limite de la plateforme, pas du code.
+
 ---
 
 ## 🚀 Installation
@@ -236,6 +274,13 @@ GUARD_TZ=Africa/Douala
 GUARD_LOG=0
 GUARD_DB=guard.json
 
+# ── Pont Vigil (optionnel) ───────────────────────
+# Vide = pont coupé, le bot fonctionne comme avant.
+VIGIL_URL=
+VIGIL_EMAIL=
+VIGIL_PASSWORD=
+VIGIL_MODE=enrich
+
 # ── Modes ────────────────────────────────────────
 MODE=public
 REJECT_CALL=1
@@ -270,6 +315,7 @@ DJOUSSE-TECH-MD/
 ├── guard/            # 🛡️ DJOUSSE GUARD — moteur de protections isolé
 │   └── src/
 │       ├── engine.js          # Orchestration + priorités
+│       ├── vigil.js           # 🔌 Second avis Vigil — fail-open, zéro requête si non configuré
 │       ├── protections/       # 13 fichiers, un par protection
 │       ├── commands/          # Commandes de modération
 │       ├── sanctions.js  · nightmode.js  · journal.js
@@ -286,7 +332,7 @@ DJOUSSE-TECH-MD/
 ├── ludo/             # 🎲 Moteur de jeu Ludo (plateau, règles, rendu canvas)
 ├── plugins/          # Plugins extensibles
 ├── scripts/audit.js  # 🔍 Audit de démarrage (sécurité, deps, structure)
-├── tests/            # ✅ node --test
+├── tests/            # ✅ node --test — 78 tests, 11 fichiers
 ├── vendor/yt-dlp.exe # ⬇️ Auto-téléchargé au premier usage
 └── session/          # 🔒 Credentials + état (gitignoré)
 ```

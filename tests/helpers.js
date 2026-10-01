@@ -21,6 +21,12 @@ process.env.PREFIX = '.';
 process.env.ANTI_DELETE = 'false'; // le .env du dépôt met true : les tests partent de la valeur par défaut
 process.env.SESSION_DIR = path.relative(ROOT, TMP); // état de test hors du projet
 process.env.GUARD_TZ = 'Africa/Douala';
+// Le pont Vigil ne doit JAMAIS appeler le réseau pendant les tests :
+// on coupe ici, avant que config.js lise .env. tests/vigil.test.js le
+// réactive en mémoire, test par test, avec un faux fetch.
+process.env.VIGIL_URL = '';
+process.env.VIGIL_EMAIL = '';
+process.env.VIGIL_PASSWORD = '';
 
 const STUBS = {
   sharp: () => ({}),

@@ -88,6 +88,22 @@ module.exports = {
     timezone: process.env.GUARD_TZ || 'Africa/Douala',          // fuseau du mode nuit
     log: bool(process.env.GUARD_LOG, false),                    // journal des expulsions → DM owner
     notifyCooldownMs: 10 * 60 * 1000,                           // avis « bot non admin » : 1 / 10 min / groupe
+    // Avis *d'infraction* (quand Vigil a nommé la règle) : nettement plus
+    // court, sinon le constat le plus utile est aussi le plus rare.
+    noticeCooldownMs: Number(process.env.GUARD_NOTICE_COOLDOWN_MS) || 60 * 1000,
+
+    // Pont vers Vigil, la console de modération (github.com/Beaute-Gar/vigil).
+    // Tant que VIGIL_URL est vide, le pont est inert : le bot fonctionne
+    // exactement comme avant, sans requête réseau supplémentaire.
+    vigil: {
+      url: String(process.env.VIGIL_URL || '').replace(/\/+$/, ''),
+      email: process.env.VIGIL_EMAIL || '',
+      password: process.env.VIGIL_PASSWORD || '',
+      timeoutMs: Number(process.env.VIGIL_TIMEOUT_MS) || 1200,
+      // 'enrich' = Vigil informe, n'annule rien (défaut, sûr)
+      // 'veto'   = si Vigil dit « propre », la protection passe son chemin
+      mode: process.env.VIGIL_MODE === 'veto' ? 'veto' : 'enrich',
+    },
   },
 
   // Messages système
