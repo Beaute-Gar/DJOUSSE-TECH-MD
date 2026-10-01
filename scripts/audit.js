@@ -365,7 +365,9 @@ function checkG2() {
   };
   for (const f of activeFiles()) {
     const r = rel(f);
-    if (r === 'handler.js' || r.startsWith('plugins/')) scanCmd(f);
+    // lib/extras.js + lib/missing.js portent aussi des cmd() : les scanner
+    // sinon G4 ignore 66 registrations (doublons lib↔handler invisibles).
+    if (r === 'handler.js' || r.startsWith('plugins/') || r.startsWith('lib/')) scanCmd(f);
   }
   const guardDir = path.join(ROOT, 'guard', 'src', 'commands');
   if (fs.existsSync(guardDir)) {

@@ -1543,7 +1543,10 @@ cmd('statut', ['status'], { cat: 9, desc: 'Publier un texte en statut WhatsApp',
   await ctx.reply(`✅ Statut publié${list.length ? ` vers ${list.length} contacts` : ''}.`);
 });
 
-cmd('location', ['position', 'localisation'], { cat: 5, desc: 'Envoyer un point GPS', usage: 'location <lat>, <lng> [nom]' }, async (ctx) => {
+/* Alias ['position','localisation'] retirés ici : lib/extras.js les réclame
+   aussi pour .loc et registerExtras (handler.js :1958) s'exécute APRÈS —
+   Map.set les écrase, ces alias étaient donc morts (G4). Comportement inchangé. */
+cmd('location', { cat: 5, desc: 'Envoyer un point GPS', usage: 'location <lat>, <lng> [nom]' }, async (ctx) => {
   const m = ctx.q.match(/(-?\d{1,3}(?:\.\d+)?)[,\s]+(-?\d{1,3}(?:\.\d+)?)/);
   if (!m) return ctx.reply(`❌ Usage : ${config.prefix}location 3.8480, 11.5020 Douala`);
   const lat = parseFloat(m[1]);

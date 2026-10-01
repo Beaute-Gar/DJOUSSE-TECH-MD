@@ -78,6 +78,11 @@ function mockSock({ botAdmin = true, admins = [], extra = [] } = {}) {
     updateLastSeenPrivacy: async (v) => { settings.push('privacy:lastseen=' + v); },
     readMessages: async () => {},
     profilePictureUrl: async () => { throw new Error('no picture'); },
+    /* Lot B14 : channels (rappels de métadonnées), favoris, bots liés */
+    newsletterMetadata: async (_type, id) => ({ id, name: 'Canal Test', description: 'Desc test', subscribersCount: 42 }),
+    newsletterUpdateName: async (id, name) => { settings.push('chname=' + name); },
+    star: async (_j, _msgs, on) => { settings.push('star=' + on); },
+    getBotListV2: async () => ([{ jid: '237655555555@s.whatsapp.net', botName: 'Bot Test' }]),
   };
 }
 

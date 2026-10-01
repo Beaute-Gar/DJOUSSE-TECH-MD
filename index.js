@@ -31,6 +31,8 @@ const config = require('./config');
 const handler = require('./handler');
 /* Présence en direct (.seen) : routage presence.update unique */
 const presence = require('./lib/presence');
+/* Étiquettes Business (.label list) : définitions + associations */
+const labelsCache = require('./lib/labels');
 /* Cadres de la console : source unique du style (style.js) */
 const { box, banner } = require('./style');
 /* Extraction du texte : parseur unique du projet (G4) */
@@ -517,6 +519,23 @@ async function startSession(options = {}) {
       presence.handle(update);
     } catch (err) {
       if (!isIgnored(err?.message)) console.error('[SOCKET] presence.update:', err?.message || err);
+    }
+  });
+
+  /* ── Étiquettes Business (.label list) → cache lib/labels.js ── */
+  sock.ev.on('labels.edit', (label) => {
+    try {
+      labelsCache.onEdit(label);
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error('[SOCKET] labels.edit:', err?.message || err);
+    }
+  });
+
+  sock.ev.on('labels.association', (evt) => {
+    try {
+      labelsCache.onAssociation(evt);
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error('[SOCKET] labels.association:', err?.message || err);
     }
   });
 
