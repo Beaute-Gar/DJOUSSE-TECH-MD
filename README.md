@@ -525,7 +525,7 @@ Les dépendances externes restent soumises à leurs licences respectives — l'u
 ## 📚 Ressources
 
 - 🌐 **Site** : [djousse-tech-md.vercel.app](https://djousse-tech-md.vercel.app)
-- 🎨 **Portfolio** : [gitskins.com/Beaute-Gar](https://www.gitskins.com/portfolio/Beaute-Gar/)
+- 🎨 **Portfolio** : [beaute-gar.github.io/Beaute-Gar](https://beaute-gar.github.io/Beaute-Gar/)
 - 📦 **Baileys** : [github.com/WhiskeySockets/Baileys](https://github.com/WhiskeySockets/Baileys)
 - ⬇️ **yt-dlp** : [github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp)
 
