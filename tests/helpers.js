@@ -70,6 +70,12 @@ function mockSock({ botAdmin = true, admins = [], extra = [] } = {}) {
     groupParticipantsUpdate: async (gid, ids, action) => { if (action === 'remove') removed.push(...ids); return []; },
     groupSettingUpdate: async (gid, v) => { settings.push(v); },
     sendPresenceUpdate: async () => {},
+    presenceSubscribe: async (j) => { settings.push('sub:' + j); },
+    logout: async () => { settings.push('logout'); },
+    removeProfilePicture: async () => { settings.push('rpp'); },
+    fetchBlocklist: async () => [],
+    groupFetchAllParticipating: async () => ({}),
+    updateLastSeenPrivacy: async (v) => { settings.push('privacy:lastseen=' + v); },
     readMessages: async () => {},
     profilePictureUrl: async () => { throw new Error('no picture'); },
   };

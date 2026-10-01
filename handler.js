@@ -37,6 +37,8 @@ const { registerTools } = require('./lib/tools');
 const { registerMissing } = require('./lib/missing');
 /* Service unique d'envoi WhatsApp (G2) : tout envoi passe par send() */
 const { send } = require('./lib/wa-send');
+/* Durées éphémères partagées (.disappear ↔ .community ephemeral) */
+const { parseEphemeral } = require('./lib/ephemeral');
 
 /* ── DJOUSSE GUARD — moteur de protections de groupe (dossier guard/) ── */
 const guardDb = require('./guard/src/db');
@@ -1705,17 +1707,11 @@ cmd('disappear', ['ephemeral', 'efemere'], {
   cat: 2, desc: 'Messages éphémères du chat', usage: 'disappear off|24h|7d|90d',
   group: true, admin: true, botAdmin: true, icon: '⏱️',
 }, async (ctx) => {
-  const map = {
-    off: 0, '0': 0, disable: 0,
-    '24h': 86400, '1d': 86400, jour: 86400,
-    '7d': 604800, '7j': 604800, semaine: 604800,
-    '90d': 7776000, '90j': 7776000,
-  };
   const arg = (ctx.args[0] || '').toLowerCase();
-  if (!(arg in map)) {
+  const seconds = parseEphemeral(arg);
+  if (seconds === null) {
     return ctx.reply(`❌ Usage : ${config.prefix}disappear off|24h|7d|90d`);
   }
-  const seconds = map[arg];
   try {
     await send(ctx.sock, ctx.from, { disappearingMessagesInChat: seconds });
     await ctx.success([
@@ -1766,8 +1762,17 @@ cmd('archive', {
 });
 
 cmd('setpp', ['setpic', 'botpp'], {
-  cat: 9, desc: 'Changer la photo de profil du bot', usage: 'setpp (répondre à une image)', owner: true, icon: '🖼️',
+  cat: 9, desc: 'Photo de profil du bot (setpp delete = retirer)', usage: 'setpp (image) · setpp delete', owner: true, icon: '🖼️',
 }, async (ctx) => {
+  const sub = (ctx.args[0] || '').toLowerCase();
+  if (sub === 'delete' || sub === 'del' || sub === 'remove') {
+    try {
+      await ctx.sock.removeProfilePicture(ctx.sock.user.id);
+      return await ctx.success(['PHOTO DE PROFIL RETIRÉE']);
+    } catch (e) {
+      return await ctx.reply(`❌ setpp delete impossible : ${e.message}`);
+    }
+  }
   const info = mediaInfo(ctx.msg);
   if (!info || !info.mimetype?.startsWith('image/')) {
     return ctx.reply(`❌ Réponds à une image ou envoie une image avec ${config.prefix}setpp`);

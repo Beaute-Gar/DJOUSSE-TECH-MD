@@ -29,6 +29,8 @@ const {
 
 const config = require('./config');
 const handler = require('./handler');
+/* Présence en direct (.seen) : routage presence.update unique */
+const presence = require('./lib/presence');
 /* Cadres de la console : source unique du style (style.js) */
 const { box, banner } = require('./style');
 /* Extraction du texte : parseur unique du projet (G4) */
@@ -506,6 +508,15 @@ async function startSession(options = {}) {
       }
     } catch (err) {
       if (!isIgnored(err?.message)) console.error('[SOCKET] groups.update:', err?.message || err);
+    }
+  });
+
+  /* ── Présence des contacts (.seen) → routage unique lib/presence.js ── */
+  sock.ev.on('presence.update', (update) => {
+    try {
+      presence.handle(update);
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error('[SOCKET] presence.update:', err?.message || err);
     }
   });
 
