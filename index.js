@@ -509,11 +509,10 @@ async function startSession(options = {}) {
     }
   });
 
-  sock.ev.on('error', (error) => {
-    const code = error?.output?.statusCode;
-    if (code === 515 || code === 503 || code === 408) return;
-    if (!isIgnored(error?.message)) console.error('[SOCKET]', error?.message || error);
-  });
+  /* Pas de listener ev.on('error') : cet evenement n'existe pas dans
+     BaileysEventMap (Baileys 6.7.24) — les erreurs remontent par
+     connection.update (champ error ? Boom), gere au-dessus.
+     Ancien listener supprime au lot B12 : 0 emit('error') dans baileys/lib. */
 
   /* ── PAIRING CODE — demandé APRÈS tous les listeners
         (waitForSocketOpen peut bloquer, connection.update doit être prêt)

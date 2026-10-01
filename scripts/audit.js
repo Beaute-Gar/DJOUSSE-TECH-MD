@@ -172,6 +172,8 @@ const BAILEYS_EVENTS = [
   'messages.reaction', 'message-receipt.update',
   'groups.upsert', 'groups.update', 'group-participants.update', 'group.join-request',
   'blocklist.set', 'blocklist.update', 'call', 'labels.edit', 'labels.association',
+  'newsletter.reaction', 'newsletter.view', 'newsletter-participants.update',
+  'newsletter-settings.update',
 ];
 
 /** Dossier de reference pour tous les envois (G2). */
@@ -294,7 +296,51 @@ function checkG2() {
   }
   const dupEv = [...counts.entries()].filter(([, v]) => v.length > 1);
   if (dupEv.length) KO('G2', `listeners doubles : ${dupEv.map(([e, v]) => `${e} x${v.length} (${v.join(', ')})`).join(' | ')}`);
-  else OK('G2', `aucun evenement Baileys ecoute 2 fois (${[...counts.values()].filter((v) => v.length).length}/25 ecoutes)`);
+  else OK('G2', `aucun evenement Baileys ecoute 2 fois (${[...counts.values()].filter((v) => v.length).length}/${BAILEYS_EVENTS.length} ecoutes)`);
+
+  // 2b. aucune ecoute ev.on() hors reference : evenement inexistant = listener
+  //     mort (cas "error" decouvert au lot B12), reference perimee sinon
+  const strays = [];
+  for (const f of files) {
+    for (const m of f.src.matchAll(/\.ev\.on\(\s*['"]([\w.\-[\]']+)['"]/g)) {
+      if (!BAILEYS_EVENTS.includes(m[1])) strays.push(`${m[1]} (${rel(f.p)})`);
+    }
+  }
+  if (strays.length) KO('G2', `ecoute d'un evenement hors reference BaileysEventMap : ${strays.join(' | ')}`);
+  else OK('G2', `toutes les ecoutes ev.on() existent dans BaileysEventMap (${BAILEYS_EVENTS.length} cles de reference)`);
+
+  // 2c. la reference suit la vraie BaileysEventMap du Baileys epingle
+  try {
+    const evSrc = read(path.join(ROOT, 'node_modules/@whiskeysockets/baileys/lib/Types/Events.d.ts'));
+    const head = evSrc.indexOf('export type BaileysEventMap = {');
+    if (head === -1) throw new Error('BaileysEventMap introuvable');
+    const open = evSrc.indexOf('{', head);
+    let depth = 0;
+    let close = -1;
+    for (let i = open; i < evSrc.length; i++) {
+      if (evSrc[i] === '{') depth++;
+      else if (evSrc[i] === '}') { depth--; if (!depth) { close = i; break; } }
+    }
+    const lines = evSrc.slice(open, close + 1).split('\n').slice(1, -1);
+    let min = Infinity;
+    for (const l of lines) { const mm = l.match(/^( +)\S/); if (mm) min = Math.min(min, mm[1].length); }
+    const real = [];
+    for (const l of lines) {
+      const mm = l.match(new RegExp('^ {' + min + "}('([^']+)'|([A-Za-z_$][\\w$]*))\\s*:"));
+      if (mm) real.push(mm[2] || mm[3]);
+    }
+    if (!real.length) {
+      WARN('G2', 'BaileysEventMap illisible : conformite de la reference non verifiable');
+    } else {
+      const missing = real.filter((e) => !BAILEYS_EVENTS.includes(e));
+      const extra = BAILEYS_EVENTS.filter((e) => !real.includes(e));
+      if (missing.length || extra.length) {
+        KO('G2', `reference BAILEYS_EVENTS perimee : manque [${missing.join(', ')}] / en trop [${extra.join(', ')}]`);
+      } else OK('G2', `reference conforme a BaileysEventMap (${real.length}/${real.length} cles)`);
+    }
+  } catch (e) {
+    WARN('G2', `BaileysEventMap illisible (${e.message}) : conformite de la reference non verifiable`);
+  }
 
   // 3. un seul registre de commandes (voir G4 pour le doublon precis)
   const registry = new Map();
