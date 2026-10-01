@@ -18,12 +18,10 @@ const path = require('path');
 const { spawn } = require('child_process');
 const config = require('./config');
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
-// ATTENTION : sharp DOIT être chargé AVANT wa-sticker-formatter.
-// wsf embarque son propre sharp@0.30 (dossier imbriqué) : s'il est chargé en
-// premier, ses DLL libvips entrent en conflit avec sharp@0.32 du projet →
-// « procedure not found » au chargement du binaire natif.
 const sharp = require('sharp');
-const { Sticker, StickerTypes } = require('wa-sticker-formatter');
+/* Stickers : fabrique interne (lib/wa-sticker.js) — remplace
+   wa-sticker-formatter (conflit de DLL sharp@0.30 + 4 vulnérabilités). */
+const { Sticker, StickerTypes } = require('./lib/wa-sticker');
 const math = require('mathjs');
 const QRCode = require('qrcode');
 const { translate } = require('@vitalets/google-translate-api');
@@ -33,6 +31,8 @@ const ffmpegPath = require('ffmpeg-static');
 const { initStore, getStore } = require('./lib/store');
 const { initScheduler, getScheduler } = require('./lib/scheduler');
 const { registerExtras } = require('./lib/extras');
+/* Conversion vidéo via ffmpeg-static — helper partagé (voir lib/wa-sticker.js) */
+const { ffmpegBuffer } = require('./lib/ffmpeg');
 const { registerTools } = require('./lib/tools');
 const { registerMissing } = require('./lib/missing');
 /* Service unique d'envoi WhatsApp (G2) : tout envoi passe par send() */
@@ -2086,29 +2086,8 @@ function findTmp(base) {
   } catch { return null; }
 }
 
-function ffmpegBuffer(input, args, maxBytes) {
-  return new Promise((resolve, reject) => {
-    const ff = spawn(ffmpegPath, ['-hide_banner', '-loglevel', 'error', ...args]);
-    const chunks = [];
-    let size = 0;
-    let err = '';
-    ff.stdout.on('data', (c) => {
-      size += c.length;
-      if (size > maxBytes) {
-        try { ff.kill(); } catch {}
-        reject(new Error('fichier trop volumineux après conversion'));
-      } else chunks.push(c);
-    });
-    ff.stderr.on('data', (c) => { err += c.toString().slice(0, 400); });
-    ff.on('error', reject);
-    ff.on('close', (code) => {
-      if (code === 0) resolve(Buffer.concat(chunks));
-      else reject(new Error(err.trim() || `ffmpeg (code ${code})`));
-    });
-    ff.stdin.on('error', () => {});
-    ff.stdin.end(input);
-  });
-}
+/* ffmpegBuffer() vit désormais dans lib/ffmpeg.js (helper partagé avec
+   lib/wa-sticker.js) : une seule implémentation (G4 « pas de doublon »). */
 
 async function ytResolve(query) {
   const m = String(query || '').match(YT_URL_RE);

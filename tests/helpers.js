@@ -24,7 +24,12 @@ process.env.GUARD_TZ = 'Africa/Douala';
 
 const STUBS = {
   sharp: () => ({}),
-  'wa-sticker-formatter': { Sticker: class {}, StickerTypes: { FULL: 'full' } },
+  // Fabrique de stickers interne (lot B11) : on stub le module handler.js
+  // pour éviter de charger sharp/node-webpmux réels dans ce processus de test.
+  './lib/wa-sticker': {
+    Sticker: class { async toBuffer() { return Buffer.from('RIFF0000WEBPfake'); } },
+    StickerTypes: { FULL: 'full', DEFAULT: 'default', CROPPED: 'crop', CIRCLE: 'circle', ROUNDED: 'rounded' },
+  },
   mathjs: { evaluate: (x) => eval(x) }, // eslint-disable-line no-eval
   qrcode: {},
   '@vitalets/google-translate-api': { translate: async () => ({ text: '' }) },
