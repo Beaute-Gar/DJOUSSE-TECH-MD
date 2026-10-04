@@ -203,14 +203,24 @@ async function startSession(options = {}) {
   const isPairing = options.connectMethod === 'pairing';
   rawLog(`[AUTH] Méthode : ${isPairing ? 'PAIRING' : 'QR'}`);
 
-  // PURGE STRICTEMENT EN MODE PAIRING :
-  //   - En QR, "me + registered:false" est l'état NORMAL après scan → ne jamais purger
-  //     ici, sinon la session fraîchement scannée est détruite à chaque redémarrage.
-  //   - En pairing, requestPairingCode écrit creds.me → au retry, Baileys tente un
-  //     login au lieu d'une registration → 401 en boucle. On repart propre.
-  if (isPairing && !state.creds.registered && state.creds.me) {
+  // PURGE DES ARTEFACTS DE PAIRING :
+  //   - En QR, "me + registered:false" est l'état NORMAL après scan → ne jamais
+  //     purger un me nu, sinon la session fraîchement scannée est détruite à
+  //     chaque redémarrage.
+  //   - En pairing, requestPairingCode écrit creds.me → au retry, Baileys tente
+  //     un login au lieu d'une registration → 401 en boucle. On repart propre.
+  //   - CORRECTIF : un pairing AVORTÉ laisse me + pairingCode dans creds.json.
+  //     Si on repart ensuite en QR, isPairing est faux → plus aucune purge →
+  //     Baileys tente un login avec ce me → 401 en boucle et le QR ne s'affiche
+  //     JAMAIS. Or pairingCode n'est écrit QUE par requestPairingCode
+  //     (lib/Socket/socket.js:356), jamais par un scan QR : sa présence est le
+  //     marqueur fiable d'un artefact, quel que soit le mode choisi ensuite.
+  const stalePairing = !state.creds.registered
+    && !!state.creds.me
+    && (isPairing || !!state.creds.pairingCode);
+  if (stalePairing) {
     purgePairingCreds(sessionDir, state);
-    rawLog('[PAIRING] 🧹 Ancien creds.me purgé — registration propre.');
+    rawLog(`[PAIRING] 🧹 Artefact de pairing purgé — ${isPairing ? 'registration propre' : 'retour QR propre'}.`);
   }
 
   // Jamais deux sockets : si un cycle plus récent a démarré pendant nos awaits
