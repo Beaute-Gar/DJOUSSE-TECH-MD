@@ -359,12 +359,12 @@ async function startSession(options = {}) {
 
       rawLog(`[SOCKET] 🔌 Fermeture (code=${statusCode ?? 'inconnu'}${lastDisconnect?.error?.message ? ` — ${lastDisconnect.error.message}` : ''})`);
 
-      // 401/403 après un login réussi → compte probablement restreint
-      if ((statusCode === 401 || statusCode === 403) && wasRegistered) {
+      // loggedOut/forbidden après un login réussi → compte probablement restreint
+      if ((statusCode === DisconnectReason.loggedOut || statusCode === DisconnectReason.forbidden) && wasRegistered) {
         rawError(`🚨 COMPTE RESTREINT ? — code ${statusCode} — pause de 10 min avant toute reconnexion.`);
       }
-      // 401 sans session enregistrée = pairing rejeté → creds.me en cause
-      if (statusCode === 401 && !wasRegistered && isPairing) {
+      // loggedOut sans session enregistrée = pairing rejeté → creds.me en cause
+      if (statusCode === DisconnectReason.loggedOut && !wasRegistered && isPairing) {
         purgePairingCreds(sessionDir, state);
         rawLog('[PAIRING] 🧹 creds.me purgé — prochaine tentative = registration propre.');
       }
@@ -374,17 +374,19 @@ async function startSession(options = {}) {
         return;
       }
 
-      // Escalier de reconnexion par code explicite
+      // Escalier de reconnexion — codes nommés via DisconnectReason (officiel),
+      // voir lib/Types/index.d.ts:25. Le 405 ne figure PAS dans l'enum : c'est
+      // un code de fermeture WebSocket, il reste en numérique.
       let delay = 3000;
-      if (statusCode === 440) {
+      if (statusCode === DisconnectReason.connectionReplaced) {
         conflictCount++;
         delay = Math.min(60000, 3000 * Math.pow(2, Math.min(conflictCount, 5)));
-        rawLog(`⚠️ CONFLICT (440) — tentative ${conflictCount}/${CONFLICT_MAX_RETRIES} — reconnexion dans ${delay / 1000}s...`);
+        rawLog(`⚠️ CONFLICT (connectionReplaced/440) — tentative ${conflictCount}/${CONFLICT_MAX_RETRIES} — reconnexion dans ${delay / 1000}s...`);
         if (conflictCount >= CONFLICT_MAX_RETRIES) {
           rawError('🛑 CONFLICT (440) persistant — une autre instance détient la session. Fermez-la puis redémarrez le bot.');
           return;
         }
-      } else if (statusCode === 401 && !wasRegistered && isPairing) {
+      } else if (statusCode === DisconnectReason.loggedOut && !wasRegistered && isPairing) {
         delay = ladder([60000, 120000, 300000], pairingAttempts);
         rawLog(`[PAIRING] 🔁 Retry pairing dans ${delay / 1000}s... (tentative ${pairingAttempts}/${MAX_PAIRING_ATTEMPTS})`);
       } else if (statusCode === 405) {
@@ -395,20 +397,35 @@ async function startSession(options = {}) {
           rawError('🛑 405 persistant — vérifiez le réseau puis redémarrez le bot (la version WA est re-récupérée automatiquement).');
           return;
         }
-      } else if (statusCode === 401 && wasRegistered) {
+      } else if (statusCode === DisconnectReason.loggedOut && wasRegistered) {
         delay = 600000; // restriction probable → longue pause
         rawError('🛑 401 après login réussi — pause de 10 minutes.');
-      } else if (statusCode === 408) {
+      } else if (statusCode === DisconnectReason.connectionLost) {
         delay = 5000;
-      } else if (statusCode === 515) {
+      } else if (statusCode === DisconnectReason.restartRequired) {
         delay = 500;
         rawLog('[SOCKET] 🔄 Stream error (515) — redémarrage immédiat du socket...');
-      } else if (statusCode === 503) {
+      } else if (statusCode === DisconnectReason.unavailableService) {
         delay = 30000;
       }
 
-      // Pendant un pairing en attente : jamais de reconnexion agressive (rate-limit)
-      if (isPairing && !wasRegistered && pairingAttempts > 0) delay = Math.max(delay, 60000);
+      // Pendant un pairing en attente, deux cas très différents :
+      //   • connectionClosed (428) / connectionLost (408) = socket tombée
+      //     PENDANT la liaison → transitoire, on repart vite. Pendant ces 60 s
+      //     la session de pairing expire côté téléphone et le code suivant
+      //     arrive quand WhatsApp l'a déjà purgée.
+      //   • tout autre code (loggedOut rejet, connectionReplaced conflit…)
+      //     → WhatsApp refuse : là on garde le backoff long pour ne pas se
+      //     faire rate-limiter.
+      if (isPairing && !wasRegistered && pairingAttempts > 0) {
+        const transient = statusCode === DisconnectReason.connectionClosed
+          || statusCode === DisconnectReason.connectionLost;
+        if (!transient) {
+          delay = Math.max(delay, 60000);
+        } else {
+          rawLog(`[PAIRING] 🔁 Coupure transitoire (${statusCode}) — nouveau code dans ${delay / 1000}s, sans le backoff de 60 s.`);
+        }
+      }
 
       rawLog(`[SOCKET] 🔁 Reconnexion dans ${delay / 1000}s...`);
       setTimeout(() => startSession(options), delay);
