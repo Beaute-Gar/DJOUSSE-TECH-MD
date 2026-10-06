@@ -369,7 +369,17 @@ async function startSession(options = {}) {
         rawLog('[PAIRING] 🧹 creds.me purgé — prochaine tentative = registration propre.');
       }
 
+      // Un 401 qui SUIT un conflit 440 n'est PAS un logout : l'instance gagnante
+      // a réécrit creds.json sur disque, celle qui perd rejoue en mémoire des
+      // creds obsolètes. Recommander « supprimez session/ » ici efface une
+      // session VALIDE — constaté le 01/10 : session enregistrée détruite après
+      // un ping-pong de deux instances. On ne propose la purge qu'en vrai logout.
       if (statusCode === DisconnectReason.loggedOut && wasRegistered) {
+        if (conflictCount > 0) {
+          rawError(`🚪 401 après ${conflictCount} conflit(s) 440 — creds périmés en mémoire, PAS un logout.`);
+          rawError('   → Ne supprimez PAS session/ . Arrêtez TOUTES les instances, puis relancez une seule.');
+          return;
+        }
         rawError('🚪 Session déconnectée (loggedOut) — supprimez session/ et rescannez le QR.');
         return;
       }
