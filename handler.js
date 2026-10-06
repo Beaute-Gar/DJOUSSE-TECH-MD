@@ -65,14 +65,41 @@ const guardProtections = require('./guard/src/protections');
 const { DATA_DIR, inData, migrate } = require('./lib/dataDir');
 migrate();
 
+/* Base SQLite (node:sqlite) : config, historique et journal dans un
+   seul data/bot.db. Si le module manque (Node < 22.5), on retombe
+   exactement sur les fichiers JSON d'origine. */
+const localDb = require('./lib/db');
+const useSqlite = localDb.available();
+
 /* Base du moteur : initialisation paresseuse (tests locaux sans index.js) */
 try { guardDb.db(); } catch (e) { guardDb.init(inData(config.guard.dbFile)); }
 
 /* ════════════════════════════════════════════════════════════
-   1. ÉTAT PERSISTANT — data/state.json
+   1. ÉTAT PERSISTANT — data/bot.db (table kv), JSON en repli
    ════════════════════════════════════════════════════════════ */
 
 const STATE_FILE = inData('state.json');
+const HISTORY_FILE = inData('history.json');
+
+const readJSONFile = (p) => {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
+};
+
+/* Adaptateur à deux moteurs, même signature des deux côtés.
+   Au premier passage en SQLite, l'ancien JSON est encore lu (migration
+   passive) ; la première écriture le remplace définitivement. */
+const store = useSqlite ? {
+  read(key, file) { return localDb.has(key) ? localDb.getJSON(key) : readJSONFile(file); },
+  write(key, file, value) { localDb.setJSON(key, value); },
+} : {
+  read(key, file) { return readJSONFile(file); },
+  write(key, file, value) {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const tmp = file + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(value, null, 2));
+    fs.renameSync(tmp, file);
+  },
+};
 
 function defaultState() {
   return {
@@ -85,9 +112,10 @@ function defaultState() {
 }
 
 function loadState() {
+  const raw = store.read('state', STATE_FILE);
+  if (!raw || typeof raw !== 'object') return defaultState();
+  const base = defaultState();
   try {
-    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    const base = defaultState();
     return {
       ...base,
       ...raw,
@@ -98,6 +126,7 @@ function loadState() {
       blacklist: Array.isArray(raw.blacklist) ? raw.blacklist : [],
     };
   } catch (e) {
+    console.error('[STATE] Fichier illisible, État par défaut :', e.message);
     return defaultState();
   }
 }
@@ -131,10 +160,7 @@ if (process.env.FORCE_PUBLIC === '1' || process.env.FORCE_PUBLIC === 'true') {
   else console.log('[STATE] welcome/goodbye OFF (tous les groupes)');
   // Écriture directe : saveState() n'est pas encore initialisé ici
   try {
-    fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
-    const tmp = STATE_FILE + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
-    fs.renameSync(tmp, STATE_FILE);
+    store.write('state', STATE_FILE, state);
   } catch (e) {
     console.error('[STATE] Écriture impossible:', e.message);
   }
@@ -157,10 +183,7 @@ let saveTimer = null;
 function saveState(immediate = false) {
   const write = () => {
     try {
-      fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
-      const tmp = STATE_FILE + '.tmp';
-      fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
-      fs.renameSync(tmp, STATE_FILE);
+      store.write('state', STATE_FILE, state);
     } catch (e) {
       console.error('[STATE] Écriture impossible:', e.message);
     }
@@ -320,7 +343,6 @@ function typingOff(sock, jid) {
    ════════════════════════════════════════════════════════════ */
 
 const history = new Map(); // jid → [{ s, t, ts }] (max 10/chat, 300 chats)
-const HISTORY_FILE = path.join(path.dirname(STATE_FILE), 'history.json');
 let historyDirty = false;
 
 function remember(jid, senderNum, text) {
@@ -340,7 +362,7 @@ function remember(jid, senderNum, text) {
 
 function loadHistory() {
   try {
-    const raw = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf8'));
+    const raw = store.read('history', HISTORY_FILE);
     if (raw && typeof raw === 'object') {
       for (const [k, v] of Object.entries(raw)) {
         if (Array.isArray(v) && v.length) history.set(k, v.slice(-10));
@@ -353,9 +375,7 @@ function flushHistory(force = false) {
   if (!historyDirty && !force) return;
   if (!history.size) return;
   try {
-    const tmp = HISTORY_FILE + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(Object.fromEntries(history)));
-    fs.renameSync(tmp, HISTORY_FILE);
+    store.write('history', HISTORY_FILE, Object.fromEntries(history));
     historyDirty = false;
   } catch (e) {
     console.error('[HISTORY] Écriture impossible:', e.message);
@@ -851,7 +871,7 @@ cmd('diag', ['diagnostic', 'health'], {
   let registered = false;
   let sessionSize = 0;
   let sessionFiles = 0;
-  const sessDir = path.join(__dirname, config.sessionDir);
+  const sessDir = path.resolve(__dirname, config.sessionDir);
   try {
     registered = !!JSON.parse(fs.readFileSync(path.join(sessDir, 'creds.json'), 'utf8')).registered;
     for (const f of fs.readdirSync(sessDir)) {
@@ -878,6 +898,8 @@ cmd('diag', ['diagnostic', 'health'], {
     }
   };
   walkData(inData(''));
+  /* Comptes SQLite (une seule passe : counts() fait 3 requêtes) */
+  const dbc = useSqlite ? localDb.counts() : null;
 
   const lastCut = waStats.lastDisconnectAt
     ? `${waStats.lastDisconnectCode ?? '?'} il y a ${age(waStats.lastDisconnectAt)}`
@@ -902,14 +924,93 @@ cmd('diag', ['diagnostic', 'health'], {
     bullet('SESSION DISQUE', sessionFiles
       ? `${sessionFiles} fichiers · ${Math.round(sessionSize / 1024)} Ko`
       : 'absente'),
-    bullet('BASE LOCALE', dataFiles
-      ? `data/ · ${dataFiles} fichiers · ${Math.round(dataSize / 1024)} Ko`
-      : 'data/ vide'),
+    bullet('BASE LOCALE', dbc
+      ? `SQLite · ${dbc.events} événements · ${dbc.messages} messages · ${Math.round(dbc.bytes / 1024)} Ko`
+      : (useSqlite ? 'data/bot.db' : 'JSON (node:sqlite absent)')),
+    bullet('DOSSIER DATA', dataFiles
+      ? `${dataFiles} fichiers · ${Math.round(dataSize / 1024)} Ko`
+      : 'vide'),
     bullet('LOG BAILEYS', process.env.BAILEYS_LOG
       ? toUnicode(process.env.BAILEYS_LOG.toUpperCase())
       : 'silencieux · BAILEYS_LOG vide'),
     bullet('MÉMOIRE', `${Math.round(process.memoryUsage().heapUsed / 1048576)} Mo`),
     bullet('NODE', process.version),
+  ]));
+});
+
+/* ── Requêtes sur la base locale (option E) ──────────────────────── */
+const fmtTs = (ts) => {
+  const d = new Date(Number(ts) || Date.now());
+  const p = (n) => String(n).padStart(2, '0');
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+const shortChat = (j) => (!j ? '—' : (j.endsWith('@g.us') ? j : `+${num(j)}`));
+const noSqlite = () => ['BASE SQLite INDISPONIBLE', 'NODE ≥ 22.5 REQUIS', 'LES FONCTIONS CLASSIQUES MARCHENT'];
+
+cmd('journal', ['events'], {
+  cat: 9, desc: 'Journal d’événements (base locale)', icon: '📒',
+  usage: 'journal [type] [n] · journal purge [jours]', owner: true,
+}, async (ctx) => {
+  if (!useSqlite) return ctx.error(noSqlite());
+  const a = String(ctx.args?.[0] || '').toLowerCase();
+  const b = String(ctx.args?.[1] || '');
+
+  if (a === 'purge') {
+    const days = Number(b) || 30;
+    const gone = localDb.purgeJournal(days);
+    return ctx.success(['JOURNAL PURGÉ', `${gone} ÉVÉNEMENT(S) SUPPRIMÉ`, `RÉTENTION : ${days} JOURS`]);
+  }
+
+  const limit = Math.min(100, Number(/^\d+$/.test(a) ? a : b) || 15);
+  const type = a && !/^\d+$/.test(a) ? a : '';
+  const rows = localDb.recentEvents({ limit, type });
+
+  if (!rows.length) {
+    return ctx.reply(renderInfo([
+      'JOURNAL VIDE',
+      type ? `AUCUN ÉVÉNEMENT DE TYPE « ${type.toUpperCase()} »` : 'AUCUN ÉVÉNEMENT ENREGISTRÉ',
+      `TYPES : CMD · PROTECT · JOIN · LEAVE · CONNECT · DISCONNECT`,
+    ]));
+  }
+  const lines = rows.map((r) => row(
+    `${fmtTs(r.ts)} · ${r.type.toUpperCase()}`
+    + `${r.actor ? ` · +${num(r.actor)}` : ''}`
+    + `${r.chat ? ` · ${shortChat(r.chat)}` : ''}`
+    + `${r.detail ? `\n   ${r.detail}` : ''}`,
+  ));
+  await ctx.reply(buildFrame(
+    `JOURNAL${type ? ` ${type.toUpperCase()}` : ''}`,
+    [...lines, note(`${rows.length} ÉVÉNEMENT(S) · ${config.prefix}JOURNAL [TYPE] [N] · ${config.prefix}JOURNAL PURGE [JOURS]`)],
+  ));
+});
+
+cmd('chatlog', ['msgs'], {
+  cat: 9, desc: 'Historique des messages (base locale)', icon: '💬',
+  usage: 'chatlog [n] [@mention] [ici]', owner: true,
+}, async (ctx) => {
+  if (!useSqlite) return ctx.error(noSqlite());
+  const ci = ctxInfo(ctx.content);
+  const mention = ci?.mentionedJid?.[0];
+  const nums = (ctx.args || []).filter((x) => /^\d+$/.test(x)).map(Number);
+  const here = (ctx.args || []).some((x) => ['ici', 'here'].includes(String(x).toLowerCase()));
+  const limit = Math.min(500, nums[0] || 20);
+  const senderFilter = mention ? num(mention) : (nums[1] ? String(nums[1]) : '');
+
+  const rows = localDb.recentMessages({
+    limit,
+    chat: here ? ctx.from : '',
+    sender: senderFilter,
+  });
+  if (!rows.length) {
+    return ctx.reply(renderInfo(['AUCUN MESSAGE', here ? 'DANS CE CHAT' : '', senderFilter ? `POUR +${senderFilter}` : ''].filter(Boolean)));
+  }
+  const lines = rows.map((r) => row(
+    `${fmtTs(r.ts)} · ${shortChat(r.chat)} · +${num(r.sender)}${r.cmd ? ` ▸ ${r.cmd}` : ''}`
+    + `${r.text ? `\n   ${String(r.text).slice(0, 160)}` : `   [${(r.kind || 'media').toUpperCase()} ${r.len || 0}]`}`,
+  ));
+  await ctx.reply(buildFrame('CHATLOG', [
+    ...lines,
+    note(`${rows.length} MESSAGE(S) · ${config.prefix}CHATLOG [N] [@USER] [ICI]`),
   ]));
 });
 
@@ -2822,6 +2923,18 @@ async function handleMessage(sock, msg) {
     saveState();
     putCache(from, msg.key.id, msg);
 
+    /* ── Historique SQLite : TOUS les messages, texte comme médias
+         (requêtes via .chatlog). Une panne de la base ne doit jamais
+         empêcher le message d'être traité. ── */
+    localDb.logMessage({
+      chat: from,
+      sender: senderNum,
+      kind: text ? 'text'
+        : String(Object.keys(content || {})[0] || 'media').replace(/Message$/, ''),
+      len: (text || '').length,
+      text,
+    });
+
     /* ── Auto-réaction aux messages entrants (flag AUTO_REACT) ── */
     if (
       config.autoReact &&
@@ -2995,8 +3108,10 @@ async function handleMessage(sock, msg) {
     try {
       await executeCommand(sock, msg, name, args, base);
       console.log(`[CMD] OK ${cmdName}`);
+      localDb.logEvent({ type: 'cmd', chat: from, actor: senderNum, detail: cmdName });
     } catch (e) {
       console.error(`[CMD] ÉCHEC ${cmdName}:`, e.message);
+      localDb.logEvent({ type: 'error', chat: from, actor: senderNum, detail: `${cmdName}: ${e.message}` });
       if (e.stack) console.error(e.stack.split('\n').slice(0, 6).join('\n'));
       // Secours : au moins répondre pour ping/menu
       try {
@@ -3077,6 +3192,14 @@ async function handleGroupUpdate(sock, update) {
       return;
     }
     groupEventCache.set(eventId, Date.now());
+
+    /* Journal SQLite : entrées/sorties/rôles, lisible via .journal */
+    localDb.logEvent({
+      type: action === 'add' ? 'join' : action === 'remove' ? 'leave' : action,
+      chat: id,
+      actor: author,
+      detail: participants.map((p) => `+${num(p)}`).join(', '),
+    });
 
     /* Anti-fake (guard) : expulse les indicatifs non autorisés AVANT le message de bienvenue */
     if (action === 'add') {

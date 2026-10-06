@@ -42,6 +42,8 @@ const guardPerms = require('./guard/src/utils/perms');
 const guardNight = require('./guard/src/nightmode');
 /* Stats de connexion partagées avec handler.js (commande .diag) */
 const waStats = require('./lib/waStats');
+/* Journal SQLite local (data/bot.db) — cycles de connexion */
+const localDb = require('./lib/db');
 
 /* ══════════════════════════════════════════════════════════════
    0. FILTRES — ignore les erreurs bruyantes de libsignal / réseau
@@ -382,6 +384,10 @@ async function startSession(options = {}) {
       waStats.lastDisconnectCode = statusCode ?? null;
       waStats.lastDisconnectAt = Date.now();
       waStats.lastDisconnectMsg = lastDisconnect?.error?.message || '';
+      localDb.logEvent({
+        type: 'disconnect',
+        detail: `${statusCode ?? '?'}${lastDisconnect?.error?.message ? ` · ${lastDisconnect.error.message}` : ''}`,
+      });
 
       // Diagnostic pairing : combien de temps le dernier code a-t-il tenu ?
       // (sans ça, impossible de savoir si le 428 arrive à 1 s ou à 45 s)
@@ -478,6 +484,7 @@ async function startSession(options = {}) {
       rawLog('[SOCKET] ✅ CONNECTÉ —', sock.user?.id || 'session active');
       waStats.connects++;
       waStats.connectedSince = Date.now();
+      localDb.logEvent({ type: 'connect', detail: sock.user?.id || 'session' });
 
       // CORRECTIF QR (prouvé en prod le 26/09/2026) : le fork ne définit jamais
       // registered=true en flux QR — sans ce marquage, chaque redémarrage voit

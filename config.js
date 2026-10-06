@@ -88,7 +88,8 @@ module.exports = {
 
   // Moteur DJOUSSE GUARD (dossier guard/) — protections de groupe
   guard: {
-    dbFile: process.env.GUARD_DB || 'guard.json',              // dans dataDir
+    // 'bot.db' (SQLite, défaut) · force l'ancien JSON avec GUARD_DB=guard.json
+    dbFile: process.env.GUARD_DB || 'bot.db',                   // dans dataDir
     timezone: process.env.GUARD_TZ || 'Africa/Douala',          // fuseau du mode nuit
     log: bool(process.env.GUARD_LOG, false),                    // journal des expulsions → DM owner
     notifyCooldownMs: 10 * 60 * 1000,                           // avis « bot non admin » : 1 / 10 min / groupe

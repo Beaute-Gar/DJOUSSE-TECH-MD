@@ -5,14 +5,14 @@
 **Bot WhatsApp intelligent — DJOUSSE TECH EVOLUTION**
 
 <img
-  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=210+commandes+%C2%B7+11+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+13+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
-  alt="210 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
+  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=212+commandes+%C2%B7+11+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+13+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
+  alt="212 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
 />
 
 <br/>
 
 <img src="https://img.shields.io/badge/version-4.0.0-2ECC71?style=flat-square" alt="Version 4.0.0" />
-<img src="https://img.shields.io/badge/commandes-210-00b894?style=flat-square" alt="210 commandes" />
+<img src="https://img.shields.io/badge/commandes-212-00b894?style=flat-square" alt="212 commandes" />
 <img src="https://img.shields.io/badge/cat%C3%A9gories-11-111b26?style=flat-square" alt="11 catégories" />
 <img src="https://img.shields.io/badge/Baileys-6.7.24-25D366?style=flat-square&logo=whatsapp&logoColor=white" alt="Baileys 6.7.24" />
 <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 18+" />
@@ -129,6 +129,26 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 
 </td>
 </tr>
+<tr>
+<td>
+
+**💾 Base locale (SQLite)**
+- `data/bot.db` — état, historique, journal en **un seul fichier**
+- `.journal [type] [n]` — sanctions, entrées/sorties, connexions
+- `.chatlog [n] [@user] [ici]` — messages reçus, requêtes rapides
+- `session/` ne contient **que** les credentials WhatsApp
+
+</td>
+<td>
+
+**🩺 Diagnostics**
+- `.diag` — état socket, version WA, conflits 440, mémoire
+- `.menu qr` / `.menu pairing <num>` — bascule de connexion
+- `.getonce` — photo, vidéo, **vocal** et document
+- `.sessions` — chemins actifs (session + base locale)
+
+</td>
+</tr>
 </table>
 
 ---
@@ -145,12 +165,12 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 | 6 | 🤖 **IA** | | 3 |
 | 7 | 🎲 **FUN** | | 14 |
 | 8 | 🔍 **RECHERCHE** | | 3 |
-| 9 | 👑 **OWNER** | | 51 |
+| 9 | 👑 **OWNER** | | 53 |
 | 10 | 📦 **DIVERS** | | 11 |
 | 11 | ⬇️ **TÉLÉCHARGEMENT** | | 3 |
-| | | **Total** | **210** |
+| | | **Total** | **212** |
 
-> **+ 95 alias** (305 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
+> **+ 97 alias** (309 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
 
 ---
 
@@ -308,7 +328,7 @@ Les credentials sont écrits dans `session/` (ignoré par git).
 ```
 DJOUSSE-TECH-MD/
 ├── index.js          # Point d'entrée : connexion Baileys, QR/pairing, reconnexion
-├── handler.js        # 🧠 Cerveau unique — 210 commandes, menu, moteur d'événements
+├── handler.js        # 🧠 Cerveau unique — 212 commandes, menu, moteur d'événements
 ├── config.js         # Toutes les constantes lues depuis .env (aucune logique métier)
 ├── style.js          # 🎨 Source unique du rendu (cadres ╭┄┄『 』┄❍, alphabet officiel)
 │
@@ -334,9 +354,9 @@ DJOUSSE-TECH-MD/
 ├── ludo/             # 🎲 Moteur de jeu Ludo (plateau, règles, rendu canvas)
 ├── plugins/          # Plugins extensibles
 ├── scripts/audit.js  # 🔍 Audit de démarrage (sécurité, deps, structure)
-├── tests/            # ✅ node --test "tests/*.test.js" — 91 tests, 14 fichiers
+├── tests/            # ✅ node --test "tests/*.test.js" — 98 tests, 15 fichiers
 ├── vendor/yt-dlp.exe # ⬇️ Auto-téléchargé au premier usage
-├── data/             # 💾 Base locale (state, historique, guard) — gitignoré
+├── data/             # 💾 Base locale SQLite — data/bot.db (état, historique, journal) — gitignoré
 └── session/          # 🔒 Credentials WhatsApp uniquement — gitignoré
 ```
 
@@ -349,6 +369,18 @@ index.js  ──messages.upsert──▶  handler.js
                                   ├─ 3. Permissions     (owner / admin / groupe)
                                   └─ 4. Exécution       → lib/wa-send.send()
 ```
+
+**Base locale — `data/bot.db` (SQLite natif `node:sqlite`, zéro dépendance) :**
+
+```
+kv        état du bot (groupes, blacklist, stats) + mémoire contextuelle
+events    journal : commandes, sanctions, entrées/sorties, cycles de connexion
+messages  historique des messages — rétention 30 j / 50 000 lignes (DB_KEEP_DAYS, DB_MAX_ROWS)
+guard_*   réglages de groupe, avertissements, mutes (DJOUSSE GUARD)
+```
+
+`GUARD_DB=guard.json` force l'ancien moteur JSON. Les fichiers JSON
+présents à la migration sont **conservés** : un retour en arrière reste possible.
 
 ---
 

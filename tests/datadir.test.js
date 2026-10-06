@@ -29,9 +29,15 @@ function seed(dir, name, content, mtime) {
   return p;
 }
 
-test('state.json écrit dans data/ et plus dans session/', () => {
-  assert.ok(fs.existsSync(path.join(H.TMP, 'data', 'state.json')),
-    'state.json vivant dans la base locale');
+test('état du bot écrit dans data/bot.db (SQLite), plus dans session/', () => {
+  const localDb = require('../lib/db');
+  if (localDb.available()) {
+    assert.ok(localDb.has('state'), 'état présent dans la table kv de data/bot.db');
+    assert.ok(fs.existsSync(path.join(H.TMP, 'data', 'bot.db')), 'base SQLite créée dans data/');
+  } else {
+    assert.ok(fs.existsSync(path.join(H.TMP, 'data', 'state.json')),
+      'repli JSON : state.json dans data/');
+  }
   assert.ok(!fs.existsSync(path.join(H.TMP, 'state.json')),
     'aucun state.json résiduel dans le dossier de session');
 });

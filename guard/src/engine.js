@@ -152,6 +152,10 @@ async function runProtections(ctx) {
         ui.kv('SANCTION', 'EXPULSION'),
       ]);
     }
+    /* Base locale : la sanction reste consultable via .journal même
+       si GUARD_LOG est éteint (pas de DM au owner). */
+    journal.record('protect', from, ctx.senderNum,
+      `${p.label} · ${kicked ? 'EXPULSION' : mode.toUpperCase()}`);
     return { handled: true, protection: p.key, reason: v.reason };
   }
 
