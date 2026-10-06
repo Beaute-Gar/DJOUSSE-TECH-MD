@@ -558,11 +558,18 @@ function visibleCommands(cat, base) {
 
 /* ── MENU PRINCIPAL : en-tête + CADRAN DES CATÉGORIES uniquement ── */
 function renderMainMenu(base) {
+  /* Méthode de connexion en vigueur (option B) :
+     '' → auto (session existante = QR, sinon invitation au démarrage) */
+  const linkLabel = config.connectMethod === 'pairing'
+    ? `PAIRING ${config.pairingPhone ? `+${config.pairingPhone}` : '(auto)'}`
+    : config.connectMethod === 'qr' ? 'QR' : 'AUTO';
+
   const header = buildFrame('INFO BOT', [
     bullet('PREFIX', `〔${config.prefix}〕`),
     bullet('BOT', config.botName),
     bullet('TIME', nowTime()),
     bullet('DATE', nowDate()),
+    bullet('CONNEXION', linkLabel),
     title(toUnicode('STATUS PANEL')),
     row(toUnicode('REPLY WITH A NUMBER')),
   ]);
@@ -708,7 +715,71 @@ async function sendMenu(sock, jid, text, quoted) {
   }
 }
 
+/* ── COMMUTATEUR QR / PAIRING (option B) ──────────────────────
+   Réécrit UNIQUEMENT CONNECT_METHOD et PAIRING_PHONE dans .env :
+   toutes les autres lignes (secrets, tokens…) sont recopiées telles
+   quelles. Écriture atomique via .tmp + rename : un process tué au
+   milieu ne laisse jamais un .env tronqué (le bot ne redémarrerait
+   plus). */
+const ENV_PATH = process.env.ENV_FILE || path.join(__dirname, '.env');
+function persistConnectMethod(method, phone) {
+  let lines = [];
+  try { lines = fs.readFileSync(ENV_PATH, 'utf8').split(/\r?\n/); } catch { /* .env absent : on le crée */ }
+  const setVar = (key, val) => {
+    const re = new RegExp(`^${key}=`);
+    const idx = lines.findIndex((l) => re.test(l));
+    if (idx >= 0) lines[idx] = `${key}=${val}`;
+    else lines.push(`${key}=${val}`);
+  };
+  setVar('CONNECT_METHOD', method);
+  setVar('PAIRING_PHONE', phone || '');
+  const tmp = `${ENV_PATH}.tmp`;
+  fs.writeFileSync(tmp, lines.join('\n'), 'utf8');
+  fs.renameSync(tmp, ENV_PATH);
+
+  /* synchronise la mémoire : config.js lit .env UNE fois au require */
+  config.connectMethod = method;
+  config.pairingPhone = phone || '';
+  process.env.CONNECT_METHOD = method;
+  process.env.PAIRING_PHONE = phone || '';
+}
+
 cmd('menu', { cat: 1, desc: 'Menu interactif par chiffres', icon: '📋' }, async (ctx) => {
+  /* Commutateur QR / Pairing :
+       .menu qr
+       .menu pairing            → numéro owner par défaut
+       .menu pairing 237690000000 */
+  const arg = String(ctx.args?.[0] || '').toLowerCase();
+  if (['qr', 'pairing', 'pair'].includes(arg)) {
+    if (!isOwnerJid(ctx.sender)) {
+      return ctx.error(['COMMANDE RÉSERVÉE AU PROPRIÉTAIRE']);
+    }
+    const method = arg === 'qr' ? 'qr' : 'pairing';
+    let phone = '';
+    if (method === 'pairing') {
+      phone = String(ctx.args?.[1] || config.ownerNumber[0] || '').replace(/\D/g, '');
+      if (phone.length < 8 || phone.length > 15) {
+        return ctx.error([
+          'NUMÉRO PAIRING INVALIDE (8 À 15 CHIFFRES)',
+          `USAGE : ${config.prefix}MENU PAIRING 237690000000`,
+        ]);
+      }
+    }
+    try {
+      persistConnectMethod(method, phone);
+    } catch (e) {
+      return ctx.error(['ÉCRITURE .ENV IMPOSSIBLE', `[${e.message}]`]);
+    }
+    return ctx.success([
+      'MÉTHODE DE CONNEXION ENREGISTRÉE',
+      method === 'qr'
+        ? '→ QR : SCAN AVEC UN SECOND APPAREIL'
+        : `→ PAIRING : ${phone} (MÊME TÉLÉPHONE)`,
+      'APPLIQUÉ AU PROCHAIN REDÉMARRAGE',
+      'REDÉMARRE LE BOT POUR L’APPLIQUER',
+    ]);
+  }
+
   setMenu(ctx.from, 0);
   await sendMenu(ctx.sock, ctx.from, renderMainMenu(ctx), ctx.msg);
 });

@@ -27,6 +27,17 @@ process.env.GUARD_TZ = 'Africa/Douala';
 process.env.VIGIL_URL = '';
 process.env.VIGIL_EMAIL = '';
 process.env.VIGIL_PASSWORD = '';
+/* Commutateur QR/Pairing (.menu qr|pairing) : le vrai .env du dépôt ne
+   doit JAMAIS être réécrit pendant les tests — on le redirige vers le
+   dossier temporaire, avec un fichier d'amorçage qui contient un secret
+   pour vérifier que les autres lignes sont recopiées octet à octet. */
+process.env.ENV_FILE = path.join(TMP, '.env');
+fs.writeFileSync(process.env.ENV_FILE,
+  'BOT_NAME=DJOUSSE-TECH-MD\n'
+  + 'PREFIX=.\n'
+  + 'DATABASE_URL=postgresql://neondb_owner:SUPER_SECRET@ep-x/neondb?sslmode=require&channel_binding=require\n'
+  + 'CONNECT_METHOD=\n'
+  + 'PAIRING_PHONE=\n', 'utf8');
 
 const STUBS = {
   sharp: () => ({}),
