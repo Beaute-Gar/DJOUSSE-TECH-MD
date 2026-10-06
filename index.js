@@ -21,6 +21,7 @@ const {
   default: makeWASocket,
   useMultiFileAuthState,
   makeCacheableSignalKeyStore,
+  Browsers,
   DisconnectReason,
   fetchLatestBaileysVersion,
   fetchLatestWaWebVersion,
@@ -88,9 +89,13 @@ process.on('exit', flushGuard);
    1. LOGGER SILENCIEUX — aucun pino-pretty (7 fichiers, zéro dépendance)
    ══════════════════════════════════════════════════════════════ */
 
-const logger = pino({ level: 'silent' });
-logger.debug = () => {};
-logger.trace = () => {};
+// BAILEYS_LOG=debug (ou trace) dans .env → affiche la VRAIE cause des coupures
+// (les logs pino ne passent pas par le filtre console ci-dessus).
+const logger = pino({ level: process.env.BAILEYS_LOG || 'silent' });
+if (!process.env.BAILEYS_LOG) {
+  logger.debug = () => {};
+  logger.trace = () => {};
+}
 
 /* ══════════════════════════════════════════════════════════════
    2. VERSION WHATSAPP — chaîne de repli (jamais une version en dur seule)
@@ -104,6 +109,12 @@ logger.trace = () => {};
    ══════════════════════════════════════════════════════════════ */
 
 async function resolveWAVersion() {
+  // WA_DEFAULT_VERSION=1 → on laisse Baileys utiliser sa version embarquée
+  // (test de diagnostic si la version GitHub/web est rejetée au pairing)
+  if (process.env.WA_DEFAULT_VERSION === '1') {
+    rawLog('[WA] Version : embarquée dans Baileys (WA_DEFAULT_VERSION=1)');
+    return undefined;
+  }
   const opts = { timeout: 8000 };
   try {
     const r = await fetchLatestBaileysVersion(opts);
@@ -239,9 +250,11 @@ async function startSession(options = {}) {
   }
 
   const sock = makeWASocket({
-    version,
+    ...(version ? { version } : {}),
     logger,
-    browser: ['DJOUSSE TECH', 'Chrome', '1.0'],
+    // Triplet officiel Baileys : un nom de navigateur « maison » peut être
+    // refusé par WhatsApp au moment du pairing.
+    browser: Browsers.ubuntu('Chrome'),
     printQRInTerminal: false,
     /* Clés mises en cache par signal-key : évite de relire le disque
        à chaque chiffrage et accélère les envois en rafale (voir
@@ -262,15 +275,14 @@ async function startSession(options = {}) {
   });
   activeSock = sock;
 
-  /* ── Credentials : sauvegarde obligatoire à chaque update ── */
-  sock.ev.on('creds.update', async () => {
-    try {
-      if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
-      await saveCreds();
-    } catch (e) {
-      console.error('[SESSION] ❌ Erreur sauvegarde creds:', e.message);
-    }
-  });
+  /* ── Credentials : sauvegarde obligatoire à chaque update ──
+        Pattern OFFICIEL Baileys (README « Example to Start ») :
+            sock.ev.on('creds.update', saveCreds)
+        Le mkdir maison disparaît : useMultiFileAuthState crée déjà le
+        dossier (lib/Utils/use-multi-file-auth-state.js:84). Un rejet
+        éventuel de l'écriture disque est attrapé par le handler global
+        unhandledRejection en tête de fichier (jamais de crash). */
+  sock.ev.on('creds.update', saveCreds);
 
   /* ── Appels entrants : rejet si activé ── */
   if (config.rejectCall) {
@@ -359,6 +371,12 @@ async function startSession(options = {}) {
 
       rawLog(`[SOCKET] 🔌 Fermeture (code=${statusCode ?? 'inconnu'}${lastDisconnect?.error?.message ? ` — ${lastDisconnect.error.message}` : ''})`);
 
+      // Diagnostic pairing : combien de temps le dernier code a-t-il tenu ?
+      // (sans ça, impossible de savoir si le 428 arrive à 1 s ou à 45 s)
+      if (isPairing && !wasRegistered && pairingCodeAt) {
+        const age = Math.max(0, Math.round((Date.now() - pairingCodeAt) / 1000));
+        rawLog(`[PAIRING] ⏱ Code émis il y a ${age}s avant la coupure${age < 5 ? ' → coupure quasi immédiate' : ''}.`);
+      }
       // loggedOut/forbidden après un login réussi → compte probablement restreint
       if ((statusCode === DisconnectReason.loggedOut || statusCode === DisconnectReason.forbidden) && wasRegistered) {
         rawError(`🚨 COMPTE RESTREINT ? — code ${statusCode} — pause de 10 min avant toute reconnexion.`);
