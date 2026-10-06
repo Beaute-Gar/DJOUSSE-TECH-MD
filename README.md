@@ -312,7 +312,7 @@ MSG_CACHE_MAX=800
 ### 3. Démarrer
 
 ```bash
-npm start        # lance d'abord l'audit, puis le bot
+npm start        # lance d'abord l'audit, puis le bot (au premier plan)
 ```
 
 Un **QR code** s'affiche dans le terminal → WhatsApp › Appareils connectés › Connecter un appareil.
@@ -320,6 +320,33 @@ Les credentials sont écrits dans `session/` (ignoré par git).
 
 > 💡 `npm run audit` s'exécute tout seul avant chaque démarrage (`prestart`).
 > `npm run check` valide la syntaxe des 4 fichiers principaux.
+
+#### Service détaché (le bot survit à la fermeture du terminal)
+
+```powershell
+node scripts/service.js start            # bot DÉTACHÉ  → logs/bot.log
+node scripts/service.js status           # état + dernières lignes
+node scripts/service.js stop             # arrêt (tue toute l'arborescence)
+
+node scripts/service.js vigil start      # Vigil sur :3120 (le « 2e avis »)
+node scripts/service.js vigil status
+node scripts/service.js vigil stop
+node scripts/service.js status           # les deux d'un coup
+```
+
+Chaque cible a son propre couple `logs/<cible>.log` + `logs/<cible>.pid`
+(les deux sont ignorés par git). Le process est créé avec `detached` +
+`unref` : pas besoin de pm2, il survit à la fermeture de la fenêtre.
+L'heure des logs est **locale**, la même que dans `.journal` / `.chatlog`.
+
+Suivi en direct :
+
+```powershell
+Get-Content logs\bot.log -Tail 20 -Wait
+```
+
+Sans Vigil lancé, le pont reste en **échec ouvert** : aucune requête,
+la protection locale continue de fonctionner (voir `guard/src/vigil.js`).
 
 ---
 
@@ -353,7 +380,7 @@ DJOUSSE-TECH-MD/
 │
 ├── ludo/             # 🎲 Moteur de jeu Ludo (plateau, règles, rendu canvas)
 ├── plugins/          # Plugins extensibles
-├── scripts/audit.js  # 🔍 Audit de démarrage (sécurité, deps, structure)
+├── scripts/          # 🔍 audit.js (audit de démarrage) · service.js (start/stop/status)
 ├── tests/            # ✅ node --test "tests/*.test.js" — 98 tests, 15 fichiers
 ├── vendor/yt-dlp.exe # ⬇️ Auto-téléchargé au premier usage
 ├── data/             # 💾 Base locale SQLite — data/bot.db (état, historique, journal) — gitignoré

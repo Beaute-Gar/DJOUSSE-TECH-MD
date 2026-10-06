@@ -60,6 +60,18 @@ cd C:\Users\djous\Documents\DJOUSSE-TECH-MD
 npm start
 ```
 
+**Variante détachée** (recommandée : le bot continue de tourner même
+après avoir fermé la fenêtre PowerShell) :
+
+```powershell
+node scripts/service.js stop     # au cas où une instance tournerait encore
+node scripts/service.js start    # PID dans logs\bot.pid
+node scripts/service.js status   # état + dernière sortie
+```
+
+⚠️ **Une seule instance à la fois** : deux bots sur la même session =
+conflit `440` / déconnexion en boucle.
+
 Attends `CONNECTÉ` + `commandes chargées`.
 
 ---
