@@ -747,6 +747,8 @@ function bridgeStatus() {
     version: config.version || '',
     prefix: config.prefix || '.',
     commands: handler.commands.size,
+    // « Groupes suivis » — même source que la commande d'état du bot.
+    groups: Object.keys((handler.state && handler.state.groups) || {}).length,
     engine: 'sqlite',
     connectMethod: bridge.method,
     qr: bridge.qr || null,
