@@ -9,6 +9,7 @@ node_modules/
 session/
 sessions/
 session-*/
+data/
 creds.json
 lid-mapping-*.json
 state.json

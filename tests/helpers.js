@@ -20,6 +20,9 @@ process.env.OWNER_NUMBER = OWNER;
 process.env.PREFIX = '.';
 process.env.ANTI_DELETE = 'false'; // le .env du dépôt met true : les tests partent de la valeur par défaut
 process.env.SESSION_DIR = path.relative(ROOT, TMP); // état de test hors du projet
+/* Base locale également hors projet : elle ne doit JAMAIS pointer sur
+   data/ du dépôt pendant un test (voir lib/dataDir.js) */
+process.env.DATA_DIR = path.relative(ROOT, path.join(TMP, 'data'));
 process.env.GUARD_TZ = 'Africa/Douala';
 // Le pont Vigil ne doit JAMAIS appeler le réseau pendant les tests :
 // on coupe ici, avant que config.js lise .env. tests/vigil.test.js le

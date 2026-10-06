@@ -3,10 +3,10 @@
  * handler.js — Cerveau unique de DJOUSSE TECH MD
  * ────────────────────────────────────────────────
  * • Menu interactif par chiffres de 1 à 10 (navigation par catégories)
- * • Commandes textuelles (.prefix + nom) — 73 commandes dans 11 catégories
+ * • Commandes textuelles (.prefix + nom) — 210 commandes dans 11 catégories
  * • Protections de groupe : antilink, antibad, antidelete, warns, blacklist,
  *   welcome/goodbye
- * • État persistant : session/state.json + mémoire session/history.json
+ * • État persistant : data/state.json + mémoire data/history.json
  *
  * index.js délègue ici : messages.upsert → handleMessage(),
  * group-participants.update → handleGroupUpdate().
@@ -59,14 +59,20 @@ const {
 const guardSanctions = require('./guard/src/sanctions');
 const guardRegistry = require('./guard/src/commands');
 const guardProtections = require('./guard/src/protections');
+/* Base locale séparée de session/ : voir lib/dataDir.js.
+   La migration s'exécute UNE fois ici, AVANT toute lecture, pour que
+   state.json / guard.json soient déjà au bon endroit. */
+const { DATA_DIR, inData, migrate } = require('./lib/dataDir');
+migrate();
+
 /* Base du moteur : initialisation paresseuse (tests locaux sans index.js) */
-try { guardDb.db(); } catch (e) { guardDb.init(path.join(__dirname, config.sessionDir, config.guard.dbFile)); }
+try { guardDb.db(); } catch (e) { guardDb.init(inData(config.guard.dbFile)); }
 
 /* ════════════════════════════════════════════════════════════
-   1. ÉTAT PERSISTANT — session/state.json
+   1. ÉTAT PERSISTANT — data/state.json
    ════════════════════════════════════════════════════════════ */
 
-const STATE_FILE = path.join(__dirname, config.sessionDir, 'state.json');
+const STATE_FILE = inData('state.json');
 
 function defaultState() {
   return {
@@ -98,8 +104,8 @@ function loadState() {
 
 const state = loadState();
 try {
-  initStore(path.join(__dirname, config.sessionDir));
-  initScheduler(path.join(__dirname, config.sessionDir));
+  initStore(DATA_DIR);
+  initScheduler(DATA_DIR);
 } catch (e) {
   console.error('[INIT] store/scheduler:', e.message);
 }
@@ -854,6 +860,25 @@ cmd('diag', ['diagnostic', 'health'], {
     }
   } catch { /* dossier absent ou creds illisibles */ }
 
+  /* Base locale : poids réel de data/ (état, garde, historiques, store)
+     — parcours borné à 5 000 entrées : le store peut grossir */
+  let dataSize = 0;
+  let dataFiles = 0;
+  const walkData = (dir) => {
+    if (dataFiles >= 5000) return;
+    let entries = [];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (dataFiles >= 5000) return;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walkData(p);
+      else {
+        try { dataSize += fs.statSync(p).size; dataFiles++; } catch { /* fichier disparu */ }
+      }
+    }
+  };
+  walkData(inData(''));
+
   const lastCut = waStats.lastDisconnectAt
     ? `${waStats.lastDisconnectCode ?? '?'} il y a ${age(waStats.lastDisconnectAt)}`
       + (waStats.lastDisconnectMsg ? ` · ${waStats.lastDisconnectMsg}` : '')
@@ -877,6 +902,9 @@ cmd('diag', ['diagnostic', 'health'], {
     bullet('SESSION DISQUE', sessionFiles
       ? `${sessionFiles} fichiers · ${Math.round(sessionSize / 1024)} Ko`
       : 'absente'),
+    bullet('BASE LOCALE', dataFiles
+      ? `data/ · ${dataFiles} fichiers · ${Math.round(dataSize / 1024)} Ko`
+      : 'data/ vide'),
     bullet('LOG BAILEYS', process.env.BAILEYS_LOG
       ? toUnicode(process.env.BAILEYS_LOG.toUpperCase())
       : 'silencieux · BAILEYS_LOG vide'),

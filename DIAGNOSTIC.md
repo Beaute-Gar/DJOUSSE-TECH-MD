@@ -24,17 +24,22 @@ REJECT_CALL=true
 AUTO_READ=true
 ```
 
-### B. Fichier `session\state.json`
+### B. Fichier `data\state.json`
+
+> ℹ️ Depuis la séparation base locale / credentials : `state.json`,
+> `history.json`, `guard.json`, `scheduler.json` et `store/` vivent dans
+> **`data/`** — `session/` ne contient plus que les credentials WhatsApp
+> (`creds.json`, clés…). La migration est automatique au démarrage.
 
 1. Arrête le bot (Ctrl+C)
-2. Ouvre `session\state.json`
+2. Ouvre `data\state.json`
 3. Mets `"selfMode": false`
 
 Si le fichier pose problème :
 
 ```powershell
 cd C:\Users\djous\Documents\DJOUSSE-TECH-MD
-Rename-Item session\state.json state.json.bak -ErrorAction SilentlyContinue
+Rename-Item data\state.json state.json.bak -ErrorAction SilentlyContinue
 ```
 
 ---

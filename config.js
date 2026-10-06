@@ -30,8 +30,12 @@ module.exports = {
   // Commandes
   prefix: process.env.PREFIX || '.',
 
-  // Session Baileys (dossier des credentials)
+  // Session Baileys (dossier des credentials — le SEUL à effacer pour
+  // réappareiller : voir lib/dataDir.js)
   sessionDir: process.env.SESSION_DIR || 'session',
+
+  // Base locale du bot (state, historiques, guard, scheduler, store)
+  dataDir: process.env.DATA_DIR || 'data',
 
   // Stickers
   packname: process.env.PACK_NAME || 'DJOUSSE TECH',
@@ -84,7 +88,7 @@ module.exports = {
 
   // Moteur DJOUSSE GUARD (dossier guard/) — protections de groupe
   guard: {
-    dbFile: process.env.GUARD_DB || 'guard.json',              // dans sessionDir
+    dbFile: process.env.GUARD_DB || 'guard.json',              // dans dataDir
     timezone: process.env.GUARD_TZ || 'Africa/Douala',          // fuseau du mode nuit
     log: bool(process.env.GUARD_LOG, false),                    // journal des expulsions → DM owner
     notifyCooldownMs: 10 * 60 * 1000,                           // avis « bot non admin » : 1 / 10 min / groupe

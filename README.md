@@ -5,14 +5,14 @@
 **Bot WhatsApp intelligent — DJOUSSE TECH EVOLUTION**
 
 <img
-  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=187+commandes+%C2%B7+11+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+13+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
-  alt="187 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
+  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=210+commandes+%C2%B7+11+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+13+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
+  alt="210 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
 />
 
 <br/>
 
 <img src="https://img.shields.io/badge/version-4.0.0-2ECC71?style=flat-square" alt="Version 4.0.0" />
-<img src="https://img.shields.io/badge/commandes-187-00b894?style=flat-square" alt="187 commandes" />
+<img src="https://img.shields.io/badge/commandes-210-00b894?style=flat-square" alt="210 commandes" />
 <img src="https://img.shields.io/badge/cat%C3%A9gories-11-111b26?style=flat-square" alt="11 catégories" />
 <img src="https://img.shields.io/badge/Baileys-6.7.24-25D366?style=flat-square&logo=whatsapp&logoColor=white" alt="Baileys 6.7.24" />
 <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 18+" />
@@ -137,20 +137,20 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 
 | # | Catégorie | | Commandes |
 |:-:|---|:-:|--:|
-| 1 | 🌟 **GÉNÉRAL** | | 8 |
-| 2 | 👥 **GROUPE** | | 25 |
+| 1 | 🌟 **GÉNÉRAL** | | 9 |
+| 2 | 👥 **GROUPE** | | 31 |
 | 3 | 🛡️ **PROTECTION** | | 40 |
 | 4 | 🖼️ **STICKER & MEDIA** | | 26 |
-| 5 | 🧰 **OUTILS** | | 16 |
+| 5 | 🧰 **OUTILS** | | 19 |
 | 6 | 🤖 **IA** | | 3 |
 | 7 | 🎲 **FUN** | | 14 |
 | 8 | 🔍 **RECHERCHE** | | 3 |
-| 9 | 👑 **OWNER** | | 38 |
+| 9 | 👑 **OWNER** | | 51 |
 | 10 | 📦 **DIVERS** | | 11 |
 | 11 | ⬇️ **TÉLÉCHARGEMENT** | | 3 |
-| | | **Total** | **187** |
+| | | **Total** | **210** |
 
-> **+ 93 alias** (280 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
+> **+ 95 alias** (305 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
 
 ---
 
@@ -308,7 +308,7 @@ Les credentials sont écrits dans `session/` (ignoré par git).
 ```
 DJOUSSE-TECH-MD/
 ├── index.js          # Point d'entrée : connexion Baileys, QR/pairing, reconnexion
-├── handler.js        # 🧠 Cerveau unique — 187 commandes, menu, moteur d'événements
+├── handler.js        # 🧠 Cerveau unique — 210 commandes, menu, moteur d'événements
 ├── config.js         # Toutes les constantes lues depuis .env (aucune logique métier)
 ├── style.js          # 🎨 Source unique du rendu (cadres ╭┄┄『 』┄❍, alphabet officiel)
 │
@@ -326,15 +326,18 @@ DJOUSSE-TECH-MD/
 │   ├── tools.js      # Outils (remove.bg, conversions…)
 │   ├── missing.js    # Événements Baileys non couverts par handler.js
 │   ├── store.js      # Persistance JSON (state, historique)
+│   ├── dataDir.js    # 💾 Base locale data/ — séparée des credentials session/
+│   ├── waStats.js    # 🔌 Stats de connexion partagées index.js ⇄ handler.js (.diag)
 │   ├── scheduler.js  # .schedule / .schedules / .unschedule
 │   └── wa-send.js    # 🔑 Service d'envoi unique — tout envoi passe par send()
 │
 ├── ludo/             # 🎲 Moteur de jeu Ludo (plateau, règles, rendu canvas)
 ├── plugins/          # Plugins extensibles
 ├── scripts/audit.js  # 🔍 Audit de démarrage (sécurité, deps, structure)
-├── tests/            # ✅ node --test — 78 tests, 11 fichiers
+├── tests/            # ✅ node --test "tests/*.test.js" — 91 tests, 14 fichiers
 ├── vendor/yt-dlp.exe # ⬇️ Auto-téléchargé au premier usage
-└── session/          # 🔒 Credentials + état (gitignoré)
+├── data/             # 💾 Base locale (state, historique, guard) — gitignoré
+└── session/          # 🔒 Credentials WhatsApp uniquement — gitignoré
 ```
 
 **Flux d'un message :**
@@ -393,6 +396,7 @@ Déjà couvert par le `.gitignore` du dépôt :
 session/
 sessions/
 session-*/
+data/
 creds.json
 state.json
 logs/
@@ -400,6 +404,10 @@ tmp/
 *.log
 vendor/yt-dlp.exe
 ```
+
+> `session/` = credentials WhatsApp · `data/` = base locale du bot
+> (`state.json`, `history.json`, `guard.json`, `scheduler.json`, `store/`).
+> Effacer `session/` pour réappareiller ne détruit donc plus la config.
 
 ## 🚨 Risques liés aux sessions
 
@@ -437,7 +445,7 @@ La quantité exacte de données traitées dépend de la configuration et des fon
 - identifiants et noms de groupes
 - messages adressés au bot et médias transmis au bot
 - informations nécessaires à l'exécution d'une commande
-- données de session (`session/`) et journaux techniques (`logs/`)
+- données de session (`session/`), base locale du bot (`data/`) et journaux techniques (`logs/`)
 
 Toutes les fonctionnalités ne traitent pas nécessairement toutes ces catégories.
 
