@@ -219,12 +219,25 @@ const isOwnerJid = (jid) => {
 };
 
 /* Message « vue unique » (view once) — détection sur le brut,
-   AVANT unwrap (les wrappers portent l'information) */
+   AVANT unwrap (les wrappers portent l'information).
+
+   On DESCEND la chaîne d'enveloppes au lieu d'un test plat : WhatsApp
+   intercale régulièrement ephemeralMessage (chat à durée limitée) ou
+   documentWithCaptionMessage AVANT le wrapper vue unique. Le test à un
+   seul niveau déclenchait un faux « CE MESSAGE N'EST PAS EN VUE UNIQUE »
+   et faisait manquer l'auto-sauvegarde (.autonce). */
 function isOnceContent(raw) {
-  return !!(
-    raw &&
-    (raw.viewOnceMessage || raw.viewOnceMessageV2 || raw.viewOnceMessageV2Extension)
-  );
+  let cur = raw;
+  for (let i = 0; i < 6 && cur; i++) {
+    if (cur.viewOnceMessage || cur.viewOnceMessageV2 || cur.viewOnceMessageV2Extension) return true;
+    const inner = cur.ephemeralMessage?.message
+      || cur.documentWithCaptionMessage?.message
+      || (cur.editedMessage?.message?.protocolMessage?.editedMessage)
+      || null;
+    if (!inner) return false;
+    cur = inner;
+  }
+  return false;
 }
 
 /* textOf() et ctxInfo() ne sont plus définis ici : implementations uniques
@@ -1156,20 +1169,59 @@ cmd('getonce', ['recuponce', 'sauveonce'], {
   cat: 4, desc: 'Récupérer un média en vue unique',
   usage: 'getonce (réponds à un média vue unique)', icon: '🔓',
 }, async (ctx) => {
-  const info = mediaInfo(ctx.msg);
-  if (!info) return ctx.reply(`❌ Réponds à un média en vue unique.\nUsage : ${config.prefix}getonce`);
+  /* ── Échelle de diagnostic : chaque refus dit POURQUOI, pas juste
+        « ce n'est pas bon ». L'erreur la plus fréquente était un
+        message média répondu à tort (l'autre bout du fil) ou un média
+        déjà consommé par le destinataire. ── */
   const ci = ctxInfo(ctx.content);
-  if (!ci?.quotedMessage || !isOnceContent(ci.quotedMessage)) {
-    return ctx.error(['CE MESSAGE N’EST PAS EN VUE UNIQUE', 'RÉPONDS À UNE PHOTO OU VIDÉO VUE UNIQUE']);
+  if (!ci?.quotedMessage) {
+    return ctx.error([
+      'AUCUN MESSAGE CITÉ',
+      'RÉPONDS DIRECTEMENT AU MÉDIA VUE UNIQUE',
+      `PUIS ${config.prefix}GETONCE`,
+    ]);
   }
-  if (!['imageMessage', 'videoMessage'].includes(info.type)) {
-    return ctx.error(['SEULES IMAGES ET VIDÉOS SONT ACCEPTÉES']);
+  if (!isOnceContent(ci.quotedMessage)) {
+    return ctx.error([
+      'CE MESSAGE N’EST PAS EN VUE UNIQUE',
+      'VÉRIFIE QUE TU CITTES LE MÉDIA LUI-MÊME',
+      '(PAS UN AUTRE MESSAGE DU MÊME FIL)',
+    ]);
+  }
+  const info = mediaInfo(ctx.msg);
+  if (!info) {
+    return ctx.error([
+      'MÉDIA CITÉ INTROUVABLE OU EXPIRÉ',
+      'LA VUE UNIQUE A DÉJÉ ÉTÉ CONSOMMÉE',
+      'DEMANDE-LUI DE RENVOYER LE MÉDIA',
+    ]);
+  }
+  /* WhatsApp autorise vue unique : photo, vidéo, audio ET document.
+     Refuser audio/document laissait croire à un bug côté bot. */
+  if (!['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage'].includes(info.type)) {
+    return ctx.error([
+      `TYPE NON GÉRÉ : ${String(info.type).replace('Message', '').toUpperCase()}`,
+      'TYPES ACCEPTÉS : PHOTO, VIDÉO, AUDIO, DOCUMENT',
+    ]);
   }
   await ctx.reply(config.messages.wait);
   try {
     const buffer = await downloadFrom(ctx.sock, info);
-    const caption = renderSuccess(['VUE UNIQUE RÉCUPÉRÉE', 'MÉDIA CONVERTI EN CLASSIQUE']);
-    const payload = info.type === 'videoMessage' ? { video: buffer, caption } : { image: buffer, caption };
+    const label = String(info.type).replace('Message', '').toUpperCase();
+    const caption = renderSuccess(['VUE UNIQUE RÉCUPÉRÉE', `${label} CONVERTI EN CLASSIQUE`]);
+    let payload;
+    if (info.type === 'videoMessage') {
+      payload = { video: buffer, caption };
+    } else if (info.type === 'imageMessage') {
+      payload = { image: buffer, caption };
+    } else if (info.type === 'audioMessage') {
+      /* pas de légende sur un vocal : on envoie le cadre puis le son */
+      await ctx.reply(caption);
+      payload = { audio: buffer, mimetype: info.mimetype || 'audio/ogg; codecs=opus' };
+    } else {
+      const ext = (String(info.mimetype).split('/')[1] || 'bin').split(';')[0];
+      payload = { document: buffer, fileName: `vue-unique.${ext}`, mimetype: info.mimetype, caption };
+    }
     await send(ctx.sock, ctx.from, payload, { quoted: ctx.msg });
   } catch (e) {
     await ctx.error(['MÉDIA INDISPONIBLE OU EXPIRÉ', `[${e.message}]`]);
