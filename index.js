@@ -40,6 +40,8 @@ const { box, banner } = require('./style');
 const { textOf } = require('./guard/src/utils/message');
 const guardPerms = require('./guard/src/utils/perms');
 const guardNight = require('./guard/src/nightmode');
+/* Stats de connexion partagées avec handler.js (commande .diag) */
+const waStats = require('./lib/waStats');
 
 /* ══════════════════════════════════════════════════════════════
    0. FILTRES — ignore les erreurs bruyantes de libsignal / réseau
@@ -109,36 +111,41 @@ if (!process.env.BAILEYS_LOG) {
    ══════════════════════════════════════════════════════════════ */
 
 async function resolveWAVersion() {
+  const noteVersion = (v, source) => {
+    waStats.waVersion = v ? v.join('.') : 'embarquée';
+    waStats.waVersionSource = source;
+    return v;
+  };
   // WA_DEFAULT_VERSION=1 → on laisse Baileys utiliser sa version embarquée
   // (test de diagnostic si la version GitHub/web est rejetée au pairing)
   if (process.env.WA_DEFAULT_VERSION === '1') {
     rawLog('[WA] Version : embarquée dans Baileys (WA_DEFAULT_VERSION=1)');
-    return undefined;
+    return noteVersion(undefined, 'embarquée (WA_DEFAULT_VERSION=1)');
   }
   const opts = { timeout: 8000 };
   try {
     const r = await fetchLatestBaileysVersion(opts);
     if (r?.isLatest && Array.isArray(r.version) && r.version.length === 3) {
       rawLog(`[WA] Version : ${r.version.join('.')} (github WhiskeySockets)`);
-      return r.version;
+      return noteVersion(r.version, 'github WhiskeySockets');
     }
   } catch {}
   try {
     const r = await fetchLatestWaWebVersion(opts);
     if (r?.isLatest && Array.isArray(r.version) && r.version.length === 3) {
       rawLog(`[WA] Version : ${r.version.join('.')} (web.whatsapp.com)`);
-      return r.version;
+      return noteVersion(r.version, 'web.whatsapp.com');
     }
   } catch {}
   if (process.env.WA_VERSION) {
     const v = process.env.WA_VERSION.split(',').map((n) => parseInt(n.trim(), 10));
     if (v.length === 3 && v.every(Number.isFinite)) {
       rawLog(`[WA] Version : ${v.join('.')} (env WA_VERSION)`);
-      return v;
+      return noteVersion(v, 'env WA_VERSION');
     }
   }
   rawWarn(`⚠️ [WA] Sources de version injoignables — repli : ${config.stableWaVersion.join('.')}`);
-  return config.stableWaVersion;
+  return noteVersion(config.stableWaVersion, 'repli stable (sources injoignables)');
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -333,6 +340,8 @@ async function startSession(options = {}) {
         'le code ci-dessus',
       ]) + '\n');
       pairingCodeAt = Date.now();
+      waStats.lastPairingCodeAt = pairingCodeAt;
+      waStats.pairingAttempts = pairingAttempts;
       const emittedAt = pairingCodeAt;
       setTimeout(() => {
         if (!state.creds.registered && pairingCodeAt === emittedAt) {
@@ -370,6 +379,9 @@ async function startSession(options = {}) {
       if (conflictStableTimer) { clearTimeout(conflictStableTimer); conflictStableTimer = null; }
 
       rawLog(`[SOCKET] 🔌 Fermeture (code=${statusCode ?? 'inconnu'}${lastDisconnect?.error?.message ? ` — ${lastDisconnect.error.message}` : ''})`);
+      waStats.lastDisconnectCode = statusCode ?? null;
+      waStats.lastDisconnectAt = Date.now();
+      waStats.lastDisconnectMsg = lastDisconnect?.error?.message || '';
 
       // Diagnostic pairing : combien de temps le dernier code a-t-il tenu ?
       // (sans ça, impossible de savoir si le 428 arrive à 1 s ou à 45 s)
@@ -408,6 +420,7 @@ async function startSession(options = {}) {
       let delay = 3000;
       if (statusCode === DisconnectReason.connectionReplaced) {
         conflictCount++;
+        waStats.conflicts = conflictCount;
         delay = Math.min(60000, 3000 * Math.pow(2, Math.min(conflictCount, 5)));
         rawLog(`⚠️ CONFLICT (connectionReplaced/440) — tentative ${conflictCount}/${CONFLICT_MAX_RETRIES} — reconnexion dans ${delay / 1000}s...`);
         if (conflictCount >= CONFLICT_MAX_RETRIES) {
@@ -419,6 +432,7 @@ async function startSession(options = {}) {
         rawLog(`[PAIRING] 🔁 Retry pairing dans ${delay / 1000}s... (tentative ${pairingAttempts}/${MAX_PAIRING_ATTEMPTS})`);
       } else if (statusCode === 405) {
         handshakeFailCount++;
+        waStats.handshakeFails = handshakeFailCount;
         delay = ladder([15000, 60000, 300000], handshakeFailCount);
         rawLog(`⚠️ HANDSHAKE REJETÉ (405) — tentative ${handshakeFailCount}/${MAX_405_RETRIES} — reconnexion dans ${delay / 1000}s...`);
         if (handshakeFailCount >= MAX_405_RETRIES) {
@@ -462,6 +476,8 @@ async function startSession(options = {}) {
 
     if (connection === 'open') {
       rawLog('[SOCKET] ✅ CONNECTÉ —', sock.user?.id || 'session active');
+      waStats.connects++;
+      waStats.connectedSince = Date.now();
 
       // CORRECTIF QR (prouvé en prod le 26/09/2026) : le fork ne définit jamais
       // registered=true en flux QR — sans ce marquage, chaque redémarrage voit
