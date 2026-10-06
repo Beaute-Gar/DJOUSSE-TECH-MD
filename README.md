@@ -238,6 +238,7 @@ VIGIL_EMAIL=demo@vigil.app
 VIGIL_PASSWORD=
 VIGIL_TIMEOUT_MS=1200
 VIGIL_MODE=enrich
+VIGIL_SYNC_MS=3000         # console à distance : rythme du va-et-vient (défaut 3 s)
 ```
 
 > **Instance en ligne** : `https://vigil-delta-lake.vercel.app` (Vercel + Neon).
@@ -246,6 +247,37 @@ VIGIL_MODE=enrich
 > (cold start) : le pont bascule alors une fois en échec ouvert, sans impact.
 > **Variante locale** : `node scripts/service.js vigil start` et
 > `VIGIL_URL=http://localhost:3120` — même verdicts, utilisable hors ligne.
+
+### 📡 Console à distance — le même pont, dans l'autre sens
+
+`lib/vigilLink.js` ne se contente pas de *consulter* Vigil : il expose la **vie
+du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
+
+| Ce que fait le site | Ce que fait le bot |
+|---|---|
+| Voit le statut live (connecté, numéro, uptime, commandes chargées) | pousse son état toutes les **3 s** |
+| Affiche le **QR** à scanner | publie la dernière chaîne QR émise |
+| Demande un **pairing code** pour un numéro | relance la session en mode pairing et publie le code |
+| Envoie une commande (`.antilink on`, `.menu`, …) | l'injecte comme un message **du propriétaire** → handler normal |
+| Lit le **journal** (~200 dernières lignes) | relaie tout ce qui s'imprime au terminal |
+| Referme la session | `stop` : socket fermée, processus vivant |
+
+**Garanties — `tests/vigillink.test.js` (13 tests) :**
+
+1. **Sans `VIGIL_URL`, rien ne part** : zéro requête, zéro timer, zéro délai.
+2. **Rien n'est perdu** : journal et retours ne sont retirés qu'après un `200` ;
+   un `500` rejoue tout au cycle suivant — et jamais deux fois.
+3. **Cookie expirée → une seule reconnexion**, jamais de boucle.
+4. **Jamais d'exception** : une commande qui casse revient `failed` côté site.
+5. **Journal borné** : 200 lignes en mémoire, 50 par aller-retour, 400 car./ligne.
+
+> La commande `raw` est volontairement traitée comme un message WhatsApp
+> *émis par le propriétaire* : les commandes owner-only restent owner-only,
+> il n'y a **aucun** raccourci d'autorisation côté handler.
+
+> **Pilotage en mode de connexion** : `qr` et `pairing` réutilisent le
+> commutateur de `.menu qr|pairing` (`persistConnectMethod`) — le mode est
+> écrit dans `.env` *et* la session relancée immédiatement.
 
 > **Sans admin, le bot peut prévenir mais pas faire taire.** WhatsApp interdit la suppression d'un
 > message par un non-admin *côté serveur* : l'avis signale alors l'infraction et invite à promouvoir

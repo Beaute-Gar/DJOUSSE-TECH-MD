@@ -63,9 +63,43 @@ const isIgnored = (value) => {
   return IGNORED_ERRORS.some((kw) => str.includes(kw));
 };
 
-const rawError = console.error.bind(console);
-const rawLog = console.log.bind(console);
-const rawWarn = console.warn.bind(console);
+/* ══════════════════════════════════════════════════════════════
+   0. PONT VIGIL (console web) — voir lib/vigilLink.js
+      Le site affiche le statut, le QR, le code de pairing et le
+      journal du bot, et peut lui envoyer des commandes. Tout ce
+      qui est imprimé ici est relayé vers Vigil (~3 s) ; rien ne
+      part tant que VIGIL_URL / VIGIL_EMAIL / VIGIL_PASSWORD ne
+      sont pas renseignés, et le pont ne démarre que dans main().
+   ══════════════════════════════════════════════════════════════ */
+
+const bridge = {
+  qr: null,        // dernier QR brut émis par Baileys (à scanner)
+  code: null,      // dernier code de pairing émis
+  codeFor: null,   // numéro visé par ce code
+  connected: false,
+  method: config.connectMethod === 'pairing' ? 'pairing' : 'qr',
+};
+
+const baseLog = console.log.bind(console);
+const baseWarn = console.warn.bind(console);
+const baseError = console.error.bind(console);
+
+/** Objets/erreurs → une ligne lisible (jamais [object Object]). */
+const bridgeText = (args) => args.map((v) => {
+  if (typeof v === 'string') return v;
+  try { return typeof v === 'object' ? JSON.stringify(v) : String(v); } catch { return String(v); }
+}).join(' ');
+
+const rawLog = (...args) => { baseLog(...args); vigLink.pushLog(bridgeText(args)); };
+const rawError = (...args) => { baseError(...args); vigLink.pushLog('✖ ' + bridgeText(args)); };
+const rawWarn = (...args) => { baseWarn(...args); vigLink.pushLog('⚠ ' + bridgeText(args)); };
+
+const { createLink: createVigilLink } = require('./lib/vigilLink');
+const vigLink = createVigilLink({
+  getState: () => bridgeStatus(),
+  onCommand: (kind, payload) => bridgeCommand(kind, payload),
+  log: (line) => baseLog(line),
+});
 
 console.error = (...args) => { if (!isIgnored(args[0])) rawError(...args); };
 console.warn = (...args) => { if (!isIgnored(args[0])) rawWarn(...args); };
@@ -342,6 +376,8 @@ async function startSession(options = {}) {
         'le code ci-dessus',
       ]) + '\n');
       pairingCodeAt = Date.now();
+      bridge.code = code;
+      bridge.codeFor = phoneNumber;
       waStats.lastPairingCodeAt = pairingCodeAt;
       waStats.pairingAttempts = pairingAttempts;
       const emittedAt = pairingCodeAt;
@@ -360,6 +396,9 @@ async function startSession(options = {}) {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
+      bridge.qr = qr;
+      bridge.code = null;
+      bridge.codeFor = null;
       if (isPairing) {
         // Le serveur envoie le « qr » quand il est prêt à lier un appareil :
         // c'est le moment officiel pour demander le code (doc Baileys).
@@ -374,6 +413,7 @@ async function startSession(options = {}) {
     }
 
     if (connection === 'close') {
+      bridge.connected = false;
       guardNight.stop();
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const wasRegistered = !!state?.creds?.registered;
@@ -481,6 +521,8 @@ async function startSession(options = {}) {
     }
 
     if (connection === 'open') {
+      bridge.connected = true;
+      bridge.qr = null;
       rawLog('[SOCKET] ✅ CONNECTÉ —', sock.user?.id || 'session active');
       waStats.connects++;
       waStats.connectedSince = Date.now();
@@ -691,10 +733,117 @@ function purgePairingCreds(sessionDir, state) {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   6 bis. PONT VIGIL — état publié + commandes reçues du site
+   ══════════════════════════════════════════════════════════════ */
+
+/** Statut envoyé à Vigil à chaque cycle (contrat : lib/vigilLink.js). */
+function bridgeStatus() {
+  const id = String((activeSock && activeSock.user && activeSock.user.id) || '');
+  const since = waStats.connectedSince || 0;
+  return {
+    connected: bridge.connected === true,
+    number: id ? id.replace(/:\d+/, '').replace(/@s\.whatsapp\.net$/, '') : null,
+    uptimeMs: bridge.connected && since ? Date.now() - since : 0,
+    version: config.version || '',
+    prefix: config.prefix || '.',
+    commands: handler.commands.size,
+    engine: 'sqlite',
+    connectMethod: bridge.method,
+    qr: bridge.qr || null,
+    pairingCode: bridge.code || null,
+    pairingFor: bridge.codeFor || null,
+  };
+}
+
+/**
+ * Commande venue de la console Vigil.
+ *
+ * `raw` est le cas important : la saisie du site est injectée comme un
+ * message WhatsApp EN PROVENANCE DU PROPRIÉTAIRE, exactement comme s'il
+ * avait tapé `.antilink on` dans sa discussion. Le handler ne connaît donc
+ * aucune exception d'autorisation — les commandes owner-only restent
+ * owner-only.
+ */
+async function bridgeCommand(kind, payload) {
+  switch (kind) {
+    case 'status': {
+      const s = bridgeStatus();
+      return [
+        `connecté=${s.connected}`,
+        `numéro=${s.number || '-'}`,
+        `commandes=${s.commands}`,
+        `méthode=${s.connectMethod}`,
+        `QR=${s.qr ? 'en attente de scan' : 'aucun'}`,
+        `code=${s.pairingCode || 'aucun'}`,
+      ].join(' ');
+    }
+
+    case 'qr': {
+      handler.persistConnectMethod('qr', '');
+      bridge.method = 'qr';
+      bridge.qr = null; bridge.code = null; bridge.codeFor = null;
+      await startSession({ connectMethod: 'qr' });
+      return 'Relance en mode QR — le QR arrive dans le journal (scanner avec un second appareil).';
+    }
+
+    case 'pairing': {
+      const phone = String(payload || '').replace(/\D/g, '');
+      if (phone.length < 8 || phone.length > 15) {
+        throw new Error('numéro invalide : 8 à 15 chiffres attendus');
+      }
+      handler.persistConnectMethod('pairing', phone);
+      bridge.method = 'pairing';
+      bridge.code = null;
+      bridge.codeFor = phone;
+      bridge.qr = null;
+      await startSession({ connectMethod: 'pairing', pairingPhone: phone });
+      return `Code de pairing demandé pour ${phone} — il apparaît dans le journal.`;
+    }
+
+    case 'stop': {
+      if (activeSock) {
+        try { activeSock.ev.removeAllListeners(); } catch { /* déjà vide */ }
+        try { activeSock.end(undefined); } catch { /* déjà fermé */ }
+        try { activeSock.ws?.close(); } catch { /* déjà fermé */ }
+        activeSock = null;
+      }
+      bridge.connected = false;
+      return 'Session WhatsApp fermée — le processus reste en vie (relancez QR ou PAIRING pour repartir).';
+    }
+
+    case 'raw': {
+      const text = String(payload || '').trim();
+      if (!text) throw new Error('commande vide');
+      const sock = activeSock;
+      if (!sock) throw new Error('bot non connecté à WhatsApp');
+      const owner = String((config.ownerNumber || [])[0] || '').replace(/\D/g, '');
+      if (!owner) throw new Error('OWNER_NUMBER absent du .env');
+
+      const fake = {
+        key: {
+          id: `WEB${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 1000)}`,
+          remoteJid: `${owner}@s.whatsapp.net`,
+          fromMe: false,
+        },
+        message: { conversation: text },
+        messageTimestamp: Math.floor(Date.now() / 1000),
+        pushName: 'Vigil',
+      };
+      await handler.handleMessage(sock, fake);
+      return `Commande exécutée : ${text}`;
+    }
+
+    default:
+      throw new Error(`commande inconnue : ${kind}`);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
    7. DÉMARRAGE
    ══════════════════════════════════════════════════════════════ */
 
 async function main() {
+  vigLink.start(); // console web : inert si VIGIL_* absents
   const sessionDir = path.join(__dirname, config.sessionDir);
 
   // Session déjà enregistrée ?

@@ -3373,4 +3373,6 @@ module.exports = {
   getCache,
   getScheduler,
   getStore,
+  // Commutateur QR/Pairing : utilisé par .menu qr|pairing ET par le pont Vigil
+  persistConnectMethod,
 };
