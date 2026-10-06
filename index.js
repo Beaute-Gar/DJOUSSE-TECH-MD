@@ -149,6 +149,7 @@ let activeSock = null;
 let conflictCount = 0;         // 440 connectionReplaced
 let handshakeFailCount = 0;    // 405 handshake rejeté
 let pairingAttempts = 0;       // codes de pairing émis
+let pairingCodeAt = 0;         // horodatage du dernier code émis → mesure sa durée de vie
 let conflictStableTimer = null;
 
 const CONFLICT_MAX_RETRIES = 8;
@@ -287,14 +288,59 @@ async function startSession(options = {}) {
     });
   }
 
+  /* ── PAIRING CODE — demandé UNE fois par socket, au 1er événement « qr »
+        (= le serveur est prêt). Appelé depuis connection.update. ── */
+  let pairingRequested = false;
+  const requestPairing = async () => {
+    if (pairingRequested) return;
+    if (epoch !== sessionEpoch) return;
+    if (sock.authState.creds.registered || !isPairing || !options.pairingPhone) return;
+    pairingRequested = true;
+
+    if (pairingAttempts >= MAX_PAIRING_ATTEMPTS) {
+      rawError(`[PAIRING] ❌ ${MAX_PAIRING_ATTEMPTS} tentatives épuisées — relancez le bot pour un nouveau code.`);
+      return;
+    }
+    const phoneNumber = String(options.pairingPhone).replace(/\D/g, '');
+    if (phoneNumber.length < 8 || phoneNumber.length > 15) {
+      rawError(`[PAIRING] ❌ Numéro invalide (8 à 15 chiffres attendus) : ${options.pairingPhone}`);
+      return;
+    }
+    try {
+      rawLog('[PAIRING] Demande du code...');
+      pairingAttempts++;
+      const rawCode = await sock.requestPairingCode(phoneNumber);
+      if (epoch !== sessionEpoch) return;
+      const code = rawCode?.match(/.{1,4}/g)?.join('-') || rawCode;
+      rawLog(`[PAIRING] Code généré : ${code} (tentative ${pairingAttempts}/${MAX_PAIRING_ATTEMPTS})`);
+      rawLog('\n' + box('CODE DE PAIRING WHATSAPP', [
+        `Code : ${code}`,
+        '',
+        'WhatsApp → Appareils liés → Connecter un',
+        'appareil → Lier avec un numéro → saisir',
+        'le code ci-dessus',
+      ]) + '\n');
+      pairingCodeAt = Date.now();
+      const emittedAt = pairingCodeAt;
+      setTimeout(() => {
+        if (!state.creds.registered && pairingCodeAt === emittedAt) {
+          rawError('\n[PAIRING] ⏱️ Le code a expiré — relancez le bot pour en obtenir un nouveau.\n');
+        }
+      }, PAIRING_TIMEOUT).unref?.();
+    } catch (e) {
+      console.error('[PAIRING] Erreur requestPairingCode:', e.message);
+    }
+  };
+
   /* ── connection.update — QR, déconnexions, reconnexion ── */
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
       if (isPairing) {
-        // En pairing, l'évent qr ne sert pas : le code est demandé en direct plus bas
-        rawLog('[AUTH] Pairing en cours — QR ignoré.');
+        // Le serveur envoie le « qr » quand il est prêt à lier un appareil :
+        // c'est le moment officiel pour demander le code (doc Baileys).
+        requestPairing();
       } else {
         rawLog('\n' + box('DJOUSSE TECH — CONNEXION QR', [
           'WhatsApp → Appareils liés → Connecter',
@@ -553,45 +599,6 @@ async function startSession(options = {}) {
      BaileysEventMap (Baileys 6.7.24) — les erreurs remontent par
      connection.update (champ error ? Boom), gere au-dessus.
      Ancien listener supprime au lot B12 : 0 emit('error') dans baileys/lib. */
-
-  /* ── PAIRING CODE — demandé APRÈS tous les listeners
-        (waitForSocketOpen peut bloquer, connection.update doit être prêt)
-        Ne pas attendre l'event qr : il se régénère toutes les ~20s.) ── */
-  if (epoch !== sessionEpoch) return sock;
-  if (!state.creds.registered && isPairing && options.pairingPhone) {
-    if (pairingAttempts >= MAX_PAIRING_ATTEMPTS) {
-      rawError(`[PAIRING] ❌ ${MAX_PAIRING_ATTEMPTS} tentatives épuisées — relancez le bot pour un nouveau code.`);
-    } else {
-      try {
-        const phoneNumber = String(options.pairingPhone).replace(/\D/g, '');
-        if (phoneNumber.length < 8 || phoneNumber.length > 15) {
-          rawError(`[PAIRING] ❌ Numéro invalide (8 à 15 chiffres attendus) : ${options.pairingPhone}`);
-        } else {
-          rawLog('[PAIRING] Demande du code...');
-          await sock.waitForSocketOpen();
-          if (epoch !== sessionEpoch) return sock;
-          pairingAttempts++;
-          const rawCode = await sock.requestPairingCode(phoneNumber);
-          const code = rawCode?.match(/.{1,4}/g)?.join('-') || rawCode;
-          rawLog(`[PAIRING] Code généré : ${code} (tentative ${pairingAttempts}/${MAX_PAIRING_ATTEMPTS})`);
-          rawLog('\n' + box('CODE DE PAIRING WHATSAPP', [
-            `Code : ${code}`,
-            '',
-            'WhatsApp → Appareils liés → Connecter un',
-            'appareil → Lier avec un numéro → saisir',
-            'le code ci-dessus',
-          ]) + '\n');
-          setTimeout(() => {
-            if (!state.creds.registered) {
-              rawError('\n[PAIRING] ⏱️ Le code a expiré — relancez le bot pour en obtenir un nouveau.\n');
-            }
-          }, PAIRING_TIMEOUT).unref?.();
-        }
-      } catch (e) {
-        console.error('[PAIRING] Erreur requestPairingCode:', e.message);
-      }
-    }
-  }
 
   return sock;
 }
