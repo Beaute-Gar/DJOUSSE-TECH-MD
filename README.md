@@ -233,12 +233,19 @@ la console de modération, quand une protection de contenu se déclenche :
 ```env
 # ── Pont Vigil (optionnel) ───────────────────────
 # Vide = pont coupé, le bot fonctionne comme avant.
-VIGIL_URL=http://localhost:3120
+VIGIL_URL=https://vigil-delta-lake.vercel.app
 VIGIL_EMAIL=demo@vigil.app
 VIGIL_PASSWORD=
 VIGIL_TIMEOUT_MS=1200
 VIGIL_MODE=enrich
 ```
+
+> **Instance en ligne** : `https://vigil-delta-lake.vercel.app` (Vercel + Neon).
+> Mesurée : login ~840 ms puis **130–280 ms** par détection — largement dans le
+> timeout de 1200 ms. Le premier appel après ~10 min d'inactivité est plus lent
+> (cold start) : le pont bascule alors une fois en échec ouvert, sans impact.
+> **Variante locale** : `node scripts/service.js vigil start` et
+> `VIGIL_URL=http://localhost:3120` — même verdicts, utilisable hors ligne.
 
 > **Sans admin, le bot peut prévenir mais pas faire taire.** WhatsApp interdit la suppression d'un
 > message par un non-admin *côté serveur* : l'avis signale alors l'infraction et invite à promouvoir
@@ -328,7 +335,8 @@ node scripts/service.js start            # bot DÉTACHÉ  → logs/bot.log
 node scripts/service.js status           # état + dernières lignes
 node scripts/service.js stop             # arrêt (tue toute l'arborescence)
 
-node scripts/service.js vigil start      # Vigil sur :3120 (le « 2e avis »)
+node scripts/service.js vigil start      # Vigil LOCAL :3120 — le pont, lui,
+                                         #  utilise VIGIL_URL (Vercel en prod)
 node scripts/service.js vigil status
 node scripts/service.js vigil stop
 node scripts/service.js status           # les deux d'un coup
