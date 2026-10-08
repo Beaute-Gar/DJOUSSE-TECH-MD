@@ -239,12 +239,16 @@ VIGIL_PASSWORD=
 VIGIL_TIMEOUT_MS=1200
 VIGIL_MODE=enrich
 VIGIL_SYNC_MS=3000         # console à distance : rythme du va-et-vient (défaut 3 s)
+VIGIL_SYNC_TIMEOUT_MS=8000 # timeout du sync SEUL (défaut 8 s) — volontairement
+                           # bien plus large que VIGIL_TIMEOUT_MS=1200, calibré
+                           # pour des détections locales
 ```
 
 > **Instance en ligne** : `https://vigil-delta-lake.vercel.app` (Vercel + Neon).
-> Mesurée : login ~840 ms puis **130–280 ms** par détection — largement dans le
-> timeout de 1200 ms. Le premier appel après ~10 min d'inactivité est plus lent
-> (cold start) : le pont bascule alors une fois en échec ouvert, sans impact.
+> Mesurée : login ~500–840 ms, puis **149–471 ms** par détection *et* **150–470 ms**
+> par sync avec un journal complet (50 lignes) — le sync a donc son propre
+> timeout de 8 s, doublé d'**une reprise immédiate** : un coup de réseau n'arme
+> plus le cooldown de 15 s (un timeout n'attend plus que ~4 s).
 > **Variante locale** : `node scripts/service.js vigil start` et
 > `VIGIL_URL=http://localhost:3120` — même verdicts, utilisable hors ligne.
 
@@ -262,7 +266,7 @@ du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
 | Lit le **journal** (~200 dernières lignes) | relaie tout ce qui s'imprime au terminal |
 | Referme la session | `stop` : socket fermée, processus vivant |
 
-**Garanties — `tests/vigillink.test.js` (13 tests) :**
+**Garanties — `tests/vigillink.test.js` (17 tests) :**
 
 1. **Sans `VIGIL_URL`, rien ne part** : zéro requête, zéro timer, zéro délai.
 2. **Rien n'est perdu** : journal et retours ne sont retirés qu'après un `200` ;
@@ -270,6 +274,13 @@ du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
 3. **Cookie expirée → une seule reconnexion**, jamais de boucle.
 4. **Jamais d'exception** : une commande qui casse revient `failed` côté site.
 5. **Journal borné** : 200 lignes en mémoire, 50 par aller-retour, 400 car./ligne.
+6. **Un coup de réseau ne coûte pas 15 s** : chaque sync est **repris une fois
+   immédiatement** avant d'abandonner, et seuls les vrais échecs (HTTP, auth)
+   armant le cooldown complet — un timeout n'attend que ~4 s.
+7. **QR/appairage jamais muets** : si le bot est déjà connecté, la commande
+   revient `failed` avec la marche à suivre (`STOP`, puis nouvelle demande)
+   au lieu d'un faux succès ; sinon la session enregistrée est **détachée à la
+   demande** pour que le QR ou le code arrive *réellement*.
 
 > La commande `raw` est volontairement traitée comme un message WhatsApp
 > *émis par le propriétaire* : les commandes owner-only restent owner-only,
@@ -277,7 +288,9 @@ du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
 
 > **Pilotage en mode de connexion** : `qr` et `pairing` réutilisent le
 > commutateur de `.menu qr|pairing` (`persistConnectMethod`) — le mode est
-> écrit dans `.env` *et* la session relancée immédiatement.
+> écrit dans `.env` *et* la session relancée immédiatement. **Le bot déjà
+> connecté refuse poliment** (erreur lisible sur le site) : une session
+> valide ne produit ni QR ni code, mieux vaut le dire que tourner à vide.
 
 > **Sans admin, le bot peut prévenir mais pas faire taire.** WhatsApp interdit la suppression d'un
 > message par un non-admin *côté serveur* : l'avis signale alors l'infraction et invite à promouvoir
