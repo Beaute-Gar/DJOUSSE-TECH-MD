@@ -396,6 +396,20 @@ function parseFrDate(s) {
   return isNaN(d.getTime()) ? null : d;
 }
 
+/* ── VUE UNIQUE — dossier de récupération + extensions ─────────
+   Référence : DJOUSSE-TECH-VV. TOUT média récupéré est écrit dans
+   downloads/ (créé au démarrage) avant d'être renvoyé. */
+const DOWNLOAD_DIR = path.join(__dirname, 'downloads');
+fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
+
+const VV_EXT = {
+  imageMessage: 'jpg',
+  videoMessage: 'mp4',
+  audioMessage: 'ogg',
+  documentMessage: 'bin',
+  stickerMessage: 'webp',
+};
+
 /* Téléchargement de média (cible = message cité ou message courant) */
 function mediaInfo(msg) {
   const content = unwrap(msg.message);
@@ -432,6 +446,62 @@ async function downloadFrom(sock, info) {
   });
 }
 
+/* ── VUE UNIQUE — téléchargement + sauvegarde disque ───────────
+   Structure de référence (downloadVV) : le média est téléchargé,
+   ÉCRIT dans downloads/, puis retourné avec ses métadonnées. */
+async function downloadVV(sock, info) {
+  const buffer = await downloadFrom(sock, info);
+  if (!buffer?.length) throw new Error('Média vide — vue unique déjà ouverte ou URL expirée.');
+  const ext = (String(info.mimetype || '').split('/')[1] || '').split(';')[0].replace('jpeg', 'jpg')
+    || VV_EXT[info.type] || 'bin';
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const filename = `vv-${stamp}.${ext}`;
+  const output = path.join(DOWNLOAD_DIR, filename);
+  fs.writeFileSync(output, buffer);
+  console.log(`[VV] ${info.type} -> ${output} (${buffer.length} octets)`);
+  return {
+    output,
+    filename,
+    bytes: buffer.length,
+    type: info.type,
+    buffer,
+    node: info.content?.[info.type] || null,
+  };
+}
+
+/* ── VUE UNIQUE — envoi du média récupéré ──────────────────────
+   Structure de référence (sendRecovered) : un branchement par type,
+   puis message texte pour les types sans légende (audio/sticker).
+   Transport garanti G2 : uniquement le service send(). */
+async function sendRecovered(sock, jid, result, quoted, caption) {
+  const body = caption
+    || `✅ Vue unique récupérée\nType : ${result.type}\nTaille : ${result.bytes} octets`;
+  const opts = quoted ? { quoted } : undefined;
+  const payload = {};
+  if (result.type === 'imageMessage') {
+    payload.image = result.buffer;
+    payload.caption = body;
+  } else if (result.type === 'videoMessage') {
+    payload.video = result.buffer;
+    payload.caption = body;
+  } else if (result.type === 'stickerMessage') {
+    payload.sticker = result.buffer;
+  } else if (result.type === 'audioMessage') {
+    payload.audio = result.buffer;
+    payload.mimetype = result.node?.mimetype || 'audio/ogg; codecs=opus';
+    payload.ptt = !!result.node?.ptt;
+  } else {
+    payload.document = result.buffer;
+    payload.mimetype = result.node?.mimetype || 'application/octet-stream';
+    payload.fileName = result.node?.fileName || result.filename;
+    payload.caption = body;
+  }
+  await send(sock, jid, payload, opts);
+  if (result.type === 'audioMessage' || result.type === 'stickerMessage') {
+    await send(sock, jid, { text: body }, opts);
+  }
+}
+
 /* ════════════════════════════════════════════════════════════
    AUTO-SAUVEGARDE VUE UNIQUE (.autonce on)
    WhatsApp interdit de conserver un média « vue unique » :
@@ -446,15 +516,19 @@ async function autoSaveOnce(sock, msg, content, from, sender) {
     if (state.onceCd[from] && Date.now() - state.onceCd[from] < 60000) return;
     state.onceCd[from] = Date.now();
     const ownerJid = `${config.ownerNumber[0]}@s.whatsapp.net`;
-    const buffer = await downloadFrom(sock, { target: msg });
+    const node = isVideo ? content.videoMessage : content.imageMessage;
+    const result = await downloadVV(sock, {
+      target: msg,
+      type: isVideo ? 'videoMessage' : 'imageMessage',
+      mimetype: node?.mimetype,
+      content,
+    });
     const chatLabel = from.endsWith('@g.us') ? `GROUPE ${num(from)}` : 'CHAT PRIVÉ';
-    const caption = renderSuccess([
+    await sendRecovered(sock, ownerJid, result, null, renderSuccess([
       'VUE UNIQUE RÉCUPÉRÉE',
       `DE: +${num(sender)}`,
       `CHAT: ${chatLabel}`,
-    ]);
-    const payload = isVideo ? { video: buffer, caption } : { image: buffer, caption };
-    await send(sock, ownerJid, payload);
+    ]));
   } catch (e) {
     console.error('[AUTONCE]', e.message);
   }
@@ -1407,19 +1481,19 @@ cmd('viewonce', ['vo', 'vueonce'], {
   }
   await ctx.reply(config.messages.wait);
   try {
-    const buffer = await downloadFrom(ctx.sock, info);
+    const result = await downloadVV(ctx.sock, info);
     const payload = info.type === 'videoMessage'
-      ? { video: buffer, viewOnce: true }
-      : { image: buffer, viewOnce: true };
+      ? { video: result.buffer, viewOnce: true }
+      : { image: result.buffer, viewOnce: true };
     await send(ctx.sock, ctx.from, payload, { quoted: ctx.msg });
   } catch (e) {
     await ctx.reply(`❌ Envoi impossible : ${e.message}`);
   }
 });
 
-cmd('getonce', ['recuponce', 'sauveonce'], {
+cmd('getonce', ['vv', 'recuponce', 'sauveonce'], {
   cat: 4, desc: 'Récupérer un média en vue unique',
-  usage: 'getonce (réponds à un média vue unique)', icon: '🔓',
+  usage: 'getonce|vv (réponds à un média vue unique)', icon: '🔓',
 }, async (ctx) => {
   /* ── Échelle de diagnostic : chaque refus dit POURQUOI, pas juste
         « ce n'est pas bon ». L'erreur la plus fréquente était un
@@ -1458,23 +1532,10 @@ cmd('getonce', ['recuponce', 'sauveonce'], {
   }
   await ctx.reply(config.messages.wait);
   try {
-    const buffer = await downloadFrom(ctx.sock, info);
     const label = String(info.type).replace('Message', '').toUpperCase();
-    const caption = renderSuccess(['VUE UNIQUE RÉCUPÉRÉE', `${label} CONVERTI EN CLASSIQUE`]);
-    let payload;
-    if (info.type === 'videoMessage') {
-      payload = { video: buffer, caption };
-    } else if (info.type === 'imageMessage') {
-      payload = { image: buffer, caption };
-    } else if (info.type === 'audioMessage') {
-      /* pas de légende sur un vocal : on envoie le cadre puis le son */
-      await ctx.reply(caption);
-      payload = { audio: buffer, mimetype: info.mimetype || 'audio/ogg; codecs=opus' };
-    } else {
-      const ext = (String(info.mimetype).split('/')[1] || 'bin').split(';')[0];
-      payload = { document: buffer, fileName: `vue-unique.${ext}`, mimetype: info.mimetype, caption };
-    }
-    await send(ctx.sock, ctx.from, payload, { quoted: ctx.msg });
+    const result = await downloadVV(ctx.sock, info);
+    await sendRecovered(ctx.sock, ctx.from, result, ctx.msg,
+      renderSuccess(['VUE UNIQUE RÉCUPÉRÉE', `${label} CONVERTI EN CLASSIQUE`]));
   } catch (e) {
     await ctx.error(['MÉDIA INDISPONIBLE OU EXPIRÉ', `[${e.message}]`]);
   }

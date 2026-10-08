@@ -144,7 +144,7 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 **🩺 Diagnostics**
 - `.diag` — état socket, version WA, conflits 440, mémoire
 - `.menu qr` / `.menu pairing <num>` — bascule de connexion
-- `.getonce` — photo, vidéo, **vocal** et document
+- `.getonce` (alias `.vv`) — photo, vidéo, **vocal** et document → sauvegardés dans `downloads/`
 - `.sessions` — chemins actifs (session + base locale)
 
 </td>

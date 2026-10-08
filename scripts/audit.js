@@ -58,7 +58,7 @@ function walk(dir, out = []) {
   for (const e of entries) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) {
-      if (['node_modules', '.git', 'session', 'sessions', 'logs', 'tmp', 'temp'].includes(e.name)) continue;
+      if (['node_modules', '.git', 'session', 'sessions', 'logs', 'tmp', 'temp', 'downloads'].includes(e.name)) continue;
       walk(p, out);
     } else if (/\.(js|cjs|mjs|ts|json|md)$/.test(e.name)) {
       out.push(p);
