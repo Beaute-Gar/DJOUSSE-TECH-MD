@@ -2,7 +2,7 @@
 /**
  * scripts/service.js — gestionnaire des deux process du système
  *
- *   node scripts/service.js [cible] <start|stop|status>
+ *   node scripts/service.js [cible] <start|stop|status|watch>
  *
  *   cible = bot (défaut)  → node index.js
  *   cible = vigil         → next start -p 3120  (le « deuxième avis »
@@ -10,13 +10,21 @@
  *
  * Exemples :
  *   node scripts/service.js start            lance le bot
+ *   node scripts/service.js watch            + surveillance (relance auto)
  *   node scripts/service.js vigil start      lance Vigil
  *   node scripts/service.js status           état des deux
  *
  * Sortie → logs/<cible>.log (append, heure locale) · PID → logs/<cible>.pid
+ * Watchdog  → logs/<cible>.watch.pid
  *
  * Le process est créé avec `detached` + `unref` : il survit à la
  * fermeture du terminal, sans pm2 ni daemon externe.
+ *
+ * ── watchdog (`watch`) ─────────────────────────────────────────────
+ * Une boucle détachée vérifie toutes les 10 s que la cible est en vie ;
+ * process mort → relance immédiate (les sessions WhatsApp se rechargent
+ * seules depuis `session/`). « stop » tue d'abord le watchdog, sinon il
+ * relancerait ce que l'on vient d'arrêter.
  */
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
@@ -40,6 +48,7 @@ const APPS = {
 const files = (name) => ({
   log: path.join(LOG_DIR, `${name}.log`),
   pid: path.join(LOG_DIR, `${name}.pid`),
+  watch: path.join(LOG_DIR, `${name}.watch.pid`),
 });
 
 /* Heure LOCALE, la même que celle affichée par .journal / .chatlog */
@@ -50,9 +59,10 @@ const stamp = () => {
     + `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
 
-function readPid(f) {
+/** Chemin de fichier .pid (string) — ex. f.pid ou f.watch. */
+function readPid(file) {
   try {
-    const pid = Number(fs.readFileSync(f.pid, 'utf8').trim());
+    const pid = Number(fs.readFileSync(file, 'utf8').trim());
     return Number.isInteger(pid) && pid > 0 ? pid : null;
   } catch { return null; }
 }
@@ -71,7 +81,7 @@ function tail(f, n = 25) {
 function start(name) {
   const app = APPS[name];
   const f = files(name);
-  const old = readPid(f);
+  const old = readPid(f.pid);
   if (alive(old)) {
     console.log(`[${name}] Déjà en cours (PID ${old}) — « ${name} stop » d'abord.`);
     return 1;
@@ -102,7 +112,9 @@ function start(name) {
 
 function stop(name) {
   const f = files(name);
-  const pid = readPid(f);
+  const killedWatch = stopWatch(name);
+  if (killedWatch) console.log(`[${name}] Watchdog arrêté.`);
+  const pid = readPid(f.pid);
   if (!alive(pid)) {
     console.log(`[${name}] Aucun process en cours.`);
     try { fs.unlinkSync(f.pid); } catch { /* déjà absent */ }
@@ -119,19 +131,79 @@ function stop(name) {
 
 function status(name) {
   const f = files(name);
-  const pid = readPid(f);
+  const pid = readPid(f.pid);
   if (alive(pid)) {
     console.log(`[${name}] EN COURS — PID ${pid}`);
   } else {
     console.log(`[${name}] ARRÊTÉ` + (pid ? ` (PID ${pid} mort)` : ''));
     try { fs.unlinkSync(f.pid); } catch { /* rien */ }
   }
+  const w = readPid(f.watch);
+  console.log(alive(w)
+    ? `[${name}] Watchdog actif (PID ${w}) — relance sous 10 s en cas de mort`
+    : `[${name}] Watchdog inactif (« ${name} watch » pour l'activer)`);
   console.log('--- dernière sortie ---');
   for (const l of tail(f, alive(pid) ? 25 : 12)) console.log(l);
   return alive(pid) ? 0 : 3;
 }
 
-const CMDS = { start, stop, status };
+/**
+ * Démarre le watchdog (boucle détachée) pour une cible.
+ * Idempotent : un seul watchdog par cible.
+ */
+function watch(name) {
+  const f = files(name);
+  if (alive(readPid(f.watch))) {
+    console.log(`[${name}] Watchdog déjà actif.`);
+    return 0;
+  }
+  fs.mkdirSync(LOG_DIR, { recursive: true });
+  const wlog = path.join(LOG_DIR, `${name}.watch.log`);
+  const out = fs.openSync(wlog, 'a');
+  fs.appendFileSync(wlog, `\n──── ${stamp()} ──── watchdog actif ────\n`);
+  const child = spawn(process.execPath, [__filename, name, 'watch-loop'], {
+    cwd: ROOT,
+    detached: true,
+    stdio: ['ignore', out, out],
+    windowsHide: true,
+  });
+  child.unref();
+  fs.writeFileSync(f.watch, String(child.pid), 'utf8');
+  console.log(`[${name}] Watchdog lancé (PID ${child.pid}) — vérifie la cible toutes les 10 s`);
+  console.log(`[${name}] Arrêt du couple : node scripts/service.js ${name} stop`);
+  return 0;
+}
+
+/**
+ * Boucle du watchdog (exécutée dans le process détaché de `watch`).
+ * Retourne undefined pour que le process reste ouvert.
+ */
+function watchLoop(name) {
+  const f = files(name);
+  fs.writeFileSync(f.watch, String(process.pid), 'utf8');
+  setInterval(() => {
+    if (alive(readPid(f.pid))) return;             // la cible vit : rien à faire
+    fs.appendFileSync(f.log,
+      `\n──── ${stamp()} ──── watchdog : process mort, relance ────\n`);
+    start(name);
+  }, 10_000);
+}
+
+/**
+ * Arrêt : on tue d'abord le watchdog (sinon il relancerait la cible),
+ * puis la cible elle-même.
+ */
+function stopWatch(name) {
+  const f = files(name);
+  const w = readPid(f.watch);
+  if (!alive(w)) { try { fs.unlinkSync(f.watch); } catch { /* rien */ } return false; }
+  spawnSync('taskkill', ['/PID', String(w), '/T', '/F'], { windowsHide: true });
+  try { fs.unlinkSync(f.watch); } catch { /* rien */ }
+  return true;
+}
+
+const CMDS = { start, stop, status, watch, 'watch-loop': watchLoop };
+const USAGE = 'start|stop|status|watch';
 
 /* argv : [script] [cible?] [commande?] — un seul mot = commande sur « bot » */
 const argv = process.argv.slice(2);
@@ -145,7 +217,8 @@ if (!APPS[name]) {
   process.exit(64);
 }
 if (!CMDS[cmd]) {
-  console.error(`Usage : node scripts/service.js [${Object.keys(APPS).join('|')}] ${Object.keys(CMDS).join('|')}`);
+  console.error(`Usage : node scripts/service.js [${Object.keys(APPS).join('|')}] ${USAGE}`);
   process.exit(64);
 }
-process.exit(CMDS[cmd](name));
+const result = CMDS[cmd](name);
+if (result !== undefined) process.exit(result); // watch-loop : reste ouvert
