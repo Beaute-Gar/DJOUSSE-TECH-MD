@@ -47,6 +47,8 @@ const guardDb = require('./guard/src/db');
 const guardEngine = require('./guard/src/engine');
 const { parse: guardParse, unwrap, textOf, ctxInfo } = require('./guard/src/utils/message');
 const guardPerms = require('./guard/src/utils/perms');
+/* MODULE 1 : autorisations (owner/sudo/accepted) — implémentation unique */
+const auth = require('./lib/auth');
 const guardEvents = require('./guard/src/events');
 const guardUi = require('./guard/src/ui');
 const { findLinks } = require('./guard/src/utils/links');
@@ -132,6 +134,9 @@ function loadState() {
 }
 
 const state = loadState();
+/* MODULE 1 : lie lib/auth à l'état persistant (sudo + accepted).
+   saveState est une function → hoistée, déjà déclarée en dessous. */
+auth.bind(state, saveState);
 try {
   initStore(DATA_DIR);
   initScheduler(DATA_DIR);
@@ -218,35 +223,21 @@ process.on('exit', () => saveState(true));
    ════════════════════════════════════════════════════════════ */
 
 const num = guardPerms.jidNum;
-/** Owners fixes (.env + session) + sudo autorisés (state.settings.sudo) */
-function getSudoList() {
-  const fromEnv = (process.env.SUDO_NUMBER || '')
-    .split(/[,\s]+/)
-    .map((x) => String(x).replace(/\D/g, ''))
-    .filter(Boolean);
-  const fromState = Array.isArray(state.settings?.sudo)
-    ? state.settings.sudo.map((x) => String(x).replace(/\D/g, '')).filter(Boolean)
-    : [];
-  return [...new Set([...fromEnv, ...fromState])];
-}
-
+/* MODULE 1 : les tests d'autorisation sont délégués à lib/auth.js
+   (implémentation unique — comparaison EXACTE, plus aucun endsWith) */
 function isPrimaryOwner(n) {
-  const num_ = String(n || '').replace(/\D/g, '');
-  return config.ownerNumber.some((o) => o === num_ || num_.endsWith(o) || o.endsWith(num_));
+  return auth.isOwner(n);
 }
 
 function isSudoNumber(n) {
-  const num_ = String(n || '').replace(/\D/g, '');
-  if (!num_) return false;
-  return getSudoList().some((o) => o === num_ || num_.endsWith(o) || o.endsWith(num_));
+  return auth.isSudo(n);
 }
 
 const isOwnerJid = (jid) => {
   if (!jid) return false;
   const n = num(jid);
   if (!n) return false;
-  if (isPrimaryOwner(n) || isSudoNumber(n)) return true;
-  return config.ownerNumber.some((o) => o === n || n.endsWith(o) || o.endsWith(n));
+  return auth.isOwner(n) || auth.isSudo(n);
 };
 
 /* Message « vue unique » (view once) — détection sur le brut,
@@ -2224,6 +2215,75 @@ cmd('read', ['markread'], {
 
 
 /* ── AUTORISATIONS OWNER / SUDO (pas tout le monde owner) ── */
+/* ══ MODULE 1 — .accept : autorisation d'utiliser le bot ════════════
+   .accept @user1 @user2 [30m|24h|7d|permanent] → accord (défaut : permanent)
+   .unaccept @user|numéro                        → révocation
+   .accepted                                     → liste + expirations
+   Toutes en owner : seul le propriétaire ouvre l'accès. */
+const DUREES_ACCEPT = { m: 60 * 1000, h: 60 * 60 * 1000, d: 24 * 60 * 60 * 1000 };
+
+function ciblesAccept(ctx) {
+  const ci = ctxInfo(ctx.content);
+  const set = new Set((ci?.mentionedJid || []).map((j) => num(j)).filter(Boolean));
+  for (const a of ctx.args || []) {
+    const d = String(a).replace(/\D/g, '');
+    if (d.length >= 8) set.add(d); // numéro tapé en dur (« @2376… » inclus)
+  }
+  return [...set];
+}
+
+function dureeAccept(ctx) {
+  const dernier = String(ctx.args?.[ctx.args.length - 1] || '').toLowerCase();
+  const m = dernier.match(/^(\d{1,5})(m|h|d)$/);
+  if (m) return parseInt(m[1], 10) * DUREES_ACCEPT[m[2]];
+  return null; // permanent par défaut (« permanent »/«jamais» acceptés aussi)
+}
+
+cmd('accept', ['autoriser'], {
+  cat: 9, desc: 'Autoriser des utilisateurs à utiliser le bot',
+  usage: 'accept @user1 @user2 [30m|24h|7d|permanent]', owner: true, icon: '✅',
+}, async (ctx) => {
+  const cibles = ciblesAccept(ctx);
+  if (!cibles.length) {
+    return ctx.error([
+      'AUCUN DESTINATAIRE',
+      `MENTIONNE : ${config.prefix}ACCEPT @USER1 @USER2`,
+      `OU NUMÉRO : ${config.prefix}ACCEPT 2376XXXXXXX 24H`,
+    ]);
+  }
+  const ttl = dureeAccept(ctx);
+  const lignes = [];
+  for (const n of cibles) {
+    const r = auth.accept(n, ttl);
+    if (!r.ok) lignes.push(`⛔ +${n} — ${r.raison}`);
+    else if (r.until) lignes.push(`✅ +${n} — JUSQU’À ${new Date(r.until).toLocaleString('fr-FR')}`);
+    else lignes.push(`✅ +${n} — PERMANENT`);
+  }
+  return ctx.success(['UTILISATEUR(S) AUTORISÉ(S)', ...lignes]);
+});
+
+cmd('unaccept', ['deaccept', 'revoquer'], {
+  cat: 9, desc: "Retirer un accès accordé par .accept",
+  usage: 'unaccept @user|numéro', owner: true, icon: '⛔',
+}, async (ctx) => {
+  const cibles = ciblesAccept(ctx);
+  if (!cibles.length) return ctx.error(['AUCUN DESTINATAIRE', `UTILISATION : ${config.prefix}UNACCEPT @USER`]);
+  const lignes = cibles.map((n) => (auth.unaccept(n).ok ? `⛔ +${n} — ACCÈS RETIRÉ` : `ℹ️ +${n} — PAS DANS LA LISTE`));
+  return ctx.success(['ACCÈS RÉVOQUÉ', ...lignes]);
+});
+
+cmd('accepted', ['acceptes', 'autorises'], {
+  cat: 9, desc: 'Liste des utilisateurs acceptés',
+  usage: 'accepted', owner: true, icon: '📋',
+}, async (ctx) => {
+  const list = auth.listAccepted();
+  if (!list.length) return ctx.success(['AUCUN UTILISATEUR ACCEPTÉ', `OUVRIR : ${config.prefix}ACCEPT @USER`]);
+  const lignes = list.map((e) => (e.until
+    ? `✅ +${e.n} — jusqu’au ${new Date(e.until).toLocaleString('fr-FR')}`
+    : `✅ +${e.n} — permanent`));
+  return ctx.success(['UTILISATEURS ACCEPTÉS', ...lignes]);
+});
+
 cmd('sudo', {
   cat: 9, desc: 'Gérer les sudo (co-owners autorisés)', usage: 'sudo add|del|list <numéro>', owner: true, icon: '🔑',
 }, async (ctx) => {
@@ -2670,6 +2730,23 @@ async function executeCommand(sock, msg, name, args, base) {
   if (config.selfMode || state.settings.selfMode) {
     if (!ctx.isOwner && !msg.key.fromMe) return true; // silencieux
   }
+
+  /* ── MODULE 1 : GATE D'ACCÈS STRICT ─────────────────────────────
+     Ni owner, ni sudo, ni « accepted » (.accept) → AUCUNE commande.
+     Premier refus = message d'explication, suivants (60 s) = silencieux
+     (anti-spam). Les protections de groupe (guard/) passent AVANT ce
+     point : elles continuent de protéger même pour un inconnu. */
+  if (!msg.key.fromMe && !auth.canRun(ctx.sender)) {
+    if (auth.shouldNotifyGate(ctx.sender)) {
+      await ctx.error([
+        'ACCÈS RESTREINT',
+        'CE BOT EST PRIVÉ — OWNER OU ACCEPTÉS UNIQUEMENT',
+        'DEMANDE L’ACCÈS AU PROPRIÉTAIRE DU BOT',
+      ]);
+    }
+    return true;
+  }
+
   if (entry.owner && !ctx.isOwner) return ctx.error([config.messages.ownerOnly.toUpperCase()]), true;
   if (entry.group && !ctx.isGroup) return ctx.error([config.messages.groupOnly.toUpperCase()]), true;
   if (entry.admin && ctx.isGroup && !ctx.isAdmin && !ctx.isOwner) return ctx.error([config.messages.adminOnly.toUpperCase()]), true;
@@ -3024,7 +3101,7 @@ async function handleMessage(sock, msg) {
         isOwnerJid(sender) ||
         isOwnerJid(senderAlt) ||
         (senderNum && botNum && senderNum === botNum) ||
-        (senderNum && config.ownerNumber.some((o) => senderNum === o || senderNum.endsWith(o) || o.endsWith(senderNum))),
+        (senderNum && (auth.isOwner(senderNum) || auth.isSudo(senderNum))),
       isBotSelf: fromMe,
       isAdmin: false,
       isBotAdmin: false,

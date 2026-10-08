@@ -23,7 +23,9 @@ module.exports = {
   botName: process.env.BOT_NAME || 'DJOUSSE TECH',
   botOwnerName: process.env.OWNER_NAME || 'Beaute Gar',
   // Numéros owner (.env). Au connect, le numéro de la session est AJOUTÉ automatiquement.
-  ownerNumber: numbers(process.env.OWNER_NUMBER, '237693978044'),
+  // Module 1 : comparaison STRICTE sur ces chiffres — aucun défaut en dur
+  // (AUTO_OWNER ajoute le numéro de session au connect → pas de lockout).
+  ownerNumber: numbers(process.env.OWNER_NUMBER, ''),
   // true = le numéro scanné (QR/pairing) devient toujours owner (défaut)
   autoOwner: process.env.AUTO_OWNER !== '0' && process.env.AUTO_OWNER !== 'false',
 
