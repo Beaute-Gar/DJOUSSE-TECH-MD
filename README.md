@@ -124,6 +124,8 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 **👑 Owner**
 - `.self` / `.public` / `.broadcast`
 - `.sudo` / `.authcode` / `.claim`
+- `.accept` / `.unaccept` / `.accepted` — accès du bot
+- `.unpause` / `.conflicts` — pause de chat (autre bot)
 - `.schedule` — planification
 - `.block`, `.mutechat`, `.archive`
 
@@ -527,6 +529,22 @@ vendor/yt-dlp.exe
 > `session/` = credentials WhatsApp · `data/` = base locale du bot
 > (`state.json`, `history.json`, `guard.json`, `scheduler.json`, `store/`).
 > Effacer `session/` pour réappareiller ne détruit donc plus la config.
+
+## 🤖 Politique d'accès & anti-conflits
+
+```text
+accès STRICT : OWNER + acceptés uniquement (numéros comparés EXACTEMENT)
+  .accept @user [30m|24h|7d|permanent] · .unaccept · .accepted
+  1er refus = explication, suivants = silencieux (anti-spam 60 s)
+autre bot détecté sur un chat (boucle de réponses) → pause automatique
+  avertissement unique puis plus aucune réponse (owner excepté)
+  .conflicts — chats en pause · .unpause [all] — reprise
+humanisation : délai aléatoire 300–1100 ms avant chaque message texte
+  HUMAN_DELAY=0 coupe · HUMAN_DELAY_MIN / HUMAN_DELAY_MAX en ms
+  réactions et médias : envoi immédiat (pas de délai)
+```
+
+Les protections de groupe (`guard/`) restent actives pendant une pause.
 
 ## 🚨 Risques liés aux sessions
 

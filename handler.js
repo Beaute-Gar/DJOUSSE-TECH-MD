@@ -39,8 +39,10 @@ const { registerExtras } = require('./lib/extras');
 const { ffmpegBuffer } = require('./lib/ffmpeg');
 const { registerTools } = require('./lib/tools');
 const { registerMissing } = require('./lib/missing');
-/* Service unique d'envoi WhatsApp (G2) : tout envoi passe par send() */
-const { send } = require('./lib/wa-send');
+/* Service unique d'envoi WhatsApp (G2) : tout envoi passe par send()
+   MODULE 2 : typingOn/typingOff = présence « écrit… », implémentation
+   UNIQUE dans wa-send (humanisation du transport — plus de copie ici) */
+const { send, typingOn, typingOff } = require('./lib/wa-send');
 /* Durées éphémères partagées (.disappear ↔ .community ephemeral) */
 const { parseEphemeral } = require('./lib/ephemeral');
 
@@ -51,6 +53,8 @@ const { parse: guardParse, unwrap, textOf, ctxInfo } = require('./guard/src/util
 const guardPerms = require('./guard/src/utils/perms');
 /* MODULE 1 : autorisations (owner/sudo/accepted) — implémentation unique */
 const auth = require('./lib/auth');
+/* MODULE 2 : détection de conflits bot↔bot + pause de chat */
+const conflict = require('./lib/conflict');
 const guardEvents = require('./guard/src/events');
 const guardUi = require('./guard/src/ui');
 const { findLinks } = require('./guard/src/utils/links');
@@ -341,12 +345,18 @@ setInterval(() => {
   for (const [k, r] of rateMap) if (now - r.ts > 30000) rateMap.delete(k);
 }, 30000).unref();
 
-/* Présence Baileys : indicateur « écrit... » pendant l'exécution d'une commande */
-function typingOn(sock, jid) {
-  if (config.autoTyping && jid) sock.sendPresenceUpdate('composing', jid).catch(() => {});
-}
-function typingOff(sock, jid) {
-  if (config.autoTyping && jid) sock.sendPresenceUpdate('paused', jid).catch(() => {});
+/* ── MODULE 2 : avertissement envoyé à la 1ʳᵉ détection de conflit ──
+   Appelé aux deux points de détection de handleMessage (signature de
+   cadre / ping-pong rapide, et participant isBot). Une seule fois. */
+function avertirConflit(sock, msg, chat, raison) {
+  console.log(`[CONFLIT] pause ${chat} — ${raison}`);
+  send(sock, chat, {
+    text: renderError([
+      'CONFLIT DÉTECTÉ — UN AUTRE BOT RÉPOND SUR CE CHAT',
+      'COMMANDES ET RÉPONSES EN PAUSE',
+      'OWNER : .UNPAUSE POUR REPRENDRE',
+    ]),
+  }, { quoted: msg }).catch(() => {});
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -2414,6 +2424,31 @@ cmd('accepted', ['acceptes', 'autorises'], {
   return ctx.success(['UTILISATEURS ACCEPTÉS', ...lignes]);
 });
 
+/* ── MODULE 2 — commandes de gestion des conflits (owner) ── */
+cmd('unpause', ['reprendre'], {
+  cat: 9, desc: 'Reprendre un chat mis en pause (conflit bot↔bot)',
+  usage: 'unpause · unpause all', owner: true, icon: '▶️',
+}, async (ctx) => {
+  const a = (ctx.args[0] || '').toLowerCase();
+  if (['all', 'tous', 'tout'].includes(a)) {
+    const liste = conflict.status();
+    let n = 0;
+    for (const c of liste) if (conflict.resume(c.chat)) n += 1;
+    return ctx.success(['PAUSES LEVÉES', `${n} CHAT(S) REPRISENT`]);
+  }
+  if (conflict.resume(ctx.from)) return ctx.success(['REPRISE', 'LES RÉPONSES SONT DE NOUVEAU ACTIVES']);
+  return ctx.error(['AUCUNE PAUSE ICI', 'CE CHAT N’EST PAS EN CONFLIT']);
+});
+
+cmd('conflicts', ['conflit', 'pauses'], {
+  cat: 9, desc: 'Lister les chats en pause (conflit bot↔bot)',
+  usage: 'conflicts', owner: true, icon: '⛔',
+}, async (ctx) => {
+  const liste = conflict.status();
+  if (!liste.length) return ctx.success(['AUCUN CONFLIT', 'ZÉRO CHAT EN PAUSE']);
+  return ctx.success(['CHATS EN PAUSE', ...liste.map((c) => `⛔ ${shortChat(c.chat)} — ${c.reason}`)]);
+});
+
 cmd('sudo', {
   cat: 9, desc: 'Gérer les sudo (co-owners autorisés)', usage: 'sudo add|del|list <numéro>', owner: true, icon: '🔑',
 }, async (ctx) => {
@@ -3199,6 +3234,17 @@ async function handleMessage(sock, msg) {
     const senderNum = num(sender);
     const senderAlt = msg.key.participantAlt || msg.key.senderPn || null; // numéro réel quand l'ID est un LID
 
+    /* ── MODULE 2 : observation du conflit bot↔bot ──────────────────
+       AVANT le filtre d'échos ci-dessous : on doit voir aussi nos
+       propres réponses (fromMe) pour compter les allers-retours. */
+    const conflit = conflict.observe({
+      chat: from,
+      text,
+      fromMe,
+      owner: fromMe || auth.isOwner(senderNum) || auth.isSudo(senderNum),
+    });
+    if (conflit.first) avertirConflit(sock, msg, from, conflit.reason);
+
     // Ignore les échos de nos propres messages (sauf commandes owner testées en « moi-même »)
     if (fromMe && text && !text.startsWith(config.prefix)) {
       putCache(from, msg.key.id, msg);
@@ -3224,6 +3270,7 @@ async function handleMessage(sock, msg) {
     /* ── Auto-réaction aux messages entrants (flag AUTO_REACT) ── */
     if (
       config.autoReact &&
+      !conflict.isPaused(from) &&
       !fromMe &&
       !content?.reactionMessage &&
       !content?.protocolMessage &&
@@ -3258,6 +3305,12 @@ async function handleMessage(sock, msg) {
       meta = await groupMeta(sock, from);
       base.isAdmin = isAdminIn(meta, sender) || base.isOwner;
       base.isBotAdmin = botIsAdmin(sock, meta);
+      /* ── MODULE 2 : participant marqué isBot par le serveur WhatsApp
+            (champ hors types Baileys, parfois présent) → conflit ── */
+      if (conflict.hasBotParticipant(meta, botNum)) {
+        const hit = conflict.markPaused(from, 'participant-isbot');
+        if (hit.first) avertirConflit(sock, msg, from, hit.reason);
+      }
     }
 
     /* ── PROTECTIONS DE GROUPE
@@ -3267,6 +3320,11 @@ async function handleMessage(sock, msg) {
     if (isGroup && !fromMe && !isCommandText) {
       if (await runGroupProtections(sock, msg, base, text, meta)) return;
     }
+
+    /* ── MODULE 2 : chat EN PAUSE (conflit bot↔bot) — OWNER EXCEPTÉ
+          (il garde la main pour diagnostiquer et lancer .unpause).
+          Les protections ci-dessus continuent de s'appliquer. ── */
+    if (conflict.isPaused(from) && !base.isOwner) return;
 
     /* Mode self : les non-owners sont ignorés totalement */
     if ((config.selfMode || state.settings.selfMode) && !base.isOwner && !fromMe) {

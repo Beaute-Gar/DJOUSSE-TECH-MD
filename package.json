@@ -9,7 +9,7 @@
         "prestart": "node scripts/audit.js",
         "audit": "node scripts/audit.js",
         "audit:deps": "node scripts/audit.js --deps",
-        "test": "node --test test/auth.test.js test/command-access.test.js test/http-get.test.js test/network-timeout.test.js",
+        "test": "node --test test/auth.test.js test/command-access.test.js test/conflict.test.js test/http-get.test.js test/network-timeout.test.js test/wa-send.test.js",
         "check": "node --check index.js && node --check handler.js && node --check config.js && node --check scripts/audit.js"
     },
     "keywords": [
