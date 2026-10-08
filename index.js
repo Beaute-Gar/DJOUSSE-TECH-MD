@@ -713,6 +713,34 @@ async function startSession(options = {}) {
   return sock;
 }
 
+/**
+ * Détache la session déjà enregistrée, À LA DEMANDE d'un opérateur.
+ *
+ * Sans ça, « Demander un QR » (ou « Générer le code ») relance un socket qui
+ * se reconnecte silencieusement avec des creds valides : aucun QR, aucun code,
+ * et l'écran qui attend tourne à vide — exactement le « rien ne fonctionne »
+ * constaté le 07/10. On ne purge QUE sur demande explicite (jamais au
+ * démarrage), et JAMAIS pendant une session connectée (le caller jette d'abord).
+ *
+ * @returns {boolean} true si une session a effectivement été détachée
+ */
+function purgeSessionForRelink() {
+  try {
+    const credsPath = path.join(__dirname, config.sessionDir, 'creds.json');
+    if (!fs.existsSync(credsPath)) return false;
+    const raw = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+    if (!raw.registered && !raw.me) return false; // rien à détacher
+    delete raw.me;
+    delete raw.pairingCode;
+    raw.registered = false;
+    fs.writeFileSync(credsPath, JSON.stringify(raw, null, 2));
+    return true;
+  } catch (e) {
+    rawError(`[SESSION] Détachement impossible : ${e.message}`);
+    return false;
+  }
+}
+
 /* Nettoyage creds du pairing (me/pairingCode) — jamais en mode QR */
 function purgePairingCreds(sessionDir, state) {
   try {
@@ -781,6 +809,18 @@ async function bridgeCommand(kind, payload) {
     }
 
     case 'qr': {
+      // Déjà en ligne : un socket avec des creds valides ne montre JAMAIS de
+      // QR — on dit plutôt que rien ne se passe. On renvoie une erreur lisible
+      // (le site l'affiche en « échec ») au lieu d'un faux succès.
+      if (bridge.connected) {
+        throw new Error(
+          `le bot est déjà connecté (${bridgeStatus().number || 'session active'}) : `
+          + 'envoyez STOP depuis la console, puis redemandez le QR',
+        );
+      }
+      if (purgeSessionForRelink()) {
+        rawLog('[SESSION] 🔑 Session précédente détachée à la demande — préparation d\'un nouveau QR.');
+      }
       handler.persistConnectMethod('qr', '');
       bridge.method = 'qr';
       bridge.qr = null; bridge.code = null; bridge.codeFor = null;
@@ -792,6 +832,18 @@ async function bridgeCommand(kind, payload) {
       const phone = String(payload || '').replace(/\D/g, '');
       if (phone.length < 8 || phone.length > 15) {
         throw new Error('numéro invalide : 8 à 15 chiffres attendus');
+      }
+      // Même piège que le QR : connecté → requestPairing() est ignoré par
+      // Baileys (creds.registered) et le site afficherait un code qui n'arrive
+      // jamais. On préfère une erreur explicite.
+      if (bridge.connected) {
+        throw new Error(
+          `le bot est déjà connecté (${bridgeStatus().number || 'session active'}) : `
+          + 'envoyez STOP depuis la console, puis régénérez le code',
+        );
+      }
+      if (purgeSessionForRelink()) {
+        rawLog('[SESSION] 🔑 Session précédente détachée à la demande — nouveau code d\'appairage.');
       }
       handler.persistConnectMethod('pairing', phone);
       bridge.method = 'pairing';
