@@ -46,6 +46,8 @@ function startServer() {
         '.js': 'application/javascript; charset=utf-8',
         '.json': 'application/json; charset=utf-8',
         '.svg': 'image/svg+xml',
+        '.txt': 'text/plain; charset=utf-8',
+        '.xml': 'application/xml; charset=utf-8',
       };
       res.writeHead(200, { 'content-type': types[ext] || 'application/octet-stream' });
       res.end(fs.readFileSync(file));
@@ -131,4 +133,26 @@ test('site : ressources internes cohérentes (favicon embarqué, pas de dépenda
   const externals = body.match(/(src|href)="https?:\/\/(?!github\.com|vigil-delta-lake)/g) || [];
   assert.strictEqual(externals.length, 0, `dépendances externes : ${externals.join(', ')}`);
   assert.match(body, /rel="icon" href="data:image\/svg/);
+  // landmark unique attendu par les lecteurs d'écran (Lighthouse)
+  assert.match(body, /<main>/);
+  assert.match(body, /<\/main>/);
+});
+
+test('site : robots.txt + sitemap.xml servis en fichiers (jamais réécrits en HTML)', async (t) => {
+  const srv = await startServer();
+  t.after(() => srv.close());
+  const base = `http://127.0.0.1:${srv.address().port}`;
+
+  const r1 = await fetch(`${base}/robots.txt`);
+  assert.strictEqual(r1.status, 200);
+  assert.ok((r1.headers.get('content-type') || '').includes('text/plain'));
+  const robots = await r1.text();
+  assert.match(robots, /User-agent: \*/);
+  assert.match(robots, /Allow: \//);
+  assert.ok(!robots.startsWith('<!DOCTYPE'), 'robots.txt réécrit vers index.html → SEO cassé');
+
+  const r2 = await fetch(`${base}/sitemap.xml`);
+  const sitemap = await r2.text();
+  assert.ok(sitemap.trimStart().startsWith('<?xml'), 'sitemap.xml réécrit vers index.html');
+  assert.match(sitemap, /djousse-tech-md\.vercel\.app/);
 });

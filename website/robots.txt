@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://djousse-tech-md.vercel.app/sitemap.xml
