@@ -144,7 +144,8 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 **🩺 Diagnostics**
 - `.diag` — état socket, version WA, conflits 440, mémoire
 - `.menu qr` / `.menu pairing <num>` — bascule de connexion
-- `.getonce` (alias `.vv`) — photo, vidéo, **vocal** et document → sauvegardés dans `downloads/`
+- `.vv` — récupère une vue unique citée (photo, vidéo, **vocal**, document ou sticker), sauvegardée dans `downloads/`
+- Photo de profil du bot — portrait anime local actualisé au démarrage après connexion
 - `.sessions` — chemins actifs (session + base locale)
 
 </td>
@@ -331,6 +332,12 @@ PREFIX=.
 CONNECT_METHOD=
 PAIRING_PHONE=
 
+# ── Photo du profil WhatsApp ─────────────────────
+# local = portrait anime fourni · random = nouvelle image anime SFW via API · off = ne rien changer
+PROFILE_PICTURE_MODE=local
+# Obligatoire si PROFILE_PICTURE_MODE=local (chemin relatif à la racine ou chemin absolu)
+PROFILE_PICTURE_PATH=assets/anime-profile.jpg
+
 # ── IA (optionnel) ───────────────────────────────
 # Sans clé, .ai renvoie un message explicite.
 GEMINI_KEY=
@@ -360,6 +367,8 @@ AUTO_READ=1
 LINK_PREVIEW=1
 MSG_CACHE_MAX=800
 ```
+
+L’image [`assets/anime-profile.jpg`](./assets/anime-profile.jpg) provient de [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Anime_girl_portrait.jpg) et est publiée dans le domaine public.
 
 ### 3. Démarrer
 
@@ -468,6 +477,7 @@ présents à la migration sont **conservés** : un retour en arrière reste poss
 ```bash
 npm run audit          # sécurité, cohérence des dépendances, structure
 npm run audit:deps     # audit des dépendances uniquement
+npm test               # tests automatisés des permissions et délais réseau
 npm run check          # node --check sur index / handler / config / audit
 ```
 

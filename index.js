@@ -199,6 +199,7 @@ const skipJid = (jid) => handler.isSystemJid(jid) && jid !== STATUS_JID; // sour
    ══════════════════════════════════════════════════════════════ */
 
 let sessionEpoch = 0;          // anti-démarrage concurrent → jamais 2 sockets
+let profilePictureAttempted = false;
 let activeSock = null;
 let conflictCount = 0;         // 440 connectionReplaced
 let handshakeFailCount = 0;    // 405 handshake rejeté
@@ -524,6 +525,12 @@ async function startSession(options = {}) {
       bridge.connected = true;
       bridge.qr = null;
       rawLog('[SOCKET] ✅ CONNECTÉ —', sock.user?.id || 'session active');
+      if (!profilePictureAttempted) {
+        profilePictureAttempted = true;
+        handler.updateBotProfilePicture(sock).catch((error) => {
+          console.error('[PROFILE] Actualisation automatique impossible:', error.message);
+        });
+      }
       waStats.connects++;
       waStats.connectedSince = Date.now();
       localDb.logEvent({ type: 'connect', detail: sock.user?.id || 'session' });

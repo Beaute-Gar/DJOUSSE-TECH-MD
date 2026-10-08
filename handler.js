@@ -32,6 +32,8 @@ const https = require('https');
 const ffmpegPath = require('ffmpeg-static');
 const { initStore, getStore } = require('./lib/store');
 const { initScheduler, getScheduler } = require('./lib/scheduler');
+const { commandAccess } = require('./lib/command-access');
+const { withNetworkTimeout } = require('./lib/network-timeout');
 const { registerExtras } = require('./lib/extras');
 /* Conversion vidéo via ffmpeg-static — helper partagé (voir lib/wa-sticker.js) */
 const { ffmpegBuffer } = require('./lib/ffmpeg');
@@ -255,11 +257,29 @@ function isOnceContent(raw) {
     const inner = cur.ephemeralMessage?.message
       || cur.documentWithCaptionMessage?.message
       || (cur.editedMessage?.message?.protocolMessage?.editedMessage)
+      || cur.editedMessage?.message
       || null;
     if (!inner) return false;
     cur = inner;
   }
   return false;
+}
+
+function unwrapOnce(raw) {
+  let current = raw;
+  for (let i = 0; i < 6 && current; i++) {
+    const next = current.ephemeralMessage?.message
+      || current.viewOnceMessage?.message
+      || current.viewOnceMessageV2?.message
+      || current.viewOnceMessageV2Extension?.message
+      || current.documentWithCaptionMessage?.message
+      || current.editedMessage?.message?.protocolMessage?.editedMessage
+      || current.editedMessage?.message
+      || null;
+    if (!next) break;
+    current = next;
+  }
+  return current || null;
 }
 
 /* textOf() et ctxInfo() ne sont plus définis ici : implementations uniques
@@ -460,6 +480,40 @@ async function downloadVV(sock, info) {
   };
 }
 
+/* Cible d'une récupération .vv : préférer le message complet du cache,
+   sinon reconstruire la clé à partir du message cité. */
+function findOnceTarget(msg) {
+  const ci = ctxInfo(unwrapOnce(msg?.message));
+  const quotedId = ci?.stanzaId;
+  const cached = quotedId ? getCache(msg.key?.remoteJid, quotedId)?.msg : null;
+  if (cached?.message) return cached;
+  if (!ci?.quotedMessage) return null;
+  return {
+    key: {
+      remoteJid: msg.key.remoteJid,
+      fromMe: false,
+      id: quotedId || `quoted-${Date.now()}`,
+      participant: ci.participant,
+    },
+    message: ci.quotedMessage,
+  };
+}
+
+/* Résout le média directement dans le message cible, sans suivre une
+   éventuelle citation imbriquée présente dans le média lui-même. */
+function onceMediaInfo(target) {
+  const content = unwrapOnce(target?.message);
+  if (!content) return null;
+  const type = Object.keys(VV_EXT).find((key) => content[key]);
+  if (!type) return null;
+  return {
+    target,
+    type,
+    mimetype: content[type]?.mimetype,
+    content,
+  };
+}
+
 /* ── VUE UNIQUE — envoi du média récupéré ──────────────────────
    Structure de référence (sendRecovered) : un branchement par type,
    puis message texte pour les types sans légende (audio/sticker).
@@ -493,27 +547,88 @@ async function sendRecovered(sock, jid, result, quoted, caption) {
   }
 }
 
+async function updateBotProfilePicture(sock) {
+  if (!sock?.user?.id) throw new Error('Socket WhatsApp non connecté.');
+  if (config.profilePictureMode === 'off') {
+    console.log('[PROFILE] Actualisation automatique désactivée.');
+    return false;
+  }
+
+  let image;
+  if (config.profilePictureMode === 'local') {
+    if (!config.profilePicturePath) {
+      throw new Error('PROFILE_PICTURE_PATH doit désigner un fichier image local.');
+    }
+    const imagePath = path.resolve(__dirname, config.profilePicturePath);
+    image = fs.readFileSync(imagePath);
+  } else {
+    image = await withNetworkTimeout(async (signal) => {
+      const apiResponse = await fetch('https://api.waifu.pics/sfw/waifu', { signal });
+      if (!apiResponse.ok) throw new Error(`API anime a répondu HTTP ${apiResponse.status}.`);
+      if (!apiResponse.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('L’API anime n’a pas retourné de JSON.');
+      }
+      const { url } = await apiResponse.json();
+      let imageUrl;
+      try {
+        imageUrl = new URL(url);
+      } catch {
+        throw new Error('URL d’image anime invalide.');
+      }
+      if (imageUrl.protocol !== 'https:' || imageUrl.hostname !== 'i.waifu.pics') {
+        throw new Error('Hôte d’image anime non autorisé.');
+      }
+      const response = await fetch(imageUrl, { signal });
+      if (!response.ok) throw new Error(`Téléchargement anime HTTP ${response.status}.`);
+      if (!response.headers.get('content-type')?.startsWith('image/')) {
+        throw new Error('Le service anime n’a pas retourné une image.');
+      }
+      const declaredSize = Number(response.headers.get('content-length') || 0);
+      if (declaredSize > 10 * 1024 * 1024) throw new Error('Image anime trop volumineuse.');
+      if (!response.body) throw new Error('Réponse image anime vide.');
+      const reader = response.body.getReader();
+      const chunks = [];
+      let total = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > 10 * 1024 * 1024) {
+          await reader.cancel();
+          throw new Error('Image anime trop volumineuse.');
+        }
+        chunks.push(Buffer.from(value));
+      }
+      return Buffer.concat(chunks, total);
+    }, 30000, 'Téléchargement image anime SFW');
+  }
+  if (!image.length || image.length > 10 * 1024 * 1024) {
+    throw new Error('Taille de l’image téléchargée invalide.');
+  }
+  const profilePicture = await sharp(image)
+    .resize(640, 640, { fit: 'cover' })
+    .jpeg({ quality: 85 })
+    .toBuffer();
+  await sock.updateProfilePicture(sock.user.id, profilePicture);
+  const source = config.profilePictureMode === 'random' ? 'anime SFW aléatoire' : 'fichier local';
+  console.log(`[PROFILE] Photo du bot actualisée (${source}, ${profilePicture.length} octets).`);
+}
+
 /* ════════════════════════════════════════════════════════════
    AUTO-SAUVEGARDE VUE UNIQUE (.autonce on)
    WhatsApp interdit de conserver un média « vue unique » :
    quand l'option est active sur un chat, chaque média vue unique
    reçu est téléchargé et envoyé en privé au propriétaire.
    ════════════════════════════════════════════════════════════ */
-async function autoSaveOnce(sock, msg, content, from, sender) {
+async function autoSaveOnce(sock, msg, from, sender) {
   try {
-    const isVideo = !!content.videoMessage;
-    if (!isVideo && !content.imageMessage) return;
+    const info = onceMediaInfo(msg);
+    if (!info || !['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'stickerMessage'].includes(info.type)) return;
     state.onceCd = state.onceCd || {};
     if (state.onceCd[from] && Date.now() - state.onceCd[from] < 60000) return;
     state.onceCd[from] = Date.now();
     const ownerJid = `${config.ownerNumber[0]}@s.whatsapp.net`;
-    const node = isVideo ? content.videoMessage : content.imageMessage;
-    const result = await downloadVV(sock, {
-      target: msg,
-      type: isVideo ? 'videoMessage' : 'imageMessage',
-      mimetype: node?.mimetype,
-      content,
-    });
+    const result = await downloadVV(sock, info);
     const chatLabel = from.endsWith('@g.us') ? `GROUPE ${num(from)}` : 'CHAT PRIVÉ';
     await sendRecovered(sock, ownerJid, result, null, renderSuccess([
       'VUE UNIQUE RÉCUPÉRÉE',
@@ -553,12 +668,15 @@ async function askGemini(prompt, media = null) {
   if (media?.data?.length) {
     parts.push({ inline_data: { mime_type: media.mime, data: media.data.toString('base64') } });
   }
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ role: 'user', parts }] }),
-  });
-  const json = await res.json();
+  const json = await withNetworkTimeout(async (signal) => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts }] }),
+      signal,
+    });
+    return res.json();
+  }, 30000, 'Gemini');
   const text = json?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('').trim();
   if (text) return text;
   throw new Error(json?.error?.message || 'Réponse IA vide');
@@ -1482,30 +1600,30 @@ cmd('viewonce', ['vo', 'vueonce'], {
   }
 });
 
-cmd('getonce', ['vv', 'recuponce', 'sauveonce'], {
+cmd('vv', {
   cat: 4, desc: 'Récupérer un média en vue unique',
-  usage: 'getonce|vv (réponds à un média vue unique)', icon: '🔓',
+  usage: 'vv (réponds à un média vue unique)', icon: '🔓',
 }, async (ctx) => {
   /* ── Échelle de diagnostic : chaque refus dit POURQUOI, pas juste
         « ce n'est pas bon ». L'erreur la plus fréquente était un
         message média répondu à tort (l'autre bout du fil) ou un média
         déjà consommé par le destinataire. ── */
-  const ci = ctxInfo(ctx.content);
-  if (!ci?.quotedMessage) {
+  const target = findOnceTarget(ctx.msg);
+  if (!target) {
     return ctx.error([
       'AUCUN MESSAGE CITÉ',
       'RÉPONDS DIRECTEMENT AU MÉDIA VUE UNIQUE',
-      `PUIS ${config.prefix}GETONCE`,
+      `PUIS ${config.prefix}VV`,
     ]);
   }
-  if (!isOnceContent(ci.quotedMessage)) {
+  if (!isOnceContent(target.message)) {
     return ctx.error([
       'CE MESSAGE N’EST PAS EN VUE UNIQUE',
       'VÉRIFIE QUE TU CITTES LE MÉDIA LUI-MÊME',
       '(PAS UN AUTRE MESSAGE DU MÊME FIL)',
     ]);
   }
-  const info = mediaInfo(ctx.msg);
+  const info = onceMediaInfo(target);
   if (!info) {
     return ctx.error([
       'MÉDIA CITÉ INTROUVABLE OU EXPIRÉ',
@@ -1513,12 +1631,11 @@ cmd('getonce', ['vv', 'recuponce', 'sauveonce'], {
       'DEMANDE-LUI DE RENVOYER LE MÉDIA',
     ]);
   }
-  /* WhatsApp autorise vue unique : photo, vidéo, audio ET document.
-     Refuser audio/document laissait croire à un bug côté bot. */
-  if (!['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage'].includes(info.type)) {
+  /* Les médias view-once incluent également les stickers. */
+  if (!['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'stickerMessage'].includes(info.type)) {
     return ctx.error([
       `TYPE NON GÉRÉ : ${String(info.type).replace('Message', '').toUpperCase()}`,
-      'TYPES ACCEPTÉS : PHOTO, VIDÉO, AUDIO, DOCUMENT',
+      'TYPES ACCEPTÉS : PHOTO, VIDÉO, AUDIO, DOCUMENT, STICKER',
     ]);
   }
   await ctx.reply(config.messages.wait);
@@ -1630,8 +1747,11 @@ cmd('binary', { cat: 5, desc: 'Encoder/décoder binaire', usage: 'binary [decode
 cmd('weather', ['meteo'], { cat: 5, desc: 'Météo d’une ville', usage: 'weather <ville>' }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}weather Douala`);
   try {
-    const res = await fetch(`https://wttr.in/${encodeURIComponent(ctx.q.slice(0, 60))}?format=j1`);
-    const data = await res.json();
+    const data = await withNetworkTimeout(async (signal) => {
+      const res = await fetch(`https://wttr.in/${encodeURIComponent(ctx.q.slice(0, 60))}?format=j1`, { signal });
+      if (!res.ok) throw new Error(`wttr.in a répondu HTTP ${res.status}.`);
+      return res.json();
+    }, 15000, 'Météo');
     const c = data.current_condition?.[0];
     if (!c) throw new Error('ville introuvable');
     const area = data.nearest_area?.[0]?.areaName?.[0]?.value || ctx.q;
@@ -1769,8 +1889,11 @@ cmd('rate', { cat: 7, desc: 'Noter un sujet', usage: 'rate <chose>' }, async (ct
 
 cmd('joke', { cat: 7, desc: 'Une blague' }, async (ctx) => {
   try {
-    const res = await fetch('https://official-joke-api.appspot.com/random_joke');
-    const j = await res.json();
+    const j = await withNetworkTimeout(async (signal) => {
+      const res = await fetch('https://official-joke-api.appspot.com/random_joke', { signal });
+      if (!res.ok) throw new Error(`API blagues HTTP ${res.status}.`);
+      return res.json();
+    }, 15000, 'API blagues');
     await ctx.reply(`😂 ${j.setup}\n\n*${j.punchline}*`);
   } catch (e) {
     await ctx.reply('❌ Blague indisponible.');
@@ -1783,10 +1906,12 @@ cmd('wiki', { cat: 8, desc: 'Résumé Wikipédia', usage: 'wiki <sujet>' }, asyn
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}wiki Cameroun`);
   const query = ctx.q.slice(0, 120);
   try {
-    let res = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
-    if (!res.ok) res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
-    if (!res.ok) throw new Error('article introuvable');
-    const j = await res.json();
+    const j = await withNetworkTimeout(async (signal) => {
+      let res = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`, { signal });
+      if (!res.ok) res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`, { signal });
+      if (!res.ok) throw new Error('article introuvable');
+      return res.json();
+    }, 15000, 'Wikipédia');
     await ctx.reply(`📖 *${j.title}*\n\n${(j.extract || '').slice(0, 1500)}\n\n🔗 ${j.content_urls?.desktop?.page || ''}`);
   } catch (e) {
     await ctx.reply(`❌ Wikipédia : ${e.message}`);
@@ -1796,9 +1921,11 @@ cmd('wiki', { cat: 8, desc: 'Résumé Wikipédia', usage: 'wiki <sujet>' }, asyn
 cmd('github', { cat: 8, desc: 'Profil GitHub', usage: 'github <utilisateur>' }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}github Beaute-Gar`);
   try {
-    const res = await fetch(`https://api.github.com/users/${encodeURIComponent(ctx.args[0])}`);
-    if (!res.ok) throw new Error('utilisateur introuvable');
-    const j = await res.json();
+    const j = await withNetworkTimeout(async (signal) => {
+      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(ctx.args[0])}`, { signal });
+      if (!res.ok) throw new Error('utilisateur introuvable');
+      return res.json();
+    }, 15000, 'GitHub');
     await ctx.reply(
       `🐙 *@${j.login}*\n` +
       `Nom : ${j.name || '—'}\n` +
@@ -1819,8 +1946,11 @@ cmd('convert', { cat: 8, desc: 'Conversion de devises', usage: 'convert 100 USD 
   const from = m[2].toUpperCase();
   const to = m[3].toUpperCase();
   try {
-    const res = await fetch(`https://open.er-api.com/v6/latest/${from}`);
-    const j = await res.json();
+    const j = await withNetworkTimeout(async (signal) => {
+      const res = await fetch(`https://open.er-api.com/v6/latest/${from}`, { signal });
+      if (!res.ok) throw new Error(`Service de change HTTP ${res.status}.`);
+      return res.json();
+    }, 15000, 'Conversion de devises');
     const rate = j.rates?.[to];
     if (!rate) throw new Error('devise inconnue');
     await ctx.reply(`💱 *${amount} ${from}* = *${(amount * rate).toFixed(2)} ${to}*\nTaux : 1 ${from} = ${rate} ${to}`);
@@ -2530,7 +2660,11 @@ function findTmp(base) {
 async function ytResolve(query) {
   const m = String(query || '').match(YT_URL_RE);
   if (m) {
-    const v = await yts({ videoId: m[1] });
+    const v = await withNetworkTimeout(
+      () => yts({ videoId: m[1] }),
+      20000,
+      'Recherche YouTube'
+    );
     if (!v?.videoId) return null;
     const seconds = Math.floor(v.duration?.seconds) ||
       String(v.timestamp || '').split(':').reduce((acc, p) => acc * 60 + Number(p), 0) || 0;
@@ -2541,7 +2675,11 @@ async function ytResolve(query) {
       seconds,
     };
   }
-  const r = await yts(query);
+  const r = await withNetworkTimeout(
+    () => yts(query),
+    20000,
+    'Recherche YouTube'
+  );
   const v = r?.videos?.[0];
   if (!v) return null;
   return {
@@ -2726,31 +2864,36 @@ async function executeCommand(sock, msg, name, args, base) {
     },
   };
 
-  /* Permissions */
-  if (config.selfMode || state.settings.selfMode) {
-    if (!ctx.isOwner && !msg.key.fromMe) return true; // silencieux
-  }
-
   /* ── MODULE 1 : GATE D'ACCÈS STRICT ─────────────────────────────
      Ni owner, ni sudo, ni « accepted » (.accept) → AUCUNE commande.
-     Premier refus = message d'explication, suivants (60 s) = silencieux
-     (anti-spam). Les protections de groupe (guard/) passent AVANT ce
-     point : elles continuent de protéger même pour un inconnu. */
-  if (!msg.key.fromMe && !auth.canRun(ctx.sender)) {
-    if (auth.shouldNotifyGate(ctx.sender)) {
-      await ctx.error([
-        'ACCÈS RESTREINT',
-        'CE BOT EST PRIVÉ — OWNER OU ACCEPTÉS UNIQUEMENT',
-        'DEMANDE L’ACCÈS AU PROPRIÉTAIRE DU BOT',
-      ]);
+     Les protections de groupe (guard/) passent AVANT ce point. */
+  const access = commandAccess(entry, {
+    isOwner: ctx.isOwner,
+    fromMe: !!msg.key.fromMe,
+    isGroup: ctx.isGroup,
+    isAdmin: ctx.isAdmin,
+    isBotAdmin: ctx.isBotAdmin,
+  }, {
+    selfMode: config.selfMode || state.settings.selfMode,
+    canRun: () => auth.canRun(ctx.sender),
+  });
+  if (!access.allowed) {
+    if (access.silent) return true;
+    if (access.reason === 'PRIVATE') {
+      if (auth.shouldNotifyGate(ctx.sender)) {
+        await ctx.error([
+          'ACCÈS RESTREINT',
+          'CE BOT EST PRIVÉ — OWNER OU ACCEPTÉS UNIQUEMENT',
+          'DEMANDE L’ACCÈS AU PROPRIÉTAIRE DU BOT',
+        ]);
+      }
+      return true;
     }
-    return true;
+    if (access.reason === 'OWNER') return ctx.error([config.messages.ownerOnly.toUpperCase()]), true;
+    if (access.reason === 'GROUP') return ctx.error([config.messages.groupOnly.toUpperCase()]), true;
+    if (access.reason === 'ADMIN') return ctx.error([config.messages.adminOnly.toUpperCase()]), true;
+    if (access.reason === 'BOT_ADMIN') return ctx.error([config.messages.botAdminNeeded.toUpperCase()]), true;
   }
-
-  if (entry.owner && !ctx.isOwner) return ctx.error([config.messages.ownerOnly.toUpperCase()]), true;
-  if (entry.group && !ctx.isGroup) return ctx.error([config.messages.groupOnly.toUpperCase()]), true;
-  if (entry.admin && ctx.isGroup && !ctx.isAdmin && !ctx.isOwner) return ctx.error([config.messages.adminOnly.toUpperCase()]), true;
-  if (entry.botAdmin && ctx.isGroup && !ctx.isBotAdmin) return ctx.error([config.messages.botAdminNeeded.toUpperCase()]), true;
 
   /* Saisie en attente (§9) : argument requis absent → on invite à
      répondre ; le prochain message texte sera passé en argument. */
@@ -3158,7 +3301,7 @@ async function handleMessage(sock, msg) {
 
     /* ── Vue unique reçue → auto-sauvegarde (.autonce on) ── */
     if (!fromMe && !isOwnerJid(sender) && state.once?.[from] && isOnceContent(msg.message)) {
-      await autoSaveOnce(sock, msg, content, from, sender);
+      await autoSaveOnce(sock, msg, from, sender);
     }
 
     if (!text) return;
@@ -3516,6 +3659,7 @@ module.exports = {
   getCache,
   getScheduler,
   getStore,
+  updateBotProfilePicture,
   // Commutateur QR/Pairing : utilisé par .menu qr|pairing ET par le pont Vigil
   persistConnectMethod,
 };
