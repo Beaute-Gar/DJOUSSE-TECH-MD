@@ -291,7 +291,6 @@
       <span class="badge">version <b>4.0.0</b></span>
       <span class="badge">Baileys <b>6.7.24</b></span>
       <span class="badge">Node.js <b>≥ 18</b></span>
-      <span class="badge">tests <b>115/115 ✓</b></span>
       <span class="badge">prefix <b>.</b></span>
     </div>
 
@@ -364,8 +363,6 @@
             <strong style="color:var(--txt)">analyse de chaque fichier et de chaque message</strong>,
             verdict rendu avec nom de règle, sévérité et action.
             Écriture atomique sur disque : rien ne se perd à l'arrêt.
-            Le tout est <strong style="color:var(--green)">testé en réel</strong> —
-            <span style="font-family:var(--mono)">node --test</span> : 115 tests, 0 échec, 0 doublon.
           </p>
           <div class="chips">
             <span class="chip">antilink</span><span class="chip">antibad</span>
@@ -473,40 +470,6 @@
   </div>
 </footer>
 
-<script>
-  // menu mobile
-  document.getElementById('burger').addEventListener('click', function(){
-    document.getElementById('menu').classList.toggle('open');
-  });
-  document.querySelectorAll('#menu a').forEach(function(a){
-    a.addEventListener('click', function(){ document.getElementById('menu').classList.remove('open'); });
-  });
-
-  // révélation au défilement
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
-  }, { threshold: .12 });
-  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
-
-  // compteurs animés (valeurs réelles issues du bot)
-  var counted = false;
-  var statsIo = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(!e.isIntersecting || counted) return;
-      counted = true;
-      document.querySelectorAll('[data-count]').forEach(function(el){
-        var target = +el.dataset.count, start = performance.now(), dur = 900;
-        function tick(now){
-          var p = Math.min((now - start) / dur, 1);
-          el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
-          if(p < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-      });
-    });
-  }, { threshold: .4 });
-  var firstStat = document.querySelector('.stats');
-  if(firstStat) statsIo.observe(firstStat);
-</script>
+<script src="/js/site.js"></script>
 </body>
 </html>
