@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DJOUSSE TECH MD — Bot WhatsApp intelligent</title>
+<meta name="description" content="DJOUSSE TECH MD : bot WhatsApp en Node.js sur Baileys 6.7.24 — 309 commandes, 11 catégories, moteur de protections DJOUSSE GUARD, IA Gemini, stickers et téléchargements.">
+<meta name="theme-color" content="#0a0f0d">
+<meta property="og:title" content="DJOUSSE TECH MD — Bot WhatsApp intelligent">
+<meta property="og:description" content="309 commandes · 11 catégories · DJOUSSE GUARD · IA Gemini · Baileys 6.7.24">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+<style>
+  :root{
+    --bg:#070b0a;
+    --bg2:#0c1211;
+    --card:#101816;
+    --card2:#131d1a;
+    --line:#1d2b27;
+    --txt:#e8f2ee;
+    --muted:#8ba69d;
+    --green:#25d366;
+    --green2:#2ECC71;
+    --em:#0a3b25;
+    --radius:16px;
+    --mono:"Cascadia Code","SF Mono",Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--txt);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--green);color:#04140c}
+  a{color:inherit;text-decoration:none}
+
+  /* ── fond ── */
+  .glow{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(600px 400px at 80% -10%, rgba(37,211,102,.13), transparent 60%),
+      radial-gradient(500px 380px at 10% 20%, rgba(46,204,113,.07), transparent 60%),
+      radial-gradient(700px 500px at 50% 110%, rgba(37,211,102,.06), transparent 60%);
+  }
+  .grid-bg{
+    position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+    background-image:linear-gradient(rgba(37,211,102,.045) 1px, transparent 1px),
+                     linear-gradient(90deg, rgba(37,211,102,.045) 1px, transparent 1px);
+    background-size:44px 44px;
+    mask-image:radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 80%);
+  }
+
+  .wrap{max-width:1140px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
+
+  /* ── nav ── */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(7,11,10,.82);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px}
+  .logo .mark{
+    width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--green),#0e9f4f);
+    color:#04140c;font-size:18px;box-shadow:0 4px 18px rgba(37,211,102,.35);
+  }
+  .logo small{color:var(--green2);font-weight:700}
+  .nav-links{display:flex;gap:26px;align-items:center}
+  .nav-links a{color:var(--muted);font-size:14.5px;font-weight:600;transition:color .2s}
+  .nav-links a:hover{color:var(--green)}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 22px;border-radius:12px;font-weight:700;font-size:15px;
+    transition:transform .15s, box-shadow .15s, background .2s;cursor:pointer;border:0;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--green),#0e9f4f);color:#04140c;box-shadow:0 6px 24px rgba(37,211,102,.3)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(37,211,102,.42)}
+  .btn-ghost{background:var(--card);color:var(--txt);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--green);color:var(--green);transform:translateY(-2px)}
+  .burger{display:none;background:none;border:1px solid var(--line);border-radius:9px;color:var(--txt);font-size:20px;padding:4px 11px;cursor:pointer}
+
+  /* ── hero ── */
+  header{padding:88px 0 64px;text-align:center}
+  .pill{
+    display:inline-flex;align-items:center;gap:9px;
+    background:rgba(37,211,102,.09);border:1px solid rgba(37,211,102,.3);
+    color:var(--green);padding:7px 16px;border-radius:999px;
+    font-size:13.5px;font-weight:700;letter-spacing:.3px;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.55)}50%{box-shadow:0 0 0 7px rgba(37,211,102,0)}}
+  h1{
+    font-size:clamp(2.5rem,6.5vw,4.4rem);
+    font-weight:900;line-height:1.08;margin:26px 0 18px;letter-spacing:-1.5px;
+  }
+  h1 .grad{
+    background:linear-gradient(120deg,var(--green) 10%,#7ff0b0 50%,var(--green2) 90%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{max-width:680px;margin:0 auto;color:var(--muted);font-size:clamp(1rem,2vw,1.17rem)}
+  .cta{display:flex;gap:14px;justify-content:center;margin-top:34px;flex-wrap:wrap}
+
+  .badges{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+  .badge{
+    font-family:var(--mono);font-size:12.5px;font-weight:600;
+    background:var(--card);border:1px solid var(--line);color:var(--muted);
+    padding:6px 13px;border-radius:8px;
+  }
+  .badge b{color:var(--green);font-weight:700}
+
+  /* ── stats ── */
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:58px;
+  }
+  .stat{
+    background:linear-gradient(180deg,var(--card),var(--bg2));
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 14px;text-align:center;transition:border-color .2s, transform .2s;
+  }
+  .stat:hover{border-color:rgba(37,211,102,.45);transform:translateY(-4px)}
+  .stat .num{font-size:2.15rem;font-weight:900;color:var(--green);font-family:var(--mono)}
+  .stat .lab{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-top:4px}
+
+  /* ── sections ── */
+  section{padding:74px 0}
+  .sec-head{text-align:center;margin-bottom:44px}
+  .sec-head h2{font-size:clamp(1.7rem,3.6vw,2.4rem);font-weight:850;letter-spacing:-.6px}
+  .sec-head p{color:var(--muted);margin-top:10px;font-size:16px}
+  .eyebrow{
+    display:inline-block;color:var(--green);font-family:var(--mono);
+    font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:10px;
+  }
+
+  /* ── features ── */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .card{
+    background:linear-gradient(180deg,var(--card),var(--bg2));
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 24px;transition:transform .2s, border-color .2s, box-shadow .2s;
+    position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--green),transparent);
+    opacity:0;transition:opacity .25s;
+  }
+  .card:hover{transform:translateY(-5px);border-color:rgba(37,211,102,.4);box-shadow:0 14px 34px rgba(0,0,0,.4)}
+  .card:hover::before{opacity:1}
+  .card .ico{
+    width:46px;height:46px;border-radius:12px;display:grid;place-items:center;
+    background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);
+    font-size:22px;margin-bottom:16px;
+  }
+  .card h3{font-size:17.5px;font-weight:800;margin-bottom:9px}
+  .card p{color:var(--muted);font-size:14.6px}
+  .card code{
+    font-family:var(--mono);font-size:13px;background:rgba(37,211,102,.1);
+    color:var(--green);padding:2px 7px;border-radius:6px;display:inline-block;margin-top:6px;
+  }
+
+  /* ── guard ── */
+  .guard-box{
+    background:linear-gradient(135deg,rgba(37,211,102,.07),rgba(37,211,102,.02));
+    border:1px solid rgba(37,211,102,.28);border-radius:22px;padding:38px;
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+  .chip{
+    background:var(--card);border:1px solid var(--line);color:var(--txt);
+    font-family:var(--mono);font-size:13.4px;font-weight:600;
+    padding:9px 15px;border-radius:10px;transition:all .18s;
+  }
+  .chip:hover{border-color:var(--green);color:var(--green);transform:translateY(-2px)}
+  .guard-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:34px;align-items:center}
+
+  /* ── menu cats ── */
+  .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .cat{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 16px;display:flex;align-items:center;gap:13px;
+    transition:all .18s;cursor:default;
+  }
+  .cat:hover{border-color:rgba(37,211,102,.5);background:var(--card2);transform:translateY(-3px)}
+  .cat .n{
+    min-width:36px;height:36px;border-radius:9px;display:grid;place-items:center;
+    background:rgba(37,211,102,.12);color:var(--green);
+    font-family:var(--mono);font-weight:800;font-size:15px;border:1px solid rgba(37,211,102,.3);
+  }
+  .cat .name{font-weight:750;font-size:13.6px;letter-spacing:.3px;line-height:1.3}
+  .cat .count{color:var(--muted);font-size:12px;font-family:var(--mono)}
+
+  /* ── connexion ── */
+  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .step-card{
+    background:linear-gradient(180deg,var(--card),var(--bg2));
+    border:1px solid var(--line);border-radius:var(--radius);padding:28px;
+  }
+  .step-card h3{display:flex;align-items:center;gap:11px;font-size:18px;margin-bottom:16px}
+  .step-card h3 .num{
+    width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    background:var(--green);color:#04140c;font-size:14px;font-weight:900;font-family:var(--mono);
+  }
+  .step-card ol{margin-left:20px;color:var(--muted);font-size:15px}
+  .step-card ol li{margin:8px 0}
+  .step-card ol li b{color:var(--txt)}
+
+  /* ── install ── */
+  pre{
+    background:#0a0f0e;border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;overflow-x:auto;font-family:var(--mono);font-size:14.4px;line-height:1.85;
+  }
+  pre .c{color:#5c7a70}
+  pre .g{color:var(--green)}
+  pre .y{color:#e8c766}
+
+  /* ── footer ── */
+  footer{
+    border-top:1px solid var(--line);background:var(--bg2);
+    padding:44px 0 34px;margin-top:30px;
+  }
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+  .foot .links{display:flex;gap:22px;flex-wrap:wrap}
+  .foot .links a{color:var(--muted);font-size:14.5px;font-weight:600;transition:color .2s}
+  .foot .links a:hover{color:var(--green)}
+  .foot .cr{color:#5c7a70;font-size:13.5px}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease, transform .6s ease}
+  .reveal.on{opacity:1;transform:none}
+
+  @media (max-width:940px){
+    .cards{grid-template-columns:repeat(2,1fr)}
+    .cats{grid-template-columns:repeat(2,1fr)}
+    .guard-grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:640px){
+    .nav-links{
+      display:none;position:absolute;top:64px;left:0;right:0;
+      flex-direction:column;background:rgba(7,11,10,.97);
+      border-bottom:1px solid var(--line);padding:18px 22px;gap:16px;
+    }
+    .nav-links.open{display:flex}
+    .burger{display:block}
+    .cards,.cats,.steps,.stats{grid-template-columns:1fr}
+    header{padding:58px 0 40px}
+    .guard-box{padding:26px 20px}
+  }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="grid-bg"></div>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="logo" href="#">
+      <span class="mark">🤖</span>
+      <span>DJOUSSE <small>TECH MD</small></span>
+    </a>
+    <div class="nav-links" id="menu">
+      <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#guard">Guard</a>
+      <a href="#menu-cat">Menu 1–11</a>
+      <a href="#connexion">Connexion</a>
+      <a href="#installation">Installation</a>
+      <a class="btn btn-primary" style="padding:9px 18px;font-size:14px" href="https://vigil-delta-lake.vercel.app" target="_blank" rel="noopener">🌐 Console</a>
+    </div>
+    <button class="burger" id="burger" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <span class="pill reveal"><span class="dot"></span> Version 4.0.0 — stable · Baileys 6.7.24</span>
+    <h1 class="reveal">Le bot WhatsApp<br><span class="grad">qui pense pour vous</span></h1>
+    <p class="sub reveal">
+      <strong>DJOUSSE TECH MD</strong> — assistant WhatsApp complet en Node.js :
+      309 commandes dans 11 catégories, moteur de protections de groupe
+      <strong>DJOUSSE GUARD</strong>, IA Gemini, stickers, et téléchargements.
+      Zéro bouton natif, 100&nbsp;% texte : ça marche partout.
+    </p>
+    <div class="cta reveal">
+      <a class="btn btn-primary" href="https://github.com/Beaute-Gar/DJOUSSE-TECH-MD" target="_blank" rel="noopener">⭐ Voir sur GitHub</a>
+      <a class="btn btn-ghost" href="#connexion">🔗 Connecter mon WhatsApp</a>
+    </div>
+    <div class="badges reveal">
+      <span class="badge">version <b>4.0.0</b></span>
+      <span class="badge">Baileys <b>6.7.24</b></span>
+      <span class="badge">Node.js <b>≥ 18</b></span>
+      <span class="badge">tests <b>115/115 ✓</b></span>
+      <span class="badge">licence <b>MIT</b></span>
+      <span class="badge">prefix <b>.</b></span>
+    </div>
+
+    <div class="stats">
+      <div class="stat reveal"><div class="num" data-count="309">0</div><div class="lab">Commandes</div></div>
+      <div class="stat reveal"><div class="num" data-count="11">0</div><div class="lab">Catégories</div></div>
+      <div class="stat reveal"><div class="num" data-count="13">0</div><div class="lab">Protections</div></div>
+      <div class="stat reveal"><div class="num" data-count="0">0</div><div class="lab">Doublon</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="fonctionnalites">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Fonctionnalités</span>
+      <h2>Tout ce qu'un groupe a besoin</h2>
+      <p>Un seul cerveau (<code style="font-family:var(--mono);color:var(--green)">handler.js</code>) centralise toutes les commandes — <code style="font-family:var(--mono);color:var(--green)">index.js</code> ne fait que la connexion.</p>
+    </div>
+    <div class="cards">
+      <div class="card reveal">
+        <div class="ico">🖼️</div>
+        <h3>Médias &amp; Stickers</h3>
+        <p>Image/vidéo → sticker, sticker → image, vidéo → MP3, view-once, albums, redimensionnement.</p>
+        <code>.s · .take · .tomp3</code>
+      </div>
+      <div class="card reveal">
+        <div class="ico">🤖</div>
+        <h3>IA Gemini</h3>
+        <p>Conversation, OCR d'image, transcription de vocal et résumé de documents — directement dans la discussion.</p>
+        <code>.ai · .analyse · .summarize</code>
+      </div>
+      <div class="card reveal">
+        <div class="ico">⬇️</div>
+        <h3>Téléchargement</h3>
+        <p>Recherche YouTube, musique en MP3, vidéo MP4 — yt-dlp est auto-téléchargé dans <code style="font-family:var(--mono)">vendor/</code>.</p>
+        <code>.yt · .play · .video</code>
+      </div>
+      <div class="card reveal">
+        <div class="ico">👥</div>
+        <h3>Gestion de groupe</h3>
+        <p>Promotion/mise en retrait, tagall, sondages, épinglage, messages d'accueil et de départ personnalisables.</p>
+        <code>.kick · .promote · .tagall</code>
+      </div>
+      <div class="card reveal">
+        <div class="ico">🛡️</div>
+        <h3>Protections</h3>
+        <p>Le moteur DJOUSSE GUARD analyse chaque message selon 13 règles ordonnées par priorité, avec sanctions progressives.</p>
+        <code>.antilink · .antiflood · …</code>
+      </div>
+      <div class="card reveal">
+        <div class="ico">🧰</div>
+        <h3>Outils &amp; Recherche</h3>
+        <p>Traduction, calcul, QR, météo, Wikipédia, GitHub, taux de change, binaire, base64 et plus encore.</p>
+        <code>.translate · .calc · .qr · .weather</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="guard">
+  <div class="wrap">
+    <div class="guard-box reveal">
+      <div class="guard-grid">
+        <div>
+          <span class="eyebrow">Moteur DJOUSSE GUARD</span>
+          <h2 style="font-size:clamp(1.6rem,3.2vw,2.1rem);font-weight:850;letter-spacing:-.5px">13 protections,<br>un seul moteur isolé</h2>
+          <p style="color:var(--muted);margin-top:14px;font-size:15.5px">
+            Chaque message du groupe traverse la liste des protections —
+            <strong style="color:var(--txt)">analyse de chaque fichier et de chaque message</strong>,
+            verdict rendu avec nom de règle, sévérité et action.
+            Écriture atomique sur disque : rien ne se perd à l'arrêt.
+            Le tout est <strong style="color:var(--green)">testé en réel</strong> —
+            <span style="font-family:var(--mono)">node --test</span> : 115 tests, 0 échec, 0 doublon.
+          </p>
+          <div class="chips">
+            <span class="chip">antilink</span><span class="chip">antibad</span>
+            <span class="chip">antiflood</span><span class="chip">antispam</span>
+            <span class="chip">antivirtex</span><span class="chip">antistatus</span>
+            <span class="chip">antisticker</span><span class="chip">antitag</span>
+            <span class="chip">antipoll</span><span class="chip">antivoice</span>
+            <span class="chip">antimedia</span><span class="chip">anticontact</span>
+            <span class="chip">antiforward</span>
+          </div>
+        </div>
+        <div>
+          <pre><span class="c"># audit du projet — zéro anomalie</span>
+<span class="g">$</span> npm run audit
+
+<span class="c">=== G1 ===</span>
+  [OK] version epinglee exacte : <span class="y">6.7.24</span>
+  [OK] une seule copie de Baileys
+<span class="c">=== G2 ===</span>
+  [OK] aucun evenement ecoute 2 fois
+  [OK] <span class="y">282</span> noms+alias uniques, aucun doublon
+<span class="c">=== G4 ===</span>
+  [OK] <span class="y">0</span> doublon MD5 sur 78 fichiers
+
+<span class="g">AUDIT : CONFORME (0 anomalie, 22 controles OK)</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="menu-cat">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Menu interactif</span>
+      <h2>Un pavé numérique, 11 catégories</h2>
+      <p>Tapez <code style="font-family:var(--mono);color:var(--green)">.menu</code>, répondez par un chiffre — l'appareil le plus vieux suffit.</p>
+    </div>
+    <div class="cats">
+      <div class="cat reveal"><span class="n">1</span><div><div class="name">🌟 GÉNÉRAL</div><div class="count">13 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">2</span><div><div class="name">👥 GROUPE</div><div class="count">38 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">3</span><div><div class="name">🛡️ PROTECTION</div><div class="count">43 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">4</span><div><div class="name">🖼️ STICKER &amp; MEDIA</div><div class="count">45 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">5</span><div><div class="name">🧰 OUTILS</div><div class="count">27 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">6</span><div><div class="name">🤖 IA</div><div class="count">9 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">7</span><div><div class="name">🎲 FUN</div><div class="count">25 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">8</span><div><div class="name">🔍 RECHERCHE</div><div class="count">3 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">9</span><div><div class="name">👑 OWNER</div><div class="count">78 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">10</span><div><div class="name">📦 DIVERS</div><div class="count">19 commandes</div></div></div>
+      <div class="cat reveal"><span class="n">11</span><div><div class="name">⬇️ TÉLÉCHARGEMENT</div><div class="count">9 commandes</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="connexion">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Connexion</span>
+      <h2>Deux façons de brancher WhatsApp</h2>
+      <p>Aucune compte WhatsApp Business requis — Baileys (multi-appareils) uniquement.</p>
+    </div>
+    <div class="steps">
+      <div class="step-card reveal">
+        <h3><span class="num">1</span> QR Code</h3>
+        <ol>
+          <li>Lancez le bot : <b>npm start</b></li>
+          <li>Choisissez <b>1 — QR Code</b></li>
+          <li>Sur le téléphone : <b>WhatsApp → Appareils liés → Connecter un appareil</b></li>
+          <li>Scannez le QR affiché dans la console</li>
+          <li>La session est sauvegardée dans <b>session/</b> : les prochains démarrages se reconnectent seuls</li>
+        </ol>
+      </div>
+      <div class="step-card reveal">
+        <h3><span class="num">2</span> Pairing Code</h3>
+        <ol>
+          <li>Lancez le bot : <b>npm start</b></li>
+          <li>Choisissez <b>2 — Pairing Code</b> puis le numéro (ex. 2376…)</li>
+          <li>Notez le code à <b>8 chiffres</b> affiché (valable 60 s)</li>
+          <li>Sur le téléphone : <b>WhatsApp → Appareils liés → Connecter un appareil → Lier avec un numéro</b></li>
+          <li>Saisissez le code — c'est terminé</li>
+        </ol>
+      </div>
+    </div>
+    <div class="step-card reveal" style="margin-top:18px;border-color:rgba(37,211,102,.35)">
+      <h3><span class="num">🌐</span> Console en ligne (Vigil)</h3>
+      <p style="color:var(--muted);font-size:15.3px">
+        La console <a href="https://vigil-delta-lake.vercel.app" target="_blank" rel="noopener" style="color:var(--green);font-weight:700">Vigil</a>
+        affiche le statut du bot en direct, le QR, le code de pairing et son journal — et peut lui envoyer des commandes à distance.
+        Tout y est relayé en temps réel depuis la machine qui exécute le bot.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="installation">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Installation</span>
+      <h2>Trois commandes, et c'est parti</h2>
+    </div>
+    <div class="reveal">
+<pre><span class="c"># 1. récupérer le code</span>
+<span class="g">$</span> git clone https://github.com/Beaute-Gar/DJOUSSE-TECH-MD.git
+<span class="g">$</span> cd DJOUSSE-TECH-MD
+
+<span class="c"># 2. installer les dépendances (Baileys 6.7.24 épinglé)</span>
+<span class="g">$</span> npm install
+
+<span class="c"># 3. configurer puis démarrer (audit automatique avant lancement)</span>
+<span class="g">$</span> <span class="y">cp</span> .env.example .env   <span class="c"># → OWNER_NUMBER, PREFIX, etc.</span>
+<span class="g">$</span> npm start</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <a class="logo" href="#">
+      <span class="mark">🤖</span>
+      <span>DJOUSSE <small>TECH MD</small></span>
+    </a>
+    <div class="links">
+      <a href="https://github.com/Beaute-Gar/DJOUSSE-TECH-MD" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/Beaute-Gar/DJOUSSE-TECH-MD#-licence" target="_blank" rel="noopener">Licence MIT</a>
+      <a href="https://vigil-delta-lake.vercel.app" target="_blank" rel="noopener">Console Vigil</a>
+      <a href="#fonctionnalites">Fonctionnalités</a>
+    </div>
+    <div class="cr">© 2026 Beaute Gar — DJOUSSE TECH EVOLUTION</div>
+  </div>
+</footer>
+
+<script>
+  // menu mobile
+  document.getElementById('burger').addEventListener('click', function(){
+    document.getElementById('menu').classList.toggle('open');
+  });
+  document.querySelectorAll('#menu a').forEach(function(a){
+    a.addEventListener('click', function(){ document.getElementById('menu').classList.remove('open'); });
+  });
+
+  // révélation au défilement
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+  }, { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  // compteurs animés (valeurs réelles issues du bot)
+  var counted = false;
+  var statsIo = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting || counted) return;
+      counted = true;
+      document.querySelectorAll('[data-count]').forEach(function(el){
+        var target = +el.dataset.count, start = performance.now(), dur = 900;
+        function tick(now){
+          var p = Math.min((now - start) / dur, 1);
+          el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+          if(p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    });
+  }, { threshold: .4 });
+  var firstStat = document.querySelector('.stats');
+  if(firstStat) statsIo.observe(firstStat);
+</script>
+</body>
+</html>
