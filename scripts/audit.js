@@ -586,7 +586,8 @@ function checkG5() {
   const jidStart = src.indexOf('const isOwnerJid');
   const ownerBlock = ownerStart >= 0 ? src.slice(ownerStart, src.indexOf('\n}', ownerStart) + 2) : '';
   const sudoBlock = sudoStart >= 0 ? src.slice(sudoStart, src.indexOf('\n}', sudoStart) + 2) : '';
-  const jidBlock = jidStart >= 0 ? src.slice(jidStart, src.indexOf(';', jidStart) + 1) : '';
+  const jidEnd = jidStart >= 0 ? src.indexOf('\n};', jidStart) : -1;
+  const jidBlock = jidStart >= 0 ? src.slice(jidStart, jidEnd >= 0 ? jidEnd + 3 : src.length) : '';
   const problems = [];
   if (!ownerBlock || /endsWith\s*\(/.test(ownerBlock)) problems.push('isPrimaryOwner absent ou comparaison par suffixe');
   if (!sudoBlock || /endsWith\s*\(/.test(sudoBlock)) problems.push('isSudoNumber absent ou comparaison par suffixe');
