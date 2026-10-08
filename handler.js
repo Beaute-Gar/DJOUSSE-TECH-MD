@@ -232,7 +232,7 @@ function getSudoList() {
 
 function isPrimaryOwner(n) {
   const num_ = String(n || '').replace(/\D/g, '');
-  return config.ownerNumber.some((o) => o === num_ || num_.endsWith(o) || o.endsWith(num_));
+  return Boolean(num_) && config.ownerNumber.some((o) => String(o || '').replace(/\D/g, '') === num_);
 }
 
 function isSudoNumber(n) {
@@ -246,7 +246,7 @@ const isOwnerJid = (jid) => {
   const n = num(jid);
   if (!n) return false;
   if (isPrimaryOwner(n) || isSudoNumber(n)) return true;
-  return config.ownerNumber.some((o) => o === n || n.endsWith(o) || o.endsWith(n));
+  return config.ownerNumber.some((o) => String(o || '').replace(/\D/g, '') === n);
 };
 
 /* Message « vue unique » (view once) — détection sur le brut,
