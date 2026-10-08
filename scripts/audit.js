@@ -572,6 +572,31 @@ function checkG4() {
 }
 
 /* ------------------------------------------------------------------ */
+/* G5 - autorisations proprietaire : comparaison exacte des numeros     */
+/* ------------------------------------------------------------------ */
+function checkG5() {
+  const p = path.join(ROOT, 'handler.js');
+  if (!fs.existsSync(p)) {
+    KO('G5', 'handler.js absent : controles owner impossibles');
+    return;
+  }
+  const src = read(p);
+  const ownerStart = src.indexOf('function isPrimaryOwner');
+  const sudoStart = src.indexOf('function isSudoNumber');
+  const jidStart = src.indexOf('const isOwnerJid');
+  const ownerBlock = ownerStart >= 0 ? src.slice(ownerStart, src.indexOf('\n}', ownerStart) + 2) : '';
+  const sudoBlock = sudoStart >= 0 ? src.slice(sudoStart, src.indexOf('\n}', sudoStart) + 2) : '';
+  const jidEnd = jidStart >= 0 ? src.indexOf('\n};', jidStart) : -1;
+  const jidBlock = jidStart >= 0 ? src.slice(jidStart, jidEnd >= 0 ? jidEnd + 3 : src.length) : '';
+  const problems = [];
+  if (!ownerBlock || /endsWith\s*\(/.test(ownerBlock)) problems.push('isPrimaryOwner absent ou comparaison par suffixe');
+  if (!sudoBlock || /endsWith\s*\(/.test(sudoBlock)) problems.push('isSudoNumber absent ou comparaison par suffixe');
+  if (!jidBlock || /endsWith\s*\(/.test(jidBlock)) problems.push('isOwnerJid absent ou comparaison par suffixe');
+  if (problems.length) KO('G5', problems.join(' | '));
+  else OK('G5', 'autorisations owner/sudo : comparaison exacte, aucun suffixe');
+}
+
+/* ------------------------------------------------------------------ */
 /* Optionnel : vulnerabilites reseau                                   */
 /* ------------------------------------------------------------------ */
 function checkDeps() {
@@ -622,9 +647,10 @@ function main() {
   checkG2();
   checkG3();
   checkG4();
+  checkG5();
   if (WITH_DEPS) checkDeps();
 
-  const groups = ['G1', 'G2', 'G3', 'G4'];
+  const groups = ['G1', 'G2', 'G3', 'G4', 'G5'];
   let failed = 0;
   for (const g of groups) {
     console.log(`\n=== ${g} ===`);
