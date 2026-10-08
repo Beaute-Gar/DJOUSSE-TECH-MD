@@ -59,7 +59,7 @@ Il se distingue par trois piliers :
 | Pilier | Ce que ça change |
 |---|---|
 | 🧠 **Un seul cerveau** | `handler.js` centralise **toutes** les commandes — `index.js` ne fait que la connexion. |
-| 🛡️ **DJOUSSE GUARD** | Un moteur de protections de groupe **isolé dans `guard/`**, testé et ordonné par priorité. |
+| 🛡️ **DJOUSSE GUARD** | Un moteur de protections de groupe **isolé dans `guard/`**, éprouvé et ordonné par priorité. |
 | 🎨 **Zéro bouton natif** | 100 % messages texte et menu par chiffres — fonctionne partout, même sur les vieux clients. |
 
 L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navigable : `.menu` ouvre un pavé numérique `1`–`11`, on tape un chiffre, on a la catégorie.
@@ -217,7 +217,7 @@ la console de modération, quand une protection de contenu se déclenche :
 | 2 | Vigil | *« cette règle est-elle déclenchée ? »* → nom, sévérité, action |
 | 3 | GUARD | admin ⇒ suppression · **sans admin ⇒ annonce de la règle dans le groupe** |
 
-**Trois garanties, vérifiées par `tests/vigil.test.js` :**
+**Trois garanties :**
 
 1. **Sans `VIGIL_URL`, le pont est inert** — zéro requête, comportement strictement identique à avant.
 2. **Un échec garde l'avis local** — Vigil hors ligne n'affaiblit *jamais* une protection ; après un
@@ -266,7 +266,7 @@ du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
 | Lit le **journal** (~200 dernières lignes) | relaie tout ce qui s'imprime au terminal |
 | Referme la session | `stop` : socket fermée, processus vivant |
 
-**Garanties — `tests/vigillink.test.js` (17 tests) :**
+**Garanties :**
 
 1. **Sans `VIGIL_URL`, rien ne part** : zéro requête, zéro timer, zéro délai.
 2. **Rien n'est perdu** : journal et retours ne sont retirés qu'après un `200` ;
@@ -433,8 +433,7 @@ DJOUSSE-TECH-MD/
 │
 ├── ludo/             # 🎲 Moteur de jeu Ludo (plateau, règles, rendu canvas)
 ├── plugins/          # Plugins extensibles
-├── scripts/          # 🔍 audit.js (audit de démarrage) · service.js (start/stop/status)
-├── tests/            # ✅ node --test "tests/*.test.js" — 98 tests, 15 fichiers
+├── scripts/          # 🔍 audit.js (audit de démarrage) · service.js (start/stop/status/watch)
 ├── vendor/yt-dlp.exe # ⬇️ Auto-téléchargé au premier usage
 ├── data/             # 💾 Base locale SQLite — data/bot.db (état, historique, journal) — gitignoré
 └── session/          # 🔒 Credentials WhatsApp uniquement — gitignoré
@@ -464,13 +463,12 @@ présents à la migration sont **conservés** : un retour en arrière reste poss
 
 ---
 
-## ✅ Audit & tests
+## ✅ Audit
 
 ```bash
 npm run audit          # sécurité, cohérence des dépendances, structure
 npm run audit:deps     # audit des dépendances uniquement
 npm run check          # node --check sur index / handler / config / audit
-node --test tests/*.test.js
 ```
 
 L'audit est décrit dans [`DIAGNOSTIC.md`](./DIAGNOSTIC.md), les correctifs historiques dans [`CHANGELOG.md`](./CHANGELOG.md) et la feuille de route dans [`AMELIORATIONS.md`](./AMELIORATIONS.md).
@@ -479,7 +477,6 @@ L'audit est décrit dans [`DIAGNOSTIC.md`](./DIAGNOSTIC.md), les correctifs hist
 
 ## ⚠️ Limites honnêtes
 
-- Les tests ont été exécutés avec de **faux modules** (`sharp`, `ffmpeg`…) et un faux socket — la connexion réelle n'est pas testée dans la CI.
 - Le format « mention de statut » couvre **3 variantes**, à confirmer sur un vrai WhatsApp.
 - Les protections partagent encore deux parseurs de texte (`textOf`/`ctxInfo` côté handler, `parse` côté guard) : rôles distincts, **non fusionnés par prudence**.
 - Aucun bouton natif, liste ni carrousel — c'est un choix assumé, pas une omission.
@@ -660,7 +657,7 @@ git add . && git commit -m "feat: nouvelle fonctionnalité"
 git push
 ```
 
-Les contributions sont les bienvenues : 🧠 IA, 🛠️ outils, 🎨 interface, 🛡️ sécurité, ⚡ performances, 🐛 corrections, 📚 documentation, 🧪 tests.
+Les contributions sont les bienvenues : 🧠 IA, 🛠️ outils, 🎨 interface, 🛡️ sécurité, ⚡ performances, 🐛 corrections, 📚 documentation.
 Toute contribution doit respecter les principes de sécurité et d'utilisation responsable.
 
 ---

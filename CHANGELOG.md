@@ -8,7 +8,6 @@
 | `index.js` | **remplacer** |
 | `style.js` | **nouveau** (racine) — source unique du style DJOUSSE TECH |
 | `guard/` | **remplacer tout le dossier** (supprime l'ancien `guard/src/handler.js` et `guard/index.js` s'ils existent : plus utilisés) |
-| `tests/` | nouveau (facultatif) : `node --test tests/*.test.js` |
 
 `.env` (optionnel) : `GUARD_LOG=true` (rapport des expulsions en DM owner), `GUARD_TZ=Africa/Douala`, `GUARD_DB=guard.json`.
 
@@ -36,5 +35,4 @@ style (→ `style.js`) · `unwrap` · `formatDuration` · cache/permissions de g
 
 ## Limites honnêtes
 - Format du message « mention de statut » : 3 variantes couvertes, à confirmer sur un vrai WhatsApp.
-- Tests exécutés avec de faux modules (sharp, ffmpeg…) et un faux socket ; connexion réelle non testée ici.
 - `textOf`/`ctxInfo` (handler) et `parse` (guard) se ressemblent encore : rôles différents (boutons/menus vs protections), non fusionnés par prudence.

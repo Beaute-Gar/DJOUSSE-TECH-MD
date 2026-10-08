@@ -106,18 +106,18 @@ function depsOf(pkg) {
   return { name: j.name, bag, raw: j };
 }
 
-/* Fichiers du code actif (charge au demarrage) + tests */
+/* Fichiers du code actif (charge au demarrage) */
 const ACTIVE_ROOT_FILES = ['index.js', 'handler.js', 'config.js', 'style.js'];
-const ACTIVE_DIRS = ['lib', 'guard', 'plugins', 'ludo', 'tests'];
+const ACTIVE_DIRS = ['lib', 'guard', 'plugins', 'ludo'];
 function activeFiles() {
   const files = [];
   for (const f of ACTIVE_ROOT_FILES) if (fs.existsSync(path.join(ROOT, f))) files.push(path.join(ROOT, f));
   for (const d of ACTIVE_DIRS) if (fs.existsSync(path.join(ROOT, d))) walk(path.join(ROOT, d), files);
   return files;
 }
-/** Code produit (hors tests) - sert au controle de style. */
+/** Code produit — sert au controle de style. */
 function productFiles() {
-  return activeFiles().filter((p) => rel(p).split('/')[0] !== 'tests');
+  return activeFiles();
 }
 
 /* Mots interdits (section 3.1) - construits par concatenation. */
