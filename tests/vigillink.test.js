@@ -339,3 +339,28 @@ test('deux echecs de suite : le cycle echoue, sans boucle infinie', async () => 
   assert.equal(syncCalls().length, 2, 'une seule reprise : pas de boucle');
   assert.equal(l._state().queuedLogs, 1, "rien n'est perdu sur un double echec");
 });
+
+/* ── 8. cooldown adaptatif ─────────────────────────────────── */
+
+test('timeout : le pont ne se fige pas 15 s pour un coup de reseau', async () => {
+  fakeVigil({ throwSync: Object.assign(new Error('operation aborted due to timeout'), { name: 'TimeoutError' }) });
+  const l = makeLink({ offlineMs: 16000, retryMs: 0 });
+
+  const s = await l.syncOnce();
+  assert.equal(s.ok, false);
+
+  const restant = l._state().offlineUntil - Date.now();
+  assert.ok(restant > 0, 'un cooldown est bien arme');
+  assert.ok(restant <= 6000, `cooldown de timeout tres inferieur au normal (${restant} ms)`);
+});
+
+test('erreur HTTP : le cooldown complet est conserve', async () => {
+  fakeVigil({ status: 503 });
+  const l = makeLink({ offlineMs: 16000, retryMs: 0 });
+
+  const s = await l.syncOnce();
+  assert.equal(s.ok, false);
+
+  const restant = l._state().offlineUntil - Date.now();
+  assert.ok(restant >= 12000, `panne serveur = pas de complaisance (${restant} ms)`);
+});
