@@ -238,7 +238,7 @@ function isPrimaryOwner(n) {
 function isSudoNumber(n) {
   const num_ = String(n || '').replace(/\D/g, '');
   if (!num_) return false;
-  return getSudoList().some((o) => o === num_ || num_.endsWith(o) || o.endsWith(num_));
+  return Boolean(num_) && getSudoList().some((o) => String(o || '').replace(/\D/g, '') === num_);
 }
 
 const isOwnerJid = (jid) => {
@@ -2963,7 +2963,7 @@ async function handleMessage(sock, msg) {
         isOwnerJid(sender) ||
         isOwnerJid(senderAlt) ||
         (senderNum && botNum && senderNum === botNum) ||
-        (senderNum && config.ownerNumber.some((o) => senderNum === o || senderNum.endsWith(o) || o.endsWith(senderNum))),
+        (senderNum && config.ownerNumber.some((o) => String(o || '').replace(/\D/g, '') === String(senderNum).replace(/\D/g, ''))),
       isBotSelf: fromMe,
       isAdmin: false,
       isBotAdmin: false,
