@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Connexion WhatsApp — DJOUSSE TECH MD</title>
+<meta name="theme-color" content="#0a0f0d">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+<style>
+  :root{
+    --bg:#070b0a;
+    --card:#101816;
+    --card2:#131d1a;
+    --line:#1d2b27;
+    --txt:#e8f2ee;
+    --muted:#8ba69d;
+    --green:#25d366;
+    --green2:#2ECC71;
+    --amber:#f0b429;
+    --red:#ff6b6b;
+    --radius:16px;
+    --mono:"Cascadia Code","SF Mono",Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg);color:var(--txt);min-height:100vh;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.6;display:flex;flex-direction:column;overflow-x:hidden;
+  }
+  ::selection{background:var(--green);color:#04140c}
+  a{color:inherit;text-decoration:none}
+
+  .glow{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(560px 380px at 80% -10%, rgba(37,211,102,.14), transparent 60%),
+      radial-gradient(500px 380px at 15% 100%, rgba(46,204,113,.08), transparent 60%);
+  }
+  .grid-bg{
+    position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.3;
+    background-image:linear-gradient(rgba(37,211,102,.045) 1px, transparent 1px),
+                     linear-gradient(90deg, rgba(37,211,102,.045) 1px, transparent 1px);
+    background-size:44px 44px;
+    mask-image:radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 80%);
+  }
+
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(7,11,10,.85);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .wrap{width:100%;max-width:820px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px}
+  .logo .mark{
+    width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--green),#0e9f4f);
+    color:#04140c;font-size:17px;box-shadow:0 4px 16px rgba(37,211,102,.35);
+  }
+  .logo small{color:var(--green2);font-weight:700}
+  .back{
+    color:var(--muted);font-size:14.5px;font-weight:650;
+    border:1px solid var(--line);background:var(--card);
+    padding:8px 15px;border-radius:10px;transition:all .18s;
+  }
+  .back:hover{border-color:var(--green);color:var(--green)}
+
+  main{flex:1;display:flex;flex-direction:column;align-items:center;padding:52px 0 60px;text-align:center}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:9px;
+    background:rgba(37,211,102,.09);border:1px solid rgba(37,211,102,.3);
+    color:var(--green);padding:7px 16px;border-radius:999px;
+    font-size:13.5px;font-weight:700;letter-spacing:.3px;
+  }
+  .pill.wait{background:rgba(240,180,41,.08);border-color:rgba(240,180,41,.35);color:var(--amber)}
+  .pill.off{background:rgba(255,107,107,.08);border-color:rgba(255,107,107,.35);color:var(--red)}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 currentColor}50%{box-shadow:0 0 0 7px transparent}}
+
+  h1{font-size:clamp(1.9rem,5vw,2.7rem);font-weight:900;letter-spacing:-1px;margin:22px 0 10px}
+  .sub{color:var(--muted);max-width:560px;font-size:16px}
+
+  /* ── panneau d'état ── */
+  .panel{margin-top:34px;width:100%;display:flex;justify-content:center}
+  .card{
+    background:linear-gradient(180deg,var(--card),var(--bg));
+    border:1px solid var(--line);border-radius:22px;
+    padding:30px 28px;width:100%;max-width:560px;
+  }
+
+  /* QR */
+  .qr-box{
+    background:#fff;border-radius:16px;padding:14px;
+    width:100%;aspect-ratio:1/1;max-width:420px;margin:0 auto;
+    display:grid;place-items:center;overflow:hidden;
+    box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 18px 50px rgba(0,0,0,.5);
+  }
+  .qr-box svg,.qr-box img{width:100%;height:100%;display:block;image-rendering:pixelated}
+  .qr-fallback{color:#333;font-size:14px;text-align:center;padding:20px}
+  .steps{display:flex;flex-direction:column;gap:9px;margin-top:22px;text-align:left}
+  .step{
+    display:flex;gap:11px;align-items:flex-start;
+    background:var(--card2);border:1px solid var(--line);
+    border-radius:11px;padding:11px 14px;font-size:14.5px;color:var(--muted);
+  }
+  .step b{
+    min-width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+    background:var(--green);color:#04140c;font-size:12.5px;font-weight:900;flex-shrink:0;
+  }
+  .step span strong,.step span b{color:var(--txt)}
+  .note{color:var(--muted);font-size:13px;margin-top:16px}
+  .note::before{content:"⟳ ";color:var(--green)}
+
+  /* succès */
+  .ok-ico{
+    width:84px;height:84px;border-radius:50%;margin:6px auto 18px;
+    display:grid;place-items:center;font-size:42px;
+    background:rgba(37,211,102,.12);border:2px solid var(--green);
+    color:var(--green);box-shadow:0 0 40px rgba(37,211,102,.25);
+    animation:pop .4s ease;
+  }
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  .card h2{font-size:22px;font-weight:850;margin-bottom:6px}
+  .card .detail{color:var(--muted);font-family:var(--mono);font-size:15px}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;margin-top:20px;
+    padding:11px 22px;border-radius:12px;font-weight:700;font-size:15px;
+    background:linear-gradient(135deg,var(--green),#0e9f4f);color:#04140c;
+    border:0;cursor:pointer;transition:transform .15s,box-shadow .15s;
+    box-shadow:0 6px 22px rgba(37,211,102,.3);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(37,211,102,.42)}
+  .btn.ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line);box-shadow:none}
+  .btn.ghost:hover{border-color:var(--green);color:var(--green)}
+
+  /* spinner */
+  .spinner{
+    width:54px;height:54px;border-radius:50%;margin:14px auto 20px;
+    border:4px solid rgba(37,211,102,.18);border-top-color:var(--green);
+    animation:spin .9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hint{color:var(--muted);font-size:14.5px}
+  .hint + .hint{margin-top:6px;font-size:13px;color:#6d8a80}
+
+  .warn-ico{
+    width:74px;height:74px;border-radius:50%;margin:6px auto 16px;
+    display:grid;place-items:center;font-size:34px;
+    background:rgba(255,107,107,.1);border:2px solid var(--red);color:var(--red);
+  }
+
+  footer{
+    border-top:1px solid var(--line);background:rgba(12,18,17,.7);
+    padding:20px 0;text-align:center;color:#6d8a80;font-size:13.5px;
+    position:relative;z-index:1;
+  }
+  footer a{color:var(--muted);font-weight:650}
+  footer a:hover{color:var(--green)}
+
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="grid-bg"></div>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="logo" href="/">
+      <span class="mark">🤖</span>
+      <span>DJOUSSE <small>TECH MD</small></span>
+    </a>
+    <a class="back" href="/">← Retour au site</a>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+    <span class="pill" id="pill"><span class="dot"></span><span id="pillText">Connexion au service…</span></span>
+    <h1>Connecter WhatsApp</h1>
+    <p class="sub">
+      Scannez le code ci-dessous avec votre téléphone : le bot reçoit votre
+      session et reste en ligne. <strong style="color:var(--txt)">Rien à installer</strong> chez vous.
+    </p>
+
+    <div class="panel">
+
+      <!-- ── QR prêt à scanner ── -->
+      <div class="card" id="qrCard" hidden>
+        <div class="qr-box" id="qrBox"></div>
+        <div class="steps">
+          <div class="step"><b>1</b><span>Ouvrez <strong>WhatsApp</strong> sur votre téléphone</span></div>
+          <div class="step"><b>2</b><span>Allez dans <strong>Appareils liés → Connecter un appareil</strong></span></div>
+          <div class="step"><b>3</b><span>Pointez l'appareil photo vers ce code</span></div>
+        </div>
+        <p class="note">Le QR se renouvelle automatiquement — gardez cette page ouverte.</p>
+      </div>
+
+      <!-- ── connecté ── -->
+      <div class="card" id="okCard" hidden>
+        <div class="ok-ico">✓</div>
+        <h2>WhatsApp connecté</h2>
+        <p class="detail" id="okDetail">Le bot est en ligne</p>
+        <a class="btn" href="/">Retour au site</a>
+      </div>
+
+      <!-- ── préparation ── -->
+      <div class="card" id="waitCard" hidden>
+        <div class="spinner"></div>
+        <h2>Préparation du QR…</h2>
+        <p class="hint">Le bot établit la connexion avec WhatsApp.</p>
+        <p class="hint">Cela prend quelques secondes.</p>
+      </div>
+
+      <!-- ── bot hors ligne ── -->
+      <div class="card" id="offCard" hidden>
+        <div class="warn-ico">⚠</div>
+        <h2>Bot hors ligne</h2>
+        <p class="hint">Le service n'est pas démarré pour le moment.</p>
+        <p class="hint">La page réessaie automatiquement toutes les 3 secondes.</p>
+        <button class="btn ghost" id="retry">↻ Réessayer maintenant</button>
+      </div>
+
+      <!-- ── service injoignable ── -->
+      <div class="card" id="errCard" hidden>
+        <div class="warn-ico">⚠</div>
+        <h2>Service injoignable</h2>
+        <p class="hint">Impossible de joindre le service de statut.</p>
+        <button class="btn ghost" id="retry2">↻ Réessayer</button>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <a href="/">DJOUSSE TECH MD</a> · Connexion WhatsApp · session hébergée et maintenue en ligne
+</footer>
+
+<script src="/js/qrcode.js"></script>
+<script src="/js/qrcode_utf8.js"></script>
+<script>
+(function () {
+  'use strict';
+  var ENDPOINT = '/api/bot/public';   // proxy Vercel → console de statut (lecture publique minimale)
+  var POLL_MS = 3000;
+  var STATES = ['qrCard', 'okCard', 'waitCard', 'offCard', 'errCard'];
+  var lastQr = null;
+  var timer = null;
+
+  function $(id) { return document.getElementById(id); }
+
+  function show(id) {
+    STATES.forEach(function (s) { $(s).hidden = (s !== id); });
+  }
+
+  function pill(text, cls) {
+    $('pillText').textContent = text;
+    $('pill').className = 'pill' + (cls ? ' ' + cls : '');
+  }
+
+  /** QR brut (Baileys) → SVG scannable ; data-URL déjà prêt → <img>. */
+  function renderQr(text) {
+    if (text === lastQr && $('qrBox').firstChild) return;
+    lastQr = text;
+    var box = $('qrBox');
+    if (text.indexOf('data:image') === 0) {
+      box.innerHTML = '<img src="' + text + '" alt="QR de connexion WhatsApp">';
+      return;
+    }
+    try {
+      var qr = qrcode(0, 'M');            // 0 = version auto
+      qr.addData(text);
+      qr.make();
+      box.innerHTML = qr.createSvgTag({
+        cellSize: 8,
+        margin: 32,                       // 4 modules de marge blanche (spec)
+        scalable: true,
+        alt: 'QR de connexion WhatsApp',
+      });
+    } catch (e) {
+      box.innerHTML = '<div class="qr-fallback">QR illisible — la page va le régénérer.</div>';
+      lastQr = null;
+    }
+  }
+
+  function apply(s) {
+    if (!s || s.ok === false) {
+      show('errCard');
+      pill('Service injoignable', 'off');
+      return;
+    }
+    if (s.online && s.qr) {
+      show('qrCard');
+      renderQr(String(s.qr));
+      pill('QR en attente de scan', '');
+      return;
+    }
+    if (s.online && s.connected) {
+      show('okCard');
+      $('okDetail').textContent = s.numberMasked
+        ? 'Connecté en tant que ' + s.numberMasked
+        : 'Le bot est en ligne';
+      pill('Connecté', '');
+      return;
+    }
+    if (s.online) {
+      show('waitCard');
+      pill('Préparation du QR…', 'wait');
+      return;
+    }
+    show('offCard');
+    pill('Bot hors ligne', 'off');
+  }
+
+  function tick() {
+    fetch(ENDPOINT, { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(apply)
+      .catch(function () { apply(null); })
+      .then(function () { timer = setTimeout(tick, POLL_MS); });
+  }
+
+  function restart() { clearTimeout(timer); lastQr = null; tick(); }
+
+  $('retry').addEventListener('click', restart);
+  $('retry2').addEventListener('click', restart);
+  tick();
+})();
+</script>
+</body>
+</html>

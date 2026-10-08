@@ -266,8 +266,7 @@
       <a href="#guard">Guard</a>
       <a href="#menu-cat">Menu 1–11</a>
       <a href="#connexion">Connexion</a>
-      <a href="#installation">Installation</a>
-      <a class="btn btn-primary" style="padding:9px 18px;font-size:14px" href="https://vigil-delta-lake.vercel.app" target="_blank" rel="noopener">🌐 Console</a>
+      <a class="btn btn-primary" style="padding:9px 18px;font-size:14px" href="/connecter.html">🔗 Se connecter</a>
     </div>
     <button class="burger" id="burger" aria-label="Menu">☰</button>
   </div>
@@ -285,15 +284,14 @@
       Zéro bouton natif, 100&nbsp;% texte : ça marche partout.
     </p>
     <div class="cta reveal">
-      <a class="btn btn-primary" href="https://github.com/Beaute-Gar/DJOUSSE-TECH-MD" target="_blank" rel="noopener">⭐ Voir sur GitHub</a>
-      <a class="btn btn-ghost" href="#connexion">🔗 Connecter mon WhatsApp</a>
+      <a class="btn btn-primary" href="/connecter.html">🔗 Connecter mon WhatsApp</a>
+      <a class="btn btn-ghost" href="#fonctionnalites">Découvrir le bot</a>
     </div>
     <div class="badges reveal">
       <span class="badge">version <b>4.0.0</b></span>
       <span class="badge">Baileys <b>6.7.24</b></span>
       <span class="badge">Node.js <b>≥ 18</b></span>
       <span class="badge">tests <b>115/115 ✓</b></span>
-      <span class="badge">licence <b>MIT</b></span>
       <span class="badge">prefix <b>.</b></span>
     </div>
 
@@ -426,59 +424,33 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow">Connexion</span>
-      <h2>Deux façons de brancher WhatsApp</h2>
-      <p>Aucune compte WhatsApp Business requis — Baileys (multi-appareils) uniquement.</p>
+      <h2>Branchez WhatsApp en 3 étapes, depuis ce site</h2>
+      <p>Pas d'installation, pas de terminal : tout se fait ici, et la session reste en ligne.</p>
     </div>
     <div class="steps">
       <div class="step-card reveal">
-        <h3><span class="num">1</span> QR Code</h3>
+        <h3><span class="num">1</span> Ouvrez la page de connexion</h3>
         <ol>
-          <li>Lancez le bot : <b>npm start</b></li>
-          <li>Choisissez <b>1 — QR Code</b></li>
-          <li>Sur le téléphone : <b>WhatsApp → Appareils liés → Connecter un appareil</b></li>
-          <li>Scannez le QR affiché dans la console</li>
-          <li>La session est sauvegardée dans <b>session/</b> : les prochains démarrages se reconnectent seuls</li>
+          <li>Cliquez sur <b>🔗 Connecter mon WhatsApp</b></li>
+          <li>Le code QR du bot s'affiche aussitôt — il se régénère tout seul</li>
         </ol>
       </div>
       <div class="step-card reveal">
-        <h3><span class="num">2</span> Pairing Code</h3>
+        <h3><span class="num">2</span> Scannez avec votre téléphone</h3>
         <ol>
-          <li>Lancez le bot : <b>npm start</b></li>
-          <li>Choisissez <b>2 — Pairing Code</b> puis le numéro (ex. 2376…)</li>
-          <li>Notez le code à <b>8 chiffres</b> affiché (valable 60 s)</li>
-          <li>Sur le téléphone : <b>WhatsApp → Appareils liés → Connecter un appareil → Lier avec un numéro</b></li>
-          <li>Saisissez le code — c'est terminé</li>
+          <li>WhatsApp → <b>Appareils liés → Connecter un appareil</b></li>
+          <li>Pointez l'appareil photo vers le QR affiché sur la page</li>
         </ol>
       </div>
     </div>
     <div class="step-card reveal" style="margin-top:18px;border-color:rgba(37,211,102,.35)">
-      <h3><span class="num">🌐</span> Console en ligne (Vigil)</h3>
+      <h3><span class="num">✓</span> Terminé — la session reste en ligne</h3>
       <p style="color:var(--muted);font-size:15.3px">
-        La console <a href="https://vigil-delta-lake.vercel.app" target="_blank" rel="noopener" style="color:var(--green);font-weight:700">Vigil</a>
-        affiche le statut du bot en direct, le QR, le code de pairing et son journal — et peut lui envoyer des commandes à distance.
-        Tout y est relayé en temps réel depuis la machine qui exécute le bot.
+        Votre session est hébergée aux côtés du bot : il reste connecté <strong style="color:var(--txt)">24&nbsp;h/24</strong>,
+        rien à relancer chez vous. La page de connexion affiche l'état en direct et vous
+        confirme le raccordement dès qu'il est établi.
       </p>
-    </div>
-  </div>
-</section>
-
-<section id="installation">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="eyebrow">Installation</span>
-      <h2>Trois commandes, et c'est parti</h2>
-    </div>
-    <div class="reveal">
-<pre><span class="c"># 1. récupérer le code</span>
-<span class="g">$</span> git clone https://github.com/Beaute-Gar/DJOUSSE-TECH-MD.git
-<span class="g">$</span> cd DJOUSSE-TECH-MD
-
-<span class="c"># 2. installer les dépendances (Baileys 6.7.24 épinglé)</span>
-<span class="g">$</span> npm install
-
-<span class="c"># 3. configurer puis démarrer (audit automatique avant lancement)</span>
-<span class="g">$</span> <span class="y">cp</span> .env.example .env   <span class="c"># → OWNER_NUMBER, PREFIX, etc.</span>
-<span class="g">$</span> npm start</pre>
+      <a class="btn btn-primary" href="/connecter.html" style="margin-top:16px">🔗 Connecter mon WhatsApp</a>
     </div>
   </div>
 </section>
@@ -492,10 +464,10 @@
       <span>DJOUSSE <small>TECH MD</small></span>
     </a>
     <div class="links">
-      <a href="https://github.com/Beaute-Gar/DJOUSSE-TECH-MD" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/Beaute-Gar/DJOUSSE-TECH-MD#-licence" target="_blank" rel="noopener">Licence MIT</a>
-      <a href="https://vigil-delta-lake.vercel.app" target="_blank" rel="noopener">Console Vigil</a>
+      <a href="/connecter.html">Connexion</a>
+      <a href="https://vigil-delta-lake.vercel.app" target="_blank" rel="noopener">Console</a>
       <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#guard">DJOUSSE Guard</a>
     </div>
     <div class="cr">© 2026 Beaute Gar — DJOUSSE TECH EVOLUTION</div>
   </div>

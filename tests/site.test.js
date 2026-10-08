@@ -31,10 +31,29 @@ function safeFile(urlPath) {
 }
 
 /** Serveur reproduisant le contrat vercel.json : sortie = website/,
- *  rewrites → /index.html pour toute route. */
+ *  proxy /api/bot/public vers la console (fixture : zéro réseau en test),
+ *  rewrites → /index.html pour toute autre route. */
 function startServer() {
   return new Promise((resolve) => {
     const srv = http.createServer((req, res) => {
+      // proxy externe de vercel.json — même chemin, même type, même JSON
+      if (req.url.split('?')[0] === '/api/bot/public') {
+        res.writeHead(200, {
+          'content-type': 'application/json; charset=utf-8',
+          'access-control-allow-origin': '*',
+          'cache-control': 'no-store',
+        });
+        res.end(JSON.stringify({
+          ok: true,
+          online: true,
+          connected: false,
+          qr: '2@QR-DE-FIXTURE',
+          connectMethod: 'qr',
+          numberMasked: null,
+          lastSeenAt: new Date().toISOString(),
+        }));
+        return;
+      }
       let file = safeFile(req.url);
       if (!file || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
         file = path.join(SITE, 'index.html'); // rewrite vercel.json
@@ -155,4 +174,52 @@ test('site : robots.txt + sitemap.xml servis en fichiers (jamais réécrits en H
   const sitemap = await r2.text();
   assert.ok(sitemap.trimStart().startsWith('<?xml'), 'sitemap.xml réécrit vers index.html');
   assert.match(sitemap, /djousse-tech-md\.vercel\.app/);
+});
+
+test('vercel.json : proxy /api/bot/public AVANT la réécriture générique', () => {
+  const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));
+  const idx = (cfg.rewrites || []).findIndex((r) => r.source === '/api/bot/public');
+  assert.ok(idx >= 0, 'proxy vers la console de statut absent');
+  assert.strictEqual(
+    cfg.rewrites[idx].destination,
+    'https://vigil-delta-lake.vercel.app/api/bot/public',
+  );
+  const catchAll = (cfg.rewrites || []).findIndex((r) => r.source === '/(.*)');
+  assert.ok(catchAll >= 0 && idx < catchAll, 'le proxy doit précéder la réécriture générique');
+});
+
+test('page connexion : fichier propre + JSON du statut accessible sur le même domaine', async (t) => {
+  const srv = await startServer();
+  t.after(() => srv.close());
+  const base = `http://127.0.0.1:${srv.address().port}`;
+
+  // la page est un fichier réel, pas la réécriture vers l'accueil
+  const page = await fetch(`${base}/connecter.html`);
+  assert.strictEqual(page.status, 200);
+  assert.ok((page.headers.get('content-type') || '').includes('text/html'));
+  assert.match(await page.text(), /\/js\/qrcode\.js/);
+
+  // …et le statut en direct arrive en JSON (proxy Vercel simulé ici)
+  const api = await fetch(`${base}/api/bot/public`);
+  assert.strictEqual(api.status, 200);
+  assert.ok((api.headers.get('content-type') || '').includes('application/json'));
+  const state = await api.json();
+  assert.strictEqual(state.ok, true);
+  assert.strictEqual(typeof state.qr, 'string');
+});
+
+test('confidentialité : ni dépôt, ni terminal, ni source sur le site', () => {
+  const index = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8');
+  const connect = fs.readFileSync(path.join(SITE, 'connecter.html'), 'utf8');
+
+  for (const [name, html] of [['index.html', index], ['connecter.html', connect]]) {
+    assert.ok(!/github\.com/i.test(html), `${name} expose le dépôt`);
+    assert.ok(!/git clone|npm install|npm start/i.test(html), `${name} expose le terminal`);
+    assert.ok(!/Licence MIT/i.test(html), `${name} annonce la licence du code`);
+  }
+
+  // …mais la page de connexion reste bien trouvable depuis l'accueil
+  assert.match(index, /href="\/connecter\.html"/, 'CTA « Connecter mon WhatsApp » absent');
+  assert.ok(!/id="installation"/.test(index), 'section installation (locale) encore présente');
+  assert.match(index, /Branchez WhatsApp en 3 étapes/, 'section connexion orientée site absente');
 });
