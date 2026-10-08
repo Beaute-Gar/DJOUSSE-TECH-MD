@@ -289,3 +289,53 @@ test('retours et commandes : bornes et typage défensif', async () => {
   l.pushResult('', 'done', 'x');
   assert.equal(l._state().queuedResults, LOG_TAIL, 'id vide ignoré');
 });
+
+/* ── 7. reprise immédiate (pont face à un coup de réseau) ──── */
+
+test('coup de réseau : la reprise évite le cooldown — le cycle aboutit', async () => {
+  calls = [];
+  logins = 0;
+  let n = 0;
+  global.fetch = async (url, opts = {}) => {
+    const u = String(url);
+    calls.push({ u, body: opts.body ? JSON.parse(opts.body) : null, cookie: opts.headers ? opts.headers.Cookie : null });
+    if (u.endsWith('/api/auth/login')) {
+      logins++;
+      return resp(200, { ok: true }, { 'set-cookie': 'vigil_session=tok1; Path=/; HttpOnly' });
+    }
+    n++;
+    if (n === 1) throw Object.assign(new Error('fetch failed'), { name: 'TypeError' });
+    return resp(200, { ok: true, commands: [] });
+  };
+
+  const l = makeLink({ retryMs: 0 });
+  l.pushLog('ligne critique');
+  const s = await l.syncOnce();
+
+  assert.equal(s.ok, true, 'la reprise doit aboutir sans passer hors ligne');
+  assert.equal(syncCalls().length, 2, 'exactement 2 tentatives : 1 echec + 1 reprise');
+  assert.equal(s.sentLogs, 1, 'le journal part quand meme');
+  assert.equal(l._state().queuedLogs, 0, 'accuse recu -> journal purge');
+});
+
+test('deux echecs de suite : le cycle echoue, sans boucle infinie', async () => {
+  calls = [];
+  logins = 0;
+  global.fetch = async (url, opts = {}) => {
+    const u = String(url);
+    calls.push({ u, body: opts.body ? JSON.parse(opts.body) : null, cookie: opts.headers ? opts.headers.Cookie : null });
+    if (u.endsWith('/api/auth/login')) {
+      logins++;
+      return resp(200, { ok: true }, { 'set-cookie': 'vigil_session=tok1; Path=/; HttpOnly' });
+    }
+    throw Object.assign(new Error('fetch failed'), { name: 'TypeError' });
+  };
+
+  const l = makeLink({ retryMs: 0 });
+  l.pushLog('ligne a conserver');
+  const s = await l.syncOnce();
+
+  assert.equal(s.ok, false, 'echec assume apres la reprise');
+  assert.equal(syncCalls().length, 2, 'une seule reprise : pas de boucle');
+  assert.equal(l._state().queuedLogs, 1, "rien n'est perdu sur un double echec");
+});
