@@ -30,3 +30,4 @@ vendor/yt-dlp.exe
 vendor/yt-dlp
 
 session.old-*/
+.vercel

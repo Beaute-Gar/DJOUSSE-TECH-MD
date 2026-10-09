@@ -90,6 +90,21 @@
     padding:30px 28px;width:100%;max-width:560px;
   }
 
+  /* Connexion */
+  .card form{display:grid;gap:12px;text-align:left}
+  .card label{font-size:13px;font-weight:750;color:var(--muted)}
+  .card input,.card select{
+    width:100%;padding:12px 14px;border-radius:10px;
+    border:1px solid var(--line);background:var(--card2);color:var(--txt);
+    font:inherit;outline:none;
+  }
+  .card input:focus,.card select:focus{border-color:var(--green)}
+  .card button:disabled{opacity:.6;cursor:wait;transform:none}
+  .card .btn{justify-content:center}
+  .error{color:var(--red);font-size:14px;margin-top:12px}
+  .status{color:var(--muted);font-size:14px;margin:12px 0}
+  .session-id{color:#6d8a80;font:12px var(--mono);overflow-wrap:anywhere;margin:8px 0}
+
   /* QR */
   .qr-box{
     background:#fff;border-radius:16px;padding:14px;
@@ -178,28 +193,54 @@
 
 <main>
   <div class="wrap">
-    <span class="pill"><span class="dot"></span><span>Authentification requise</span></span>
-    <h1>Gérez vos sessions WhatsApp</h1>
+    <span class="pill"><span class="dot"></span><span>Connexion depuis DJOUSSE-TECH-MD</span></span>
+    <h1>Connectez votre WhatsApp</h1>
     <p class="sub">
-      Connectez-vous à votre espace Vigil pour consulter et contrôler vos propres sessions.
-      Les QR codes ne sont accessibles qu’après authentification.
+      Scannez le QR code ou utilisez le code d’appairage directement sur ce site.
+      Après la connexion WhatsApp, un code temporaire vous permettra de créer votre accès Vigil.
     </p>
 
     <div class="panel">
-      <div class="card">
-        <div class="ok-ico">🔒</div>
-        <h2>Console sécurisée</h2>
-        <p class="hint">Chaque compte Vigil dispose de son propre espace et de ses propres sessions.</p>
-        <a class="btn" href="https://vigil-delta-lake.vercel.app/connect">
-          Créer mon compte avec WhatsApp
-        </a>
-      </div>
+      <section class="card" aria-live="polite">
+        <form id="enrollment-form">
+          <label for="connect-method">Méthode de connexion</label>
+          <select id="connect-method" name="method">
+            <option value="qr">Scanner un QR code</option>
+            <option value="pairing">Code d’appairage</option>
+          </select>
+          <div id="phone-field" hidden>
+            <label for="phone">Numéro WhatsApp avec indicatif international</label>
+            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="2376XXXXXXXX">
+          </div>
+          <button id="start-button" class="btn" type="submit">Démarrer la connexion</button>
+        </form>
+
+        <div id="session-panel" hidden>
+          <p id="session-id" class="session-id"></p>
+          <p id="session-status" class="status" role="status">Préparation de la session…</p>
+          <div id="qr-box" class="qr-box" hidden></div>
+          <p id="pairing-code" class="detail" hidden></p>
+          <div id="connection-help" class="steps" hidden>
+            <div class="step"><b>1</b><span>Ouvrez WhatsApp, puis <strong>Appareils liés</strong>.</span></div>
+            <div class="step"><b>2</b><span>Scannez le QR affiché ici ou saisissez le code d’appairage.</span></div>
+          </div>
+          <form id="claim-form" method="post" action="https://vigil-delta-lake.vercel.app/api/auth/claim-whatsapp/browser" target="_blank" hidden>
+            <input id="claim-session-id" name="sessionId" type="hidden">
+            <label for="claim-code">Code à usage unique reçu dans votre discussion WhatsApp</label>
+            <input id="claim-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+            <button class="btn" type="submit">Vérifier et créer mon accès</button>
+            <p class="hint">Votre espace Vigil s’ouvrira dans un nouvel onglet.</p>
+          </form>
+        </div>
+        <p id="form-error" class="error" role="alert" hidden></p>
+      </section>
     </div>
   </div>
 </main>
 
 <footer>
-  <a href="/">DJOUSSE TECH MD</a> · Les identifiants et QR codes restent dans votre espace authentifié.
+  <a href="/">DJOUSSE TECH MD</a> · Votre QR est affiché uniquement sur cette page.
 </footer>
+<script src="/js/connecter.js" defer></script>
 </body>
 </html>

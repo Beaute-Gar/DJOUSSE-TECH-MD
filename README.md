@@ -261,7 +261,7 @@ du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
 | Ce que fait le site | Ce que fait le bot |
 |---|---|
 | Voit le statut live (connecté, numéro, uptime, commandes chargées) | pousse son état toutes les **3 s** |
-| Affiche le **QR privé** à scanner dans l'espace authentifié | publie la dernière chaîne QR émise pour ce nœud |
+| Affiche le **QR privé** directement sur `djousse-tech-md.vercel.app/connecter.html` | publie la dernière chaîne QR émise pour ce nœud |
 | Demande un **pairing code** pour un numéro | relance la session en mode pairing et publie le code |
 | Envoie une commande (`.antilink on`, `.menu`, …) | l'injecte comme un message **du propriétaire** → handler normal |
 | Lit le **journal** (~200 dernières lignes) | relaie tout ce qui s'imprime au terminal |
@@ -289,13 +289,15 @@ du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
 
 #### Connexion WhatsApp sans mot de passe et hôte central
 
-La page `/connect` crée une demande temporaire. Le gestionnaire sur la machine
-centrale lance un processus DJOUSSE-TECH-MD isolé avec son propre répertoire
-Baileys et ses propres données. Après le scan du QR (ou l’appairage), le bot
-envoie un code à usage unique au numéro WhatsApp connecté. La saisie de ce code
-crée le compte Vigil et ouvre la session navigateur ; le numéro WhatsApp est
-vérifié par le code, il n’est pas utilisé seul comme justificatif. Un même compte
-Vigil peut ensuite rattacher plusieurs sessions.
+La page de connexion du site DJOUSSE TECH crée une demande temporaire auprès de
+Vigil et affiche le QR ou le code d’appairage **sur le site du bot**. Le
+gestionnaire sur la machine centrale lance un processus DJOUSSE-TECH-MD isolé
+avec son propre répertoire Baileys et ses propres données. Après le scan du QR
+(ou l’appairage), le bot envoie un code à usage unique au numéro WhatsApp
+connecté. Le formulaire de cette page transmet le code à Vigil ; après
+vérification, le compte est créé sans mot de passe et Vigil s’ouvre dans un
+nouvel onglet pour établir la session sécurisée. Le numéro WhatsApp est vérifié
+par le code, il n’est pas utilisé seul comme justificatif.
 
 Il faut configurer **la même clé aléatoire d’au moins 32 caractères** dans
 l’environnement du déploiement Vigil (`VIGIL_HOST_SECRET`) et dans le `.env` de
