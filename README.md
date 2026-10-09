@@ -138,7 +138,7 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 - `data/bot.db` — état, historique, journal en **un seul fichier**
 - `.journal [type] [n]` — sanctions, entrées/sorties, connexions
 - `.chatlog [n] [@user] [ici]` — messages reçus, requêtes rapides
-- `session/` ne contient **que** les credentials WhatsApp
+- `sessions/djsession/` ne contient **que** les credentials WhatsApp
 
 </td>
 <td>
@@ -237,8 +237,6 @@ la console de modération, quand une protection de contenu se déclenche :
 # ── Pont Vigil (optionnel) ───────────────────────
 # Vide = pont coupé, le bot fonctionne comme avant.
 VIGIL_URL=https://vigil-delta-lake.vercel.app
-VIGIL_EMAIL=demo@vigil.app
-VIGIL_PASSWORD=
 VIGIL_TIMEOUT_MS=1200
 VIGIL_MODE=enrich
 VIGIL_SYNC_MS=3000         # console à distance : rythme du va-et-vient (défaut 3 s)
@@ -263,7 +261,7 @@ du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
 | Ce que fait le site | Ce que fait le bot |
 |---|---|
 | Voit le statut live (connecté, numéro, uptime, commandes chargées) | pousse son état toutes les **3 s** |
-| Affiche le **QR** à scanner | publie la dernière chaîne QR émise |
+| Affiche le **QR privé** à scanner dans l'espace authentifié | publie la dernière chaîne QR émise pour ce nœud |
 | Demande un **pairing code** pour un numéro | relance la session en mode pairing et publie le code |
 | Envoie une commande (`.antilink on`, `.menu`, …) | l'injecte comme un message **du propriétaire** → handler normal |
 | Lit le **journal** (~200 dernières lignes) | relaie tout ce qui s'imprime au terminal |
@@ -284,6 +282,44 @@ du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
    revient `failed` avec la marche à suivre (`STOP`, puis nouvelle demande)
    au lieu d'un faux succès ; sinon la session enregistrée est **détachée à la
    demande** pour que le QR ou le code arrive *réellement*.
+8. **Isolation par compte et par processus** : Vigil lie chaque compte à son
+   propre espace et chaque processus bot à un nœud identifié. Les commandes,
+   états et QR sont lus dans l'espace authentifié puis ciblés par identifiant
+   de nœud. L'ancienne route publique `/api/bot/public` ne délivre plus d'état.
+
+#### Connexion WhatsApp sans mot de passe et hôte central
+
+La page `/connect` crée une demande temporaire. Le gestionnaire sur la machine
+centrale lance un processus DJOUSSE-TECH-MD isolé avec son propre répertoire
+Baileys et ses propres données. Après le scan du QR (ou l’appairage), le bot
+envoie un code à usage unique au numéro WhatsApp connecté. La saisie de ce code
+crée le compte Vigil et ouvre la session navigateur ; le numéro WhatsApp est
+vérifié par le code, il n’est pas utilisé seul comme justificatif. Un même compte
+Vigil peut ensuite rattacher plusieurs sessions.
+
+Il faut configurer **la même clé aléatoire d’au moins 32 caractères** dans
+l’environnement du déploiement Vigil (`VIGIL_HOST_SECRET`) et dans le `.env` de
+la machine centrale. Ne la placez jamais dans le site web, dans un profil de bot
+ou dans le dépôt. Configurez également `VIGIL_URL` sur la machine centrale,
+puis démarrez le gestionnaire :
+
+```powershell
+$env:VIGIL_URL = "https://vigil-delta-lake.vercel.app"
+$env:VIGIL_HOST_SECRET = "<même secret aléatoire que dans Vigil>"
+npm run vigil:host
+```
+
+Le gestionnaire interroge Vigil en sortie HTTPS et lance un processus enfant par
+session. Il n’exige pas de port entrant ouvert sur ta machine. Pour un service
+continu, configure `npm run vigil:host` dans le Planificateur de tâches Windows
+avec lancement à la connexion/démarrage et redémarrage en cas d’échec. Le
+processus parent garde le secret hôte ; chaque bot enfant ne reçoit qu’un jeton
+dérivé, propre à sa session. Chaque demande non réclamée expire après une heure.
+
+Les dossiers d’authentification WhatsApp restent dans `sessions/managed/` et les
+données dans `data/managed/`. Ne les partagez pas entre sessions et ne les
+publiez pas. Arrêter la fenêtre du gestionnaire arrête les bots gérés ; configurez
+un lancement automatique pour les reprendre après redémarrage de la machine.
 
 > La commande `raw` est volontairement traitée comme un message WhatsApp
 > *émis par le propriétaire* : les commandes owner-only restent owner-only,
@@ -330,8 +366,9 @@ AUTO_OWNER=1
 PREFIX=.
 
 # ── Connexion ────────────────────────────────────
-# QR : laisser vide   ·   Pairing : CONNECT_METHOD=pairing
-CONNECT_METHOD=
+# Le pairing code est utilisé par défaut ; définir CONNECT_METHOD=qr pour le QR
+SESSION_DIR=sessions/djsession
+CONNECT_METHOD=pairing
 PAIRING_PHONE=
 
 # ── Photo du .menu ────────────────────────────────
@@ -351,6 +388,10 @@ ANTI_DELETE=0
 WELCOME=0
 ANTI_LEFT=0
 
+# WELCOME et ANTI_LEFT sont les valeurs par défaut des nouveaux groupes.
+# Pour les groupes existants, les réglages propres au groupe sont conservés ;
+# utilise .welcome on all ou .goodbye on all pour les activer partout.
+
 # ── DJOUSSE GUARD ────────────────────────────────
 GUARD_TZ=Africa/Douala
 GUARD_LOG=0
@@ -359,8 +400,7 @@ GUARD_DB=guard.json
 # ── Pont Vigil (optionnel) ───────────────────────
 # Vide = pont coupé, le bot fonctionne comme avant.
 VIGIL_URL=
-VIGIL_EMAIL=
-VIGIL_PASSWORD=
+VIGIL_NODE_NAME=DJOUSSE-TECH-MD
 VIGIL_MODE=enrich
 
 # ── Modes ────────────────────────────────────────
@@ -379,8 +419,11 @@ L’image [`assets/anime-profile.jpg`](./assets/anime-profile.jpg) provient de [
 npm start        # lance d'abord l'audit, puis le bot (au premier plan)
 ```
 
-Un **QR code** s'affiche dans le terminal → WhatsApp › Appareils connectés › Connecter un appareil.
-Les credentials sont écrits dans `session/` (ignoré par git).
+Au lancement, le terminal affiche l’état réel du processus, du stockage, des protections et de la connexion WhatsApp, ainsi que les commandes et plugins effectivement chargés. L’IA indique uniquement si une clé est configurée (aucun secret n’est affiché). Les services externes ne sont pas sondés au démarrage afin de ne pas ralentir ni bloquer la connexion. WhatsApp ne passe à `CONNECTE` qu’après l’événement de connexion confirmé par Baileys.
+
+Le bot demande ton numéro international et affiche un **code de jumelage**.
+Sur WhatsApp : Appareils connectés → Connecter un appareil → Associer avec un numéro de téléphone.
+Les credentials sont écrits dans `sessions/djsession/` (ignoré par git).
 
 > 💡 `npm run audit` s'exécute tout seul avant chaque démarrage (`prestart`).
 > `npm run check` valide la syntaxe des 4 fichiers principaux.
@@ -438,7 +481,7 @@ DJOUSSE-TECH-MD/
 │   ├── tools.js      # Outils (remove.bg, conversions…)
 │   ├── missing.js    # Événements Baileys non couverts par handler.js
 │   ├── store.js      # Persistance JSON (state, historique)
-│   ├── dataDir.js    # 💾 Base locale data/ — séparée des credentials session/
+│   ├── dataDir.js    # 💾 Base locale data/ — séparée des credentials WhatsApp
 │   ├── waStats.js    # 🔌 Stats de connexion partagées index.js ⇄ handler.js (.diag)
 │   ├── scheduler.js  # .schedule / .schedules / .unschedule
 │   └── wa-send.js    # 🔑 Service d'envoi unique — tout envoi passe par send()
@@ -448,7 +491,7 @@ DJOUSSE-TECH-MD/
 ├── scripts/          # 🔍 audit.js (audit de démarrage) · service.js (start/stop/status/watch)
 ├── vendor/yt-dlp.exe # ⬇️ Auto-téléchargé au premier usage
 ├── data/             # 💾 Base locale SQLite — data/bot.db (état, historique, journal) — gitignoré
-└── session/          # 🔒 Credentials WhatsApp uniquement — gitignoré
+└── sessions/djsession/ # 🔒 Credentials WhatsApp uniquement — gitignoré
 ```
 
 **Flux d'un message :**
@@ -504,7 +547,7 @@ L'audit est décrit dans [`DIAGNOSTIC.md`](./DIAGNOSTIC.md), les correctifs hist
 Les éléments suivants doivent rester **privés** et **jamais** être commités dans Git :
 
 ```text
-.env              session/           logs/
+.env              sessions/          logs/
 tokens            API keys           mots de passe
 cookies           QR codes           codes d'appairage
 credentials       journaux contenant des données sensibles
@@ -527,9 +570,9 @@ tmp/
 vendor/yt-dlp.exe
 ```
 
-> `session/` = credentials WhatsApp · `data/` = base locale du bot
+> `sessions/djsession/` = credentials WhatsApp · `data/` = base locale du bot
 > (`state.json`, `history.json`, `guard.json`, `scheduler.json`, `store/`).
-> Effacer `session/` pour réappareiller ne détruit donc plus la config.
+> Effacer `sessions/djsession/` pour réappareiller ne détruit donc plus la config.
 
 ## 🤖 Politique d'accès & anti-conflits
 
@@ -555,7 +598,7 @@ Si les fichiers d'authentification sont exposés, une personne non autorisée po
 ### ✅ À faire
 
 ```text
-protéger le serveur · protéger le PC · protéger session/
+protéger le serveur · protéger le PC · protéger sessions/djsession/
 limiter les accès · supprimer les sessions inutilisées
 ```
 
@@ -563,7 +606,7 @@ limiter les accès · supprimer les sessions inutilisées
 
 ```text
 envoyer sa session à quelqu'un
-publier session/ sur GitHub
+publier sessions/djsession/ sur GitHub
 envoyer son QR dans un groupe public
 publier son code d'appairage
 écrire ses secrets directement dans index.js ou config.js
@@ -583,7 +626,7 @@ La quantité exacte de données traitées dépend de la configuration et des fon
 - identifiants et noms de groupes
 - messages adressés au bot et médias transmis au bot
 - informations nécessaires à l'exécution d'une commande
-- données de session (`session/`), base locale du bot (`data/`) et journaux techniques (`logs/`)
+- données de session (`sessions/djsession/`), base locale du bot (`data/`) et journaux techniques (`logs/`)
 
 Toutes les fonctionnalités ne traitent pas nécessairement toutes ces catégories.
 
@@ -612,10 +655,10 @@ Les données sont soit **temporaires** (exécution d'une opération), soit **tec
 Pour tout supprimer :
 
 ```bash
-rm -rf session/ logs/ tmp/
+rm -rf sessions/djsession/ logs/ tmp/
 ```
 
-⚠️ Supprimer `session/` impose une nouvelle authentification par QR ou code d'appairage.
+⚠️ Supprimer `sessions/djsession/` impose une nouvelle authentification par code d'appairage (ou QR si `CONNECT_METHOD=qr`).
 
 ---
 

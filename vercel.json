@@ -4,7 +4,6 @@
   "installCommand": null,
   "framework": null,
   "rewrites": [
-    { "source": "/api/bot/public", "destination": "https://vigil-delta-lake.vercel.app/api/bot/public" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

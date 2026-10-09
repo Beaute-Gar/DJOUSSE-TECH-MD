@@ -178,69 +178,28 @@
 
 <main>
   <div class="wrap">
-    <span class="pill" id="pill"><span class="dot"></span><span id="pillText">Connexion au service…</span></span>
-    <h1>Connecter WhatsApp</h1>
+    <span class="pill"><span class="dot"></span><span>Authentification requise</span></span>
+    <h1>Gérez vos sessions WhatsApp</h1>
     <p class="sub">
-      Scannez le code ci-dessous avec votre téléphone : le bot reçoit votre
-      session et reste en ligne. <strong style="color:var(--txt)">Rien à installer</strong> chez vous.
+      Connectez-vous à votre espace Vigil pour consulter et contrôler vos propres sessions.
+      Les QR codes ne sont accessibles qu’après authentification.
     </p>
 
     <div class="panel">
-
-      <!-- ── QR prêt à scanner ── -->
-      <div class="card" id="qrCard" hidden>
-        <div class="qr-box" id="qrBox"></div>
-        <div class="steps">
-          <div class="step"><b>1</b><span>Ouvrez <strong>WhatsApp</strong> sur votre téléphone</span></div>
-          <div class="step"><b>2</b><span>Allez dans <strong>Appareils liés → Connecter un appareil</strong></span></div>
-          <div class="step"><b>3</b><span>Pointez l'appareil photo vers ce code</span></div>
-        </div>
-        <p class="note">Le QR se renouvelle automatiquement — gardez cette page ouverte.</p>
+      <div class="card">
+        <div class="ok-ico">🔒</div>
+        <h2>Console sécurisée</h2>
+        <p class="hint">Chaque compte Vigil dispose de son propre espace et de ses propres sessions.</p>
+        <a class="btn" href="https://vigil-delta-lake.vercel.app/connect">
+          Créer mon compte avec WhatsApp
+        </a>
       </div>
-
-      <!-- ── connecté ── -->
-      <div class="card" id="okCard" hidden>
-        <div class="ok-ico">✓</div>
-        <h2>WhatsApp connecté</h2>
-        <p class="detail" id="okDetail">Le bot est en ligne</p>
-        <a class="btn" href="/">Retour au site</a>
-      </div>
-
-      <!-- ── préparation ── -->
-      <div class="card" id="waitCard" hidden>
-        <div class="spinner"></div>
-        <h2>Préparation du QR…</h2>
-        <p class="hint">Le bot établit la connexion avec WhatsApp.</p>
-        <p class="hint">Cela prend quelques secondes.</p>
-      </div>
-
-      <!-- ── bot hors ligne ── -->
-      <div class="card" id="offCard" hidden>
-        <div class="warn-ico">⚠</div>
-        <h2>Bot hors ligne</h2>
-        <p class="hint">Le service n'est pas démarré pour le moment.</p>
-        <p class="hint">La page réessaie automatiquement toutes les 3 secondes.</p>
-        <button class="btn ghost" id="retry">↻ Réessayer maintenant</button>
-      </div>
-
-      <!-- ── service injoignable ── -->
-      <div class="card" id="errCard" hidden>
-        <div class="warn-ico">⚠</div>
-        <h2>Service injoignable</h2>
-        <p class="hint">Impossible de joindre le service de statut.</p>
-        <button class="btn ghost" id="retry2">↻ Réessayer</button>
-      </div>
-
     </div>
   </div>
 </main>
 
 <footer>
-  <a href="/">DJOUSSE TECH MD</a> · Connexion WhatsApp · session hébergée et maintenue en ligne
+  <a href="/">DJOUSSE TECH MD</a> · Les identifiants et QR codes restent dans votre espace authentifié.
 </footer>
-
-<script src="/js/qrcode.js"></script>
-<script src="/js/qrcode_utf8.js"></script>
-<script src="/js/connecter.js"></script>
 </body>
 </html>

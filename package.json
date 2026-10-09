@@ -6,11 +6,12 @@
     "type": "commonjs",
     "scripts": {
         "start": "node index.js",
+        "vigil:host": "node scripts/vigil-host.js",
         "prestart": "node scripts/audit.js",
         "audit": "node scripts/audit.js",
         "audit:deps": "node scripts/audit.js --deps",
-        "test": "node --test test/auth.test.js test/command-access.test.js test/conflict.test.js test/http-get.test.js test/network-timeout.test.js test/wa-send.test.js",
-        "check": "node --check index.js && node --check handler.js && node --check config.js && node --check scripts/audit.js"
+        "test": "node --test test/auth.test.js test/command-access.test.js test/config-env.test.js test/conflict.test.js test/handler-options.test.js test/http-get.test.js test/message-cache.test.js test/network-timeout.test.js test/style.test.js test/vigil-host.test.js test/vigil-link.test.js test/wa-send.test.js",
+        "check": "node --check index.js && node --check handler.js && node --check config.js && node --check scripts/audit.js && node --check scripts/vigil-host.js"
     },
     "keywords": [
         "whatsapp bot",

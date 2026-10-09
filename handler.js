@@ -31,6 +31,7 @@ const yts = require('yt-search');
 const https = require('https');
 const ffmpegPath = require('ffmpeg-static');
 const { initStore, getStore } = require('./lib/store');
+const { createMessageCache } = require('./lib/message-cache');
 const { initScheduler, getScheduler } = require('./lib/scheduler');
 const { commandAccess } = require('./lib/command-access');
 const { withNetworkTimeout } = require('./lib/network-timeout');
@@ -155,28 +156,6 @@ if (process.env.FORCE_PUBLIC === '1' || process.env.FORCE_PUBLIC === 'true') {
   console.log('[STATE] FORCE_PUBLIC=1 → selfMode désactivé');
 }
 
-/* welcome / goodbye OFF pour TOUS les groupes (défaut + state existant) */
-{
-  state.groups = state.groups || {};
-  let n = 0;
-  for (const gid of Object.keys(state.groups)) {
-    const g = state.groups[gid];
-    if (!g) continue;
-    if (g.welcome) { g.welcome = false; n++; }
-    if (g.goodbye) { g.goodbye = false; n++; }
-  }
-  config.defaultGroupSettings.welcome = false;
-  config.defaultGroupSettings.goodbye = false;
-  if (n) console.log(`[STATE] welcome/goodbye forcés OFF (${n} drapeaux)`);
-  else console.log('[STATE] welcome/goodbye OFF (tous les groupes)');
-  // Écriture directe : saveState() n'est pas encore initialisé ici
-  try {
-    store.write('state', STATE_FILE, state);
-  } catch (e) {
-    console.error('[STATE] Écriture impossible:', e.message);
-  }
-}
-
 // Restaurer les owners découverts à la connexion précédente (session = owner)
 if (Array.isArray(state.settings?.owners) && state.settings.owners.length) {
   const merged = new Set([
@@ -292,23 +271,10 @@ function unwrapOnce(raw) {
 
 /* Cache des messages (antidelete / getMessage / edit / pin) : `${chat}|${id}` → message complet
    Branché sur makeWASocket({ getMessage }) pour retry, polls, édition. */
-const msgCache = new Map();
-function putCache(jid, id, msg) {
-  if (!jid || !id || !msg) return;
-  msgCache.set(`${jid}|${id}`, { msg, ts: Date.now() });
-  const max = config.msgCacheMax || 800;
-  while (msgCache.size > max) {
-    const oldest = msgCache.keys().next().value;
-    msgCache.delete(oldest);
-  }
-  try {
-    const st = getStore();
-    if (st) st.put(jid, id, msg);
-  } catch (_) {}
-}
-function getCache(jid, id) {
-  return msgCache.get(`${jid}|${id}`) || null;
-}
+const { put: putCache, get: getCache } = createMessageCache({
+  getStore,
+  getMaxSize: () => config.msgCacheMax || 800,
+});
 /** Callback Baileys getMessage — retourne le message brut (proto) ou undefined */
 async function getMessageForBaileys(key) {
   if (!key?.remoteJid || !key?.id) return undefined;
@@ -939,7 +905,7 @@ async function sendMenu(sock, jid, text, quoted) {
    quelles. Écriture atomique via .tmp + rename : un process tué au
    milieu ne laisse jamais un .env tronqué (le bot ne redémarrerait
    plus). */
-const ENV_PATH = process.env.ENV_FILE || path.join(__dirname, '.env');
+const ENV_PATH = path.resolve(process.env.ENV_FILE || path.join(__dirname, '.env'));
 function persistConnectMethod(method, phone) {
   let lines = [];
   try { lines = fs.readFileSync(ENV_PATH, 'utf8').split(/\r?\n/); } catch { /* .env absent : on le crée */ }
@@ -2849,8 +2815,10 @@ cmd(['video', 'ytv', 'ytmp4'], { cat: 11, desc: 'Télécharger une vidéo YouTub
    dépendance à handler.js — seules les 3 commandes sont branchées ici.
    try/catch : un module absent ou une dépendance manquante (canvas) ne
    doit jamais empêcher le bot de démarrer. ── */
+const loadedPlugins = [];
 try {
   require('./plugins/ludo')(cmd, commands);
+  loadedPlugins.push('ludo');
 } catch (e) {
   console.error('[LUDO] module non chargé :', e.message);
 }
@@ -3701,6 +3669,7 @@ module.exports = {
   handleGroupInfo,
   handleMessagesUpdate,
   commands,
+  loadedPlugins,
   CATEGORIES,
   renderMainMenu,
   state,

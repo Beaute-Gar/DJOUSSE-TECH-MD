@@ -3,12 +3,12 @@
  * DJOUSSE TECH MD — Point d'entrée (Baileys)
  *
  * Rôle :
- *   1. Connexion WhatsApp (QR ou code de pairing) avec reconnexion robuste
- *   2. Sauvegarde des credentials (session/)
+ *   1. Connexion WhatsApp (pairing code ou QR explicite) avec reconnexion robuste
+ *   2. Sauvegarde des credentials (sessions/djsession/)
  *   3. Délégation de TOUS le traitement métier à handler.js
  *
  * Architecture :
- *   .env · .gitignore · config.js · style.js · handler.js · index.js · package.json · session/
+ *   .env · .gitignore · config.js · style.js · handler.js · index.js · package.json · sessions/djsession/
  *   guard/ (moteur de protections de groupe)
  */
 
@@ -25,7 +25,6 @@ const {
   DisconnectReason,
   fetchLatestBaileysVersion,
   fetchLatestWaWebVersion,
-  downloadMediaMessage,
 } = require('@whiskeysockets/baileys');
 
 const config = require('./config');
@@ -35,7 +34,7 @@ const presence = require('./lib/presence');
 /* Étiquettes Business (.label list) : définitions + associations */
 const labelsCache = require('./lib/labels');
 /* Cadres de la console : source unique du style (style.js) */
-const { box, banner } = require('./style');
+const { box, banner, renderStartupDashboard } = require('./style');
 /* Extraction du texte : parseur unique du projet (G4) */
 const { textOf } = require('./guard/src/utils/message');
 const guardPerms = require('./guard/src/utils/perms');
@@ -44,6 +43,7 @@ const guardNight = require('./guard/src/nightmode');
 const waStats = require('./lib/waStats');
 /* Journal SQLite local (data/bot.db) — cycles de connexion */
 const localDb = require('./lib/db');
+const { DATA_DIR } = require('./lib/dataDir');
 
 /* ══════════════════════════════════════════════════════════════
    0. FILTRES — ignore les erreurs bruyantes de libsignal / réseau
@@ -65,10 +65,10 @@ const isIgnored = (value) => {
 
 /* ══════════════════════════════════════════════════════════════
    0. PONT VIGIL (console web) — voir lib/vigilLink.js
-      Le site affiche le statut, le QR, le code de pairing et le
-      journal du bot, et peut lui envoyer des commandes. Tout ce
-      qui est imprimé ici est relayé vers Vigil (~3 s) ; rien ne
-      part tant que VIGIL_URL / VIGIL_EMAIL / VIGIL_PASSWORD ne
+      Le tableau de bord authentifié affiche le statut, le QR, le code
+      de pairing et le journal de cette session, et peut lui envoyer des commandes. Tout ce
+      qui est imprimé ici est relayé vers Vigil (~3 s) ; les processus
+      gérés par l’hôte utilisent un jeton distinct par session.
       sont pas renseignés, et le pont ne démarre que dans main().
    ══════════════════════════════════════════════════════════════ */
 
@@ -77,7 +77,10 @@ const bridge = {
   code: null,      // dernier code de pairing émis
   codeFor: null,   // numéro visé par ce code
   connected: false,
-  method: config.connectMethod === 'pairing' ? 'pairing' : 'qr',
+  status: 'INITIALISATION',
+  lastError: '',
+  claimCodeSent: false,
+  method: config.connectMethod === 'qr' ? 'qr' : 'pairing',
 };
 
 const baseLog = console.log.bind(console);
@@ -93,6 +96,56 @@ const bridgeText = (args) => args.map((v) => {
 const rawLog = (...args) => { baseLog(...args); vigLink.pushLog(bridgeText(args)); };
 const rawError = (...args) => { baseError(...args); vigLink.pushLog('✖ ' + bridgeText(args)); };
 const rawWarn = (...args) => { baseWarn(...args); vigLink.pushLog('⚠ ' + bridgeText(args)); };
+
+let startupDashboardShown = false;
+function showStartupDashboard() {
+  let storage = 'ERREUR';
+  let protections = 'ERREUR';
+  try {
+    fs.accessSync(DATA_DIR, fs.constants.W_OK);
+    if (!handler.getStore() || !handler.getScheduler()) throw new Error('stockage non initialisé');
+    storage = localDb.available() ? 'OK (SQLite)' : 'OK (JSON)';
+  } catch {
+    storage = 'ERREUR';
+  }
+  try {
+    guardDb.db();
+    protections = 'INITIALISEES';
+  } catch {
+    protections = 'ERREUR';
+  }
+
+  const uniqueCommands = new Set(
+    Array.from(handler.commands.values(), (command) => command.name),
+  ).size;
+  const lastError = bridge.lastError || (
+    storage === 'ERREUR' ? 'Stockage inaccessible'
+      : protections === 'ERREUR' ? 'Protections indisponibles'
+        : ''
+  );
+  baseLog(renderStartupDashboard({
+    process: 'ACTIF',
+    version: config.version || 'inconnue',
+    nodeVersion: process.version,
+    storage,
+    commands: uniqueCommands,
+    plugins: handler.loadedPlugins.length,
+    protections,
+    ai: config.geminiKey ? 'CLE CONFIGUREE' : 'SANS CLE',
+    sessionId: path.basename(config.sessionDir) || 'principale',
+    connection: bridge.status,
+    activeSessions: bridge.connected ? 1 : 0,
+    lastError,
+  }));
+  startupDashboardShown = true;
+}
+
+function setBridgeStatus(status, lastError = '') {
+  const changed = bridge.status !== status || bridge.lastError !== lastError;
+  bridge.status = status;
+  bridge.lastError = lastError;
+  if (changed && startupDashboardShown) showStartupDashboard();
+}
 
 const { createLink: createVigilLink } = require('./lib/vigilLink');
 const vigLink = createVigilLink({
@@ -202,18 +255,17 @@ let sessionEpoch = 0;          // anti-démarrage concurrent → jamais 2 socket
 let activeSock = null;
 let conflictCount = 0;         // 440 connectionReplaced
 let handshakeFailCount = 0;    // 405 handshake rejeté
-let pairingAttempts = 0;       // codes de pairing émis
+let pairingAttempts = 0;       // demandes de code de pairing depuis la connexion
 let pairingCodeAt = 0;         // horodatage du dernier code émis → mesure sa durée de vie
 let conflictStableTimer = null;
 
 const CONFLICT_MAX_RETRIES = 8;
 const MAX_405_RETRIES = 5;
-const MAX_PAIRING_ATTEMPTS = 3;
 const PAIRING_TIMEOUT = 60 * 1000;
 const ladder = (arr, i) => arr[Math.min(Math.max(i, 1), arr.length) - 1];
 
 /* ══════════════════════════════════════════════════════════════
-   5. CHOIX MÉTHODE DE CONNEXION (readline seulement si TTY + pas de creds)
+   5. SAISIE DU NUMÉRO DE JUMELAGE (readline uniquement en terminal)
    ══════════════════════════════════════════════════════════════ */
 
 const ask = (query) => new Promise((resolve) => {
@@ -221,31 +273,14 @@ const ask = (query) => new Promise((resolve) => {
   rl.question(query, (ans) => { rl.close(); resolve(ans.trim()); });
 });
 
-async function askConnectionMethod() {
-  rawLog('\n' + box('DJOUSSE TECH — CONNEXION WHATSAPP', [
-    '1. QR Code      — Scanner avec le téléphone',
-    '2. Pairing Code — Saisir un code 8 chiffres',
-  ]) + '\n');
-  const choice = await ask('Choix [1/2]: ');
-  if (choice === '2') {
-    const phone = await ask('Numéro WhatsApp (ex: 237693978044): ');
-    const clean = phone.replace(/\D/g, '');
-    if (!clean || clean.length < 8) {
-      rawError('❌ Numéro invalide. Fallback QR Code.');
-      return { method: 'qr' };
-    }
-    return { method: 'pairing', phone: clean };
-  }
-  return { method: 'qr' };
-}
-
 /* ══════════════════════════════════════════════════════════════
    6. CYCLE DE CONNEXION — startSession()
    ══════════════════════════════════════════════════════════════ */
 
 async function startSession(options = {}) {
   const epoch = ++sessionEpoch;
-  const sessionDir = path.join(__dirname, config.sessionDir);
+  setBridgeStatus('INITIALISATION');
+  const sessionDir = path.resolve(__dirname, config.sessionDir);
 
   if (!fs.existsSync(sessionDir)) {
     fs.mkdirSync(sessionDir, { recursive: true });
@@ -295,10 +330,10 @@ async function startSession(options = {}) {
   const sock = makeWASocket({
     ...(version ? { version } : {}),
     logger,
-    // Triplet officiel Baileys : un nom de navigateur « maison » peut être
-    // refusé par WhatsApp au moment du pairing.
-    browser: Browsers.ubuntu('Chrome'),
+    browser: Browsers.windows('Chrome'),
     printQRInTerminal: false,
+    connectTimeoutMs: 60_000,
+    defaultQueryTimeoutMs: 60_000,
     /* Clés mises en cache par signal-key : évite de relire le disque
        à chaque chiffrage et accélère les envois en rafale (voir
        lib/Utils/auth-utils.d.ts → makeCacheableSignalKeyStore) */
@@ -343,31 +378,36 @@ async function startSession(options = {}) {
     });
   }
 
-  /* ── PAIRING CODE — demandé UNE fois par socket, au 1er événement « qr »
-        (= le serveur est prêt). Appelé depuis connection.update. ── */
+  /* ── PAIRING CODE — demandé une fois au premier QR émis par Baileys. ── */
   let pairingRequested = false;
   const requestPairing = async () => {
     if (pairingRequested) return;
     if (epoch !== sessionEpoch) return;
-    if (sock.authState.creds.registered || !isPairing || !options.pairingPhone) return;
+    if (sock.authState.creds.registered || !isPairing) return;
     pairingRequested = true;
 
-    if (pairingAttempts >= MAX_PAIRING_ATTEMPTS) {
-      rawError(`[PAIRING] ❌ ${MAX_PAIRING_ATTEMPTS} tentatives épuisées — relancez le bot pour un nouveau code.`);
-      return;
-    }
-    const phoneNumber = String(options.pairingPhone).replace(/\D/g, '');
-    if (phoneNumber.length < 8 || phoneNumber.length > 15) {
-      rawError(`[PAIRING] ❌ Numéro invalide (8 à 15 chiffres attendus) : ${options.pairingPhone}`);
-      return;
-    }
     try {
+      const configuredPhone = options.pairingPhone || config.pairingPhone
+        || String(config.ownerNumber?.[0] || '');
+      const input = process.stdin.isTTY && process.stdout.isTTY
+        ? await ask(
+          '\n' + box('DJOUSSE-TECH-MD', [
+            'Entre ton numéro WhatsApp',
+            'Avec indicatif international',
+            'Exemple Cameroun : 237XXXXXXXXX',
+          ]) + '\n> '
+        )
+        : configuredPhone;
+      const phoneNumber = String(input).replace(/\D/g, '');
+      if (!/^\d{8,15}$/.test(phoneNumber)) {
+        throw new Error('Numéro invalide. Utilise le numéro international avec indicatif.');
+      }
       rawLog('[PAIRING] Demande du code...');
       pairingAttempts++;
       const rawCode = await sock.requestPairingCode(phoneNumber);
       if (epoch !== sessionEpoch) return;
       const code = rawCode?.match(/.{1,4}/g)?.join('-') || rawCode;
-      rawLog(`[PAIRING] Code généré : ${code} (tentative ${pairingAttempts}/${MAX_PAIRING_ATTEMPTS})`);
+      rawLog(`[PAIRING] Code généré : ${code} (tentative ${pairingAttempts})`);
       rawLog('\n' + box('CODE DE PAIRING WHATSAPP', [
         `Code : ${code}`,
         '',
@@ -387,6 +427,7 @@ async function startSession(options = {}) {
         }
       }, PAIRING_TIMEOUT).unref?.();
     } catch (e) {
+      pairingRequested = false;
       console.error('[PAIRING] Erreur requestPairingCode:', e.message);
     }
   };
@@ -395,10 +436,16 @@ async function startSession(options = {}) {
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
 
+    if (connection === 'connecting') {
+      setBridgeStatus('INITIALISATION');
+      rawLog('[WHATSAPP] Connexion en cours...');
+    }
+
     if (qr) {
       bridge.qr = qr;
       bridge.code = null;
       bridge.codeFor = null;
+      setBridgeStatus('EN ATTENTE');
       if (isPairing) {
         // Le serveur envoie le « qr » quand il est prêt à lier un appareil :
         // c'est le moment officiel pour demander le code (doc Baileys).
@@ -417,6 +464,10 @@ async function startSession(options = {}) {
       guardNight.stop();
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const wasRegistered = !!state?.creds?.registered;
+      setBridgeStatus(
+        'RECONNEXION',
+        statusCode == null ? 'Deconnexion WhatsApp' : `Deconnexion WhatsApp (${statusCode})`,
+      );
 
       if (conflictStableTimer) { clearTimeout(conflictStableTimer); conflictStableTimer = null; }
 
@@ -447,16 +498,18 @@ async function startSession(options = {}) {
 
       // Un 401 qui SUIT un conflit 440 n'est PAS un logout : l'instance gagnante
       // a réécrit creds.json sur disque, celle qui perd rejoue en mémoire des
-      // creds obsolètes. Recommander « supprimez session/ » ici efface une
+      // creds obsolètes. Recommander « supprimez sessions/djsession/ » ici efface une
       // session VALIDE — constaté le 01/10 : session enregistrée détruite après
       // un ping-pong de deux instances. On ne propose la purge qu'en vrai logout.
       if (statusCode === DisconnectReason.loggedOut && wasRegistered) {
         if (conflictCount > 0) {
+          setBridgeStatus('ERREUR', `Session WhatsApp (${statusCode})`);
           rawError(`🚪 401 après ${conflictCount} conflit(s) 440 — creds périmés en mémoire, PAS un logout.`);
-          rawError('   → Ne supprimez PAS session/ . Arrêtez TOUTES les instances, puis relancez une seule.');
+          rawError('   → Ne supprimez PAS sessions/djsession/. Arrêtez TOUTES les instances, puis relancez une seule.');
           return;
         }
-        rawError('🚪 Session déconnectée (loggedOut) — supprimez session/ et rescannez le QR.');
+        setBridgeStatus('ERREUR', `Session WhatsApp (${statusCode})`);
+        rawError('🚪 Session déconnectée (loggedOut) — supprimez sessions/djsession/ et refaites le jumelage.');
         return;
       }
 
@@ -470,18 +523,20 @@ async function startSession(options = {}) {
         delay = Math.min(60000, 3000 * Math.pow(2, Math.min(conflictCount, 5)));
         rawLog(`⚠️ CONFLICT (connectionReplaced/440) — tentative ${conflictCount}/${CONFLICT_MAX_RETRIES} — reconnexion dans ${delay / 1000}s...`);
         if (conflictCount >= CONFLICT_MAX_RETRIES) {
+          setBridgeStatus('ERREUR', `Conflit WhatsApp (${statusCode})`);
           rawError('🛑 CONFLICT (440) persistant — une autre instance détient la session. Fermez-la puis redémarrez le bot.');
           return;
         }
       } else if (statusCode === DisconnectReason.loggedOut && !wasRegistered && isPairing) {
         delay = ladder([60000, 120000, 300000], pairingAttempts);
-        rawLog(`[PAIRING] 🔁 Retry pairing dans ${delay / 1000}s... (tentative ${pairingAttempts}/${MAX_PAIRING_ATTEMPTS})`);
+        rawLog(`[PAIRING] 🔁 Retry pairing dans ${delay / 1000}s... (tentative ${pairingAttempts})`);
       } else if (statusCode === 405) {
         handshakeFailCount++;
         waStats.handshakeFails = handshakeFailCount;
         delay = ladder([15000, 60000, 300000], handshakeFailCount);
         rawLog(`⚠️ HANDSHAKE REJETÉ (405) — tentative ${handshakeFailCount}/${MAX_405_RETRIES} — reconnexion dans ${delay / 1000}s...`);
         if (handshakeFailCount >= MAX_405_RETRIES) {
+          setBridgeStatus('ERREUR', `Handshake WhatsApp (${statusCode})`);
           rawError('🛑 405 persistant — vérifiez le réseau puis redémarrez le bot (la version WA est re-récupérée automatiquement).');
           return;
         }
@@ -523,10 +578,21 @@ async function startSession(options = {}) {
     if (connection === 'open') {
       bridge.connected = true;
       bridge.qr = null;
+      setBridgeStatus('CONNECTE');
       rawLog('[SOCKET] ✅ CONNECTÉ —', sock.user?.id || 'session active');
       waStats.connects++;
       waStats.connectedSince = Date.now();
       localDb.logEvent({ type: 'connect', detail: sock.user?.id || 'session' });
+
+      if (process.env.VIGIL_INSTANCE_ID && !bridge.claimCodeSent) {
+        try {
+          await vigLink.issueClaimCode(sock);
+          bridge.claimCodeSent = true;
+          rawLog('[VIGIL LINK] Code de vérification envoyé au WhatsApp connecté.');
+        } catch (error) {
+          rawError('[VIGIL LINK] Envoi du code de vérification impossible :', error.message);
+        }
+      }
 
       // CORRECTIF QR (prouvé en prod le 26/09/2026) : le fork ne définit jamais
       // registered=true en flux QR — sans ce marquage, chaque redémarrage voit
@@ -726,7 +792,7 @@ async function startSession(options = {}) {
  */
 function purgeSessionForRelink() {
   try {
-    const credsPath = path.join(__dirname, config.sessionDir, 'creds.json');
+    const credsPath = path.join(path.resolve(__dirname, config.sessionDir), 'creds.json');
     if (!fs.existsSync(credsPath)) return false;
     const raw = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
     if (!raw.registered && !raw.me) return false; // rien à détacher
@@ -862,6 +928,7 @@ async function bridgeCommand(kind, payload) {
         activeSock = null;
       }
       bridge.connected = false;
+      setBridgeStatus('EN ATTENTE');
       return 'Session WhatsApp fermée — le processus reste en vie (relancez QR ou PAIRING pour repartir).';
     }
 
@@ -898,7 +965,7 @@ async function bridgeCommand(kind, payload) {
 
 async function main() {
   vigLink.start(); // console web : inert si VIGIL_* absents
-  const sessionDir = path.join(__dirname, config.sessionDir);
+  const sessionDir = path.resolve(__dirname, config.sessionDir);
 
   // Session déjà enregistrée ?
   let hasCreds = false;
@@ -907,38 +974,14 @@ async function main() {
     if (fs.existsSync(credsPath)) hasCreds = !!JSON.parse(fs.readFileSync(credsPath, 'utf8')).registered;
   } catch { hasCreds = false; }
 
-  let connectMethod = (config.connectMethod === 'pairing') ? 'pairing'
-    : (config.connectMethod === 'qr') ? 'qr' : '';
+  let connectMethod = config.connectMethod === 'qr' ? 'qr' : 'pairing';
   let pairingPhone = config.pairingPhone || null;
 
   if (hasCreds) {
     rawLog('[SESSION] Session existante détectée — reconnexion automatique...');
-    if (!connectMethod) connectMethod = 'qr';
-  } else if (!connectMethod) {
-    if (process.stdin.isTTY && process.stdout.isTTY) {
-      const choice = await askConnectionMethod();
-      connectMethod = choice.method;
-      pairingPhone = choice.phone || pairingPhone;
-    } else {
-      // Non-interactif (service) : pas de readline — env ou pairing auto
-      const ownerPhone = String(config.ownerNumber?.[0] || '').replace(/\D/g, '');
-      connectMethod = 'pairing';
-      pairingPhone = pairingPhone || ownerPhone || null;
-      if (!pairingPhone) connectMethod = 'qr';
-      rawLog(`[SESSION] Mode non-interactif → ${connectMethod}${pairingPhone ? ` (téléphone: ${pairingPhone})` : ''}`);
-    }
   }
 
-  if (connectMethod === 'pairing' && !pairingPhone) {
-    const ownerPhone = String(config.ownerNumber?.[0] || '').replace(/\D/g, '');
-    pairingPhone = ownerPhone || null;
-    if (!pairingPhone) {
-      rawError('[PAIRING] ❌ Aucun numéro (PAIRING_PHONE / OWNER_NUMBER vide) → fallback QR.');
-      connectMethod = 'qr';
-    }
-  }
-
-  rawLog(banner(`   ${config.botName} v${config.version} — DJOUSSE TECH MD`));
+  showStartupDashboard();
 
   await startSession({ connectMethod, pairingPhone });
 }
@@ -947,6 +990,8 @@ async function main() {
    pour les tests E2E qui appellent startSession() eux-mêmes */
 if (require.main === module) {
   main().catch((err) => {
+    setBridgeStatus('ERREUR', 'Demarrage impossible');
+    if (!startupDashboardShown) showStartupDashboard();
     rawError('Fatal:', err?.message || err);
     process.exit(1);
   });

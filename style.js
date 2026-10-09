@@ -48,16 +48,46 @@ const box = (heading, rows = []) =>
 const banner = (text, w = 46) =>
   [`┌${'─'.repeat(w)}┐`, `│${String(text).padEnd(w)}│`, `└${'─'.repeat(w)}┘`].join('\n');
 
+function renderStartupDashboard(status) {
+  const fit = (value) => [...String(value)].slice(0, BOX_W).join('');
+  const rows = [
+    'DJOUSSE TECH EVOLUTION',
+    'DJOUSSE-TECH-MD - BOT WHATSAPP',
+    'Des solutions fiables pour un avenir',
+    'sans limites',
+    '',
+    'SYSTEME',
+    `Processus : ${status.process}`,
+    `Version bot : ${status.version}`,
+    `Runtime Node.js : ${status.nodeVersion}`,
+    `Stockage : ${status.storage}`,
+    `Commandes : ${status.commands} chargees`,
+    `Plugins : ${status.plugins} charges`,
+    `Protections : ${status.protections}`,
+    `Intelligence IA : ${status.ai}`,
+    'Services externes : NON TESTES',
+    '',
+    'SESSION',
+    `ID : ${status.sessionId}`,
+    `Connexion : ${status.connection}`,
+    `Sessions actives : ${status.activeSessions}`,
+    `Derniere erreur : ${status.lastError || 'aucune'}`,
+  ];
+  return box('DJOUSSE TECH EVOLUTION', rows.map(fit));
+}
+
 /* Footer officiel — menus uniquement (pas sur les petits messages) */
 function signature() {
   return `${toUnicode('MULTI-DEVICE WHATSAPP BOT')}\n${toUnicode('MADE BY')} DJOUSSE TECH`;
 }
 
-/* Réponses système — lignes fournies telles quelles (valeurs lisibles) */
-const renderInfo = (lines) => buildFrame('INFO', lines.map((l) => `│✦ ${l}`));
-const renderSuccess = (lines) => buildFrame('SUCCÈS', lines.map((l) => `│✦ ${l}`));
-const renderError = (lines) => buildFrame('ERREUR', lines.map((l) => `│✦ ${toUnicode(l)}`));
-const renderSaisie = (hint) => buildFrame('SAISISSEZ REQUIS', [`│✦ ${toUnicode(hint)}`]);
+/* Réponses système — titres et contenus suivent tous le même alphabet. */
+const renderNotice = (heading, lines) =>
+  buildFrame(heading, lines.map((line) => `│✦ ${toUnicode(line)}`));
+const renderInfo = (lines) => renderNotice('INFO', lines);
+const renderSuccess = (lines) => renderNotice('SUCCÈS', lines);
+const renderError = (lines) => renderNotice('ERREUR', lines);
+const renderSaisie = (hint) => renderNotice('SAISISSEZ REQUIS', [hint]);
 
 const two = (n) => String(n).padStart(2, '0');
 function nowTime() {
@@ -71,6 +101,7 @@ function nowDate() {
 
 module.exports = {
   toUnicode, frameHeader, frameFooter, buildFrame, listHeader, listItem, bullet,
-  row, blank, title, note, box, banner, boxTop, boxRule, boxBottom, boxRow, BOX_W,
+  row, blank, title, note, box, banner, renderStartupDashboard,
+  boxTop, boxRule, boxBottom, boxRow, BOX_W,
   signature, renderInfo, renderSuccess, renderError, renderSaisie, two, nowTime, nowDate,
 };

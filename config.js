@@ -5,7 +5,9 @@
  * Aucune logique métier ici : uniquement des constantes lues une seule fois.
  */
 
-require('dotenv').config();
+const dotenv = require('dotenv');
+if (process.env.ENV_FILE) dotenv.config({ path: process.env.ENV_FILE });
+else dotenv.config();
 
 const bool = (value, fallback = false) => {
   if (value === undefined || value === null || value === '') return fallback;
@@ -44,7 +46,7 @@ module.exports = {
 
   // Session Baileys (dossier des credentials — le SEUL à effacer pour
   // réappareiller : voir lib/dataDir.js)
-  sessionDir: process.env.SESSION_DIR || 'session',
+  sessionDir: process.env.SESSION_DIR || 'sessions/djsession',
 
   // Base locale du bot (state, historiques, guard, scheduler, store)
   dataDir: process.env.DATA_DIR || 'data',
@@ -81,7 +83,7 @@ module.exports = {
   // IA (optionnelle : sans clé, la commande .ai répond avec un message explicite)
   geminiKey: process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || '',
 
-  // Connexion (QR par défaut, pairing si CONNECT_METHOD=pairing)
+  // Connexion (pairing par défaut, QR si CONNECT_METHOD=qr)
   connectMethod: (process.env.CONNECT_METHOD || '').toLowerCase(),
   pairingPhone: String(process.env.PAIRING_PHONE || '').replace(/\D/g, ''),
 

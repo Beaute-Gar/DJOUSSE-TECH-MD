@@ -569,6 +569,35 @@ function checkG4() {
   }
   if (parserProblems.length) KO('G4', `parseurs dupliques : ${parserProblems.join(' | ')}`);
   else OK('G4', `parseurs uniques au bon proprietaire (${Object.keys(PARSERS).length}/5 → guard/src/utils/message.js)`);
+
+  // 6. les réponses encadrées partagent le moteur et les wrappers publics l'utilisent
+  const style = require(path.join(ROOT, 'style.js'));
+  const sample = 'Status active 123';
+  const expectedLine = `│✦ ${style.toUnicode(sample)}`;
+  const rendered = [
+    style.renderInfo([sample]),
+    style.renderSuccess([sample]),
+    style.renderError([sample]),
+    style.renderSaisie(sample),
+  ];
+  const inconsistent = rendered.some((text) =>
+    !text.includes(expectedLine)
+    || !text.startsWith('╭┄┄『 ')
+    || !text.endsWith('╰┄┄┄┄┄┄┄┄┄┄┄┄⪼')
+  );
+  const handler = strip(read(path.join(ROOT, 'handler.js')));
+  const responseWrappers = [
+    /error:\s*async\s*\([^)]*\)\s*=>\s*send\([\s\S]{0,180}?renderError\(/,
+    /info:\s*async\s*\([^)]*\)\s*=>\s*send\([\s\S]{0,180}?renderInfo\(/,
+    /success:\s*async\s*\([^)]*\)\s*=>\s*send\([\s\S]{0,180}?renderSuccess\(/,
+    /saisie:\s*async\s*\([^)]*\)\s*=>\s*send\([\s\S]{0,180}?renderSaisie\(/,
+  ];
+  if (inconsistent) KO('G4', 'renderers de réponses système incoherents (cadre ou alphabet)');
+  else if (responseWrappers.some((re) => !re.test(handler))) {
+    KO('G4', 'un wrapper de réponse du handler contourne le moteur style.js');
+  } else {
+    OK('G4', 'réponses système : cadre et alphabet uniformes via style.js');
+  }
 }
 
 /* ------------------------------------------------------------------ */
