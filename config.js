@@ -18,17 +18,20 @@ const numbers = (value, fallback) =>
     .map((entry) => entry.trim().replace(/\D/g, ''))
     .filter(Boolean);
 
-const profilePictureMode = (process.env.PROFILE_PICTURE_MODE || 'local').trim().toLowerCase();
-if (!['random', 'local', 'off'].includes(profilePictureMode)) {
-  console.error(`[CONFIG] PROFILE_PICTURE_MODE invalide (${profilePictureMode}) — mode random utilisé.`);
+/* Photo du .menu : random = photo aléatoire qui tourne toute seule
+   (l'API la fournit, échec → image locale → bannière),
+   local = image fixe du dossier assets/, off = bannière générée. */
+const menuPictureMode = (process.env.MENU_PICTURE_MODE || 'random').trim().toLowerCase();
+if (!['random', 'local', 'off'].includes(menuPictureMode)) {
+  console.error(`[CONFIG] MENU_PICTURE_MODE invalide (${menuPictureMode}) — mode random utilisé.`);
 }
 
 module.exports = {
   // Identité du bot
   botName: process.env.BOT_NAME || 'DJOUSSE TECH',
   botOwnerName: process.env.OWNER_NAME || 'Beaute Gar',
-  profilePictureMode: ['random', 'local', 'off'].includes(profilePictureMode) ? profilePictureMode : 'random',
-  profilePicturePath: process.env.PROFILE_PICTURE_PATH || 'assets/anime-profile.jpg',
+  menuPictureMode: ['random', 'local', 'off'].includes(menuPictureMode) ? menuPictureMode : 'random',
+  menuPicturePath: process.env.MENU_PICTURE_PATH || 'assets/anime-profile.jpg',
   // Numéros owner (.env). Au connect, le numéro de la session est AJOUTÉ automatiquement.
   // Module 1 : comparaison STRICTE sur ces chiffres — aucun défaut en dur
   // (AUTO_OWNER ajoute le numéro de session au connect → pas de lockout).

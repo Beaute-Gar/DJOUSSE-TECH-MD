@@ -557,71 +557,47 @@ async function sendRecovered(sock, jid, result, quoted, caption) {
   }
 }
 
-async function updateBotProfilePicture(sock) {
-  if (!sock?.user?.id) throw new Error('Socket WhatsApp non connecté.');
-  if (config.profilePictureMode === 'off') {
-    console.log('[PROFILE] Actualisation automatique désactivée.');
-    return false;
-  }
+/* ── PHOTO ALÉATOIRE DU MENU ─────────────────────────────────
+   L'image affichée par .menu tourne toute seule : à chaque
+   expiration du cache de `getMenuImageBuffer()`, une nouvelle photo
+   est téléchargée (Picsum — photos réelles aléatoires, hôte restreint,
+   taille bornée). En cas d'échec réseau on retombe proprement sur
+   l'image locale puis sur la bannière générée — le menu n'échoue
+   jamais.
 
-  let image;
-  if (config.profilePictureMode === 'local') {
-    if (!config.profilePicturePath) {
-      throw new Error('PROFILE_PICTURE_PATH doit désigner un fichier image local.');
+   (Remplace l'ancienne rotation de la PHOTO DE PROFIL WhatsApp :
+   la photo qui change est celle du menu, pas le profil du bot.) */
+async function fetchRandomMenuPhoto() {
+  const image = await withNetworkTimeout(async (signal) => {
+    const response = await fetch('https://picsum.photos/800/450', { signal });
+    if (!response.ok) throw new Error(`Picsum a répondu HTTP ${response.status}.`);
+    if (!response.headers.get('content-type')?.startsWith('image/')) {
+      throw new Error('Picsum n’a pas retourné une image.');
     }
-    const imagePath = path.resolve(__dirname, config.profilePicturePath);
-    image = fs.readFileSync(imagePath);
-  } else {
-    image = await withNetworkTimeout(async (signal) => {
-      const apiResponse = await fetch('https://api.waifu.pics/sfw/waifu', { signal });
-      if (!apiResponse.ok) throw new Error(`API anime a répondu HTTP ${apiResponse.status}.`);
-      if (!apiResponse.headers.get('content-type')?.includes('application/json')) {
-        throw new Error('L’API anime n’a pas retourné de JSON.');
+    const declaredSize = Number(response.headers.get('content-length') || 0);
+    if (declaredSize > 10 * 1024 * 1024) throw new Error('Image Picsum trop volumineuse.');
+    if (!response.body) throw new Error('Réponse image Picsum vide.');
+    const reader = response.body.getReader();
+    const chunks = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > 10 * 1024 * 1024) {
+        await reader.cancel();
+        throw new Error('Image Picsum trop volumineuse.');
       }
-      const { url } = await apiResponse.json();
-      let imageUrl;
-      try {
-        imageUrl = new URL(url);
-      } catch {
-        throw new Error('URL d’image anime invalide.');
-      }
-      if (imageUrl.protocol !== 'https:' || imageUrl.hostname !== 'i.waifu.pics') {
-        throw new Error('Hôte d’image anime non autorisé.');
-      }
-      const response = await fetch(imageUrl, { signal });
-      if (!response.ok) throw new Error(`Téléchargement anime HTTP ${response.status}.`);
-      if (!response.headers.get('content-type')?.startsWith('image/')) {
-        throw new Error('Le service anime n’a pas retourné une image.');
-      }
-      const declaredSize = Number(response.headers.get('content-length') || 0);
-      if (declaredSize > 10 * 1024 * 1024) throw new Error('Image anime trop volumineuse.');
-      if (!response.body) throw new Error('Réponse image anime vide.');
-      const reader = response.body.getReader();
-      const chunks = [];
-      let total = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        total += value.length;
-        if (total > 10 * 1024 * 1024) {
-          await reader.cancel();
-          throw new Error('Image anime trop volumineuse.');
-        }
-        chunks.push(Buffer.from(value));
-      }
-      return Buffer.concat(chunks, total);
-    }, 30000, 'Téléchargement image anime SFW');
-  }
-  if (!image.length || image.length > 10 * 1024 * 1024) {
-    throw new Error('Taille de l’image téléchargée invalide.');
-  }
-  const profilePicture = await sharp(image)
-    .resize(640, 640, { fit: 'cover' })
-    .jpeg({ quality: 85 })
+      chunks.push(Buffer.from(value));
+    }
+    return Buffer.concat(chunks, total);
+  }, 30000, 'Téléchargement photo aléatoire Picsum');
+  if (!image.length) throw new Error('Image Picsum vide.');
+  /* Format menu : 800×450 JPEG léger, comme setmenuimg. */
+  return sharp(image)
+    .resize(800, 450, { fit: 'cover' })
+    .jpeg({ quality: 75, mozjpeg: true })
     .toBuffer();
-  await sock.updateProfilePicture(sock.user.id, profilePicture);
-  const source = config.profilePictureMode === 'random' ? 'anime SFW aléatoire' : 'fichier local';
-  console.log(`[PROFILE] Photo du bot actualisée (${source}, ${profilePicture.length} octets).`);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -877,31 +853,52 @@ let _menuImgCache = null;
 let _menuImgTs = 0;
 
 async function getMenuImageBuffer() {
-  // Cache 5 min
+  // Cache 5 min — la photo aléatoire tourne donc régulièrement
   if (_menuImgCache && Date.now() - _menuImgTs < 5 * 60 * 1000) return _menuImgCache;
 
-  for (const p of MENU_IMG_PATHS) {
+  /* ── Mode random (défaut) : photo aléatoire qui change avec le
+        menu. Échec API/réseau → repli local → bannière : jamais
+        d'erreur au destinataire. ── */
+  if (config.menuPictureMode === 'random') {
     try {
-      if (fs.existsSync(p)) {
-        const raw = fs.readFileSync(p);
-        // Compresser si trop lourd (> 400 Ko)
-        if (raw.length > 400 * 1024) {
-          _menuImgCache = await sharp(raw)
-            .resize(800, 450, { fit: 'cover' })
-            .jpeg({ quality: 72, mozjpeg: true })
-            .toBuffer();
-        } else if (p.endsWith('.png')) {
-          _menuImgCache = await sharp(raw)
-            .resize(800, 450, { fit: 'inside' })
-            .jpeg({ quality: 80 })
-            .toBuffer();
-        } else {
-          _menuImgCache = raw;
+      const photo = await fetchRandomMenuPhoto();
+      _menuImgCache = photo;
+      _menuImgTs = Date.now();
+      console.log(`[MENU] Photo aléatoire du menu actualisée (${photo.length} octets).`);
+      return _menuImgCache;
+    } catch (e) {
+      console.error('[MENU] Photo aléatoire indisponible, repli local:', e.message);
+    }
+  }
+
+  /* Mode off : bannière générée uniquement. */
+  if (config.menuPictureMode !== 'off') {
+    const localPaths = config.menuPicturePath
+      ? [path.resolve(__dirname, config.menuPicturePath), ...MENU_IMG_PATHS]
+      : MENU_IMG_PATHS;
+    for (const p of localPaths) {
+      try {
+        if (fs.existsSync(p)) {
+          const raw = fs.readFileSync(p);
+          // Compresser si trop lourd (> 400 Ko)
+          if (raw.length > 400 * 1024) {
+            _menuImgCache = await sharp(raw)
+              .resize(800, 450, { fit: 'cover' })
+              .jpeg({ quality: 72, mozjpeg: true })
+              .toBuffer();
+          } else if (p.endsWith('.png')) {
+            _menuImgCache = await sharp(raw)
+              .resize(800, 450, { fit: 'inside' })
+              .jpeg({ quality: 80 })
+              .toBuffer();
+          } else {
+            _menuImgCache = raw;
+          }
+          _menuImgTs = Date.now();
+          return _menuImgCache;
         }
-        _menuImgTs = Date.now();
-        return _menuImgCache;
-      }
-    } catch (_) {}
+      } catch (_) {}
+    }
   }
 
   // Bannière générée (très légère) — style DJOUSSE
@@ -1614,38 +1611,33 @@ cmd('vv', {
   cat: 4, desc: 'Récupérer un média en vue unique',
   usage: 'vv (réponds à un média vue unique)', icon: '🔓',
 }, async (ctx) => {
-  /* ── Échelle de diagnostic : chaque refus dit POURQUOI, pas juste
-        « ce n'est pas bon ». L'erreur la plus fréquente était un
-        message média répondu à tort (l'autre bout du fil) ou un média
-        déjà consommé par le destinataire. ── */
+  /* ── Comportement à l'identique de la référence DJOUSSE-TECH-VV :
+        la commande accepte le MÉDIA CITÉ tel quel, enveloppe vue
+        unique ou non. WhatsApp retire souvent l'enveloppe
+        viewOnceMessage* du message cité (elle n'est qu'une marque
+        d'affichage côté téléphone) ; exiger l'enveloppe rejetait à
+        tort une récupération pourtant valide — le média lui-même est
+        bien présent dans le cache ou dans quotedMessage.
+
+        La référence réagit ⏳ puis ✅/❌ : même feedback ici, transport
+        garanti G2 via send(). Chaque refus dit POURQUOI. ── */
+  await send(ctx.sock, ctx.from, { react: { text: '⏳', key: ctx.msg.key } });
   const target = findOnceTarget(ctx.msg);
   if (!target) {
+    await send(ctx.sock, ctx.from, { react: { text: '❌', key: ctx.msg.key } });
     return ctx.error([
       'AUCUN MESSAGE CITÉ',
       'RÉPONDS DIRECTEMENT AU MÉDIA VUE UNIQUE',
       `PUIS ${config.prefix}VV`,
     ]);
   }
-  if (!isOnceContent(target.message)) {
-    return ctx.error([
-      'CE MESSAGE N’EST PAS EN VUE UNIQUE',
-      'VÉRIFIE QUE TU CITTES LE MÉDIA LUI-MÊME',
-      '(PAS UN AUTRE MESSAGE DU MÊME FIL)',
-    ]);
-  }
   const info = onceMediaInfo(target);
   if (!info) {
+    await send(ctx.sock, ctx.from, { react: { text: '❌', key: ctx.msg.key } });
     return ctx.error([
       'MÉDIA CITÉ INTROUVABLE OU EXPIRÉ',
       'LA VUE UNIQUE A DÉJÉ ÉTÉ CONSOMMÉE',
       'DEMANDE-LUI DE RENVOYER LE MÉDIA',
-    ]);
-  }
-  /* Les médias view-once incluent également les stickers. */
-  if (!['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'stickerMessage'].includes(info.type)) {
-    return ctx.error([
-      `TYPE NON GÉRÉ : ${String(info.type).replace('Message', '').toUpperCase()}`,
-      'TYPES ACCEPTÉS : PHOTO, VIDÉO, AUDIO, DOCUMENT, STICKER',
     ]);
   }
   await ctx.reply(config.messages.wait);
@@ -1654,7 +1646,9 @@ cmd('vv', {
     const result = await downloadVV(ctx.sock, info);
     await sendRecovered(ctx.sock, ctx.from, result, ctx.msg,
       renderSuccess(['VUE UNIQUE RÉCUPÉRÉE', `${label} CONVERTI EN CLASSIQUE`]));
+    await send(ctx.sock, ctx.from, { react: { text: '✅', key: ctx.msg.key } });
   } catch (e) {
+    await send(ctx.sock, ctx.from, { react: { text: '❌', key: ctx.msg.key } });
     await ctx.error(['MÉDIA INDISPONIBLE OU EXPIRÉ', `[${e.message}]`]);
   }
 });
@@ -3717,7 +3711,6 @@ module.exports = {
   getCache,
   getScheduler,
   getStore,
-  updateBotProfilePicture,
   // Commutateur QR/Pairing : utilisé par .menu qr|pairing ET par le pont Vigil
   persistConnectMethod,
 };

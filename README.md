@@ -334,11 +334,12 @@ PREFIX=.
 CONNECT_METHOD=
 PAIRING_PHONE=
 
-# ── Photo du profil WhatsApp ─────────────────────
-# local = portrait anime fourni · random = nouvelle image anime SFW via API · off = ne rien changer
-PROFILE_PICTURE_MODE=local
-# Obligatoire si PROFILE_PICTURE_MODE=local (chemin relatif à la racine ou chemin absolu)
-PROFILE_PICTURE_PATH=assets/anime-profile.jpg
+# ── Photo du .menu ────────────────────────────────
+# random = photo aléatoire tirée de Picsum, qui change régulièrement (défaut)
+# local  = image fixe (MENU_PICTURE_PATH)  ·  off = bannière générée
+MENU_PICTURE_MODE=random
+# Utilisé si MENU_PICTURE_MODE=local (chemin relatif à la racine ou absolu)
+MENU_PICTURE_PATH=assets/anime-profile.jpg
 
 # ── IA (optionnel) ───────────────────────────────
 # Sans clé, .ai renvoie un message explicite.
