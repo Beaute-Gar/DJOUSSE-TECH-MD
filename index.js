@@ -442,7 +442,9 @@ async function startSession(options = {}) {
     }
 
     if (qr) {
-      bridge.qr = qr;
+      // En mode pairing, Baileys émet un QR interne comme signal pour
+      // requestPairingCode ; ce QR ne peut pas être scanné par l’utilisateur.
+      bridge.qr = isPairing ? null : qr;
       bridge.code = null;
       bridge.codeFor = null;
       setBridgeStatus('EN ATTENTE');
@@ -461,6 +463,9 @@ async function startSession(options = {}) {
 
     if (connection === 'close') {
       bridge.connected = false;
+      bridge.qr = null;
+      bridge.code = null;
+      bridge.codeFor = null;
       guardNight.stop();
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const wasRegistered = !!state?.creds?.registered;
@@ -578,6 +583,8 @@ async function startSession(options = {}) {
     if (connection === 'open') {
       bridge.connected = true;
       bridge.qr = null;
+      bridge.code = null;
+      bridge.codeFor = null;
       setBridgeStatus('CONNECTE');
       rawLog('[SOCKET] ✅ CONNECTÉ —', sock.user?.id || 'session active');
       waStats.connects++;
