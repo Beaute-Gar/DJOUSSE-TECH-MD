@@ -37,6 +37,7 @@ const { commandAccess } = require('./lib/command-access');
 const { withNetworkTimeout } = require('./lib/network-timeout');
 const { registerExtras } = require('./lib/extras');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('./lib/ported-auto');
+const portedGroup = require('./lib/ported-group');
 /* Conversion vidéo via ffmpeg-static — helper partagé (voir lib/wa-sticker.js) */
 const { ffmpegBuffer } = require('./lib/ffmpeg');
 const { registerTools } = require('./lib/tools');
@@ -2570,6 +2571,16 @@ try {
     buildFrame,
     bullet,
   });
+  /* ── Portées de TEDDY-XMD : groupe (anti-bot, cron, tagadmin) ── */
+  portedGroup.registerPortedGroup(cmd, {
+    config,
+    send,
+    saveState,
+    getSettings: () => state.settings.portedGroup || {},
+    setSettings: (s) => { state.settings.portedGroup = s; },
+    buildFrame,
+    bullet,
+  });
   registerTools(cmd, {
     config,
     mediaInfo,
@@ -3569,6 +3580,14 @@ async function handleGroupUpdate(sock, update) {
         participants = participants.filter((p) => !fakes.includes(p));
         if (!participants.length) return;
       }
+    }
+
+    /* Porté TEDDY-XMD : anti-bot (expulsion/avertissement des bots qui entrent) */
+    if (action === 'add') {
+      try {
+        const n = await portedGroup.onParticipantAdd(sock, id, participants, state.settings.portedGroup);
+        if (n) console.log(`[ANTIBOT] ${n} bot(s) traité(s) dans ${id}`);
+      } catch (e) { console.error('[ANTIBOT]', e.message); }
     }
 
     const g = getGroup(id);
