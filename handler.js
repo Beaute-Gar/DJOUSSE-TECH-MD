@@ -58,6 +58,8 @@ const auth = require('./lib/auth');
 const conflict = require('./lib/conflict');
 /* MODULE 4 : IA unifiée — Gemini + secours OpenRouter, messages d'erreur élégants */
 const { askAI, hasAIKey, aiUserMessage, MSG_NO_KEY } = require('./lib/ai');
+/* Moteur auto-statuts (vue + réaction + réponse) — voir lib/auto-status.js */
+const autoStatus = require('./lib/auto-status');
 const guardEvents = require('./guard/src/events');
 const guardUi = require('./guard/src/ui');
 const { findLinks } = require('./guard/src/utils/links');
@@ -1926,6 +1928,49 @@ cmd('public', { cat: 9, desc: 'Mode tout le monde', owner: true }, async (ctx) =
   await ctx.reply('🌐 Mode *PUBLIC* activé : tout le monde peut utiliser les commandes.');
 });
 
+/* ── AUTO-STATUTS : réglages runtime (priorité sur le .env) ── */
+
+cmd('autoview', { cat: 9, desc: 'Vue automatique des statuts', usage: 'autoview on|off', owner: true }, async (ctx) => {
+  const arg = (ctx.args[0] || '').toLowerCase();
+  if (arg !== 'on' && arg !== 'off') {
+    const on = autoStatus.effective(state.settings.autoStatus || {}).seen;
+    return ctx.reply(`👁️ *Vue auto des statuts* : ${on ? 'ON ✅' : 'OFF ❌'}\nUsage : ${config.prefix}autoview on|off`);
+  }
+  state.settings.autoStatus = { ...(state.settings.autoStatus || {}), seen: arg === 'on' };
+  saveState(true);
+  await ctx.reply(arg === 'on'
+    ? '👁️ Vue auto des statuts : *ON ✅* — chaque statut reçu est marqué comme vu.'
+    : '👁️ Vue auto des statuts : *OFF ❌*.');
+});
+
+cmd('autolike', ['autoreact'], { cat: 9, desc: 'Réaction automatique aux statuts', usage: 'autolike on|off', owner: true }, async (ctx) => {
+  const arg = (ctx.args[0] || '').toLowerCase();
+  if (arg !== 'on' && arg !== 'off') {
+    const on = autoStatus.effective(state.settings.autoStatus || {}).react;
+    return ctx.reply(`👍 *Réaction auto aux statuts* : ${on ? 'ON ✅' : 'OFF ❌'}\nUsage : ${config.prefix}autolike on|off`);
+  }
+  state.settings.autoStatus = { ...(state.settings.autoStatus || {}), react: arg === 'on' };
+  saveState(true);
+  await ctx.reply(arg === 'on'
+    ? '👍 Réaction auto aux statuts : *ON ✅* — emoji tiré au sort à chaque statut.'
+    : '👍 Réaction auto aux statuts : *OFF ❌*.');
+});
+
+cmd('autostatus', ['statusconfig'], { cat: 9, desc: 'Panneau Auto-Status (vue · réaction · réponse)', owner: true }, async (ctx) => {
+  const o = state.settings.autoStatus || {};
+  const eff = autoStatus.effective(o);
+  const src = (key, envVal) => (o[key] !== undefined ? 'commande 📱' : `.env (${envVal ? 'on' : 'off'}) 📄`);
+  const mark = (v) => (v ? 'ON ✅' : 'OFF ❌');
+  await ctx.reply(buildFrame('AUTO-STATUS', [
+    bullet('VUE', `${mark(eff.seen)} — ${src('seen', config.autoStatusSeen)}`),
+    bullet('RÉACTION', `${mark(eff.react)} — ${src('react', config.autoStatusReact)}`),
+    bullet('RÉPONSE', `${mark(eff.reply)} — ${src('reply', config.autoStatusReply)}`),
+    bullet('EMOJIS', (config.statusEmojis || []).map((e) => e.trim()).filter(Boolean).join(' ') || '👍'),
+    bullet('MSG RÉPONSE', config.autoStatusMsg || '(aucun)'),
+    `Commandes : ${config.prefix}autoview on|off · ${config.prefix}autolike on|off`,
+  ]));
+});
+
 cmd('broadcast', ['bc'], { cat: 9, desc: 'Diffuser un message', usage: 'broadcast <texte>', owner: true }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}broadcast Hello à tous`);
   const chats = [...new Set([...msgCache.keys()].map((k) => k.split('|')[0]))]
@@ -3134,22 +3179,12 @@ async function runGroupProtections(sock, msg, base, text, meta) {
 const isSystemJid = (jid) =>
   !jid || jid.includes('@broadcast') || jid.includes('status@') || jid.includes('@newsletter');
 
-/* Moteur STATUTS (stories) : vu auto + réaction auto + réponse auto */
+/* Moteur STATUTS (stories) — pont vers lib/auto-status.js :
+   vue via sendReceipt, réaction avec statusJidList (sinon WhatsApp
+   l'avale), réponse DM citée. Overrides runtime : .autoview/.autolike
+   persistés dans state.settings.autoStatus. */
 async function handleStatus(sock, msg) {
-  try {
-    if (msg.key.fromMe) return;
-    if (config.autoStatusSeen) {
-      await sock.readMessages([msg.key]).catch(() => {});
-    }
-    if (config.autoStatusReact) {
-      await send(sock, 'status@broadcast', {
-        react: { text: config.likeEmoji || '👍', key: msg.key },
-      }).catch(() => {});
-    }
-    if (config.autoReplyStatus && config.statusReadMsg && msg.key.participant) {
-      await send(sock, msg.key.participant, { text: config.statusReadMsg }).catch(() => {});
-    }
-  } catch (e) {}
+  await autoStatus.handleStatus(sock, msg, state.settings.autoStatus || {});
 }
 
 async function handleMessage(sock, msg) {
@@ -3663,6 +3698,6 @@ module.exports = {
   getCache,
   getScheduler,
   getStore,
-  // Commutateur QR/Pairing : utilisé par .menu qr|pairing ET par le pont Vigil
+  // Commutateur QR/Pairing : utilisé par .menu qr|pairing
   persistConnectMethod,
 };

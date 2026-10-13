@@ -266,7 +266,7 @@
       <a href="#guard">Guard</a>
       <a href="#menu-cat">Menu 1–11</a>
       <a href="#connexion">Connexion</a>
-      <a class="btn btn-primary" style="padding:9px 18px;font-size:14px" href="/connecter.html">🔗 Se connecter</a>
+      <a class="btn btn-primary" style="padding:9px 18px;font-size:14px" href="#connexion">🔗 Se connecter</a>
     </div>
     <button class="burger" id="burger" aria-label="Menu">☰</button>
   </div>
@@ -284,7 +284,7 @@
       Zéro bouton natif, 100&nbsp;% texte : ça marche partout.
     </p>
     <div class="cta reveal">
-      <a class="btn btn-primary" href="/connecter.html">🔗 Connecter mon WhatsApp</a>
+      <a class="btn btn-primary" href="#connexion">🔗 Connecter mon WhatsApp</a>
       <a class="btn btn-ghost" href="#fonctionnalites">Découvrir le bot</a>
     </div>
     <div class="badges reveal">
@@ -421,33 +421,31 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow">Connexion</span>
-      <h2>Branchez WhatsApp en 3 étapes, depuis ce site</h2>
-      <p>Pas d'installation, pas de terminal : tout se fait ici, et la session reste en ligne.</p>
+      <h2>Branchez WhatsApp en 3 étapes</h2>
+      <p>Pas de compte, pas de cloud : la connexion se fait depuis la console du bot, en local.</p>
     </div>
     <div class="steps">
       <div class="step-card reveal">
-        <h3><span class="num">1</span> Ouvrez la page de connexion</h3>
+        <h3><span class="num">1</span> Lancez le bot</h3>
         <ol>
-          <li>Cliquez sur <b>🔗 Connecter mon WhatsApp</b></li>
-          <li>Le code QR du bot s'affiche aussitôt — il se régénère tout seul</li>
+          <li>Démarrez le bot sur son hébergement — <b>npm start</b> ou le service en arrière-plan</li>
+          <li>Le QR ou le code d'appairage s'affiche aussitôt — il se régénère tout seul</li>
         </ol>
       </div>
       <div class="step-card reveal">
         <h3><span class="num">2</span> Scannez avec votre téléphone</h3>
         <ol>
           <li>WhatsApp → <b>Appareils liés → Connecter un appareil</b></li>
-          <li>Pointez l'appareil photo vers le QR affiché sur la page</li>
+          <li>Pointez l'appareil photo vers le QR de la console — ou saisissez le code d'appairage</li>
         </ol>
       </div>
     </div>
     <div class="step-card reveal" style="margin-top:18px;border-color:rgba(37,211,102,.35)">
       <h3><span class="num">✓</span> Terminé — la session reste en ligne</h3>
       <p style="color:var(--muted);font-size:15.3px">
-        Votre session est hébergée aux côtés du bot : il reste connecté <strong style="color:var(--txt)">24&nbsp;h/24</strong>,
-        rien à relancer chez vous. La page de connexion affiche l'état en direct et vous
-        confirme le raccordement dès qu'il est établi.
+        Le bot reste connecté <strong style="color:var(--txt)">24&nbsp;h/24</strong> sur son hébergement,
+        où qu'il soit dans le monde. Sa console affiche <b>✅ CONNECTÉ</b> : votre confirmation en direct.
       </p>
-      <a class="btn btn-primary" href="/connecter.html" style="margin-top:16px">🔗 Connecter mon WhatsApp</a>
     </div>
   </div>
 </section>
@@ -461,8 +459,7 @@
       <span>DJOUSSE <small>TECH MD</small></span>
     </a>
     <div class="links">
-      <a href="/connecter.html">Connexion</a>
-      <a href="/connecter.html">Console</a>
+      <a href="#connexion">Connexion</a>
       <a href="#fonctionnalites">Fonctionnalités</a>
       <a href="#guard">DJOUSSE Guard</a>
     </div>

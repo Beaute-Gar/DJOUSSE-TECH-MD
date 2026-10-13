@@ -64,38 +64,24 @@ const isIgnored = (value) => {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   0. PONT VIGIL (console web) — voir lib/vigilLink.js
-      Le tableau de bord authentifié affiche le statut, le QR, le code
-      de pairing et le journal de cette session, et peut lui envoyer des commandes. Tout ce
-      qui est imprimé ici est relayé vers Vigil (~3 s) ; les processus
-      gérés par l’hôte utilisent un jeton distinct par session.
-      sont pas renseignés, et le pont ne démarre que dans main().
+   0. ÉTAT DE SESSION (bridge local)
+      Statut, QR, code de pairing et dernière erreur suivis ici pour
+      le tableau de bord de démarrage et les événements de connexion.
    ══════════════════════════════════════════════════════════════ */
 
 const bridge = {
-  qr: null,        // dernier QR brut émis par Baileys (à scanner)
-  code: null,      // dernier code de pairing émis
-  codeFor: null,   // numéro visé par ce code
   connected: false,
   status: 'INITIALISATION',
   lastError: '',
-  claimCodeSent: false,
-  method: config.connectMethod === 'qr' ? 'qr' : 'pairing',
 };
 
 const baseLog = console.log.bind(console);
 const baseWarn = console.warn.bind(console);
 const baseError = console.error.bind(console);
 
-/** Objets/erreurs → une ligne lisible (jamais [object Object]). */
-const bridgeText = (args) => args.map((v) => {
-  if (typeof v === 'string') return v;
-  try { return typeof v === 'object' ? JSON.stringify(v) : String(v); } catch { return String(v); }
-}).join(' ');
-
-const rawLog = (...args) => { baseLog(...args); vigLink.pushLog(bridgeText(args)); };
-const rawError = (...args) => { baseError(...args); vigLink.pushLog('✖ ' + bridgeText(args)); };
-const rawWarn = (...args) => { baseWarn(...args); vigLink.pushLog('⚠ ' + bridgeText(args)); };
+const rawLog = (...args) => baseLog(...args);
+const rawError = (...args) => baseError(...args);
+const rawWarn = (...args) => baseWarn(...args);
 
 let startupDashboardShown = false;
 function showStartupDashboard() {
@@ -146,13 +132,6 @@ function setBridgeStatus(status, lastError = '') {
   bridge.lastError = lastError;
   if (changed && startupDashboardShown) showStartupDashboard();
 }
-
-const { createLink: createVigilLink } = require('./lib/vigilLink');
-const vigLink = createVigilLink({
-  getState: () => bridgeStatus(),
-  onCommand: (kind, payload) => bridgeCommand(kind, payload),
-  log: (line) => baseLog(line),
-});
 
 console.error = (...args) => { if (!isIgnored(args[0])) rawError(...args); };
 console.warn = (...args) => { if (!isIgnored(args[0])) rawWarn(...args); };
@@ -416,8 +395,6 @@ async function startSession(options = {}) {
         'le code ci-dessus',
       ]) + '\n');
       pairingCodeAt = Date.now();
-      bridge.code = code;
-      bridge.codeFor = phoneNumber;
       waStats.lastPairingCodeAt = pairingCodeAt;
       waStats.pairingAttempts = pairingAttempts;
       const emittedAt = pairingCodeAt;
@@ -444,9 +421,6 @@ async function startSession(options = {}) {
     if (qr) {
       // En mode pairing, Baileys émet un QR interne comme signal pour
       // requestPairingCode ; ce QR ne peut pas être scanné par l’utilisateur.
-      bridge.qr = isPairing ? null : qr;
-      bridge.code = null;
-      bridge.codeFor = null;
       setBridgeStatus('EN ATTENTE');
       if (isPairing) {
         // Le serveur envoie le « qr » quand il est prêt à lier un appareil :
@@ -463,9 +437,6 @@ async function startSession(options = {}) {
 
     if (connection === 'close') {
       bridge.connected = false;
-      bridge.qr = null;
-      bridge.code = null;
-      bridge.codeFor = null;
       guardNight.stop();
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const wasRegistered = !!state?.creds?.registered;
@@ -582,24 +553,11 @@ async function startSession(options = {}) {
 
     if (connection === 'open') {
       bridge.connected = true;
-      bridge.qr = null;
-      bridge.code = null;
-      bridge.codeFor = null;
       setBridgeStatus('CONNECTE');
       rawLog('[SOCKET] ✅ CONNECTÉ —', sock.user?.id || 'session active');
       waStats.connects++;
       waStats.connectedSince = Date.now();
       localDb.logEvent({ type: 'connect', detail: sock.user?.id || 'session' });
-
-      if (process.env.VIGIL_INSTANCE_ID && !bridge.claimCodeSent) {
-        try {
-          await vigLink.issueClaimCode(sock);
-          bridge.claimCodeSent = true;
-          rawLog('[VIGIL LINK] Code de vérification envoyé au WhatsApp connecté.');
-        } catch (error) {
-          rawError('[VIGIL LINK] Envoi du code de vérification impossible :', error.message);
-        }
-      }
 
       // CORRECTIF QR (prouvé en prod le 26/09/2026) : le fork ne définit jamais
       // registered=true en flux QR — sans ce marquage, chaque redémarrage voit
@@ -834,144 +792,10 @@ function purgePairingCreds(sessionDir, state) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   6 bis. PONT VIGIL — état publié + commandes reçues du site
-   ══════════════════════════════════════════════════════════════ */
-
-/** Statut envoyé à Vigil à chaque cycle (contrat : lib/vigilLink.js). */
-function bridgeStatus() {
-  const id = String((activeSock && activeSock.user && activeSock.user.id) || '');
-  const since = waStats.connectedSince || 0;
-  return {
-    connected: bridge.connected === true,
-    number: id ? id.replace(/:\d+/, '').replace(/@s\.whatsapp\.net$/, '') : null,
-    uptimeMs: bridge.connected && since ? Date.now() - since : 0,
-    version: config.version || '',
-    prefix: config.prefix || '.',
-    commands: handler.commands.size,
-    // « Groupes suivis » — même source que la commande d'état du bot.
-    groups: Object.keys((handler.state && handler.state.groups) || {}).length,
-    engine: 'sqlite',
-    connectMethod: bridge.method,
-    qr: bridge.qr || null,
-    pairingCode: bridge.code || null,
-    pairingFor: bridge.codeFor || null,
-  };
-}
-
-/**
- * Commande venue de la console Vigil.
- *
- * `raw` est le cas important : la saisie du site est injectée comme un
- * message WhatsApp EN PROVENANCE DU PROPRIÉTAIRE, exactement comme s'il
- * avait tapé `.antilink on` dans sa discussion. Le handler ne connaît donc
- * aucune exception d'autorisation — les commandes owner-only restent
- * owner-only.
- */
-async function bridgeCommand(kind, payload) {
-  switch (kind) {
-    case 'status': {
-      const s = bridgeStatus();
-      return [
-        `connecté=${s.connected}`,
-        `numéro=${s.number || '-'}`,
-        `commandes=${s.commands}`,
-        `méthode=${s.connectMethod}`,
-        `QR=${s.qr ? 'en attente de scan' : 'aucun'}`,
-        `code=${s.pairingCode || 'aucun'}`,
-      ].join(' ');
-    }
-
-    case 'qr': {
-      // Déjà en ligne : un socket avec des creds valides ne montre JAMAIS de
-      // QR — on dit plutôt que rien ne se passe. On renvoie une erreur lisible
-      // (le site l'affiche en « échec ») au lieu d'un faux succès.
-      if (bridge.connected) {
-        throw new Error(
-          `le bot est déjà connecté (${bridgeStatus().number || 'session active'}) : `
-          + 'envoyez STOP depuis la console, puis redemandez le QR',
-        );
-      }
-      if (purgeSessionForRelink()) {
-        rawLog('[SESSION] 🔑 Session précédente détachée à la demande — préparation d\'un nouveau QR.');
-      }
-      handler.persistConnectMethod('qr', '');
-      bridge.method = 'qr';
-      bridge.qr = null; bridge.code = null; bridge.codeFor = null;
-      await startSession({ connectMethod: 'qr' });
-      return 'Relance en mode QR — le QR arrive dans le journal (scanner avec un second appareil).';
-    }
-
-    case 'pairing': {
-      const phone = String(payload || '').replace(/\D/g, '');
-      if (phone.length < 8 || phone.length > 15) {
-        throw new Error('numéro invalide : 8 à 15 chiffres attendus');
-      }
-      // Même piège que le QR : connecté → requestPairing() est ignoré par
-      // Baileys (creds.registered) et le site afficherait un code qui n'arrive
-      // jamais. On préfère une erreur explicite.
-      if (bridge.connected) {
-        throw new Error(
-          `le bot est déjà connecté (${bridgeStatus().number || 'session active'}) : `
-          + 'envoyez STOP depuis la console, puis régénérez le code',
-        );
-      }
-      if (purgeSessionForRelink()) {
-        rawLog('[SESSION] 🔑 Session précédente détachée à la demande — nouveau code d\'appairage.');
-      }
-      handler.persistConnectMethod('pairing', phone);
-      bridge.method = 'pairing';
-      bridge.code = null;
-      bridge.codeFor = phone;
-      bridge.qr = null;
-      await startSession({ connectMethod: 'pairing', pairingPhone: phone });
-      return `Code de pairing demandé pour ${phone} — il apparaît dans le journal.`;
-    }
-
-    case 'stop': {
-      if (activeSock) {
-        try { activeSock.ev.removeAllListeners(); } catch { /* déjà vide */ }
-        try { activeSock.end(undefined); } catch { /* déjà fermé */ }
-        try { activeSock.ws?.close(); } catch { /* déjà fermé */ }
-        activeSock = null;
-      }
-      bridge.connected = false;
-      setBridgeStatus('EN ATTENTE');
-      return 'Session WhatsApp fermée — le processus reste en vie (relancez QR ou PAIRING pour repartir).';
-    }
-
-    case 'raw': {
-      const text = String(payload || '').trim();
-      if (!text) throw new Error('commande vide');
-      const sock = activeSock;
-      if (!sock) throw new Error('bot non connecté à WhatsApp');
-      const owner = String((config.ownerNumber || [])[0] || '').replace(/\D/g, '');
-      if (!owner) throw new Error('OWNER_NUMBER absent du .env');
-
-      const fake = {
-        key: {
-          id: `WEB${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 1000)}`,
-          remoteJid: `${owner}@s.whatsapp.net`,
-          fromMe: false,
-        },
-        message: { conversation: text },
-        messageTimestamp: Math.floor(Date.now() / 1000),
-        pushName: 'Vigil',
-      };
-      await handler.handleMessage(sock, fake);
-      return `Commande exécutée : ${text}`;
-    }
-
-    default:
-      throw new Error(`commande inconnue : ${kind}`);
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
    7. DÉMARRAGE
    ══════════════════════════════════════════════════════════════ */
 
 async function main() {
-  vigLink.start(); // console web : inert si VIGIL_* absents
   const sessionDir = path.resolve(__dirname, config.sessionDir);
 
   // Session déjà enregistrée ?

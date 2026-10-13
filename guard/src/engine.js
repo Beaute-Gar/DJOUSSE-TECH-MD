@@ -10,7 +10,6 @@ const { send } = require('../../lib/wa-send');
 const sanctions = require('./sanctions');
 const journal = require('./journal');
 const ui = require('./ui');
-const vigil = require('./vigil');
 const PROTECTIONS = require('./protections');
 
 const notified = new Map();       // gid → dernier avis « bot non admin »
@@ -33,23 +32,15 @@ async function del(sock, msg, from) {
   return safe(send(sock, from, { delete: msg.key }));
 }
 
-/**
- * Avis « le bot n'est pas admin ».
- *
- * `extra` sert à rendre le message utile : quand Vigil a répondu, on sait
- * *quelle règle* a décidé et avec quelle sévérité — l'avis cesse d'être
- * un simple « je suis cassé » et devient un vrai constat d'infraction.
- */
-async function notifyNotOperational(sock, gid, label, extra = []) {
+/** Avis « le bot n'est pas admin » — cooldown 1 / 10 min / groupe. */
+async function notifyNotOperational(sock, gid, label) {
   const last = notified.get(gid) || 0;
-  const cooldown = extra.length ? config.noticeCooldownMs || 60 * 1000 : config.notifyCooldownMs;
-  if (Date.now() - last < cooldown) return false;
+  if (Date.now() - last < config.notifyCooldownMs) return false;
   notified.set(gid, Date.now());
   await safe(send(sock, gid, {
     text: ui.frame(`${label.toUpperCase()} INACTIF`, [
       '⚠️ INFRACTION DÉTECTÉE, SUPPRESSION IMPOSSIBLE',
       ui.kv('CAUSE', "LE BOT N'EST PAS ADMIN"),
-      ...extra,
       ui.kv('SOLUTION', 'PROMOUVEZ LE BOT (REPRISE AUTO)'),
     ]),
   }));
@@ -79,41 +70,14 @@ async function runProtections(ctx) {
     return { handled: botAdmin, reason: 'muted' };
   }
 
-  /* ── Second avis : Vigil ──────────────────────────────────────────
-     Le moteur local dit « il y a un lien » ; Vigil dit si c'est
-     *réellement* une infraction, avec quelle règle et quelle sévérité.
-     `null` = Vigil muet (inactif, éteint, timeout) → on repart de
-     l'avis local, sans délai ajouté.
-
-     Mémorisé : au plus UN appel réseau par message, même si plusieurs
-     protections se déclenchent en mode `veto`.                       */
-  let verdict = null;
-  let verdictAsked = false;
-
   for (const p of active) {
     const v = p.detect(ctx, g);
     if (!v) continue;
 
-    if (!verdictAsked) {
-      verdictAsked = true;
-      verdict = await vigil.judge(ctx.text, { channel: from, subject: ctx.senderNum });
-      // En mode `veto`, un « propre » signifie qu'on s'était trompé :
-      // la protection locale n'a pas à sanctionner.
-      if (verdict && verdict.clean && vigil.vetoEnabled()) continue;
-    }
-
-    // Ce qu'on peut afficher quand Vigil a vraiment décidé.
-    const vigiLines = verdict && verdict.rule
-      ? [
-          ui.kv('RÈGLE', `${verdict.rule.name} (#${verdict.rule.priority})`),
-          ui.kv('SÉVÉRITÉ', String(verdict.severity || '—').toUpperCase()),
-        ]
-      : [];
-
     if (!botAdmin) {
       // Sans admin on ne supprime rien — mais on n'est plus muet : on dit
       // au moins *quelle règle* est tombée, et pourquoi on n'a rien fait.
-      await notifyNotOperational(sock, from, p.label, vigiLines);
+      await notifyNotOperational(sock, from, p.label);
       return { handled: false, reason: 'bot-not-admin', protection: p.key };
     }
 
@@ -125,8 +89,6 @@ async function runProtections(ctx) {
     const lines = [
       `👤 @${ctx.senderNum}`,
       ui.kv('INFRACTION', v.reason),
-      // La règle Vigil et sa sévérité, quand le pont a répondu.
-      ...vigiLines,
       ui.kv('ACTION', 'MESSAGE SUPPRIMÉ'),
     ];
     let kicked = false;

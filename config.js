@@ -65,11 +65,17 @@ module.exports = {
   autoTyping: bool(process.env.AUTO_TYPING, false),
   alwaysOnline: bool(process.env.ALWAYS_ONLINE, false),
   autoReact: bool(process.env.AUTO_REACT, false),
-  autoStatusSeen: bool(process.env.AUTO_STATUS_SEEN, false),
-  autoStatusReact: bool(process.env.AUTO_STATUS_REACT, false),
-  autoReplyStatus: bool(process.env.AUTO_REPLY_STATUS, false),
+  // AUTO-STATUTS (module lib/auto-status.js) — défauts : vue ON, réaction ON, réponse OFF
+  autoStatusSeen: bool(process.env.AUTO_STATUS_SEEN, true),
+  autoStatusReact: bool(process.env.AUTO_STATUS_REACT, true),
+  autoStatusReply: bool(
+    process.env.AUTO_STATUS_REPLY !== undefined ? process.env.AUTO_STATUS_REPLY : process.env.AUTO_REPLY_STATUS,
+    false,
+  ),
+  autoStatusMsg: process.env.AUTO_STATUS_MSG || process.env.STATUS_READ_MSG || '',
+  // Emojis de réaction tirés au sort (liste CSV) — CUSTOM_REACT_EMOJIS
+  statusEmojis: String(process.env.CUSTOM_REACT_EMOJIS || '❤️,🔥,💯,😍,👏').split(','),
   likeEmoji: process.env.AUTOLIKE_EMOJI || '👍',
-  statusReadMsg: process.env.STATUS_READ_MSG || '',
 
   // Aperçus de liens haute qualité (Baileys)
   linkPreview: bool(process.env.LINK_PREVIEW, true),
@@ -116,22 +122,6 @@ module.exports = {
     timezone: process.env.GUARD_TZ || 'Africa/Douala',          // fuseau du mode nuit
     log: bool(process.env.GUARD_LOG, false),                    // journal des expulsions → DM owner
     notifyCooldownMs: 10 * 60 * 1000,                           // avis « bot non admin » : 1 / 10 min / groupe
-    // Avis *d'infraction* (quand Vigil a nommé la règle) : nettement plus
-    // court, sinon le constat le plus utile est aussi le plus rare.
-    noticeCooldownMs: Number(process.env.GUARD_NOTICE_COOLDOWN_MS) || 60 * 1000,
-
-    // Pont vers Vigil, la console de modération (github.com/Beaute-Gar/vigil).
-    // Tant que VIGIL_URL est vide, le pont est inert : le bot fonctionne
-    // exactement comme avant, sans requête réseau supplémentaire.
-    vigil: {
-      url: String(process.env.VIGIL_URL || '').replace(/\/+$/, ''),
-      email: process.env.VIGIL_EMAIL || '',
-      password: process.env.VIGIL_PASSWORD || '',
-      timeoutMs: Number(process.env.VIGIL_TIMEOUT_MS) || 1200,
-      // 'enrich' = Vigil informe, n'annule rien (défaut, sûr)
-      // 'veto'   = si Vigil dit « propre », la protection passe son chemin
-      mode: process.env.VIGIL_MODE === 'veto' ? 'veto' : 'enrich',
-    },
   },
 
   // Messages système

@@ -1,18 +1,13 @@
 'use strict';
 /**
- * scripts/service.js — gestionnaire des deux process du système
+ * scripts/service.js — gestionnaire du process du bot
  *
- *   node scripts/service.js [cible] <start|stop|status|watch>
- *
- *   cible = bot (défaut)  → node index.js
- *   cible = vigil         → next start -p 3120  (le « deuxième avis »
- *                            du pont guard/src/vigil.js)
+ *   node scripts/service.js <start|stop|status|watch>
  *
  * Exemples :
  *   node scripts/service.js start            lance le bot
  *   node scripts/service.js watch            + surveillance (relance auto)
- *   node scripts/service.js vigil start      lance Vigil
- *   node scripts/service.js status           état des deux
+ *   node scripts/service.js status           état du bot
  *
  * Sortie → logs/<cible>.log (append, heure locale) · PID → logs/<cible>.pid
  * Watchdog  → logs/<cible>.watch.pid
@@ -41,11 +36,6 @@ const APPS = {
   bot: {
     run: [process.execPath, ['index.js']],
     cwd: ROOT,
-  },
-  vigil: {
-    run: [process.execPath, [path.join(ROOT, '..', 'vigil', 'node_modules', 'next', 'dist', 'bin', 'next'),
-      'start', '-p', '3120']],
-    cwd: path.join(ROOT, '..', 'vigil'),
   },
 };
 
@@ -88,10 +78,6 @@ function start(name) {
   const old = readPid(f.pid);
   if (alive(old)) {
     console.log(`[${name}] Déjà en cours (PID ${old}) — « ${name} stop » d'abord.`);
-    return 1;
-  }
-  if (name === 'vigil' && !fs.existsSync(path.dirname(app.run[1][0]))) {
-    console.log('[vigil] introuvable : vigil/node_modules absent (npm install dans Documents/vigil).');
     return 1;
   }
   fs.mkdirSync(LOG_DIR, { recursive: true });

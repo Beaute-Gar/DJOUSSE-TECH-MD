@@ -209,130 +209,6 @@ L'ordre du tableau = **ordre de priorité d'évaluation**.
 - Un seul **cache de permissions**, invalidé quand le bot est promu admin.
 - Le owner est reconnu même quand WhatsApp renvoie un **LID**.
 
-### 🔌 Pont vers Vigil (optionnel)
-
-`guard/src/vigil.js` demande un **second avis** à [Vigil](https://github.com/Beaute-Gar/vigil),
-la console de modération, quand une protection de contenu se déclenche :
-
-| Étape | Qui | Question |
-|---|---|---|
-| 1 | GUARD (local) | *« y a-t-il un lien ? »* — décision immédiate, sans réseau |
-| 2 | Vigil | *« cette règle est-elle déclenchée ? »* → nom, sévérité, action |
-| 3 | GUARD | admin ⇒ suppression · **sans admin ⇒ annonce de la règle dans le groupe** |
-
-**Trois garanties :**
-
-1. **Sans `VIGIL_URL`, le pont est inert** — zéro requête, comportement strictement identique à avant.
-2. **Un échec garde l'avis local** — Vigil hors ligne n'affaiblit *jamais* une protection ; après un
-   échec, un cooldown de 1 min évite de marteler un serveur déjà mort.
-3. **Un seul appel réseau par message**, même quand plusieurs protections se déclenchent.
-
-**Le mode** :
-
-- `enrich` *(défaut)* — Vigil informe (nom de règle, sévérité) mais **ne peut pas** déclarer
-  « propre » et annuler une protection. Brancher Vigil ne rend donc jamais la modération plus faible.
-- `veto` — Vigil a le dernier mot sur le contenu. À n'utiliser que si des règles existent côté Vigil.
-
-```env
-# ── Pont Vigil (optionnel) ───────────────────────
-# Vide = pont coupé, le bot fonctionne comme avant.
-VIGIL_URL=https://vigil-delta-lake.vercel.app
-VIGIL_TIMEOUT_MS=1200
-VIGIL_MODE=enrich
-VIGIL_SYNC_MS=3000         # console à distance : rythme du va-et-vient (défaut 3 s)
-VIGIL_SYNC_TIMEOUT_MS=8000 # timeout du sync SEUL (défaut 8 s) — volontairement
-                           # bien plus large que VIGIL_TIMEOUT_MS=1200, calibré
-                           # pour des détections locales
-```
-
-> **Instance en ligne** : `https://vigil-delta-lake.vercel.app` (Vercel + Neon).
-> Mesurée : login ~500–840 ms, puis **149–471 ms** par détection *et* **150–470 ms**
-> par sync avec un journal complet (50 lignes) — le sync a donc son propre
-> timeout de 8 s, doublé d'**une reprise immédiate** : un coup de réseau n'arme
-> plus le cooldown de 15 s (un timeout n'attend plus que ~4 s).
-> **Variante locale** : `node scripts/service.js vigil start` et
-> `VIGIL_URL=http://localhost:3120` — même verdicts, utilisable hors ligne.
-
-### 📡 Console à distance — le même pont, dans l'autre sens
-
-`lib/vigilLink.js` ne se contente pas de *consulter* Vigil : il expose la **vie
-du bot** sur le site (`/dashboard/bot`) et lui ouvre un **canal de commandes**.
-
-| Ce que fait le site | Ce que fait le bot |
-|---|---|
-| Voit le statut live (connecté, numéro, uptime, commandes chargées) | pousse son état toutes les **3 s** |
-| Affiche le **QR privé** directement sur `djousse-tech-md.vercel.app/connecter.html` | publie la dernière chaîne QR émise pour ce nœud |
-| Demande un **pairing code** pour un numéro | relance la session en mode pairing et publie le code |
-| Envoie une commande (`.antilink on`, `.menu`, …) | l'injecte comme un message **du propriétaire** → handler normal |
-| Lit le **journal** (~200 dernières lignes) | relaie tout ce qui s'imprime au terminal |
-| Referme la session | `stop` : socket fermée, processus vivant |
-
-**Garanties :**
-
-1. **Sans `VIGIL_URL`, rien ne part** : zéro requête, zéro timer, zéro délai.
-2. **Rien n'est perdu** : journal et retours ne sont retirés qu'après un `200` ;
-   un `500` rejoue tout au cycle suivant — et jamais deux fois.
-3. **Cookie expirée → une seule reconnexion**, jamais de boucle.
-4. **Jamais d'exception** : une commande qui casse revient `failed` côté site.
-5. **Journal borné** : 200 lignes en mémoire, 50 par aller-retour, 400 car./ligne.
-6. **Un coup de réseau ne coûte pas 15 s** : chaque sync est **repris une fois
-   immédiatement** avant d'abandonner, et seuls les vrais échecs (HTTP, auth)
-   armant le cooldown complet — un timeout n'attend que ~4 s.
-7. **QR/appairage jamais muets** : si le bot est déjà connecté, la commande
-   revient `failed` avec la marche à suivre (`STOP`, puis nouvelle demande)
-   au lieu d'un faux succès ; sinon la session enregistrée est **détachée à la
-   demande** pour que le QR ou le code arrive *réellement*.
-8. **Isolation par compte et par processus** : Vigil lie chaque compte à son
-   propre espace et chaque processus bot à un nœud identifié. Les commandes,
-   états et QR sont lus dans l'espace authentifié puis ciblés par identifiant
-   de nœud. L'ancienne route publique `/api/bot/public` ne délivre plus d'état.
-
-#### Connexion WhatsApp sans mot de passe et hôte central
-
-La page de connexion du site DJOUSSE TECH crée une demande temporaire auprès de
-Vigil et affiche le QR ou le code d’appairage **sur le site du bot**. Le
-gestionnaire sur la machine centrale lance un processus DJOUSSE-TECH-MD isolé
-avec son propre répertoire Baileys et ses propres données. Après le scan du QR
-(ou l’appairage), le bot envoie un code à usage unique au numéro WhatsApp
-connecté. Le formulaire de cette page transmet le code à Vigil ; après
-vérification, le compte est créé sans mot de passe et Vigil s’ouvre dans un
-nouvel onglet pour établir la session sécurisée. Le numéro WhatsApp est vérifié
-par le code, il n’est pas utilisé seul comme justificatif.
-
-Il faut configurer **la même clé aléatoire d’au moins 32 caractères** dans
-l’environnement du déploiement Vigil (`VIGIL_HOST_SECRET`) et dans le `.env` de
-la machine centrale. Ne la placez jamais dans le site web, dans un profil de bot
-ou dans le dépôt. Configurez également `VIGIL_URL` sur la machine centrale,
-puis démarrez le gestionnaire :
-
-```powershell
-$env:VIGIL_URL = "https://vigil-delta-lake.vercel.app"
-$env:VIGIL_HOST_SECRET = "<même secret aléatoire que dans Vigil>"
-npm run vigil:host
-```
-
-Le gestionnaire interroge Vigil en sortie HTTPS et lance un processus enfant par
-session. Il n’exige pas de port entrant ouvert sur ta machine. Pour un service
-continu, configure `npm run vigil:host` dans le Planificateur de tâches Windows
-avec lancement à la connexion/démarrage et redémarrage en cas d’échec. Le
-processus parent garde le secret hôte ; chaque bot enfant ne reçoit qu’un jeton
-dérivé, propre à sa session. Chaque demande non réclamée expire après une heure.
-
-Les dossiers d’authentification WhatsApp restent dans `sessions/managed/` et les
-données dans `data/managed/`. Ne les partagez pas entre sessions et ne les
-publiez pas. Arrêter la fenêtre du gestionnaire arrête les bots gérés ; configurez
-un lancement automatique pour les reprendre après redémarrage de la machine.
-
-> La commande `raw` est volontairement traitée comme un message WhatsApp
-> *émis par le propriétaire* : les commandes owner-only restent owner-only,
-> il n'y a **aucun** raccourci d'autorisation côté handler.
-
-> **Pilotage en mode de connexion** : `qr` et `pairing` réutilisent le
-> commutateur de `.menu qr|pairing` (`persistConnectMethod`) — le mode est
-> écrit dans `.env` *et* la session relancée immédiatement. **Le bot déjà
-> connecté refuse poliment** (erreur lisible sur le site) : une session
-> valide ne produit ni QR ni code, mieux vaut le dire que tourner à vide.
-
 > **Sans admin, le bot peut prévenir mais pas faire taire.** WhatsApp interdit la suppression d'un
 > message par un non-admin *côté serveur* : l'avis signale alors l'infraction et invite à promouvoir
 > le bot. C'est une limite de la plateforme, pas du code.
@@ -404,11 +280,12 @@ GUARD_TZ=Africa/Douala
 GUARD_LOG=0
 GUARD_DB=guard.json
 
-# ── Pont Vigil (optionnel) ───────────────────────
-# Vide = pont coupé, le bot fonctionne comme avant.
-VIGIL_URL=
-VIGIL_NODE_NAME=DJOUSSE-TECH-MD
-VIGIL_MODE=enrich
+# ── Auto-Statuts (stories) ───────────────────────
+AUTO_STATUS_SEEN=true      # vue auto de chaque statut reçu
+AUTO_STATUS_REACT=true     # réaction auto (emoji tiré au sort)
+AUTO_STATUS_REPLY=false    # réponse en DM à l'auteur du statut
+AUTO_STATUS_MSG=Statut vu par DJOUSE TECH MD ✅
+CUSTOM_REACT_EMOJIS=❤️,🔥,💯,😍,👏
 
 # ── Modes ────────────────────────────────────────
 MODE=public
@@ -441,16 +318,10 @@ Les credentials sont écrits dans `sessions/djsession/` (ignoré par git).
 node scripts/service.js start            # bot DÉTACHÉ  → logs/bot.log
 node scripts/service.js status           # état + dernières lignes
 node scripts/service.js stop             # arrêt (tue toute l'arborescence)
-
-node scripts/service.js vigil start      # Vigil LOCAL :3120 — le pont, lui,
-                                         #  utilise VIGIL_URL (Vercel en prod)
-node scripts/service.js vigil status
-node scripts/service.js vigil stop
-node scripts/service.js status           # les deux d'un coup
 ```
 
-Chaque cible a son propre couple `logs/<cible>.log` + `logs/<cible>.pid`
-(les deux sont ignorés par git). Le process est créé avec `detached` +
+Le bot garde son couple `logs/bot.log` + `logs/bot.pid` (ignorés par git).
+Le process est créé avec `detached` +
 `unref` : pas besoin de pm2, il survit à la fermeture de la fenêtre.
 L'heure des logs est **locale**, la même que dans `.journal` / `.chatlog`.
 
@@ -459,9 +330,6 @@ Suivi en direct :
 ```powershell
 Get-Content logs\bot.log -Tail 20 -Wait
 ```
-
-Sans Vigil lancé, le pont reste en **échec ouvert** : aucune requête,
-la protection locale continue de fonctionner (voir `guard/src/vigil.js`).
 
 ---
 
@@ -477,7 +345,6 @@ DJOUSSE-TECH-MD/
 ├── guard/            # 🛡️ DJOUSSE GUARD — moteur de protections isolé
 │   └── src/
 │       ├── engine.js          # Orchestration + priorités
-│       ├── vigil.js           # 🔌 Second avis Vigil — fail-open, zéro requête si non configuré
 │       ├── protections/       # 13 fichiers, un par protection
 │       ├── commands/          # Commandes de modération
 │       ├── sanctions.js  · nightmode.js  · journal.js
