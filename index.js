@@ -625,6 +625,19 @@ async function startSession(options = {}) {
         console.error('[SCHED] start:', e.message);
       }
 
+      /* ── Porté TEDDY-XMD : toujours-en-ligne (si activé) ── */
+      try {
+        if (handler.autoSettings && handler.startOnlineTimer) {
+          const auto = handler.autoSettings(handler.state?.settings?.portedAuto);
+          if (auto.alwaysonline) {
+            handler.startOnlineTimer(sock);
+            rawLog('[AUTO] toujours-en-ligne réactivé (réglage conservé)');
+          }
+        }
+      } catch (e) {
+        console.error('[AUTO] alwaysonline:', e.message);
+      }
+
       rawLog(`[BOT] ${config.botName} v${config.version} — prefix "${config.prefix}" — owner +${config.ownerNumber[0]}`);
       rawLog(`[BOT] ${handler.commands.size} commandes chargées · tapez ${config.prefix}menu dans WhatsApp\n`);
     }

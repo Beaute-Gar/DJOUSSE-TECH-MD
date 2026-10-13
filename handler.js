@@ -36,6 +36,7 @@ const { initScheduler, getScheduler } = require('./lib/scheduler');
 const { commandAccess } = require('./lib/command-access');
 const { withNetworkTimeout } = require('./lib/network-timeout');
 const { registerExtras } = require('./lib/extras');
+const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('./lib/ported-auto');
 /* Conversion vidéo via ffmpeg-static — helper partagé (voir lib/wa-sticker.js) */
 const { ffmpegBuffer } = require('./lib/ffmpeg');
 const { registerTools } = require('./lib/tools');
@@ -2557,6 +2558,18 @@ try {
     ctxInfo,
     unwrap,
   });
+  /* ── Portées de TEDDY-XMD : auto & présence ── */
+  registerPortedAuto(cmd, {
+    config,
+    send,
+    saveState,
+    getSettings: () => state.settings.portedAuto || {},
+    setSettings: (s) => { state.settings.portedAuto = s; },
+    downloadFrom,
+    mediaInfo,
+    buildFrame,
+    bullet,
+  });
   registerTools(cmd, {
     config,
     mediaInfo,
@@ -3184,7 +3197,14 @@ const isSystemJid = (jid) =>
    l'avale), réponse DM citée. Overrides runtime : .autoview/.autolike
    persistés dans state.settings.autoStatus. */
 async function handleStatus(sock, msg) {
-  await autoStatus.handleStatus(sock, msg, state.settings.autoStatus || {});
+  await autoStatus.handleStatus(sock, msg, state.settings.portedAuto?.status || state.settings.autoStatus || {});
+  /* porté TEDDY : sauvegarde des médias de statuts si activée */
+  if (autoSettings(state.settings.portedAuto).autodlstatus) {
+    await autoOnStatus({
+      sock, msg, settings: state.settings.portedAuto,
+      mediaInfo, downloadFrom,
+    }).catch((e) => console.error('[AUTO] statut:', e.message));
+  }
 }
 
 async function handleMessage(sock, msg) {
@@ -3234,6 +3254,23 @@ async function handleMessage(sock, msg) {
     state.stats.messages += 1;
     saveState();
     putCache(from, msg.key.id, msg);
+
+    /* ── Porté TEDDY-XMD : présence & réponses auto ── */
+    if (!fromMe) {
+      await autoOnMessage({
+        sock,
+        from,
+        sender,
+        senderNum,
+        isGroup,
+        fromMe,
+        isCommand: text.startsWith(config.prefix),
+        isOwner: auth.isOwner(senderNum) || auth.isSudo(senderNum),
+        knownSenders: new Set([...auth.listSudo?.() || [], ...auth.listOwners?.() || []]),
+        settings: state.settings.portedAuto,
+        msg,
+      }).catch((e) => console.error('[AUTO] message:', e.message));
+    }
 
     /* ── Historique SQLite : TOUS les messages, texte comme médias
          (requêtes via .chatlog). Une panne de la base ne doit jamais
@@ -3698,6 +3735,10 @@ module.exports = {
   getCache,
   getScheduler,
   getStore,
+  // Porté TEDDY-XMD : présence & réponses auto
+  autoSettings,
+  startOnlineTimer: autoStartTimer,
+  stopOnlineTimer: require('./lib/ported-auto').stopOnlineTimer,
   // Commutateur QR/Pairing : utilisé par .menu qr|pairing
   persistConnectMethod,
 };
