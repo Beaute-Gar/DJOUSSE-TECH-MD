@@ -38,6 +38,7 @@ const { withNetworkTimeout } = require('./lib/network-timeout');
 const { registerExtras } = require('./lib/extras');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('./lib/ported-auto');
 const portedGroup = require('./lib/ported-group');
+const portedAudio = require('./lib/ported-audio');
 /* Conversion vidéo via ffmpeg-static — helper partagé (voir lib/wa-sticker.js) */
 const { ffmpegBuffer } = require('./lib/ffmpeg');
 const { registerTools } = require('./lib/tools');
@@ -2578,6 +2579,15 @@ try {
     saveState,
     getSettings: () => state.settings.portedGroup || {},
     setSettings: (s) => { state.settings.portedGroup = s; },
+    buildFrame,
+    bullet,
+  });
+  /* ── Portées de TEDDY-XMD : édition audio/vidéo ── */
+  portedAudio.registerPortedAudio(cmd, {
+    config,
+    mediaInfo,
+    downloadFrom,
+    send,
     buildFrame,
     bullet,
   });

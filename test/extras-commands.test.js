@@ -71,7 +71,7 @@ test('jeux — pendu, trivia, réponse, devinette, morpion', async () => {
   let c = mkC([]);
   await reg.get('hangman').fn(c);
   assert.match(c._out.join(' '), /PENDU/);
-  assert.match(c._out.join(' '), /_ _ _ _ _ _/);
+  assert.match(c._out.join(' '), /_ _ _ _ _/);
   c = mkC(['A']);
   await reg.get('hang').fn(c);
   assert.match(c._out.join(' '), /PENDU/);
