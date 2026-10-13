@@ -1,5 +1,5 @@
-# DJOUSSE TECH MD sur Replit — worker sans port : la Console affiche
-# directement le code d'appairage 8 caractères.
+# DJOUSSE TECH MD sur Replit — worker SANS port : la Console affiche
+# directement le code d'appairage 8 caractères (pas de webview).
 #
 #   1. Secrets (Variables d'environnement) : OWNER_NUMBER, PAIRING_PHONE…
 #   2. ▶ Run → le code s'imprime dans la Console
@@ -7,7 +7,7 @@
 #      et le disque Replit étant volatile, un réappairage sera nécessaire.
 #
 # ⚠ Jamais deux instances en parallèle : un seul Run à la fois.
-modules = ["nodejs-22", "web"]
+modules = ["nodejs-20"]
 run = "npm start"
 entrypoint = "node index.js"
 hidden = ["node_modules", "sessions", "data", "logs", "downloads"]
