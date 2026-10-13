@@ -42,6 +42,9 @@ function boot(opts = {}) {
       }),
     }));
     server.once('error', reject);
+    /* unref : un serveur de test éphémère ne doit JAMAIS garder le
+       process en vie (node --test restait bloqué après les résultats). */
+    server.unref?.();
   });
 }
 

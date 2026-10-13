@@ -18,3 +18,8 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./downloads:/app/downloads
+    # Par défaut : AUCUN port exposé (le bot est un worker).
+    # Pour activer l'API de jumelage (PAIRING_API=on dans .env) et servir
+    # le site web sur le même port (SERVE_SITE=on), décommente :
+    # ports:
+    #   - "8089:8089"
