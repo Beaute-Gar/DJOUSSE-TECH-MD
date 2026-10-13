@@ -1,0 +1,32 @@
+{
+    "name": "DJOUSSE TECH MD",
+    "description": "Bot WhatsApp complet (Baileys) : 300+ commandes, protections de groupe DJOUSSE GUARD, IA Gemini/OpenRouter. Worker sans port — le code d'appairage s'affiche dans les logs.",
+    "keywords": ["whatsapp", "bot", "baileys", "node"],
+    "env": {
+        "CONNECT_METHOD": {
+            "description": "Mode de connexion : pairing (conseillé, code 8 caractères) ou qr",
+            "value": "pairing"
+        },
+        "PAIRING_PHONE": {
+            "description": "Numéro WhatsApp international sans + ni espaces (ex : 237659809751)",
+            "required": false
+        },
+        "OWNER_NUMBER": {
+            "description": "Numéro du propriétaire (commandes owner)",
+            "required": false
+        },
+        "PREFIX": {
+            "description": "Préfixe des commandes",
+            "value": "."
+        },
+        "GEMINI_KEY": {
+            "description": "Clé Gemini pour .ai (optionnel)",
+            "required": false
+        },
+        "OPENROUTER_API_KEY": {
+            "description": "Clé de secours OpenRouter pour .ai (optionnel)",
+            "required": false
+        }
+    },
+    "stacks": ["heroku-24"]
+}

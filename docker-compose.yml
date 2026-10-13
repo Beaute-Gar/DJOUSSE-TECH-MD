@@ -1,0 +1,20 @@
+# Docker Compose — mise en route sur n'importe quel VPS en une commande :
+#
+#   docker compose up -d --build
+#
+# La session WhatsApp (./sessions), l'état du bot (./data) et ses logs
+# vivent sur l'hôte : redémarrages et mises à jour ne perdent rien.
+# Les secrets viennent de .env (env_file) — ce fichier n'est jamais
+# commité.
+services:
+  djousse:
+    build: .
+    image: djousse-tech-md:latest
+    container_name: djousse-tech-md
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./sessions:/app/sessions
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./downloads:/app/downloads

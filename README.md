@@ -334,6 +334,35 @@ Suivi en direct :
 Get-Content logs\bot.log -Tail 20 -Wait
 ```
 
+### 4. Hébergement (multiplateforme)
+
+Le bot est un **worker sans port** (aucun serveur HTTP) : il tourne tel quel
+sur VPS, Docker, Render, Fly.io, Railway, Heroku ou Replit. Fichiers livrés :
+
+| Plateforme | Fichier | Lancer avec |
+|---|---|---|
+| VPS / serveur maison | `docker-compose.yml` | `docker compose up -d --build` |
+| Docker générique | `Dockerfile` | `docker build -t djousse .` + `docker run --env-file .env -v ./sessions:/app/sessions -v ./data:/app/data -d djousse` |
+| Render | `render.yaml` | New → Blueprint (service *worker*) |
+| Fly.io | `fly.toml` | `fly launch --copy-config` + `fly volumes create djousse_state` |
+| Heroku | `Procfile` + `app.json` | `heroku create` puis déploiement git |
+| Replit | `.replit` | ▶ Run (Always On recommandé) |
+
+**Règles d'or en cloud**
+
+1. **Persistance** — monte `sessions/` et `data/` sur un disque/volume :
+   sans lui, chaque redémarrage impose un réappairage. C'est le piège n°1
+   des bots WhatsApp hébergés (Heroku et le plan gratuit de Render n'ont
+   *aucun* disque persistant).
+2. **Code d'appairage** — `CONNECT_METHOD=pairing` + `PAIRING_PHONE` dans
+   les variables d'environnement ; le code 8 caractères s'affiche dans les
+   **logs** de la plateforme (onglet Logs de Render, `fly logs`, Console
+   Replit, `docker logs djousse-tech-md`).
+3. **Jamais deux instances** — un seul déploiement actif par numéro : deux
+   sessions concurrentes se détruisent mutuellement.
+4. Le QR brut n'est jamais lisible depuis un log — préfère toujours le
+   mode `pairing` en hébergement.
+
 ---
 
 ## 🏗️ Architecture
@@ -361,12 +390,16 @@ DJOUSSE-TECH-MD/
 │   ├── dataDir.js    # 💾 Base locale data/ — séparée des credentials WhatsApp
 │   ├── waStats.js    # 🔌 Stats de connexion partagées index.js ⇄ handler.js (.diag)
 │   ├── scheduler.js  # .schedule / .schedules / .unschedule
+│   ├── ai.js         # 🤖 IA unifiée : Gemini → secours OpenRouter multi-modèles
+│   ├── auto-status.js # 📺 Auto-Status : vue + réaction + réponse sur les statuts
 │   └── wa-send.js    # 🔑 Service d'envoi unique — tout envoi passe par send()
 │
 ├── ludo/             # 🎲 Moteur de jeu Ludo (plateau, règles, rendu canvas)
 ├── plugins/          # Plugins extensibles
-├── scripts/          # 🔍 audit.js (audit de démarrage) · service.js (start/stop/status/watch)
+├── scripts/          # 🔍 audit.js · service.js · menu-image.js (image .menu ephoto360)
 ├── vendor/yt-dlp.exe # ⬇️ Auto-téléchargé au premier usage
+├── Dockerfile · docker-compose.yml · Procfile · render.yaml · fly.toml · app.json · .replit
+│                     # 🌍 hébergement multiplateforme (worker sans port)
 ├── data/             # 💾 Base locale SQLite — data/bot.db (état, historique, journal) — gitignoré
 └── sessions/djsession/ # 🔒 Credentials WhatsApp uniquement — gitignoré
 ```

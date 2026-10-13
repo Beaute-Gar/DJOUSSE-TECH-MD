@@ -1,0 +1,33 @@
+# fly.toml — Fly.io (aucun service HTTP : le bot est un worker pur).
+#
+#   fly launch --copy-config        # accepte ce fichier
+#   fly volumes create djousse_state --size 1 --region cdg
+#   fly secrets set PAIRING_PHONE=2376... OWNER_NUMBER=2376...
+#   fly deploy
+#
+# Le volume persiste la session WhatsApp et l'état du bot ; le code
+# d'appairage s'affiche dans `fly logs`.
+app = 'djousse-tech-md'
+primary_region = 'cdg'
+
+[build]
+  [build.args]
+    NODE_VERSION = '22'
+
+[env]
+  NODE_ENV = 'production'
+  CONNECT_METHOD = 'pairing'
+  DATA_DIR = '/app/state/data'
+  SESSION_DIR = '/app/state/sessions/djsession'
+
+[processes]
+  app = 'node index.js'
+
+[mounts]
+  source = 'djousse_state'
+  destination = '/app/state'
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
