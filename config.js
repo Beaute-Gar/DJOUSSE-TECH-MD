@@ -82,6 +82,15 @@ module.exports = {
 
   // IA (optionnelle : sans clé, la commande .ai répond avec un message explicite)
   geminiKey: process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || '',
+  // MODULE 4 : secours IA — pris automatiquement si Gemini échoue (lib/ai.js)
+  // Liste ordonnée de modèles gratuits TESTÉS en réel le 2026-10-13 :
+  // les pools Google sont passées en dernier (429 récurrents côté upstream),
+  // NVIDIA d'abord (200 stable). OPENROUTER_MODEL accepte une liste « a, b ».
+  openrouterKey: process.env.OPENROUTER_API_KEY || '',
+  openrouterModels: String(
+    process.env.OPENROUTER_MODEL
+      || 'nvidia/nemotron-3-super-120b-a12b:free, nvidia/nemotron-3.5-lightning:free, google/gemma-4-31b-it:free',
+  ).split(',').map((s) => s.trim()).filter(Boolean),
 
   // Connexion (pairing par défaut, QR si CONNECT_METHOD=qr)
   connectMethod: (process.env.CONNECT_METHOD || '').toLowerCase(),

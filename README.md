@@ -382,7 +382,12 @@ MENU_PICTURE_PATH=assets/anime-profile.jpg
 
 # ── IA (optionnel) ───────────────────────────────
 # Sans clé, .ai renvoie un message explicite.
+# Gemini est le provider principal ; en cas de panne, repli automatique
+# sur OpenRouter — liste ordonnée de modèles, séparés par des virgules
+# (les pools gratuits saturent : le suivant prend le relais).
 GEMINI_KEY=
+OPENROUTER_API_KEY=
+# OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free, nvidia/nemotron-3.5-lightning:free, google/gemma-4-31b-it:free
 
 # ── Protections par défaut ───────────────────────
 ANTILINK=0
@@ -634,7 +639,7 @@ Toutes les fonctionnalités ne traitent pas nécessairement toutes ces catégori
 
 ### 🧠 Données envoyées aux services d'IA
 
-Le module IA utilise **Google Gemini** (`GEMINI_KEY`). Les données nécessaires au traitement de la demande peuvent être transmises à ce fournisseur.
+Le module IA utilise **Google Gemini** (`GEMINI_KEY`), avec repli automatique sur **OpenRouter** (`OPENROUTER_API_KEY`). Les données nécessaires au traitement de la demande peuvent être transmises à ces fournisseurs.
 
 Avant d'activer un fournisseur, vérifie ses conditions d'utilisation, sa politique de confidentialité, ses règles de conservation et ses limitations.
 

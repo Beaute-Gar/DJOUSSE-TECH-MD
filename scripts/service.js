@@ -33,6 +33,10 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const LOG_DIR = path.join(ROOT, 'logs');
 
+/* MODULE 5 : rythme du watchdog — vérification de vie toutes les 10 s
+   (exporté et testé : test/purge-watchdog.test.js) */
+const WATCH_INTERVAL_MS = 10_000;
+
 const APPS = {
   bot: {
     run: [process.execPath, ['index.js']],
@@ -186,7 +190,7 @@ function watchLoop(name) {
     fs.appendFileSync(f.log,
       `\n──── ${stamp()} ──── watchdog : process mort, relance ────\n`);
     start(name);
-  }, 10_000);
+  }, WATCH_INTERVAL_MS);
 }
 
 /**
@@ -205,20 +209,26 @@ function stopWatch(name) {
 const CMDS = { start, stop, status, watch, 'watch-loop': watchLoop };
 const USAGE = 'start|stop|status|watch';
 
-/* argv : [script] [cible?] [commande?] — un seul mot = commande sur « bot » */
-const argv = process.argv.slice(2);
-let name = 'bot';
-let cmd = 'status';
-if (argv.length === 1) { (CMDS[argv[0]] ? (cmd = argv[0]) : (name = argv[0])); }
-else if (argv.length >= 2) { name = argv[0]; cmd = argv[1]; }
+/* CLI uniquement si lancé comme script : un `require()` (tests) n'exécute
+   RIEN — seule la constante du watchdog est exportée. */
+if (require.main === module) {
+  /* argv : [script] [cible?] [commande?] — un seul mot = commande sur « bot » */
+  const argv = process.argv.slice(2);
+  let name = 'bot';
+  let cmd = 'status';
+  if (argv.length === 1) { (CMDS[argv[0]] ? (cmd = argv[0]) : (name = argv[0])); }
+  else if (argv.length >= 2) { name = argv[0]; cmd = argv[1]; }
 
-if (!APPS[name]) {
-  console.error(`Cible inconnue « ${name} » — attendu : ${Object.keys(APPS).join(' | ')}`);
-  process.exit(64);
+  if (!APPS[name]) {
+    console.error(`Cible inconnue « ${name} » — attendu : ${Object.keys(APPS).join(' | ')}`);
+    process.exit(64);
+  }
+  if (!CMDS[cmd]) {
+    console.error(`Usage : node scripts/service.js [${Object.keys(APPS).join('|')}] ${USAGE}`);
+    process.exit(64);
+  }
+  const result = CMDS[cmd](name);
+  if (result !== undefined) process.exit(result); // watch-loop : reste ouvert
 }
-if (!CMDS[cmd]) {
-  console.error(`Usage : node scripts/service.js [${Object.keys(APPS).join('|')}] ${USAGE}`);
-  process.exit(64);
-}
-const result = CMDS[cmd](name);
-if (result !== undefined) process.exit(result); // watch-loop : reste ouvert
+
+module.exports = { WATCH_INTERVAL_MS };

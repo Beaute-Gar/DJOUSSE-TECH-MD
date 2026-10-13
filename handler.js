@@ -56,6 +56,8 @@ const guardPerms = require('./guard/src/utils/perms');
 const auth = require('./lib/auth');
 /* MODULE 2 : détection de conflits bot↔bot + pause de chat */
 const conflict = require('./lib/conflict');
+/* MODULE 4 : IA unifiée — Gemini + secours OpenRouter, messages d'erreur élégants */
+const { askAI, hasAIKey, aiUserMessage, MSG_NO_KEY } = require('./lib/ai');
 const guardEvents = require('./guard/src/events');
 const guardUi = require('./guard/src/ui');
 const { findLinks } = require('./guard/src/utils/links');
@@ -612,27 +614,8 @@ async function toAudioBuffer(input, ext) {
   }
 }
 
-async function askGemini(prompt, media = null) {
-  if (!config.geminiKey) return null;
-  /* gemini-flash-latest : alias maintenu par Google (gemini-2.0-flash retiré) */
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${config.geminiKey}`;
-  const parts = [{ text: prompt }];
-  if (media?.data?.length) {
-    parts.push({ inline_data: { mime_type: media.mime, data: media.data.toString('base64') } });
-  }
-  const json = await withNetworkTimeout(async (signal) => {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts }] }),
-      signal,
-    });
-    return res.json();
-  }, 30000, 'Gemini');
-  const text = json?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('').trim();
-  if (text) return text;
-  throw new Error(json?.error?.message || 'Réponse IA vide');
-}
+/* ── IA ── MODULE 4 : implémentation unifiée dans lib/ai.js
+   (Gemini → repli OpenRouter, erreurs élégantes) — import en tête de fichier. */
 
 /* ════════════════════════════════════════════════════════════
    3. REGISTRE DES COMMANDES + CATÉGORIES (menu 1 → 11)
@@ -1746,7 +1729,7 @@ cmd('ai', ['gemini', 'bot'], { cat: 6, desc: 'Pose une question à l’IA', usag
     if (ci?.quotedMessage) prompt = textOf(unwrap(ci.quotedMessage));
   }
   if (!prompt) return ctx.reply(`❌ Usage : ${config.prefix}ai Comment aller-tu ?`);
-  if (!config.geminiKey) return ctx.reply('🔑 Clé IA manquante : ajoute GEMINI_KEY dans le fichier .env puis relance le bot.');
+  if (!hasAIKey()) return ctx.reply(MSG_NO_KEY);
   await ctx.reply(config.messages.wait);
   try {
     /* Contexte : 5 derniers messages du chat (mémoire persistante) */
@@ -1754,10 +1737,10 @@ cmd('ai', ['gemini', 'bot'], { cat: 6, desc: 'Pose une question à l’IA', usag
     const block = mem.length
       ? `Conversation récente :\n${mem.map((e) => `+${e.s}: ${e.t}`).join('\n')}\n\nQuestion : `
       : '';
-    const answer = await askGemini((block + prompt).slice(0, 2500));
+    const answer = await askAI((block + prompt).slice(0, 2500));
     await ctx.reply(answer.slice(0, 4000));
   } catch (e) {
-    await ctx.reply(`❌ IA indisponible : ${e.message}`);
+    await ctx.reply(aiUserMessage(e));
   }
 });
 
@@ -1766,20 +1749,20 @@ cmd('summarize', ['resume'], { cat: 6, desc: 'Résumer un texte cité', usage: '
   const quoted = ci?.quotedMessage ? textOf(unwrap(ci.quotedMessage)) : '';
   const source = quoted || ctx.q;
   if (!source) return ctx.reply(`❌ Réponds à un texte.\nUsage : ${config.prefix}summarize`);
-  if (!config.geminiKey) return ctx.reply('🔑 Clé IA manquante : ajoute GEMINI_KEY dans .env.');
+  if (!hasAIKey()) return ctx.reply(MSG_NO_KEY);
   await ctx.reply(config.messages.wait);
   try {
-    const answer = await askGemini(`Résume ce texte en 5 points maximum, en français :\n\n${source.slice(0, 3000)}`);
+    const answer = await askAI(`Résume ce texte en 5 points maximum, en français :\n\n${source.slice(0, 3000)}`);
     await ctx.reply(`📋 *Résumé*\n\n${answer.slice(0, 3500)}`);
   } catch (e) {
-    await ctx.reply(`❌ Résumé impossible : ${e.message}`);
+    await ctx.reply(aiUserMessage(e));
   }
 });
 
 cmd('analyse', ['ocr', 'transcrire', 'decrit'], { cat: 6, desc: 'IA : lire une image, transcrire un vocal, résumer un document', usage: 'analyse [question] (réponds à un média)' }, async (ctx) => {
   const info = mediaInfo(ctx.msg);
   if (!info) return ctx.reply(`❌ Réponds à une image, un vocal ou un document.\nUsage : ${config.prefix}analyse`);
-  if (!config.geminiKey) return ctx.reply('🔑 Clé IA manquante : ajoute GEMINI_KEY dans le fichier .env.');
+  if (!hasAIKey()) return ctx.reply(MSG_NO_KEY);
 
   const kind = info.type;
   const prompts = {
@@ -1810,10 +1793,10 @@ cmd('analyse', ['ocr', 'transcrire', 'decrit'], { cat: 6, desc: 'IA : lire une i
 
   const prompt = (ctx.q || prompts[kind]).slice(0, 1500);
   try {
-    const answer = await askGemini(prompt, { mime: mime || 'application/octet-stream', data: buf });
+    const answer = await askAI(prompt, { mime: mime || 'application/octet-stream', data: buf });
     await ctx.reply(`🧠 *Analyse IA*\n\n${answer.slice(0, 4000)}`);
   } catch (e) {
-    await ctx.reply(`❌ IA indisponible : ${e.message}`);
+    await ctx.reply(aiUserMessage(e));
   }
 });
 
@@ -3674,7 +3657,7 @@ module.exports = {
   renderMainMenu,
   state,
   saveState,
-  askGemini,
+  askAI,
   getMessageForBaileys,
   putCache,
   getCache,
