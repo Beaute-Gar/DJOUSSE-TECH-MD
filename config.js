@@ -102,6 +102,14 @@ module.exports = {
   connectMethod: (process.env.CONNECT_METHOD || '').toLowerCase(),
   pairingPhone: String(process.env.PAIRING_PHONE || '').replace(/\D/g, ''),
 
+  // API DE JUMELAGE HTTP (lib/pairing-api.js) — pour le site / l'app.
+  // DÉSACTIVÉE par défaut : le bot reste un worker sans port.
+  pairingApi: bool(process.env.PAIRING_API, false),
+  pairingApiPort: numbers(process.env.PAIRING_API_PORT, 8089),
+  pairingApiToken: process.env.PAIRING_API_TOKEN || '',
+  // SERVE_SITE=on : sert aussi website/ sur ce port (app + API, une seule URL)
+  serveSite: bool(process.env.SERVE_SITE, false),
+
   // Version WhatsApp de repli si toutes les sources échouent
   stableWaVersion: [2, 3000, 1043857760],
 

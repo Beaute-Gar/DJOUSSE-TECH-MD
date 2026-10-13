@@ -232,6 +232,7 @@ const skipJid = (jid) => handler.isSystemJid(jid) && jid !== STATUS_JID; // sour
 
 let sessionEpoch = 0;          // anti-démarrage concurrent → jamais 2 sockets
 let activeSock = null;
+let apiCredsState = null;      // état Baileys courant → garde-fou de l'API de jumelage
 let conflictCount = 0;         // 440 connectionReplaced
 let handshakeFailCount = 0;    // 405 handshake rejeté
 let pairingAttempts = 0;       // demandes de code de pairing depuis la connexion
@@ -267,6 +268,7 @@ async function startSession(options = {}) {
   }
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+  apiCredsState = state; // l'API de jumelage refuse tout code si session déjà enregistrée
   const version = await resolveWAVersion();
 
   const isPairing = options.connectMethod === 'pairing';
@@ -813,6 +815,24 @@ async function main() {
   }
 
   showStartupDashboard();
+
+  /* API DE JUMELAGE HTTP (optionnelle, PAIRING_API=on) — le site « workspace »
+     et l'app mobile en obtiennent un code SANS terminal. Démarrée AVANT le
+     socket : elle répond /status immédiatement et /pair dès que la socket est
+     prête. Refuse tout code si une session est déjà enregistrée (409). */
+  if (config.pairingApi) {
+    const { startPairingApi } = require('./lib/pairing-api');
+    startPairingApi({
+      getSocket: () => activeSock,
+      isRegistered: () => !!(apiCredsState && apiCredsState.creds && apiCredsState.creds.registered),
+      isConnected: () => bridge.connected,
+      status: () => bridge.status,
+      token: config.pairingApiToken,
+      port: config.pairingApiPort,
+      serveSite: config.serveSite,
+      log: rawLog,
+    });
+  }
 
   await startSession({ connectMethod, pairingPhone });
 }

@@ -534,7 +534,8 @@ function checkG4() {
     while ((m = rx.exec(src))) {
       const spec = m[1];
       const base = spec.startsWith('@') ? spec.split('/').slice(0, 2).join('/') : spec.split('/')[0];
-      if (builtinModules.includes(base) || builtinModules.includes('node:' + base)) continue;
+      const bare = base.startsWith('node:') ? base.slice(5) : base;
+      if (builtinModules.includes(bare) || builtinModules.includes('node:' + bare)) continue;
       if (!declared.has(base)) missing.add(`${base} (${rel(f)})`);
     }
   }
