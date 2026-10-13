@@ -250,11 +250,14 @@ CONNECT_METHOD=pairing
 PAIRING_PHONE=
 
 # ── Photo du .menu ────────────────────────────────
-# random = photo aléatoire tirée de Picsum, qui change régulièrement (défaut)
+# random = photo aléatoire tirée de Picsum, qui change régulièrement
 # local  = image fixe (MENU_PICTURE_PATH)  ·  off = bannière générée
-MENU_PICTURE_MODE=random
+# Livrée : avatar hacker néon cyan « DJOUSSE TECH » (900×900, ephoto360)
+MENU_PICTURE_MODE=local
 # Utilisé si MENU_PICTURE_MODE=local (chemin relatif à la racine ou absolu)
-MENU_PICTURE_PATH=assets/anime-profile.jpg
+MENU_PICTURE_PATH=assets/menu-hacker.jpg
+# Régénérer (autre texte ou remise à zéro) :
+#   node scripts/menu-image.js "DJOUSSE TECH" assets/menu-hacker.jpg
 
 # ── IA (optionnel) ───────────────────────────────
 # Sans clé, .ai renvoie un message explicite.
