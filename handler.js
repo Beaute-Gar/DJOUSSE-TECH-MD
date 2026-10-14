@@ -2637,7 +2637,13 @@ try {
 
 /* ── PLUGINS SILVA-MD (222 fichiers, adaptés au registre DJOUSE) ── */
 try {
-  const rap = loadSilvaPlugins(cmd, { config, send, exists: (n) => commands.has(String(n).toLowerCase()) });
+  const rap = loadSilvaPlugins(cmd, {
+    config, send,
+    exists: (n) => commands.has(String(n).toLowerCase()),
+    /* styles DJOUSE injectés : les messages d'erreur/succès des plugins
+       silva sont réencadrés dans NOTRE charte (renderError/renderSuccess). */
+    style: { renderError, renderSuccess },
+  });
   console.log(`[SILVA] ${rap.charges} plugins chargés · ${rap.commandes} commandes/alias enregistrés · ${rap.ignores} ignorés`);
   if (rap.echecs.length) {
     console.log(`[SILVA] ${rap.echecs.length} fichier(s) ignoré(s) :`);
