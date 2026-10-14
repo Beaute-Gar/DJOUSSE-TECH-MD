@@ -6,13 +6,13 @@
 
 <img
   src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=363+commandes+%C2%B7+11+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+13+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
-  alt="363 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
+  alt="1803 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
 />
 
 <br/>
 
 <img src="https://img.shields.io/badge/version-4.0.0-2ECC71?style=flat-square" alt="Version 4.0.0" />
-<img src="https://img.shields.io/badge/commandes-363-00b894?style=flat-square" alt="363 commandes" />
+<img src="https://img.shields.io/badge/commandes-1803-00b894?style=flat-square" alt="1803 commandes" />
 <img src="https://img.shields.io/badge/cat%C3%A9gories-11-111b26?style=flat-square" alt="11 catégories" />
 <img src="https://img.shields.io/badge/Baileys-6.7.24-25D366?style=flat-square&logo=whatsapp&logoColor=white" alt="Baileys 6.7.24" />
 <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 18+" />
@@ -382,7 +382,7 @@ sur VPS, Docker, Render, Fly.io, Railway, Heroku ou Replit. Fichiers livrés :
 ```
 DJOUSSE-TECH-MD/
 ├── index.js          # Point d'entrée : connexion Baileys, QR/pairing, reconnexion
-├── handler.js        # 🧠 Cerveau unique — 363 commandes, menu, moteur d'événements
+├── handler.js        # 🧠 Cerveau unique — 1803 commandes, menu, moteur d'événements
 ├── config.js         # Toutes les constantes lues depuis .env (aucune logique métier)
 ├── style.js          # 🎨 Source unique du rendu (cadres ╭┄┄『 』┄❍, alphabet officiel)
 │
