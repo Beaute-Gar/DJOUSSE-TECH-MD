@@ -37,6 +37,7 @@ const { commandAccess } = require('./lib/command-access');
 const { withNetworkTimeout } = require('./lib/network-timeout');
 const { registerExtras } = require('./lib/extras');
 const { registerHackTools } = require('./lib/hacktools');
+const { loadSilvaPlugins } = require('./lib/silva-loader');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('./lib/ported-auto');
 const portedGroup = require('./lib/ported-group');
 const portedAudio = require('./lib/ported-audio');
@@ -2634,6 +2635,19 @@ try {
   console.error('[EXTRAS] enregistrement:', e.message);
 }
 
+/* ── PLUGINS SILVA-MD (222 fichiers, adaptés au registre DJOUSE) ── */
+try {
+  const rap = loadSilvaPlugins(cmd, { config, send, exists: (n) => commands.has(String(n).toLowerCase()) });
+  console.log(`[SILVA] ${rap.charges} plugins chargés · ${rap.commandes} commandes/alias enregistrés · ${rap.ignores} ignorés`);
+  if (rap.echecs.length) {
+    console.log(`[SILVA] ${rap.echecs.length} fichier(s) ignoré(s) :`);
+    for (const e of rap.echecs.slice(0, 15)) console.log(`   - ${e}`);
+    if (rap.echecs.length > 15) console.log(`   … et ${rap.echecs.length - 15} autres`);
+  }
+} catch (e) {
+  console.error('[SILVA] chargement interrompu:', e.message);
+}
+
 /* ── 11. TÉLÉCHARGEMENT ───────────────────────────────────── */
 
 const YT_URL_RE = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/;
@@ -3781,6 +3795,7 @@ module.exports = {
   getCache,
   getScheduler,
   getStore,
+  mediaInfo,
   // Porté TEDDY-XMD : présence & réponses auto
   autoSettings,
   startOnlineTimer: autoStartTimer,

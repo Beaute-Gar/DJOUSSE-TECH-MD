@@ -388,8 +388,16 @@ function checkG2() {
   else OK('G2', `${registry.size} noms+alias uniques, aucun doublon de commande`);
 
   // 4. service d'envoi unique
+  /* TIERS : plugins/silva/ est du code tiers (fichiers adaptés par
+     lib/silva-loader.js). Le loader route leurs envois via lib/wa-send.js
+     À L'EXÉCUTION (proxy) : la centralisation est réelle en production.
+     lib/silva-loader.js est exclu aussi : il contient le repli brut
+     (t.sendMessage) utilisé seulement si wa-send ne sait pas envoyer
+     un contenu. Le contrôle statique s'applique à NOTRE code. */
+  const TIERS = ['plugins/silva/', 'lib/silva-loader.js'];
   const senders = new Map();
   for (const f of productFiles()) {
+    if (TIERS.some((t) => rel(f).startsWith(t))) continue;
     const src = strip(read(f));
     const re = /\.sendMessage\s*\(/g;
     let m;
@@ -399,7 +407,7 @@ function checkG2() {
   }
   const outside = [...senders.entries()].filter(([f]) => f !== SEND_SERVICE);
   if (outside.length === 0) {
-    OK('G2', `envois centralises dans ${SEND_SERVICE}`);
+    OK('G2', `envois centralises dans ${SEND_SERVICE} (tiers route par proxy)`);
   } else {
     const total = outside.reduce((s, [, n]) => s + n, 0);
     KO('G2', `${total} appel(s) .sendMessage hors ${SEND_SERVICE} dans ${outside.length} fichier(s) : ${outside.map(([f, n]) => `${f} x${n}`).join(', ')}`);
@@ -512,6 +520,10 @@ function checkG4() {
   const offenders = [];
   for (const f of productFiles()) {
     if (rel(f) === 'style.js') continue;
+    /* tiers : les plugins silva ont leurs propres cadres ; leur rendu
+       reste isolé (catégories déduites), la charte DJOUSSE s'applique
+       à notre code. */
+    if (rel(f).startsWith('plugins/silva/')) continue;
     const src = strip(read(f));
     const lines = src.split(/\r?\n/);
     const bad = [];
