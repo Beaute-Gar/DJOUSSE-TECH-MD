@@ -110,6 +110,14 @@ module.exports = {
   // SERVE_SITE=on : sert aussi website/ sur ce port (app + API, une seule URL)
   serveSite: bool(process.env.SERVE_SITE, false),
 
+  // CANAL OFFICIEL WhatsApp Agent Platform (lib/wa-agent.js) — zéro risque
+  // de bannissement. DÉSACTIVÉ par défaut (ton bot tourne avec Baileys).
+  // AGENT_MODE=on + AGENT_API_TOKEN=jeton → l'API officielle remplace Baileys.
+  // Limite officielle : l'agent ne parle QU'À son créateur (pas de groupe).
+  agentMode: bool(process.env.AGENT_MODE, false),
+  agentToken: process.env.AGENT_API_TOKEN || '',
+  agentCreateur: process.env.AGENT_CREATOR_ID || '',
+
   // Version WhatsApp de repli si toutes les sources échouent
   stableWaVersion: [2, 3000, 1043857760],
 

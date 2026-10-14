@@ -847,7 +847,60 @@ async function main() {
     });
   }
 
+  /* ── CANAL OFFICIEL : WhatsApp Agent Platform (AGENT_MODE=on) ──────────
+     Remplace Baileys par l'API officielle : aucun risque de bannissement,
+     mais l'agent ne parle qu'à son créateur (limite WhatsApp, doc v1). */
+  if (config.agentMode) {
+    if (!config.agentToken) {
+      rawError('[AGENT] AGENT_MODE=on mais AGENT_API_TOKEN est vide — canal officiel NON démarré.');
+      rawError('[AGENT] Crée ton agent : WhatsApp → Paramètres → Agents → Créer un agent → Clé d’API.');
+    } else {
+      await startAgentPlatform();
+      return; // on ne lance PAS Baileys
+    }
+  }
+
   await startSession({ connectMethod, pairingPhone });
+}
+
+/* ══════════ CANAL OFFICIEL — API Agent ══════════ */
+async function startAgentPlatform() {
+  const { AgentClient, AgentError } = require('./lib/wa-agent');
+  const { demarrerBoucle, envoyerContenu } = require('./lib/wa-agent-bridge');
+  const handler = require('./handler');
+
+  const client = new AgentClient({
+    token: config.agentToken,
+    createur: config.agentCreateur,
+    log: rawLog,
+  });
+  if (!client.configure) { rawError('[AGENT] jeton absent'); return; }
+
+  setBridgeStatus('CONNECTE (AGENT OFFICIEL)');
+  bridge.connected = true;
+  rawLog('[AGENT] Canal officiel WhatsApp Agent Platform actif.');
+  rawLog(`[AGENT] Agent → ${config.agentCreateur || 'créateur (rempli au 1er message)'}.`);
+  rawLog('[AGENT] Rappel : un agent ne peut écrire QU’À son créateur (groupe impossible).');
+
+  /* chaque entrant passe par le moteur de commandes DJOUSSE */
+  const arreter = demarrerBoucle(client, handler, {
+    onMessage: async (msg) => {
+      /* mémorise le créateur au premier message reçu */
+      if (!config.agentCreateur) {
+        config.agentCreateur = msg.key.remoteJid;
+        client.createur = msg.key.remoteJid;
+        rawLog(`[AGENT] Créateur détecté : ${msg.key.remoteJid}`);
+      }
+      try {
+        await handler.handleMessage(client, msg);
+      } catch (e) {
+        rawError('[AGENT] traitement message:', e?.message || e);
+      }
+    },
+    log: rawLog,
+  });
+
+  process.on('SIGINT', () => { arreter(); process.exit(0); });
 }
 
 /* Lancement direct (node index.js / npm start) — require() reste sans effet

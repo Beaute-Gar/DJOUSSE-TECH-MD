@@ -177,6 +177,47 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 
 ---
 
+## 🛡️ Canal officiel WhatsApp Agent Platform (zéro bannissement)
+
+Alternative **officielle** à Baileys, activable quand tu veux. L'API est
+fournie par WhatsApp lui-même (`api.whatsapp.com/agent/v1`) : aucun risque
+de bannissement, aucun QR, aucune session à conserver.
+
+**Activer (2 minutes)** — `.env` :
+
+```env
+AGENT_MODE=on
+AGENT_API_TOKEN=ton-jeton
+```
+
+Jeton obtenu dans WhatsApp : **Paramètres → Agents → Créer un agent** →
+ouvrir le chat de l'agent → **Chat info → Clé d'API**.
+
+**Ce que ça change** — le bot reçoit tes messages en direct et répond avec
+**toutes** ses commandes (`.menu`, jeux, outils, logos, football…).
+
+**Limites officielles** (imposées par WhatsApp, pas par le bot) :
+
+| Limite | Valeur |
+|---|---|
+| Destinataire | **Le créateur de l'agent uniquement** (pas de groupe, pas de tierce personne) |
+| Réactions | Réception seule (l'envoi est refusé) |
+| Envois | 12 messages/minute |
+| Sondages | 15 requêtes/minute |
+| Médias | 5 Mo image · 500 Ko sticker · 16 Mo vidéo/audio/document |
+| Rétention | 30 jours |
+
+> 🧠 Bon réflexe : garde **Baileys** pour ton bot public (groupes,
+> modération, protections) et bascule sur **AGENT_MODE=on** pour ton
+> usage perso sans aucun risque. Les deux modes se coupent dans `.env`.
+
+Technique : `lib/wa-agent.js` (client complet : envoi, sondage long, accusés
+de lecture, médias, erreurs typées, quota glissant, backoff exponentiel) et
+`lib/wa-agent-bridge.js` (adapte les messages officiels au moteur DJOUSSE,
+donc **toutes tes commandes existantes fonctionnent sans réécriture**).
+
+---
+
 ## 🛡️ DJOUSSE GUARD
 
 Le dossier `guard/` contient un moteur de protections **indépendant du reste du bot**.
