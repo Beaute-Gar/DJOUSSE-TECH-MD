@@ -26,12 +26,32 @@ function ctx(args, from) {
   return { c, out };
 }
 
+/* Les plugins silva envoient via sock.sendMessage → le loader les proxifie
+   par lib/wa-send.js. On espionne wa-send pour vérifier les DEUX chemins. */
+const waSend = require('../lib/wa-send');
+const origSend = waSend.send;
+let envoyesViaWaSend = [];
+function espionner() {
+  envoyesViaWaSend = [];
+  waSend.send = async (sock, jid, content) => { envoyesViaWaSend.push({ jid, content }); };
+}
+function restaurer() { waSend.send = origSend; }
+
 async function runCmd(nom, args, from) {
   const entry = h.commands.get(nom);
   assert.ok(entry, `commande ${nom} enregistrée`);
   const { c, out } = ctx(args, from);
-  await entry.handler(c);
-  return out;
+  espionner();
+  try {
+    await entry.handler(c);
+  } catch (e) {
+    restaurer();
+    /* une commande tierce peut légitimement lever si son API est morte :
+       ce n'est pas un plantage du bot, la commande répond son erreur. */
+    throw e;
+  }
+  restaurer();
+  return { out, envoyes: envoyesViaWaSend };
 }
 
 test('le chargeur a enregistré plus de 1000 commandes silva', () => {
@@ -39,26 +59,33 @@ test('le chargeur a enregistré plus de 1000 commandes silva', () => {
   console.log('   registre total :', h.commands.size);
 });
 
-test('RÉEL — .8ball répond une des réponses du plugin silva', async () => {
-  const out = await runCmd('8ball', ['vais-je', 'être', 'riche'], 'g@g.us');
+test('REEL - .8ball repond (commande maison conservee, pas ecrasee par silva)', async () => {
+  /* silva a aussi un plugin 8ball : le chargeur NE l'a PAS enregistre car
+     notre commande existait deja. C'est donc la notre qui repond. */
+  const { out } = await runCmd('8ball', ['vais-je', 'etre', 'riche'], 'g@g.us');
   const txt = JSON.stringify(out);
-  assert.match(txt, /certain|doubt|definitely|likely|signs point|ask again|cannot predict|concentrate|count on|reply is no|sources say|doubtful|outlook/i);
+  assert.match(txt, /certain|doubt|definitely|likely|signs point|ask again|cannot predict|concentrate|count on|reply is no|sources say|doubtful|outlook|8ball/i);
+});
+
+test('protection anti-ecrasement : notre .8ball reste la notre (usage FR)', async () => {
+  const { out } = await runCmd('8ball', [], 'g@g.us');
+  assert.match(JSON.stringify(out), /Usage.*r[ée]ussir/i);
 });
 
 test('RÉEL — .emojiguess lance un devinette (état du plugin conservé)', async () => {
-  const out = await runCmd('emojiguess', [], 'partie1@g.us');
-  assert.match(JSON.stringify(out), /Guess|emoji|Movie/i);
+  const { out, envoyes } = await runCmd('emojiguess', [], 'partie1@g.us');
+  assert.match(JSON.stringify([...out, ...envoyes.map((e) => e.content)]), /Guess|emoji|Movie/i);
 });
 
 test('RÉEL — .mathquiz pose un calcul (plugin silva avec état)', async () => {
-  const out = await runCmd('mathquiz', [], 'mathpartie@g.us');
-  const txt = JSON.stringify(out);
+  const { out, envoyes } = await runCmd('mathquiz', [], 'mathpartie@g.us');
+  const txt = JSON.stringify([...out, ...envoyes.map((e) => e.content)]);
   assert.match(txt, /Quick Math|[0-9]+\s*[-+×x*]\s*[0-9]+/);
 });
 
 test('RÉEL — .flagquiz pose un drapeau à deviner', async () => {
-  const out = await runCmd('flagquiz', [], 'fl@g.us');
-  assert.match(JSON.stringify(out), /Country|Country|Guess/i);
+  const { out, envoyes } = await runCmd('flagquiz', [], 'fl@g.us');
+  assert.match(JSON.stringify([...out, ...envoyes.map((e) => e.content)]), /Country|Guess/i);
 });
 
 test('les commandes interdites (crash/NSFW) ne sont PAS enregistrées', () => {
