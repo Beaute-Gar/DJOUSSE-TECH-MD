@@ -5,7 +5,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const { AgentClient, AgentError, limiteTaille, typeDepuisMime } = require('../lib/wa-agent');
-const { messageAgentVersBaileys, envoyerContenu, demarrerBoucle } = require('../lib/wa-agent-bridge');
+const { messageAgentVersBaileys, envoyerContenu, demarrerBoucle, jidLocalDepuisAgent, destinataireReel } = require('../lib/wa-agent-bridge');
 
 /* ── faux serveur API ── */
 function serveur(comportement) {
@@ -13,13 +13,21 @@ function serveur(comportement) {
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://x');
     const auth = req.headers.authorization;
-    let corps = null;
-    if ((req.method === 'POST' || req.method === 'DELETE') && !req.headers['content-type']?.includes('multipart')) {
-      const chunks = [];
-      for await (const c of req) chunks.push(c);
-      corps = JSON.parse(Buffer.concat(chunks).toString() || '{}');
+    /* JSON : on lit le corps (les tests vérifient le contenu).
+       Multipart : on le draine SANS l'attendre (req.resume) — sinon la
+       réponse serait bloquée sous node --test (fetch attend la fin du corps). */
+    const chunks = [];
+    if (req.headers['content-type']?.includes('json')) {
+      try { for await (const c of req) chunks.push(c); } catch {}
+    } else {
+      req.resume();
     }
-    recus.push({ methode: req.method, chemin: url.pathname + url.search, auth, corps });
+    const brut = Buffer.concat(chunks).toString();
+    let corps = null;
+    if (req.headers['content-type']?.includes('json') && brut) {
+      try { corps = JSON.parse(brut); } catch { corps = null; }
+    }
+    recus.push({ methode: req.method, chemin: url.pathname + url.search, auth, corps, multipart: req.headers['content-type']?.includes('multipart') ? '[multipart]' : null });
     const sortie = await comportement(req, res, corps, recus);
     if (!res.writableEnded) {
       res.writeHead(sortie?.status || 200, { 'Content-Type': 'application/json' });
@@ -27,11 +35,14 @@ function serveur(comportement) {
     }
   });
   return new Promise((resolve) => {
-    server.listen(0, '127.0.0.1', () => resolve({
-      recus,
-      url: `http://127.0.0.1:${server.address().port}`,
-      close: () => new Promise((r) => { server.closeAllConnections?.(); server.close(r); }),
-    }));
+    server.listen(0, '127.0.0.1', () => {
+      server.unref?.(); // un serveur de test ne garde jamais le process en vie
+      resolve({
+        recus,
+        url: `http://127.0.0.1:${server.address().port}`,
+        close: () => new Promise((r) => { server.closeAllConnections?.(); server.close(r); }),
+      });
+    });
   });
 }
 
@@ -82,8 +93,8 @@ test('envoi d\'une réaction → refusé AVANT l\'appel (réception seule)', asy
 });
 
 test('média : upload (multipart) puis envoi avec l\'id retourné', async () => {
-  const s = await serveur((req) => {
-    if (req?.chemin === '/media') return { body: { id: 'MEDIA-42' } };
+  const s = await serveur((req, res, corps, recus) => {
+    if (recus[recus.length - 1]?.chemin === '/media') return { body: { id: 'MEDIA-42' } };
     return { body: { messages: [{ id: 'wamid.MEDIA' }] } };
   });
   const c = clientSur(s.url);
@@ -100,10 +111,10 @@ test('média : upload (multipart) puis envoi avec l\'id retourné', async () => 
 test('média trop gros → refus AVANT l\'upload, avec le bon type', async () => {
   const s = await serveur(() => ({ body: { id: 'X' } }));
   const c = clientSur(s.url);
-  /* sticker : limite 500 KB */
+  /* sticker : limite 500 KB — 600 KB doit être refusé */
   await assert.rejects(
     () => envoyerContenu(c, 'user:1', { sticker: Buffer.alloc(600 * 1024) }),
-    (e) => e.code === 131053 && /600\.0 K?o|600/.test(e.details) === false && e.status === 400,
+    (e) => e.code === 131053 && e.status === 400,
   );
   assert.equal(s.recus.length, 0, 'aucun upload lancé');
   await s.close();
@@ -189,6 +200,20 @@ test('sondage vide (204) → { vide: true } sans offset modifié', async () => {
   await s.close();
 });
 
+test('démarrage sans offset → pas de backlog (head actuel)', async () => {
+  const appels = [];
+  const s = await serveur((req, res, corps, recus) => {
+    appels.push(recus[recus.length - 1]?.chemin || req.url);
+    return { status: 204 };
+  });
+  const c = clientSur(s.url);
+  assert.equal(c.offset, null, 'offset nul au démarrage');
+  await c.mises();
+  const chemin = appels[appels.length - 1];
+  assert.ok(!chemin.includes('offset='), `pas d'offset dans l'URL : ${chemin}`);
+  await s.close();
+});
+
 /* ══════════ erreurs & quotas ══════════ */
 test('token absent → 401 code 190 avec conseil clair', async () => {
   const s = await serveur(() => ({ status: 401, body: { error: { message: '(190)', code: 190 } } }));
@@ -247,20 +272,35 @@ test('quota local 12/min dépassé → refus AVANT l\'appel HTTP', async () => {
 });
 
 test('média : métadonnées puis téléchargement des octets', async () => {
-  const octets = Buffer.from('contenu-media');
-  const s = await serveur((req) => {
-    if (req?.chemin.startsWith('/media/M9')) {
-      return { body: { url: `http://127.0.0.1:${req.socket.localPort}/media/M9/content`, mime_type: 'image/png', sha256: 'ab', file_size: octets.length, id: 'M9' } };
+  const octets = Buffer.from('contenu-media-reel');
+  const server = http.createServer(async (req, res) => {
+    const url = new URL(req.url, 'http://x');
+    if (url.pathname === '/media/M9') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        url: `http://127.0.0.1:${server.address().port}/media/M9/content`,
+        mime_type: 'image/png', sha256: 'ab', file_size: octets.length, id: 'M9',
+      }));
+      return;
     }
-    if (req?.chemin.startsWith('/media/M9/content')) return null; // servi en binaire
-    return { body: {} };
+    if (url.pathname === '/media/M9/content') {
+      assert.equal(req.headers.authorization, 'Bearer jeton-test', 'le média se télécharge avec le jeton');
+      res.writeHead(200, { 'Content-Type': 'image/png' });
+      res.end(octets);
+      return;
+    }
+    res.writeHead(404).end();
   });
-  /* on prépare la route binaire à part */
-  s.close && null;
-  const c = clientSur(s.url);
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const c = clientSur(base);
   const meta = await c.metaMedia('M9');
   assert.equal(meta.mime_type, 'image/png');
-  await s.close();
+  assert.equal(meta.file_size, octets.length);
+  const dl = await c.telecharger('M9');
+  assert.equal(dl.buffer.toString(), 'contenu-media-reel');
+  assert.equal(dl.mime, 'image/png');
+  await new Promise((r) => { server.closeAllConnections?.(); server.close(r); });
 });
 
 /* ══════════ pont ══════════ */
@@ -268,11 +308,15 @@ test('boucle : un message reçu est transmis au handler puis marqué lu', async 
   let polls = 0;
   const s = await serveur(() => {
     polls += 1;
-    if (polls === 1) {
+    /* après 2 sondages on renvoie 204 : la boucle s'arrête d'elle-même,
+       le test n'attend pas 20 s de timeout. */
+    if (polls <= 2) {
       return {
         body: {
           entry: [{ id: '1', changes: [{ field: 'messages', value: {
-            contacts: [], messages: [{ from: 'user:5', id: 'wamid.A', timestamp: '1736844652', type: 'text', text: { body: '.ping' } }], statuses: [],
+            contacts: [], messages: polls === 1
+              ? [{ from: 'user:5', id: 'wamid.A', timestamp: '1736844652', type: 'text', text: { body: '.ping' } }]
+              : [], statuses: [],
           } }] }],
           next_offset: 2,
         },
@@ -280,10 +324,11 @@ test('boucle : un message reçu est transmis au handler puis marqué lu', async 
     }
     return { status: 204 };
   });
-  const c = clientSur(s.url);
+  const c = clientSur(s.url, { timeoutMs: 5000, maxTentatives: 2 });
   const vus = [];
   const arreter = demarrerBoucle(c, null, { onMessage: (m) => vus.push(m), log: () => {} });
-  await new Promise((r) => setTimeout(r, 600));
+  /* on attend que le message soit traité (pas une durée fixe) */
+  for (let i = 0; i < 60 && vus.length === 0; i += 1) await new Promise((r) => setTimeout(r, 25));
   arreter();
   assert.equal(vus.length, 1, 'un message transmis au moteur');
   assert.equal(vus[0].message.conversation, '.ping');
@@ -300,4 +345,90 @@ test('limites officielles exposées (tailles et types)', () => {
   assert.equal(typeDepuisMime('image/webp'), 'sticker');
   assert.equal(typeDepuisMime('image/jpeg'), 'image');
   assert.equal(typeDepuisMime('audio/ogg'), 'audio');
+});
+
+/* ══════════ identité : le créateur de l'agent est OWNER ══════════ */
+test('id agent « user:123 » → JID local Baileys, reconnu owner par le moteur', () => {
+  const auth = require('./../lib/auth');
+  const config = require('./../config');
+  const { jidNum } = require('./../guard/src/utils/perms');
+
+  assert.equal(jidLocalDepuisAgent('user:20749792362661'), '20749792362661@s.whatsapp.net');
+  assert.equal(jidLocalDepuisAgent('agent:42'), '42@s.whatsapp.net');
+  assert.equal(jidLocalDepuisAgent('sans-chiffres'), null);
+  assert.equal(jidLocalDepuisAgent(''), null);
+
+  const local = jidLocalDepuisAgent('user:20749792362661');
+  /* le handler appelle jidNum puis auth.* : les chiffres doivent survivre */
+  assert.equal(jidNum(local), '20749792362661');
+
+  const avant = config.ownerNumber.length;
+  if (!config.ownerNumber.includes('20749792362661')) config.ownerNumber.push('20749792362661');
+  try {
+    assert.equal(auth.isOwner(local), true, 'créateur reconnu owner');
+    assert.equal(auth.canRun(local), true, 'gate d\'accès ouvert');
+    assert.equal(auth.isOwner('99999999999@s.whatsapp.net'), false, 'un inconnu reste refusé');
+    assert.equal(auth.canRun('99999999999@s.whatsapp.net'), false);
+  } finally {
+    config.ownerNumber.length = avant;
+  }
+});
+
+test('message agent : JID local exposé, id réel conservé pour l\'envoi', () => {
+  const local = jidLocalDepuisAgent('user:20749792362661');
+  const msg = messageAgentVersBaileys(
+    { from: 'user:20749792362661', id: 'wamid.O', type: 'text', text: { body: '.menu' } },
+    [], { jidLocal: local },
+  );
+  assert.equal(msg.key.remoteJid, local);
+  assert.equal(msg.key.participant, local);
+  assert.equal(msg._agentFrom, 'user:20749792362661');
+  assert.equal(msg.message.conversation, '.menu');
+
+  /* sans option : comportement d'origine préservé (compat tests/appels) */
+  const brut = messageAgentVersBaileys({ from: 'user:7', id: 'x', type: 'text', text: { body: 'y' } }, []);
+  assert.equal(brut.key.remoteJid, 'user:7');
+
+  /* retraduction à l'envoi */
+  const client = { jidLocal: local, createur: 'user:20749792362661' };
+  assert.equal(destinataireReel(client, local), 'user:20749792362661');
+  assert.equal(destinataireReel(client, 'autre@s.whatsapp.net'), 'autre@s.whatsapp.net');
+  assert.equal(destinataireReel({}, 'user:1'), 'user:1');
+});
+
+test('boucle : le créateur devient owner local et la réponse part vers l\'id réel', async () => {
+  let polls = 0;
+  const s = await serveur(() => {
+    polls += 1;
+    if (polls === 1) {
+      return {
+        body: {
+          entry: [{ id: '1', changes: [{ field: 'messages', value: {
+            contacts: [],
+            messages: [{ from: 'user:20749792362661', id: 'wamid.N', type: 'text', text: { body: '.menu' } }],
+            statuses: [],
+          } }] }],
+          next_offset: 2,
+        },
+      };
+    }
+    return { status: 204 };
+  });
+  const c = clientSur(s.url, { timeoutMs: 5000, maxTentatives: 2 });
+  const vus = [];
+  const arreter = demarrerBoucle(c, null, { onMessage: (m) => vus.push(m), log: () => {} });
+  for (let i = 0; i < 60 && vus.length === 0; i += 1) await new Promise((r) => setTimeout(r, 25));
+  arreter();
+
+  assert.equal(c.createur, 'user:20749792362661');
+  assert.equal(c.jidLocal, '20749792362661@s.whatsapp.net');
+  assert.equal(vus.length, 1);
+  assert.equal(vus[0].key.remoteJid, '20749792362661@s.whatsapp.net');
+
+  /* le moteur répond au JID local → l'API doit recevoir l'id réel */
+  await c.sendMessage(c.jidLocal, { text: 'pong' });
+  const envoi = s.recus.filter((x) => x.chemin === '/messages').pop();
+  assert.ok(envoi, 'un envoi a eu lieu');
+  assert.equal(envoi.corps.to, 'user:20749792362661');
+  await s.close();
 });

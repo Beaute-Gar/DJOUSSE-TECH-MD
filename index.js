@@ -864,6 +864,21 @@ async function main() {
 }
 
 /* ══════════ CANAL OFFICIEL — API Agent ══════════ */
+/* Le créateur de l'agent est identifié par l'API sous « user:123 » /
+   « agent:123 ». On ajoute ses chiffres à la liste owner pour que le
+   moteur le reconnaisse (toutes ses commandes répondent, zéro ACCÈS
+   RESTREINT). Aucun secret en dur : c'est l'id renvoyé par WhatsApp. */
+function enregistrerCreateurAgent(id) {
+  const chiffres = String(id || '').replace(/\D/g, '');
+  if (!chiffres) return false;
+  if (!config.ownerNumber.includes(chiffres)) {
+    config.ownerNumber.push(chiffres);
+    rawLog(`[AGENT] Créateur enregistré comme OWNER (${chiffres}) — toutes tes commandes répondent.`);
+    return true;
+  }
+  return false;
+}
+
 async function startAgentPlatform() {
   const { AgentClient, AgentError } = require('./lib/wa-agent');
   const { demarrerBoucle, envoyerContenu } = require('./lib/wa-agent-bridge');
@@ -876,6 +891,8 @@ async function startAgentPlatform() {
   });
   if (!client.configure) { rawError('[AGENT] jeton absent'); return; }
 
+  if (config.agentCreateur) enregistrerCreateurAgent(config.agentCreateur);
+
   setBridgeStatus('CONNECTE (AGENT OFFICIEL)');
   bridge.connected = true;
   rawLog('[AGENT] Canal officiel WhatsApp Agent Platform actif.');
@@ -885,12 +902,14 @@ async function startAgentPlatform() {
   /* chaque entrant passe par le moteur de commandes DJOUSSE */
   const arreter = demarrerBoucle(client, handler, {
     onMessage: async (msg) => {
-      /* mémorise le créateur au premier message reçu */
-      if (!config.agentCreateur) {
-        config.agentCreateur = msg.key.remoteJid;
-        client.createur = msg.key.remoteJid;
-        rawLog(`[AGENT] Créateur détecté : ${msg.key.remoteJid}`);
+      /* mémorise le créateur au premier message reçu + le reconnaît owner */
+      const vraiId = msg._agentFrom || client.createur;
+      if (vraiId && !config.agentCreateur) {
+        config.agentCreateur = vraiId;
+        client.createur = vraiId;
+        rawLog(`[AGENT] Créateur détecté : ${vraiId}`);
       }
+      enregistrerCreateurAgent(vraiId);
       try {
         await handler.handleMessage(client, msg);
       } catch (e) {
