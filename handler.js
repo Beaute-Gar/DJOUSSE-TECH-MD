@@ -41,6 +41,7 @@ const portedGroup = require('./lib/ported-group');
 const portedAudio = require('./lib/ported-audio');
 const portedFun = require('./lib/ported-fun');
 const { registerPortedLogo, registerPortedLookup } = require('./lib/ported-logo');
+const { registerPortedShot } = require('./lib/ported-shot');
 /* Conversion vidéo via ffmpeg-static — helper partagé (voir lib/wa-sticker.js) */
 const { ffmpegBuffer } = require('./lib/ffmpeg');
 const { registerTools } = require('./lib/tools');
@@ -2598,6 +2599,8 @@ try {
   /* ── Portées de TEDDY-XMD : logos (23 effets) & lookups ── */
   registerPortedLogo(cmd, { config, send, buildFrame, bullet });
   registerPortedLookup(cmd, { config, send, buildFrame, bullet });
+  /* ── Portée de TEDDY-XMD : capture d'écran web ── */
+  registerPortedShot(cmd, { config, send });
   registerTools(cmd, {
     config,
     mediaInfo,

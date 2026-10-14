@@ -9,7 +9,7 @@
         "prestart": "node scripts/audit.js",
         "audit": "node scripts/audit.js",
         "audit:deps": "node scripts/audit.js --deps",
-        "test": "node --test test/ai.test.js test/auth.test.js test/auto-status.test.js test/command-access.test.js test/config-env.test.js test/conflict.test.js test/extras-commands.test.js test/guard-protections.test.js test/handler-options.test.js test/http-get.test.js test/message-cache.test.js test/network-timeout.test.js test/pairing-api.test.js test/ported-auto.test.js test/ported-audio.test.js test/ported-fun.test.js test/ported-group.test.js test/ported-logo.test.js test/purge-watchdog.test.js test/style.test.js test/wa-send.test.js",
+        "test": "node --test test/ai.test.js test/auth.test.js test/auto-status.test.js test/command-access.test.js test/config-env.test.js test/conflict.test.js test/extras-commands.test.js test/guard-protections.test.js test/handler-options.test.js test/http-get.test.js test/message-cache.test.js test/network-timeout.test.js test/pairing-api.test.js test/ported-auto.test.js test/ported-audio.test.js test/ported-fun.test.js test/ported-group.test.js test/ported-logo.test.js test/ported-shot.test.js test/purge-watchdog.test.js test/style.test.js test/wa-send.test.js",
         "check": "node --check index.js && node --check handler.js && node --check config.js && node --check scripts/audit.js"
     },
     "keywords": [
