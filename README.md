@@ -5,14 +5,14 @@
 **Bot WhatsApp intelligent — DJOUSSE TECH EVOLUTION**
 
 <img
-  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=377+commandes+%C2%B7+11+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+13+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
-  alt="377 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
+  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=363+commandes+%C2%B7+11+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+13+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
+  alt="363 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
 />
 
 <br/>
 
 <img src="https://img.shields.io/badge/version-4.0.0-2ECC71?style=flat-square" alt="Version 4.0.0" />
-<img src="https://img.shields.io/badge/commandes-377-00b894?style=flat-square" alt="377 commandes" />
+<img src="https://img.shields.io/badge/commandes-363-00b894?style=flat-square" alt="363 commandes" />
 <img src="https://img.shields.io/badge/cat%C3%A9gories-11-111b26?style=flat-square" alt="11 catégories" />
 <img src="https://img.shields.io/badge/Baileys-6.7.24-25D366?style=flat-square&logo=whatsapp&logoColor=white" alt="Baileys 6.7.24" />
 <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 18+" />
@@ -161,19 +161,19 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 | # | Catégorie | | Commandes |
 |:-:|---|:-:|--:|
 | 1 | 🌟 **GÉNÉRAL** | | 9 |
-| 2 | 👥 **GROUPE** | | 37 |
-| 3 | 🛡️ **PROTECTION** | | 40 |
-| 4 | 🖼️ **STICKER & MEDIA** | | 29 |
-| 5 | 🧰 **OUTILS** | | 33 |
+| 2 | 👥 **GROUPE** | | 41 |
+| 3 | 🛡️ **PROTECTION** | | 41 |
+| 4 | 🖼️ **STICKER & MEDIA** | | 37 |
+| 5 | 🧰 **OUTILS** | | 58 |
 | 6 | 🤖 **IA** | | 3 |
-| 7 | 🎲 **FUN** | | 24 |
-| 8 | 🔍 **RECHERCHE** | | 3 |
-| 9 | 👑 **OWNER** | | 63 |
+| 7 | 🎲 **FUN** | | 83 |
+| 8 | 🔍 **RECHERCHE** | | 6 |
+| 9 | 👑 **OWNER** | | 71 |
 | 10 | 📦 **DIVERS** | | 11 |
 | 11 | ⬇️ **TÉLÉCHARGEMENT** | | 3 |
-| | | **Total** | **255** |
+| | | **Total** | **363** |
 
-> **+ 122 alias** (377 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
+> **+ 125 alias** (488 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
 
 ---
 
@@ -382,7 +382,7 @@ sur VPS, Docker, Render, Fly.io, Railway, Heroku ou Replit. Fichiers livrés :
 ```
 DJOUSSE-TECH-MD/
 ├── index.js          # Point d'entrée : connexion Baileys, QR/pairing, reconnexion
-├── handler.js        # 🧠 Cerveau unique — 377 commandes, menu, moteur d'événements
+├── handler.js        # 🧠 Cerveau unique — 363 commandes, menu, moteur d'événements
 ├── config.js         # Toutes les constantes lues depuis .env (aucune logique métier)
 ├── style.js          # 🎨 Source unique du rendu (cadres ╭┄┄『 』┄❍, alphabet officiel)
 │
