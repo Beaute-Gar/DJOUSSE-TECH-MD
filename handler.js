@@ -36,6 +36,7 @@ const { initScheduler, getScheduler } = require('./lib/scheduler');
 const { commandAccess } = require('./lib/command-access');
 const { withNetworkTimeout } = require('./lib/network-timeout');
 const { registerExtras } = require('./lib/extras');
+const { registerHackTools } = require('./lib/hacktools');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('./lib/ported-auto');
 const portedGroup = require('./lib/ported-group');
 const portedAudio = require('./lib/ported-audio');
@@ -2604,6 +2605,8 @@ try {
   registerPortedShot(cmd, { config, send });
   /* ── Portées de TEDDY-XMD : football live (36) ── */
   registerPortedFoot(cmd, { config, send, buildFrame, bullet });
+  /* ── Section HACKTOOLS : hors menu, mot de passe requis ── */
+  registerHackTools(cmd, { config, send, buildFrame, bullet, note });
   registerTools(cmd, {
     config,
     mediaInfo,
@@ -3769,6 +3772,7 @@ module.exports = {
   loadedPlugins,
   CATEGORIES,
   renderMainMenu,
+  renderCategory,
   state,
   saveState,
   askAI,
