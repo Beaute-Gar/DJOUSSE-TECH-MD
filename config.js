@@ -127,6 +127,11 @@ module.exports = {
   agentMode: bool(process.env.AGENT_MODE, false),
   agentToken: process.env.AGENT_API_TOKEN || '',
   agentCreateur: process.env.AGENT_CREATOR_ID || '',
+  // HYBRID_MODE=on (avec AGENT_MODE=on) : lance EN PLUS une session Baileys.
+  // L'agent officiel reste ton canal perso (limité par WhatsApp) ; Baileys
+  // (numéro du bot) donne TOUTES les commandes : groupes, tout le monde,
+  // réactions… Deux identités distinctes, un seul process.
+  hybridMode: bool(process.env.HYBRID_MODE, false),
 
   // Version WhatsApp de repli si toutes les sources échouent
   stableWaVersion: [2, 3000, 1043857760],

@@ -211,6 +211,26 @@ ouvrir le chat de l'agent → **Chat info → Clé d'API**.
 > modération, protections) et bascule sur **AGENT_MODE=on** pour ton
 > usage perso sans aucun risque. Les deux modes se coupent dans `.env`.
 
+**Mode HYBRIDE (le meilleur des deux)** — `.env` :
+
+```env
+AGENT_MODE=on
+HYBRID_MODE=on
+```
+
+Un **seul process** lance alors **deux identités** :
+
+| Identité | Numéro | Commands | Risque de ban |
+|---|---|---|---|
+| **Agent officiel** | ton numéro perso | limité par WhatsApp (créateur, pas de groupe) | **aucun** |
+| **Baileys** | numéro du bot | **TOUTES** (groupes, tout le monde, réactions…) | normal |
+
+Écris au **numéro du bot** pour les commandes complètes ; l'agent reste
+ton canal personnel. ⚠️ On ne peut pas **étendre** l'agent (ses limites
+sont côté serveurs WhatsApp) : Baileys tourne **à côté**, avec sa propre
+identité. Aucune commande ne peut donc « sortir » de l'agent vers des
+tiers ou des groupes.
+
 Technique : `lib/wa-agent.js` (client complet : envoi, sondage long, accusés
 de lecture, médias, erreurs typées, quota glissant, backoff exponentiel) et
 `lib/wa-agent-bridge.js` (adapte les messages officiels au moteur DJOUSSE,

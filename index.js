@@ -856,7 +856,11 @@ async function main() {
       rawError('[AGENT] Crée ton agent : WhatsApp → Paramètres → Agents → Créer un agent → Clé d’API.');
     } else {
       await startAgentPlatform();
-      return; // on ne lance PAS Baileys
+      if (!config.hybridMode) {
+        return; // canal officiel seul (aucun risque de ban)
+      }
+      rawLog('[HYBRID] HYBRID_MODE=on → Baileys démarre EN PLUS de l’agent (deux identités distinctes).');
+      rawLog('[HYBRID] Écris au NUMÉRO DU BOT pour toutes les commandes ; l’agent reste ton canal perso.');
     }
   }
 

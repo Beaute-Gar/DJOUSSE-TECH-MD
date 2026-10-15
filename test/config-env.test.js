@@ -80,3 +80,50 @@ it('PUBLIC_MODE=on force le public même sans MODE', () => {
 it('aucun mode → publicMode désactivé par défaut (sécurité)', () => {
   assert.deepEqual(lirePublicMode({}), { publicMode: false, selfMode: false });
 });
+
+it('HYBRID_MODE=on → Baileys lancé en plus de l’agent officiel', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'djousse-env-'));
+  const envFile = path.join(tempDir, '.env.instance');
+  fs.writeFileSync(envFile, 'AGENT_MODE=on\nHYBRID_MODE=on\n');
+  try {
+    const env = { ...process.env, ENV_FILE: envFile };
+    delete env.AGENT_MODE;
+    delete env.HYBRID_MODE;
+    const result = spawnSync(
+      process.execPath,
+      [
+        '-e',
+        `const config = require(${JSON.stringify(path.resolve(__dirname, '../config.js'))});` +
+          'process.stdout.write(JSON.stringify({ agentMode: config.agentMode, hybridMode: config.hybridMode }));',
+      ],
+      { cwd: path.resolve(__dirname, '..'), env, encoding: 'utf8' },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), { agentMode: true, hybridMode: true });
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+it('hybridMode désactivé par défaut (l’agent seul ne lance pas Baileys)', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'djousse-env-'));
+  const envFile = path.join(tempDir, '.env.instance');
+  fs.writeFileSync(envFile, 'AGENT_MODE=on\n');
+  try {
+    const env = { ...process.env, ENV_FILE: envFile };
+    delete env.AGENT_MODE;
+    delete env.HYBRID_MODE;
+    const result = spawnSync(
+      process.execPath,
+      [
+        '-e',
+        `const config = require(${JSON.stringify(path.resolve(__dirname, '../config.js'))});config.hybridMode === false ? process.stdout.write('ok') : process.stdout.write('ko');`,
+      ],
+      { cwd: path.resolve(__dirname, '..'), env, encoding: 'utf8' },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, 'ok');
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
