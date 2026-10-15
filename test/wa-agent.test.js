@@ -4,7 +4,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
-const { AgentClient, AgentError, limiteTaille, typeDepuisMime } = require('../lib/wa-agent');
+const { AgentClient, AgentError, limiteTaille, typeDepuisMime, mimeDepuisBuffer } = require('../lib/wa-agent');
 const { messageAgentVersBaileys, envoyerContenu, demarrerBoucle, jidLocalDepuisAgent, destinataireReel } = require('../lib/wa-agent-bridge');
 
 /* ── faux serveur API ── */
@@ -120,6 +120,39 @@ test('média trop gros → refus AVANT l\'upload, avec le bon type', async () =>
   await s.close();
 });
 
+test('MIME deviné depuis les octets (jamais de type générique)', () => {
+  assert.equal(mimeDepuisBuffer(Buffer.from([0xff, 0xd8, 0xff, 0xe0])), 'image/jpeg');
+  assert.equal(mimeDepuisBuffer(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), 'image/png');
+  assert.equal(mimeDepuisBuffer(Buffer.from('RIFF....WEBP', 'ascii')), 'image/webp');
+  assert.equal(mimeDepuisBuffer(Buffer.from('%PDF-1.4', 'ascii')), 'application/pdf');
+  assert.equal(mimeDepuisBuffer(Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x01])), 'video/webm');
+  assert.equal(mimeDepuisBuffer(Buffer.from([0x01, 0x02, 0x03, 0x04])), null);
+});
+
+test('image Buffer (JPEG) → MIME CONCRET envoyé à l’upload (pas « image/* »)', async () => {
+  const c = clientSur('http://127.0.0.1:1'); // aucune requête : méthodes remplacées
+  let mimeVu = null;
+  let envoiVu = null;
+  c.televerser = async (buf, o) => { mimeVu = o && o.mime; return 'MID'; };
+  c.envoyer = async (arg) => { envoiVu = arg; return { id: 'wamid.X' }; };
+  const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(64)]);
+  await envoyerContenu(c, 'user:1', { image: jpeg, caption: 'menu' });
+  assert.equal(mimeVu, 'image/jpeg');
+  assert.ok(!mimeVu.includes('*'), 'jamais de « * » dans le MIME');
+  assert.equal(envoiVu.type, 'image');
+  assert.equal(envoiVu.mediaId, 'MID');
+});
+
+test('image Buffer non reconnue → défaut CONCRET image/jpeg (jamais « image/* »)', async () => {
+  const c = clientSur('http://127.0.0.1:1');
+  let mimeVu = null;
+  c.televerser = async (buf, o) => { mimeVu = o.mime; return 'MID'; };
+  c.envoyer = async () => ({ id: 'w' });
+  await envoyerContenu(c, 'user:1', { image: Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05]) });
+  assert.equal(mimeVu, 'image/jpeg');
+  assert.ok(!mimeVu.includes('*'));
+});
+
 test('envoi vers un NON-créateur → refus AVANT l\'appel (limite officielle)', async () => {
   const s = await serveur(() => ({ body: { messages: [{ id: 'w' }] } }));
   const c = clientSur(s.url, { createur: 'user:createur' });
@@ -211,6 +244,16 @@ test('démarrage sans offset → pas de backlog (head actuel)', async () => {
   await c.mises();
   const chemin = appels[appels.length - 1];
   assert.ok(!chemin.includes('offset='), `pas d'offset dans l'URL : ${chemin}`);
+  await s.close();
+});
+
+test('sondage AVEC offset → UN SEUL « ? » (régression 400 #131009)', async () => {
+  const s = await serveur(() => ({ status: 204 }));
+  const c = clientSur(s.url);
+  await c.mises({ offset: 62, timeout: 5 });
+  const chemin = s.recus[s.recus.length - 1].chemin;
+  assert.equal(chemin, '/updates?offset=62&limit=50&timeout=5');
+  assert.equal((chemin.match(/\?/g) || []).length, 1, 'un seul « ? » dans l’URL');
   await s.close();
 });
 
