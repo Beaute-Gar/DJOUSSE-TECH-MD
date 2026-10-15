@@ -332,7 +332,12 @@ AUTO_STATUS_MSG=Statut vu par DJOUSE TECH MD ✅
 CUSTOM_REACT_EMOJIS=❤️,🔥,💯,😍,👏
 
 # ── Modes ────────────────────────────────────────
+# public = TOUT LE MONDE peut exécuter les commandes (celles réservées au
+#          propriétaire — .accept, redémarrage… — restent protégées).
+# self   = seul le propriétaire peut commander.
 MODE=public
+# PUBLIC_MODE=on force le mode public, même si MODE n'est pas défini.
+# PUBLIC_MODE=on
 REJECT_CALL=1
 AUTO_READ=1
 LINK_PREVIEW=1

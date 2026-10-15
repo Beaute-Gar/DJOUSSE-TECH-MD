@@ -2970,6 +2970,7 @@ async function executeCommand(sock, msg, name, args, base) {
     isBotAdmin: ctx.isBotAdmin,
   }, {
     selfMode: config.selfMode || state.settings.selfMode,
+    publicMode: config.publicMode,
     canRun: () => auth.canRun(ctx.sender),
   });
   if (!access.allowed) {

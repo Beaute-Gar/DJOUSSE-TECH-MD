@@ -28,6 +28,12 @@ if (!['random', 'local', 'off'].includes(menuPictureMode)) {
   console.error(`[CONFIG] MENU_PICTURE_MODE invalide (${menuPictureMode}) — mode random utilisé.`);
 }
 
+/* MODE : 'self' = seul le propriétaire peut commander ; 'public' = TOUT LE
+   MONDE (les commandes réservées au propriétaire restent protégées).
+   PUBLIC_MODE force explicitement et a la priorité sur MODE. */
+const mode = String(process.env.MODE || '').trim().toLowerCase();
+const publicMode = bool(process.env.PUBLIC_MODE, mode === 'public');
+
 module.exports = {
   // Identité du bot
   botName: process.env.BOT_NAME || 'DJOUSSE TECH',
@@ -57,6 +63,10 @@ module.exports = {
 
   // Modes de fonctionnement
   selfMode: process.env.MODE === 'self',
+  // MODE=public (ou PUBLIC_MODE=on) : n'importe qui peut exécuter les
+  // commandes ; les commandes réservées au owner (entry.owner) restent
+  // protégées. Voir lib/command-access.js.
+  publicMode,
   rejectCall: bool(process.env.REJECT_CALL, true),
   autoRead: bool(process.env.AUTO_READ, true),
   autoBio: bool(process.env.AUTO_BIO, false),
