@@ -2641,8 +2641,19 @@ try {
     config, send,
     exists: (n) => commands.has(String(n).toLowerCase()),
     /* styles DJOUSE injectés : les messages d'erreur/succès des plugins
-       silva sont réencadrés dans NOTRE charte (renderError/renderSuccess). */
-    style: { renderError, renderSuccess },
+       silva sont réencadrés dans NOTRE charte (renderError/renderSuccess),
+       et la marque tierce (« Silva MD ») est réécrite en identité maison. */
+    style: { renderError, renderSuccess, botName: config.botName },
+    /* Téléchargement de médias fourni aux plugins qui le déstructurent
+       (`const { download } = ctx`). Accepte un WAMessage complet ou un
+       nœud média (imageMessage, videoMessage…). */
+    download: (m, type) => {
+      const cle = type ? `${type}Message` : null;
+      const cible = (m && m.message) ? m
+        : (cle && m && m.mimetype) ? { key: {}, message: { [cle]: m } }
+          : m;
+      return downloadMediaMessage(cible, 'buffer', {}, {});
+    },
   });
   console.log(`[SILVA] ${rap.charges} plugins chargés · ${rap.commandes} commandes/alias enregistrés · ${rap.ignores} ignorés`);
   if (rap.echecs.length) {
