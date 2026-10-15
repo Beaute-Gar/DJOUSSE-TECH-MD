@@ -307,17 +307,22 @@ const findParticipant = guardPerms.findParticipant;
 const isAdminIn = guardPerms.isParticipantAdmin;
 const botIsAdmin = guardPerms.botIsAdmin;
 
-/* Limitation de débit : 10 commandes / 10 s par expéditeur */
+/* Limitation de débit : 10 commandes / 10 s par expéditeur.
+   Réglable par .env (RATE_MAX / RATE_WINDOW_MS) — mêmes valeurs par défaut.
+   Utile aux balayages de test : sinon 1 seul expéditeur (ex. le créateur de
+   l'agent) est coupé au 11ᵉ envoi, ce qui masque le comportement réel. */
+const RATE_MAX = Number(process.env.RATE_MAX) > 0 ? Number(process.env.RATE_MAX) : 10;
+const RATE_WINDOW_MS = Number(process.env.RATE_WINDOW_MS) > 0 ? Number(process.env.RATE_WINDOW_MS) : 10000;
 const rateMap = new Map();
 function rateOk(sender) {
   const now = Date.now();
   let r = rateMap.get(sender);
-  if (!r || now - r.ts > 10000) {
+  if (!r || now - r.ts > RATE_WINDOW_MS) {
     r = { count: 0, ts: now };
     rateMap.set(sender, r);
   }
   r.count += 1;
-  return r.count <= 10;
+  return r.count <= RATE_MAX;
 }
 setInterval(() => {
   const now = Date.now();
