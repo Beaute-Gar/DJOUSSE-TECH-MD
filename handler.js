@@ -76,7 +76,7 @@ const { formatDuration } = require('./guard/src/utils/time');
 const {
   toUnicode, frameFooter, buildFrame, listHeader, listItem, bullet, signature,
   renderInfo, renderSuccess, renderError, renderSaisie, nowTime, nowDate,
-  row, blank, title, note,
+  row, blank, title, note, catBox, numItem, backBox,
 } = require('./style');
 const guardSanctions = require('./guard/src/sanctions');
 const guardRegistry = require('./guard/src/commands');
@@ -764,6 +764,43 @@ function renderCategory(catNum, base) {
   return `${header}\n\n${listBlock}\n\n${back}\n\n${signature()}`;
 }
 
+/* ── SOUS-MENU GROUPE : catalogue STATIQUE en 9 sections (89 commandes).
+      L'affichage est déclaratif (charte du créateur) ; l'exécution au
+      chiffre reste gérée par visibleCommands() — flux inchangé. */
+const GROUPE_SECTIONS = [
+  { emoji: '👑', label: 'ADMINISTRATION', items: ['admin', 'admins', 'promote', 'demote', 'kick', 'tagadmin', 'tagall', 'hidetag', 'mentionall', 'htag'] },
+  { emoji: '👥', label: 'MEMBRES', items: ['listmembers', 'dmmembers', 'listadmins', 'mygroups', 'getjid'] },
+  { emoji: '🔗', label: 'LIENS & INVITATIONS', items: ['link', 'revoke', 'ginvite', 'inviteinfo', 'joingroup', 'joinv4'] },
+  { emoji: '🔒', label: 'OUVERTURE / FERMETURE', items: ['open', 'close', 'lock', 'unlock', 'joinmode'] },
+  { emoji: '📝', label: 'CONFIGURATION', items: ['setname', 'setdesc', 'grouprules', 'rules', 'pin', 'pinmsg', 'unpin', 'disappear', 'groupcron', 'welcomequiz'] },
+  { emoji: '🛡️', label: 'FILTRES & MUTES', items: ['addfilter', 'removefilter', 'clearfilters', 'listfilters', 'mutelist', 'muteuser', 'unmuteuser', 'automute', 'autounmute', 'addmode'] },
+  { emoji: '📊', label: 'INFO & STATS', items: ['groupinfo', 'groupstatus', 'gstats', 'chatstats', 'analytics', 'rank', 'time', 'tz', 'expense', 'glog', 'auditlog', 'groupbackup', 'backupgroup'] },
+  { emoji: '🏘️', label: 'COMMUNAUTÉ', items: ['community', 'comminfo', 'comminvite', 'commapprove', 'commreject', 'commrequests', 'commrevoke', 'newsletter'] },
+  { emoji: '📦', label: 'DIVERS', items: ['leavegroup', 'bye2', 'hug', 'warnreset', 'reportuser', 'blocknum', 'blockuser', 'unblockuser', 'addnote', 'vcfgen', 'terminategc', 'subbot', 'pair', 'togglestatus', 'anon', 'listblock', 'massbc', 'broadcast2', 'revokev4', 'poll', 'dailychallenge', 'sondage'] },
+];
+
+/* Item de section : ┊ 𝟶𝟷 ⟩⟩ .cmd (chiffres gras + double chevron) */
+const groupeItem = (n, cmd) => `┊ ${toUnicode(String(n).padStart(2, '0'))} ⟩⟩ .${cmd}`;
+
+function renderGroupMenu() {
+  const total = GROUPE_SECTIONS.reduce((s, c) => s + c.items.length, 0);
+
+  const header = buildFrame('GROUPE MENU', [
+    bullet('BOT', config.botName),
+    bullet('PREFIX', `〔 ${config.prefix} 〕`),
+    bullet('COMMANDES', `${toUnicode(String(total))} ${toUnicode('UNIQUES')}`),
+    bullet('ALIAS', `${toUnicode('10')} ${toUnicode('cachés')}`),
+    title(toUnicode('REPLY WITH A NUMBER')),
+  ]);
+
+  const blocks = GROUPE_SECTIONS.map((s) => [
+    catBox(s.emoji, s.label, s.items.length),
+    ...s.items.map((cmd, i) => groupeItem(i + 1, cmd)),
+  ].join('\n'));
+
+  return `${header}\n\n${blocks.join('\n\n')}\n\n${backBox(`⬅️ ${toUnicode('RETOUR AU MENU')}`)}\n\n${signature()}`;
+}
+
 /* État du menu par chat : { cat: 0|1..10, ts } — TTL 5 minutes */
 const menuState = new Map();
 const MENU_TTL = 5 * 60 * 1000;
@@ -1016,7 +1053,7 @@ cmd('info', { cat: 1, desc: 'Informations du bot', icon: 'ℹ️' }, async (ctx)
   ]));
 });
 
-cmd('diag', ['diagnostic', 'health'], {
+cmd('diag', ['diagnostic'], {
   cat: 1, desc: 'Diagnostic connexion Baileys', usage: 'diag', owner: true, icon: '🩺',
 }, async (ctx) => {
   const age = (ts) => (ts ? formatDuration(Date.now() - ts) : '—');
@@ -1190,16 +1227,31 @@ cmd('source', { cat: 1, desc: 'Code source du bot' }, async (ctx) => {
 });
 
 cmd('list', { cat: 1, desc: 'Toutes les commandes', icon: '📜' }, async (ctx) => {
-  const blocks = [listHeader('ALL COMMANDS')];
-  for (const cat of CATEGORIES) {
-    const list = visibleCommands(cat.n, ctx);
-    if (!list.length) continue;
-    blocks.push(`${cat.emoji} ${toUnicode(cat.label)}`);
-    blocks.push(list.map((c) => `.${c.name}`).join('  '));
+  /* En-tête façon `.info` : BOT / PREFIX / TOTAL / MODE */
+  const cats = CATEGORIES
+    .map((c) => ({ ...c, list: visibleCommands(c.n, ctx) }))
+    .filter((c) => c.list.length > 0);
+  const total = cats.reduce((n, c) => n + c.list.length, 0);
+
+  const header = buildFrame('ALL COMMANDS', [
+    bullet('BOT', config.botName),
+    bullet('PREFIX', `〔${config.prefix}〕`),
+    bullet('TOTAL', `${total} ${toUnicode('COMMANDES')}`),
+    bullet('MODE', state.settings.selfMode ? toUnicode('SELF') : toUnicode('PUBLIC')),
+    title(toUnicode('REPLY WITH A NUMBER TO OPEN')),
+  ]);
+
+  /* Corps : une catégorie = un cadre ┏━┓, chaque commande numérotée ┊ 01 ⟩ */
+  const blocks = [];
+  for (const c of cats) {
+    blocks.push(catBox(c.emoji, c.label, c.list.length));
+    blocks.push(c.list.map((cmd, i) => numItem(i + 1, cmd.name)).join('\n'));
     blocks.push('');
   }
-  blocks.push(frameFooter());
-  await ctx.reply(`${blocks.join('\n').trimEnd()}\n\n${signature()}`);
+
+  await ctx.reply(
+    `${header}\n\n${blocks.join('\n').trimEnd()}\n\n${frameFooter()}\n\n${signature()}`
+  );
 });
 
 /* ── 2. GROUPE ────────────────────────────────────────────── */
@@ -1213,26 +1265,64 @@ function targetFrom(ctx) {
   return null;
 }
 
+/* Toutes les cibles d'un coup : mentions multiples (bulk), sinon repli
+   1-cible (réponse citée / numéro tapé) — dédupliquées. */
+function targetsFrom(ctx) {
+  const ci = ctxInfo(ctx.content);
+  if (ci?.mentionedJid?.length) return [...new Set(ci.mentionedJid.filter(Boolean))];
+  if (ci?.participant) return [ci.participant];
+  const raw = (ctx.q || '').match(/\d{5,}/);
+  return raw ? [`${raw[0]}@s.whatsapp.net`] : [];
+}
+
+/* Actions sur membres (kick / promote / demote) — BULK (N mentions).
+   .kick protège les admins : jamais expulsés, sauf si l'auteur est owner. */
 async function participantsUpdate(ctx, action, label) {
-  const target = targetFrom(ctx);
-  if (!target) return ctx.reply(`❌ Mentionne la personne : ${config.prefix}${action} @user`);
+  const targets = targetsFrom(ctx);
+  if (!targets.length) return ctx.reply(`❌ Mentionne la personne : ${config.prefix}${action} @user`);
   const meta = await groupMeta(ctx.sock, ctx.from);
-  const p = findParticipant(meta, target);
-  const id = p?.id || target;
+
+  const kickMode = label === 'remove';
+  const canKickAdmins = !!ctx.isOwner;
+  const toUpdate = [];
+  let skippedAdmins = 0;
+  for (const t of targets) {
+    const p = findParticipant(meta, t);
+    const id = (p && p.id) || t;
+    const isAdmin = !!p && (p.admin === 'admin' || p.admin === 'superadmin');
+    if (kickMode && isAdmin && !canKickAdmins) { skippedAdmins += 1; continue; }
+    toUpdate.push(id);
+  }
+
+  if (!toUpdate.length) {
+    return ctx.reply(`⚠️ ${skippedAdmins} admin${skippedAdmins > 1 ? 's' : ''} ignoré${skippedAdmins > 1 ? 's' : ''} — impossible d'expulser un admin.`);
+  }
+
   try {
-    await ctx.sock.groupParticipantsUpdate(ctx.from, [id], label);
+    await ctx.sock.groupParticipantsUpdate(ctx.from, toUpdate, label);
     await ctx.react('✅');
-    await ctx.reply(`✅ ${label === 'remove' ? 'Expulsé' : label === 'promote' ? 'Promu admin' : 'Rétrogradé'} : +${num(target)}`);
+    const n = toUpdate.length;
+    const pl = n > 1 ? 's' : '';
+    if (kickMode) {
+      // Message conditionnel : la mention des admins ignorés n'apparaît que si > 0.
+      const sk = skippedAdmins;
+      const skPart = sk ? ` ${sk} admin${sk > 1 ? 's' : ''} ignoré${sk > 1 ? 's' : ''}.` : '';
+      await ctx.reply(`🦵 ${n} utilisateur${pl} expulsé${pl}.${skPart}`);
+    } else if (label === 'promote') {
+      await ctx.reply(`✅ ${n} utilisateur${pl} promu${pl} admin${pl}`);
+    } else {
+      await ctx.reply(`✅ ${n} utilisateur${pl} rétrogradé${pl}`);
+    }
   } catch (e) {
     await ctx.reply(`❌ Échec : ${e.message}`);
   }
 }
 
-cmd('kick', { cat: 2, desc: 'Expulser un membre', usage: 'kick @user', group: true, admin: true, botAdmin: true }, async (ctx) => participantsUpdate(ctx, 'kick', 'remove'));
-cmd('promote', { cat: 2, desc: 'Promouvoir admin', usage: 'promote @user', group: true, admin: true, botAdmin: true }, async (ctx) => participantsUpdate(ctx, 'promote', 'promote'));
-cmd('demote', { cat: 2, desc: 'Retirer le statut admin', usage: 'demote @user', group: true, admin: true, botAdmin: true }, async (ctx) => participantsUpdate(ctx, 'demote', 'demote'));
+cmd('kick', ['remove'], { cat: 2, desc: 'Expulser un membre', usage: 'kick @user', group: true, admin: true, botAdmin: true }, async (ctx) => participantsUpdate(ctx, 'kick', 'remove'));
+cmd('promote', ['makeadmin'], { cat: 2, desc: 'Promouvoir admin', usage: 'promote @user', group: true, admin: true, botAdmin: true }, async (ctx) => participantsUpdate(ctx, 'promote', 'promote'));
+cmd('demote', ['removeadmin'], { cat: 2, desc: 'Retirer le statut admin', usage: 'demote @user', group: true, admin: true, botAdmin: true }, async (ctx) => participantsUpdate(ctx, 'demote', 'demote'));
 
-cmd('tagall', { cat: 2, desc: 'Mentionner tout le groupe', usage: 'tagall [message]', group: true, admin: true }, async (ctx) => {
+cmd('tagall', ['all'], { cat: 2, desc: 'Mentionner tout le groupe', usage: 'tagall [message]', group: true, admin: true }, async (ctx) => {
   const meta = await groupMeta(ctx.sock, ctx.from);
   const ids = meta.participants.map((p) => p.id).filter(Boolean);
   const mentions = meta.participants.map((p) => p.phoneNumber || p.id).filter(Boolean);
@@ -1246,7 +1336,7 @@ cmd('hidetag', { cat: 2, desc: 'Mention invisible', usage: 'hidetag [message]', 
   await send(ctx.sock, ctx.from, { text: ctx.q || '👋', mentions: ids }, { quoted: ctx.msg });
 });
 
-cmd('groupinfo', { cat: 2, desc: 'Infos du groupe', group: true }, async (ctx) => {
+cmd('groupinfo', ['ginfo'], { cat: 2, desc: 'Infos du groupe', group: true }, async (ctx) => {
   const meta = await groupMeta(ctx.sock, ctx.from);
   if (!meta) return ctx.reply('❌ Groupe introuvable.');
   const admins = meta.participants.filter((p) => p.admin).length;
@@ -1268,7 +1358,7 @@ cmd('setname', { cat: 2, desc: 'Changer le nom du groupe', usage: 'setname <nom>
   await ctx.reply('✅ Nom du groupe modifié.');
 });
 
-cmd('setdesc', { cat: 2, desc: 'Changer la description', usage: 'setdesc <texte>', group: true, admin: true, botAdmin: true }, async (ctx) => {
+cmd('setdesc', ['setdescription'], { cat: 2, desc: 'Changer la description', usage: 'setdesc <texte>', group: true, admin: true, botAdmin: true }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}setdesc Description...`);
   await ctx.sock.groupUpdateDescription(ctx.from, ctx.q.slice(0, 500));
   await ctx.reply('✅ Description modifiée.');
@@ -1284,7 +1374,7 @@ cmd('close', { cat: 2, desc: 'Fermer le groupe (admins)', group: true, admin: tr
   await ctx.reply('🔒 Seuls les admins peuvent écrire.');
 });
 
-cmd('link', { cat: 2, desc: 'Lien d’invitation', group: true, admin: true }, async (ctx) => {
+cmd('link', ['grouplink'], { cat: 2, desc: 'Lien d’invitation', group: true, admin: true }, async (ctx) => {
   try {
     const code = await ctx.sock.groupInviteCode(ctx.from);
     await ctx.reply(`🔗 https://chat.whatsapp.com/${code}`);
@@ -1293,7 +1383,7 @@ cmd('link', { cat: 2, desc: 'Lien d’invitation', group: true, admin: true }, a
   }
 });
 
-cmd('revoke', { cat: 2, desc: 'Révoquer le lien', group: true, admin: true, botAdmin: true }, async (ctx) => {
+cmd('revoke', ['revokelink'], { cat: 2, desc: 'Révoquer le lien', group: true, admin: true, botAdmin: true }, async (ctx) => {
   try {
     await ctx.sock.groupRevokeInvite(ctx.from);
     await ctx.reply('✅ Lien révoqué.');
@@ -1552,7 +1642,7 @@ cmd('toaudio', { cat: 4, desc: 'Vidéo → mp3', usage: 'toaudio (réponds à un
 
 /* ── VUE UNIQUE (view once) — au-delà de WhatsApp ──────────── */
 
-cmd('viewonce', ['vo', 'vueonce'], {
+cmd('viewonce', ['vo'], {
   cat: 4, desc: 'Renvoyer un média en vue unique',
   usage: 'viewonce (réponds à une image/vidéo)', icon: '👁️',
 }, async (ctx) => {
@@ -1618,7 +1708,7 @@ cmd('vv', {
   }
 });
 
-cmd('autonce', ['autoonce', 'saveonce'], {
+cmd('autonce', ['autoonce'], {
   cat: 4, desc: 'Sauvegarde auto des vue uniques',
   usage: 'autonce on|off', icon: '📥',
 }, async (ctx) => {
@@ -1738,7 +1828,7 @@ cmd('weather', ['meteo'], { cat: 5, desc: 'Météo d’une ville', usage: 'weath
 
 /* ── 6. IA ────────────────────────────────────────────────── */
 
-cmd('ai', ['gemini', 'bot'], { cat: 6, desc: 'Pose une question à l’IA', usage: 'ai <question>' }, async (ctx) => {
+cmd('ai', ['gemini'], { cat: 6, desc: 'Pose une question à l’IA', usage: 'ai <question>' }, async (ctx) => {
   let prompt = ctx.q;
   if (!prompt) {
     const ci = ctxInfo(ctx.content);
@@ -1775,7 +1865,7 @@ cmd('summarize', ['resume'], { cat: 6, desc: 'Résumer un texte cité', usage: '
   }
 });
 
-cmd('analyse', ['ocr', 'transcrire', 'decrit'], { cat: 6, desc: 'IA : lire une image, transcrire un vocal, résumer un document', usage: 'analyse [question] (réponds à un média)' }, async (ctx) => {
+cmd('analyse', ['ocr'], { cat: 6, desc: 'IA : lire une image, transcrire un vocal, résumer un document', usage: 'analyse [question] (réponds à un média)' }, async (ctx) => {
   const info = mediaInfo(ctx.msg);
   if (!info) return ctx.reply(`❌ Réponds à une image, un vocal ou un document.\nUsage : ${config.prefix}analyse`);
   if (!hasAIKey()) return ctx.reply(MSG_NO_KEY);
@@ -2063,7 +2153,7 @@ cmd('location', { cat: 5, desc: 'Envoyer un point GPS', usage: 'location <lat>, 
   }, { quoted: ctx.msg });
 });
 
-cmd('vcard', ['contact', 'carte'], { cat: 10, desc: 'Envoyer une carte de contact', usage: 'vcard <numéro> [@mention] [nom]' }, async (ctx) => {
+cmd('vcard', ['contact'], { cat: 10, desc: 'Envoyer une carte de contact', usage: 'vcard <numéro> [@mention] [nom]' }, async (ctx) => {
   const ci = ctxInfo(ctx.content);
   const number =
     (ci?.mentionedJid || []).map((j) => num(j)).find(Boolean) ||
@@ -2078,7 +2168,7 @@ cmd('vcard', ['contact', 'carte'], { cat: 10, desc: 'Envoyer une carte de contac
   }, { quoted: ctx.msg });
 });
 
-cmd('event', ['rdv', 'rendezvous'], { cat: 10, desc: 'Créer un événement WhatsApp', usage: 'event <titre> | <lieu> | <JJ/MM/AAAA HH:MM> | <description>' }, async (ctx) => {
+cmd('event', ['rdv'], { cat: 10, desc: 'Créer un événement WhatsApp', usage: 'event <titre> | <lieu> | <JJ/MM/AAAA HH:MM> | <description>' }, async (ctx) => {
   const parts = ctx.q.split('|').map((s) => s.trim()).filter(Boolean);
   if (!parts.length) {
     return ctx.reply(`❌ Usage : ${config.prefix}event Réunion | Salle A | 28/09/2026 18:00 | Ordre du jour`);
@@ -2209,7 +2299,7 @@ cmd('unpin', { cat: 2, desc: 'Désépingler un message', usage: 'unpin (répondr
   }
 });
 
-cmd('disappear', ['ephemeral', 'efemere'], {
+cmd('disappear', ['ephemeral'], {
   cat: 2, desc: 'Messages éphémères du chat', usage: 'disappear off|24h|7d|90d',
   group: true, admin: true, botAdmin: true, icon: '⏱️',
 }, async (ctx) => {
@@ -2267,7 +2357,7 @@ cmd('archive', {
   }
 });
 
-cmd('setpp', ['setpic', 'botpp'], {
+cmd('setpp', ['setpic'], {
   cat: 9, desc: 'Photo de profil du bot (setpp delete = retirer)', usage: 'setpp (image) · setpp delete', owner: true, icon: '🖼️',
 }, async (ctx) => {
   const sub = (ctx.args[0] || '').toLowerCase();
@@ -2329,7 +2419,7 @@ cmd('react', {
   }
 });
 
-cmd('del', ['delete', 'suppr'], {
+cmd('del', ['delete'], {
   cat: 5, desc: 'Supprimer un message (pour tous si admin/bot)', usage: 'del (répondre au message)', icon: '🗑️',
 }, async (ctx) => {
   const key = quotedKey(ctx.msg, ctx.content);
@@ -2404,7 +2494,7 @@ cmd('accept', ['autoriser'], {
   return ctx.success(['UTILISATEUR(S) AUTORISÉ(S)', ...lignes]);
 });
 
-cmd('unaccept', ['deaccept', 'revoquer'], {
+cmd('unaccept', ['deaccept'], {
   cat: 9, desc: "Retirer un accès accordé par .accept",
   usage: 'unaccept @user|numéro', owner: true, icon: '⛔',
 }, async (ctx) => {
@@ -2414,7 +2504,7 @@ cmd('unaccept', ['deaccept', 'revoquer'], {
   return ctx.success(['ACCÈS RÉVOQUÉ', ...lignes]);
 });
 
-cmd('accepted', ['acceptes', 'autorises'], {
+cmd('accepted', ['acceptes'], {
   cat: 9, desc: 'Liste des utilisateurs acceptés',
   usage: 'accepted', owner: true, icon: '📋',
 }, async (ctx) => {
@@ -2442,7 +2532,7 @@ cmd('unpause', ['reprendre'], {
   return ctx.error(['AUCUNE PAUSE ICI', 'CE CHAT N’EST PAS EN CONFLIT']);
 });
 
-cmd('conflicts', ['conflit', 'pauses'], {
+cmd('conflicts', ['conflit'], {
   cat: 9, desc: 'Lister les chats en pause (conflit bot↔bot)',
   usage: 'conflicts', owner: true, icon: '⛔',
 }, async (ctx) => {
@@ -2499,7 +2589,7 @@ cmd('sudo', {
   ]);
 });
 
-cmd('authcode', ['codeowner', 'codeauth'], {
+cmd('authcode', ['codeauth'], {
   cat: 9, desc: 'Générer un code pour activer un sudo', usage: 'authcode', owner: true, icon: '🎫',
 }, async (ctx) => {
   // Seul un owner PRINCIPAL (pas sudo) peut générer — sécurité
@@ -2523,7 +2613,7 @@ cmd('authcode', ['codeowner', 'codeauth'], {
   ]);
 });
 
-cmd('claim', ['claimsudo', 'activer'], {
+cmd('claim', ['claimsudo'], {
   cat: 1, desc: 'Activer un accès sudo avec un code', usage: 'claim <CODE>', icon: '🎫',
 }, async (ctx) => {
   const code = (ctx.args[0] || ctx.q || '').trim().toUpperCase();
@@ -2668,6 +2758,25 @@ try {
   }
 } catch (e) {
   console.error('[SILVA] chargement interrompu:', e.message);
+}
+
+/* ── PHASE B — suppressions de NOMS (règle absolue : 1 nom + 1 alias max).
+      Seules des clés sont retirées du registre, APRÈS le chargement
+      silva — aucun fichier ni handler silva n'est modifié/supprimé.
+        · gi         → doublon silva de groupinfo/ginfo (décision créateur)
+        · memberlist → 3ᵉ nom silva de listmembers.members (budget 1+1) */
+/* Doublons silva restants découverts à l'Étape 2 — même traitement. */
+for (const nomSupprime of ['gi', 'memberlist', 'gcinfo', 'groupdesc', 'invitelink', 'resetlink']) {
+  if (commands.delete(nomSupprime)) console.log(`[REGISTRE] "${nomSupprime}" retiré (doublon)`);
+}
+
+/* togglestatus : le nom long devient le PRIMAIRE affiché, togstatus
+   l'alias (règle 1 + 1) — même commande, aucun handler touché. */
+const stCmd = commands.get('togstatus');
+if (stCmd && !commands.has('togglestatus')) {
+  const renomme = { ...stCmd, name: 'togglestatus' };
+  commands.set('togstatus', renomme);
+  commands.set('togglestatus', renomme);
 }
 
 /* ── 11. TÉLÉCHARGEMENT ───────────────────────────────────── */
@@ -2848,7 +2957,7 @@ async function ytDownloadVideo(url) {
 
 const ytFail = (e) => `❌ Échec du téléchargement : ${e.message}\nRéessaie avec un autre titre, ou plus tard.`;
 
-cmd(['yt', 'yts', 'ytsearch'], { cat: 11, desc: 'Rechercher une vidéo YouTube', usage: 'yt <titre>', requiresInput: true }, async (ctx) => {
+cmd(['yt', 'ytsearch'], { cat: 11, desc: 'Rechercher une vidéo YouTube', usage: 'yt <titre>', requiresInput: true }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}yt <titre>`);
   await ctx.react('⏳');
   const r = await yts(ctx.q);
@@ -2861,7 +2970,7 @@ cmd(['yt', 'yts', 'ytsearch'], { cat: 11, desc: 'Rechercher une vidéo YouTube',
   await ctx.react('✅');
 });
 
-cmd(['play', 'mp3', 'yta'], { cat: 11, desc: 'Télécharger une musique en MP3', usage: 'play <titre ou lien>', requiresInput: true }, async (ctx) => {
+cmd(['play', 'mp3'], { cat: 11, desc: 'Télécharger une musique en MP3', usage: 'play <titre ou lien>', requiresInput: true }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}play <titre ou lien YouTube>`);
   await ctx.react('⏳');
   await ctx.reply(`${config.messages.wait}\n🎵 Recherche de *${ctx.q}*...`);
@@ -2891,7 +3000,7 @@ cmd(['play', 'mp3', 'yta'], { cat: 11, desc: 'Télécharger une musique en MP3',
   }
 });
 
-cmd(['video', 'ytv', 'ytmp4'], { cat: 11, desc: 'Télécharger une vidéo YouTube', usage: 'video <titre ou lien>', requiresInput: true }, async (ctx) => {
+cmd(['video', 'ytmp4'], { cat: 11, desc: 'Télécharger une vidéo YouTube', usage: 'video <titre ou lien>', requiresInput: true }, async (ctx) => {
   if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}video <titre ou lien YouTube>`);
   await ctx.react('⏳');
   await ctx.reply(`${config.messages.wait}\n🎬 Recherche de *${ctx.q}*...`);
@@ -3064,7 +3173,9 @@ async function handleNumeric(sock, msg, text, base) {
       return true;
     }
     setMenu(chat, hit.n);
-    await sendMenu(sock, chat, renderCategory(hit.n, base), msg);
+    /* Cat.2 GROUPE : rendu statique en 9 sections (catalogue 89) ;
+       les autres catégories gardent le rendu dynamique. */
+    await sendMenu(sock, chat, hit.n === 2 ? renderGroupMenu() : renderCategory(hit.n, base), msg);
     return true;
   }
 
@@ -3306,7 +3417,12 @@ async function handleMessage(sock, msg) {
     const fromMe = !!msg.key.fromMe;
     const sender = fromMe ? sock.user?.id || from : msg.key.participant || from;
     const senderNum = num(sender);
-    const senderAlt = msg.key.participantAlt || msg.key.senderPn || null; // numéro réel quand l'ID est un LID
+    /* Numéro réel du participant quand WhatsApp présente un @lid :
+       participantPn est le champ OFFICIEL Baileys 6.7 (participantAlt et
+       senderPn ne sont que des replis de forks — cf. lib/auto-status.js).
+       Sans participantPn, l'owner était méconnu en @lid : en chat en
+       pause, .unpause / .menu étaient ignorés. */
+    const senderAlt = msg.key.participantPn || msg.key.participantAlt || msg.key.senderPn || null;
 
     /* ── MODULE 2 : observation du conflit bot↔bot ──────────────────
        AVANT le filtre d'échos ci-dessous : on doit voir aussi nos
@@ -3810,6 +3926,7 @@ module.exports = {
   CATEGORIES,
   renderMainMenu,
   renderCategory,
+  renderGroupMenu,
   state,
   saveState,
   askAI,

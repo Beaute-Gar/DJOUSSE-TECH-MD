@@ -19,17 +19,17 @@
 <meta name="mobile-web-app-capable" content="yes">
 <style>
   :root{
-    --bg:#070b0a;
-    --bg2:#0c1211;
-    --card:#101816;
-    --card2:#131d1a;
-    --line:#1d2b27;
-    --txt:#e8f2ee;
-    --muted:#8ba69d;
-    --green:#25d366;
-    --green2:#2ECC71;
-    --red:#ff6b6b;
-    --radius:14px;
+    --bg:#FFFFFF;
+    --bg2:#F5F1E8;
+    --card:#FFFFFF;
+    --card2:#F0EDE2;
+    --line:#B38B6D;
+    --txt:#000000;
+    --muted:#808080;
+    --green:#000000;
+    --green2:#000000;
+    --red:#000000;
+    --radius:0px;
     --mono:"Cascadia Code","SF Mono",Consolas,monospace;
     --side-w:248px;
   }
@@ -102,10 +102,10 @@
   }
   .btn:hover{border-color:var(--green);color:var(--green);transform:translateY(-1px)}
   .btn-primary{
-    background:linear-gradient(135deg,var(--green),#0e9f4f);color:#04140c;
-    border:0;box-shadow:0 5px 20px rgba(37,211,102,.28);
+    background:var(--card);color:var(--txt);border:1px solid var(--line);
+    transition:all .15s;
   }
-  .btn-primary:hover{color:#04140c;box-shadow:0 8px 26px rgba(37,211,102,.4)}
+  .btn-primary:hover{border-color:var(--green);color:var(--green);transform:none}
   .btn-primary:disabled{opacity:.55;cursor:wait;transform:none}
   #burger{
     display:none;background:none;border:1px solid var(--line);border-radius:9px;
@@ -123,15 +123,14 @@
   .page-head .sub{color:var(--muted);font-size:14.3px;max-width:640px;margin-top:4px}
   .pill{
     display:inline-flex;align-items:center;gap:8px;
-    background:rgba(37,211,102,.09);border:1px solid rgba(37,211,102,.3);
-    color:var(--green);padding:5px 13px;border-radius:999px;
+    background:rgba(0,0,0,.06);border:1px solid rgba(128,128,128,.3);
+    color:var(--txt);padding:5px 13px;border-radius:999px;
     font-size:12.3px;font-weight:700;margin-bottom:12px;
   }
 
   .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .card{
-    background:linear-gradient(180deg,var(--card),var(--bg2));
-    border:1px solid var(--line);border-radius:var(--radius);padding:22px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;
   }
   .card h2{font-size:16.5px;font-weight:800;margin-bottom:10px}
   .card h3{font-size:15px;font-weight:800;margin:14px 0 8px}

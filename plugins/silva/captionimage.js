@@ -42,23 +42,12 @@ module.exports = {
             const base64 = imgBuffer.toString('base64');
             const mimeType = imgMsg.mimetype || 'image/jpeg';
 
-            // Try Gemini vision if key is available
-            const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || '';
-            if (apiKey) {
-                try {
-                    const { GoogleGenerativeAI } = require('@google/generative-ai');
-                    const genAI = new GoogleGenerativeAI(apiKey);
-                    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-                    const result = await model.generateContent([
-                        question,
-                        { inlineData: { data: base64, mimeType } },
-                    ]);
-                    const text = result.response.text().trim();
-                    return await safeSend({
-                        text: `👁️ *Image Analysis*\n\n${text}`,
-                    }, { quoted: message });
-                } catch { /* fall through */ }
-            }
+            // 1. IA maison (Groq → Gemini → OpenRouter) — lib/ai.js (vision supportée)
+            try {
+                const { askAI } = require('../../lib/ai');
+                const text = (await askAI(question, { mime: mimeType, data: imgBuffer })).trim();
+                if (text) return await safeSend({ text: `👁️ *Image Analysis*\n\n${text}` }, { quoted: message });
+            } catch { /* fall through */ }
 
             // Try pollinations.ai image description (send as URL via base64 data URI)
             try {

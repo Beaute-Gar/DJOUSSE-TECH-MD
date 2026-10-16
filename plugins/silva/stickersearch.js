@@ -18,7 +18,14 @@ module.exports = {
         }
         await sock.sendMessage(chatId, { text: `⏳ Searching GIFs for "${query}"...`, contextInfo }, { quoted: message });
         try {
-            const api = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCYQ&limit=1&media_filter=gif`;
+            const apiKey = (process.env.TENOR_API_KEY || '').trim();
+            if (!apiKey) {
+                return sock.sendMessage(chatId, {
+                    text: '🔑 Clé Tenor manquante : ajoute TENOR_API_KEY dans le .env (l’API Tenor de Google est fermée, le service est indisponible sans clé valide).',
+                    contextInfo
+                }, { quoted: message });
+            }
+            const api = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${apiKey}&limit=1&media_filter=gif`;
             const { data } = await axios.get(api, { timeout: 10000 });
             const gif = data?.results?.[0]?.media_formats?.gif?.url;
             if (!gif) throw new Error('No GIFs found.');
@@ -31,7 +38,11 @@ module.exports = {
                 contextInfo
             }, { quoted: message });
         } catch (e) {
-            await sock.sendMessage(chatId, { text: `❌ Sticker search failed: ${e.message}`, contextInfo }, { quoted: message });
+            if (e.response?.status === 403 || /discontinu/i.test(e.message)) {
+                await sock.sendMessage(chatId, { text: '❌ Service GIF indisponible : l\'API Tenor a été arrêtée par Google.', contextInfo }, { quoted: message });
+            } else {
+                await sock.sendMessage(chatId, { text: `❌ Sticker search failed: ${e.message}`, contextInfo }, { quoted: message });
+            }
         }
     }
 };

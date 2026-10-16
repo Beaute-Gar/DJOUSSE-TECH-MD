@@ -40,6 +40,41 @@ test('message ordinaire (aucune marque de cadre) : pas de pause', () => {
   assert.equal(conflict.isPaused('g7@g.us'), false);
 });
 
+test('RÉGRESSION : carte décorée d’un AUTRE bot → plus de pause', () => {
+  /* vraie carte de bienvenue d'un autre bot (coins décoratifs + cadre) */
+  const carte =
+    '╭┈┈┈〔 🕸️ *ᴡᴇʟᴄᴏᴍᴇ* 〕┈┈┈\n'
+    + '┊ ✸ @205102707167396\n'
+    + '├┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n'
+    + '┊ ◎ ᴛɪᴋᴛᴏᴋ  ➭ https://vt.tiktok.com/x\n'
+    + '╰┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈';
+  assert.equal(
+    conflict.observe({ chat: 'g8@g.us', fromMe: false, owner: false, text: carte }).conflict,
+    false,
+    'une carte d’un autre bot ne doit plus mettre le chat en pause',
+  );
+  assert.equal(conflict.isPaused('g8@g.us'), false);
+
+  /* simple décoration contenant les deux coins : plus de déclenchement */
+  assert.equal(
+    conflict.observe({ chat: 'g9@g.us', fromMe: false, owner: false, text: 'salut ╭ toi ╰' }).conflict,
+    false,
+  );
+  assert.equal(conflict.isPaused('g9@g.us'), false);
+});
+
+test('un morceau de cadre (en-tête seul) reste détecté', () => {
+  /* un envoi long est découpé : un morceau peut ne porter que l'en-tête */
+  const hit = conflict.observe({
+    chat: 'g10@g.us',
+    fromMe: false,
+    owner: false,
+    text: style.frameHeader('CONFLIT TEST'),
+  });
+  assert.equal(hit.conflict, true);
+  assert.equal(hit.reason, 'signature-cadre');
+});
+
 test('ping-pong rapide (boucle bot↔bot) déclenche la pause au 6ᵉ message', () => {
   let firstAt = -1;
   for (let i = 0; i < 8; i += 1) {

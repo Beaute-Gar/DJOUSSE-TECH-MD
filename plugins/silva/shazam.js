@@ -44,7 +44,7 @@ module.exports = {
 
             const form = new FormData();
             form.append('return', 'apple_music,spotify');
-            form.append('api_token', 'test');
+            form.append('api_token', process.env.AUDD_API_KEY || 'test');
             form.append('file', new Blob([buffer]), 'audio.ogg');
 
             const res = await axios.post('https://api.audd.io/', form, { timeout: 30000 });

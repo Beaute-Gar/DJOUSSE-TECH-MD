@@ -30,7 +30,22 @@ module.exports = {
             const res    = await axios.get(ttsUrl, { responseType: 'arraybuffer', timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.0' } });
             await sock.sendMessage(jid, { audio: Buffer.from(res.data), mimetype: 'audio/mpeg', ptt: true }, { quoted: message });
         } catch (err) {
-            await sock.sendMessage(jid, { text: `❌ TTS failed: ${err.message}`, contextInfo }, { quoted: message });
+            // Réessayez avec ElevenLabs si la clé est configurée
+            if (config.elevenlabsKey) {
+                try {
+                    const voiceId = 'pNInz6obviR9B1vJ5wsF'; // voix par défaut gratuite
+                    const ElevenLabsUrl = `https://api.elevenlabs.io/v1/text-with-speech/${voiceId}?output_format=mp3`;
+                    const res = await axios.post(ElevenLabsUrl,
+                        { text: text },
+                        { headers: { 'xi-api-key': config.elevenlabsKey, 'Content-Type': 'application/json' }, timeout: 15000 }
+                    );
+                    await sock.sendMessage(jid, { audio: Buffer.from(res.data), mimetype: 'audio/mpeg', ptt: true }, { quoted: message });
+                } catch (err2) {
+                    await sock.sendMessage(jid, { text: `❌ TTS failed`, contextInfo }, { quoted: message });
+                }
+            } else {
+                await sock.sendMessage(jid, { text: `❌ TTS failed: ${err.message}`, contextInfo }, { quoted: message });
+            }
         }
     }
 };

@@ -98,6 +98,14 @@ module.exports = {
 
   // IA (optionnelle : sans clé, la commande .ai répond avec un message explicite)
   geminiKey: process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || '',
+  // Modèles Gemini essayés DANS L'ORDRE (GEMINI_MODEL accepte « a, b »).
+  // Google a retiré gemini-1.5-flash (404) et réserve gemini-2.5-* aux
+  // anciens comptes : « -latest » est l'alias maintenu, et les deux
+  // suivants ont été vérifiés en réel le 2026-10-15 (HTTP 200).
+  geminiModels: String(
+    process.env.GEMINI_MODEL
+      || 'gemini-flash-latest, gemini-3-flash-preview, gemini-3.5-flash',
+  ).split(',').map((s) => s.trim()).filter(Boolean),
   // MODULE 4 : secours IA — pris automatiquement si Gemini échoue (lib/ai.js)
   // Liste ordonnée de modèles gratuits TESTÉS en réel le 2026-10-13 :
   // les pools Google sont passées en dernier (429 récurrents côté upstream),
@@ -107,6 +115,20 @@ module.exports = {
     process.env.OPENROUTER_MODEL
       || 'nvidia/nemotron-3-super-120b-a12b:free, nvidia/nemotron-3.5-lightning:free, google/gemma-4-31b-it:free',
   ).split(',').map((s) => s.trim()).filter(Boolean),
+  // MODULE 4 : secours 3 — Groq (gratuit, le plus rapide : ~0,5 s en réel).
+  // Premier essayé par lib/ai.js. GROQ_MODEL accepte une liste « a, b ».
+  // Modèles vérifiés en réel le 2026-10-15 (HTTP 200 + texte non vide).
+  groqKey: process.env.GROQ_API_KEY || '',
+  groqModels: String(
+    process.env.GROQ_MODEL
+      || 'openai/gpt-oss-120b, qwen/qwen3.8-27b, openai/gpt-oss-20b',
+  ).split(',').map((s) => s.trim()).filter(Boolean),
+  // Clé API Serper (recherche Google officielle) — utilisée par .google
+  serperKey: process.env.SERPER_API_KEY || '',
+  // Clé API GNews — utilisée par .news
+  gnewsKey: process.env.GNEWS_API_KEY || '',
+  // Clé API ElevenLabs — utilisée par .tts (voix premium)
+  elevenlabsKey: process.env.ELEVENLABS_API_KEY || '',
 
   // Connexion (pairing par défaut, QR si CONNECT_METHOD=qr)
   connectMethod: (process.env.CONNECT_METHOD || '').toLowerCase(),

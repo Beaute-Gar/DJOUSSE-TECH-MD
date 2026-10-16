@@ -1733,12 +1733,12 @@ module.exports = {
                 // Gemini secondary fallback (only if keyed)
                 if (!aiReply) {
                     try {
-                        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || '';
+                        const apiKey = process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || '';
                         if (apiKey) {
                             const { GoogleGenerativeAI } = require('@google/generative-ai');
                             const genAI = new GoogleGenerativeAI(apiKey);
                             const model = genAI.getGenerativeModel({
-                                model: 'gemini-1.5-flash',
+                                model: 'gemini-3.5-flash',
                                 generationConfig: { temperature: 0.85, maxOutputTokens: 800 },
                             });
                             const mem = getMemory(jid).slice(-6);

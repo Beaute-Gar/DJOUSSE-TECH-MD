@@ -33,12 +33,26 @@ module.exports = {
 
         if (cmd === 'google') {
             try {
-                // DuckDuckGo Instant Answers API — confirmed working 2026-06
-                const res = await axios.get(
-                    `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`,
-                    { timeout: 10000 }
-                );
-                const d = res.data;
+                // Essai Serper (recherche Google officielle) si clé configurée
+                if (config.serperKey) {
+                    const res = await axios.post(
+                        'https://google.serper.dev/search',
+                        { q: query },
+                        { headers: { 'X-API-KEY': config.serperKey }, timeout: 15000 }
+                    );
+                    const j = res.data;
+                    const items = j?.organic || [];
+                    if (items.length > 0) {
+                        let text = `🔍 *Google Serper : "${query}"*\n\n`;
+                        items.slice(0, 5).forEach((item, i) => {
+                            const title = item.title || '';
+                            const link = item.link || '';
+                            const snippet = item.snippet || '';
+                            text += `*${i + 1}.* ${title.slice(0, 100)}\n   🔗 ${link}\n   ${snippet.slice(0, 200)}\n\n`;
+                        });
+                        return await sock.sendMessage(jid, { text: text }, { quoted: message });
+                    }
+                }
                 const abstract = d?.AbstractText || d?.Answer || '';
                 const topics = (d?.RelatedTopics || [])
                     .filter(t => t.Text && t.FirstURL)

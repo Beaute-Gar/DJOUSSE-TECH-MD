@@ -40,18 +40,12 @@ module.exports = {
 
         const prompt = `Summarize the following text in clear, concise bullet points. Be brief but cover all key points:\n\n${inputText.slice(0, 4000)}`;
 
-        // 1. Try Gemini (if key set)
-        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY || '';
-        if (apiKey) {
-            try {
-                const { GoogleGenerativeAI } = require('@google/generative-ai');
-                const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-                const result = await model.generateContent(prompt);
-                const summary = result.response.text().trim();
-                if (summary) return reply(`📝 *Summary*\n\n${summary}`);
-            } catch { /* fall through */ }
-        }
+        // 1. IA maison (Groq → Gemini → OpenRouter) — lib/ai.js
+        try {
+            const { askAI } = require('../../lib/ai');
+            const summary = (await askAI(prompt)).trim();
+            if (summary) return reply(`📝 *Summary*\n\n${summary}`);
+        } catch { /* fall through */ }
 
         // 2. Try ch.at (confirmed working 2026-06)
         try {

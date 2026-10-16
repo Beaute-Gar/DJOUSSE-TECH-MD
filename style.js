@@ -76,6 +76,37 @@ function renderStartupDashboard(status) {
   return box('DJOUSSE TECH EVOLUTION', rows.map(fit));
 }
 
+/* ── Cadre catégorie (┃ … ┗━┛) pour la liste complète `.list` ───────────
+   Le filet `━` s'adapte à la largeur du contenu pour un rendu aligné. */
+function dispWidth(s) {
+  /* Largeur visuelle approximative : emoji/symboles = 2 colonnes, reste = 1. */
+  let w = 0;
+  for (const ch of String(s)) {
+    const c = ch.codePointAt(0);
+    if (
+      (c >= 0x1F000 && c <= 0x1FAFF) ||  /* emoji & symboles divers */
+      (c >= 0x2600 && c <= 0x27BF) ||    /* dingbats */
+      (c >= 0x2B00 && c <= 0x2BFF) ||    /* symboles divers */
+      (c >= 0xFE00 && c <= 0xFE0F)       /* sélecteurs de variation */
+    ) w += 2;
+    else w += 1;
+  }
+  return w;
+}
+
+const catBox = (emoji, label, count) => {
+  const inner = `  ${emoji}  ${toUnicode(label)}  ⟨ ${count} ⟩`;
+  const bar = '━'.repeat(Math.max(dispWidth(inner), 6));
+  return `┏${bar}┓\n┃${inner}\n┗${bar}┛`;
+};
+
+/* Item numéroté `.list` : ┊ 𝟶𝟷 ⟩ .cmd (chiffres gras Unicode) */
+const numItem = (n, cmd) => `┊ ${toUnicode(String(n).padStart(2, '0'))} ⟩ .${cmd}`;
+
+/* Bouton retour du sous-menu GROUPE : cadre ┄ réutilise le même pas
+   que frameFooter() pour rester symétrique (glyphe propriétaire). */
+const backBox = (label) => `╭${'┄'.repeat(14)}⪼\n${listItem(0, label)}\n${frameFooter()}`;
+
 /* Footer officiel — menus uniquement (pas sur les petits messages) */
 function signature() {
   return `${toUnicode('MULTI-DEVICE WHATSAPP BOT')}\n${toUnicode('MADE BY')} DJOUSSE TECH`;
@@ -103,5 +134,6 @@ module.exports = {
   toUnicode, frameHeader, frameFooter, buildFrame, listHeader, listItem, bullet,
   row, blank, title, note, box, banner, renderStartupDashboard,
   boxTop, boxRule, boxBottom, boxRow, BOX_W,
+  catBox, numItem, dispWidth, backBox,
   signature, renderInfo, renderSuccess, renderError, renderSaisie, two, nowTime, nowDate,
 };
