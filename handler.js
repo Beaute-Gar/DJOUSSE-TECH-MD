@@ -1551,7 +1551,7 @@ for (const p of guardProtections) {
     group: true, admin: true, icon: guardUi.ICONS[p.key] || '🛡️',
   });
 }
-guardCmd('security', { cat: 3, desc: 'Pack sécurité on/off', usage: 'security on|off', group: true, admin: true, icon: '🛡️' });
+guardCmd('security', { cat: 3, desc: 'Toutes les protections on/off', usage: 'security on|off', group: true, admin: true, icon: '🛡️' });
 guardCmd(['settings', 'config'], { cat: 3, desc: 'Configuration du groupe', usage: 'settings', group: true, admin: true, icon: '⚙️' });
 guardCmd('sanction', { cat: 3, desc: 'Sanction sur infraction', usage: 'sanction delete|warn|kick', group: true, admin: true, icon: '⚖️' });
 guardCmd('warnlimit', { cat: 3, desc: "Limite d'avertissements", usage: 'warnlimit <1-20>', group: true, admin: true, icon: '🔢' });
@@ -3078,7 +3078,7 @@ async function ytDownloadVideo(url) {
       buf = await ffmpegBuffer(
         buf,
         ['-i', 'pipe:0', '-vf', 'scale=-2:360', '-c:v', 'libx264', '-preset', 'veryfast',
-         '-crf', '28', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', 'pipe:1'],
+         '-crf', '28', '-c:a', 'aac', '-b:a', '96k', '-movflags', 'frag_keyframe+empty_moov', '-f', 'mp4', 'pipe:1'],
         15 * 1024 * 1024
       );
     }

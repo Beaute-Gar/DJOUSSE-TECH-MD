@@ -58,7 +58,12 @@ function walk(dir, out = []) {
   for (const e of entries) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) {
-      if (['node_modules', '.git', 'session', 'sessions', 'logs', 'tmp', 'temp', 'downloads'].includes(e.name)) continue;
+      const n = e.name;
+      /* Dossiers RUNTIME (gitignorés) : caches, sessions, logs, déploiement.
+         Exclus du scan source : ce sont des données regénérées, pas du code,
+         et un cache de messages contient naturellement des champs de l'API. */
+      if (['node_modules', '.git', 'session', 'sessions', 'logs', 'tmp', 'temp', 'downloads', 'data', '.vercel'].includes(n)) continue;
+      if (/^session[-.]/.test(n)) continue; // session.old-*, session-*
       walk(p, out);
     } else if (/\.(js|cjs|mjs|ts|json|md)$/.test(e.name)) {
       out.push(p);

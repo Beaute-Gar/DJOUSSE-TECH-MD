@@ -21,6 +21,8 @@ const guardDb = require('../guard/src/db');
 const { enforceAntiFake } = require('../guard/src/events');
 const { get: getCmd } = require('../guard/src/commands/registry');
 require('../guard/src/commands/join.js'); // enregistre .antifake + .allowcodes
+require('../guard/src/commands/protection.js'); // enregistre .security + .settings + .antilink…
+const { runProtections, PROTECTIONS } = require('../guard/src/engine');
 
 const g = (over = {}) => ({ ...guardDb.GROUP_DEFAULTS(), ...over });
 
@@ -79,6 +81,94 @@ function fakeSock(botJid, meta) {
     },
   };
 }
+
+/* ── Preuve DE BOUT EN BOUT : l'action (suppression) a réellement lieu ──
+   Le moteur doit supprimer le lien d'un simple membre, mais EXEMPTER un
+   admin/owner (voulu : sinon le bot supprimerait son propre admin). */
+
+test('antilink SUPPRIME réellement le lien d’un membre non-admin', async () => {
+  guardDb.init(path.join(TMP, 'guard-e2e-link.db'));
+  const gid = '120363055555555555@g.us';
+  const botJid = '237690000001:42@s.whatsapp.net';
+  const memberJid = '237690000099@s.whatsapp.net';
+
+  const g0 = guardDb.db().getGroup(gid);
+  g0.antilink = true;                      // protection activée
+  guardDb.db().saveGroup(gid, g0);
+
+  const meta = {
+    id: gid, subject: 'Groupe test',
+    participants: [
+      { id: botJid, admin: 'superadmin' }, // le bot PEUT supprimer
+      { id: memberJid, admin: null },      // simple membre → cible
+    ],
+  };
+  const { sock, sent } = fakeSock(botJid, meta);
+
+  const msg = { key: { id: 'MSG-LINK-1', remoteJid: gid, participant: memberJid } };
+  const r = await runProtections({
+    sock, msg, from: gid, sender: memberJid, senderNum: '237690000099',
+    type: 'extendedTextMessage', text: 'regarde https://youtu.be/sdJIvgKTEG0',
+    meta, isBotSelf: false, isOwner: false,
+  });
+
+  assert.equal(r.handled, true, 'le lien d’un membre doit être pris en charge');
+  assert.equal(r.protection, 'antilink');
+  assert.ok(sent.some((s) => s.content && s.content.delete), 'un { delete } doit être émis');
+  const gg = guardDb.db().getGroup(gid);
+  assert.equal(gg.stats.antilink, 1, 'le compteur antilink doit augmenter');
+});
+
+test('antilink EXEMpte un admin : aucun lien supprimé pour un admin', async () => {
+  guardDb.init(path.join(TMP, 'guard-e2e-admin.db'));
+  const gid = '120363044444444444@g.us';
+  const botJid = '237690000001:42@s.whatsapp.net';
+  const adminJid = '237690000077@s.whatsapp.net';
+
+  const g0 = guardDb.db().getGroup(gid);
+  g0.antilink = true;
+  guardDb.db().saveGroup(gid, g0);
+
+  const meta = {
+    id: gid, subject: 'Groupe test',
+    participants: [
+      { id: botJid, admin: 'superadmin' },
+      { id: adminJid, admin: 'admin' },   // admin du groupe
+    ],
+  };
+  const { sock, sent } = fakeSock(botJid, meta);
+
+  const msg = { key: { id: 'MSG-LINK-2', remoteJid: gid, participant: adminJid } };
+  const r = await runProtections({
+    sock, msg, from: gid, sender: adminJid, senderNum: '237690000077',
+    type: 'extendedTextMessage', text: 'https://youtu.be/sdJIvgKTEG0',
+    meta, isBotSelf: false, isOwner: false,
+  });
+
+  assert.equal(r.handled, false, 'un admin est exempté');
+  assert.equal(r.reason, 'exempt');
+  assert.ok(!sent.some((s) => s.content && s.content.delete), 'aucune suppression pour un admin');
+});
+
+test('.security on active les 14 protections (13 moteur + antifake)', async () => {
+  guardDb.init(path.join(TMP, 'guard-e2e-security.db'));
+  const gid = '120363033333333333@g.us';
+  const mk = (args) => ({ from: gid, args, prefix: '.', reply: async (t) => t });
+  const sec = getCmd('security');
+  assert.ok(sec, 'la commande .security doit exister');
+  assert.equal(PROTECTIONS.length + 1, 14, '13 protections + antifake = 14');
+
+  await sec.run(mk(['on']));
+  let g = guardDb.db().getGroup(gid);
+  for (const p of PROTECTIONS) assert.equal(g[p.key], true, `${p.key} doit être ACTIVÉ`);
+  assert.equal(g.antifake, true, 'antifake doit être ACTIVÉ');
+  assert.deepEqual(g.allowedCodes, ['237'], 'antifake prend le défaut 237 (comme .antifake on)');
+
+  await getCmd('security').run(mk(['off']));
+  g = guardDb.db().getGroup(gid);
+  for (const p of PROTECTIONS) assert.equal(g[p.key], false, `${p.key} doit être DÉSACTIVÉ`);
+  assert.equal(g.antifake, false, 'antifake doit être DÉSACTIVÉ');
+});
 
 test('antifake : indicatif interdit expulsé, indicatif autorisé conservé', async () => {
   guardDb.init(path.join(TMP, 'guard-on.db'));

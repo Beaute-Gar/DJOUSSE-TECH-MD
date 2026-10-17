@@ -33,13 +33,15 @@ for (const p of PROTECTIONS) {
 }
 
 cmd({
-  name: 'security', admin: true, desc: 'Pack sécurité on/off',
+  name: 'security', admin: true, desc: 'Pack sécurité : TOUTES les protections on/off',
   async run(c) {
     const val = parseSwitch(c.args[0]);
     if (val === null) return usage(c, 'security on|off');
-    const pack = ['antilink', 'antispam', 'antiflood', 'antibad', 'antitag', 'antistatus', 'antivirtex'];
+    /* 13 protections du moteur + antifake = les 14 lignes affichées par .settings */
+    const pack = [...PROTECTIONS.map((p) => p.key), 'antifake'];
     const g = db().getGroup(c.from);
     pack.forEach((k) => (g[k] = val));
+    if (val && !g.allowedCodes.length) g.allowedCodes = ['237']; // comme .antifake on
     db().saveGroup(c.from, g);
     return c.reply(ui.frame('DJOUSSE SECURITY', [kv('PACK', val ? 'ACTIVÉ' : 'DÉSACTIVÉ'), ...pack.map((k) => `${val ? '✅' : '❌'} ${k.toUpperCase()}`)]));
   },
