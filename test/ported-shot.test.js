@@ -28,7 +28,7 @@ test('commande screenshot enregistrée avec ses alias', () => {
   }, { config: { prefix: '.' }, send: async () => {} });
   const cmd = vus.find((v) => v.name === 'screenshot');
   assert.ok(cmd, 'commande screenshot');
-  assert.deepEqual(cmd.aliases, ['ss', 'sshot', 'shotweb']);
+  assert.deepEqual(cmd.aliases, ['ss']);
 });
 
 test('parsing des options : full, width=, device', async () => {

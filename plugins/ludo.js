@@ -102,6 +102,6 @@ module.exports = function registerLudo(cmd, commands) {
   const acute = (s) => [s, s.normalize('NFD')];
 
   cmd(['ludo', 'ludogame'], o('LUDO 2-4 joueurs : .ludo creer | solo | rejoindre | start | pos | plateau'), bridge('ludo'));
-  cmd(['de', ...acute('dé'), ...acute('dés'), 'lancer', 'dice'], o('LUDO : lancer le dé', 'dé'), bridge('de'));
+  cmd(['de', 'dice'], o('LUDO : lancer le dé', 'de'), bridge('de'));
   cmd(['pion', 'pawn'], o('LUDO : déplacer un pion', 'pion 1-4'), bridge('pion'));
 };

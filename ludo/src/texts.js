@@ -79,7 +79,7 @@ Jeu de plateau pour *2 à 4 joueurs* 🎲
 • *.ludo stop* — annuler la partie (organisateur/admin)
 
 *Pendant la partie*
-• *.dé* — lancer le dé 🎲
+• *.de* — lancer le dé 🎲
 • *.pion 1-4* — déplacer un pion
 • *.ludo pos* — voir mes pions et leurs cases
 • *.ludo plateau* — plateau + tous les joueurs
