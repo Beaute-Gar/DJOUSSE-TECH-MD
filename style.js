@@ -112,6 +112,11 @@ function signature() {
   return `${toUnicode('MULTI-DEVICE WHATSAPP BOT')}\n${toUnicode('MADE BY')} DJOUSSE TECH`;
 }
 
+/* Signature ENCADRÉE — écrans ARCHIVES (cat.12). Reprend le pas ┄ de
+   frameFooter() pour rester symétrique (glyphes autorisés ici seulement). */
+const signatureBox = () =>
+  `╭${'┄'.repeat(14)}⪼\n${signature().split('\n').map((l) => `│  ${l}`).join('\n')}\n${frameFooter()}`;
+
 /* Réponses système — titres et contenus suivent tous le même alphabet. */
 const renderNotice = (heading, lines) =>
   buildFrame(heading, lines.map((line) => `│✦ ${toUnicode(line)}`));
@@ -134,6 +139,6 @@ module.exports = {
   toUnicode, frameHeader, frameFooter, buildFrame, listHeader, listItem, bullet,
   row, blank, title, note, box, banner, renderStartupDashboard,
   boxTop, boxRule, boxBottom, boxRow, BOX_W,
-  catBox, numItem, dispWidth, backBox,
+  catBox, numItem, dispWidth, backBox, signatureBox,
   signature, renderInfo, renderSuccess, renderError, renderSaisie, two, nowTime, nowDate,
 };

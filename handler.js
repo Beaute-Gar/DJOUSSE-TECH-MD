@@ -36,7 +36,7 @@ const { initScheduler, getScheduler } = require('./lib/scheduler');
 const { commandAccess } = require('./lib/command-access');
 const { withNetworkTimeout } = require('./lib/network-timeout');
 const { registerExtras } = require('./lib/extras');
-const { registerHackTools } = require('./lib/hacktools');
+const { registerHackTools, GROUPES: HACK_SECTIONS } = require('./lib/hacktools');
 const { loadSilvaPlugins } = require('./lib/silva-loader');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('./lib/ported-auto');
 const portedGroup = require('./lib/ported-group');
@@ -74,7 +74,7 @@ const guardUi = require('./guard/src/ui');
 const { findLinks } = require('./guard/src/utils/links');
 const { formatDuration } = require('./guard/src/utils/time');
 const {
-  toUnicode, frameFooter, buildFrame, listHeader, listItem, bullet, signature,
+  toUnicode, frameFooter, buildFrame, listHeader, listItem, bullet, signature, signatureBox,
   renderInfo, renderSuccess, renderError, renderSaisie, nowTime, nowDate,
   row, blank, title, note, catBox, numItem, backBox,
 } = require('./style');
@@ -694,6 +694,7 @@ const CATEGORIES = [
   { n: 9, label: 'OWNER', emoji: '👑' },
   { n: 10, label: 'DIVERS', emoji: '📦' },
   { n: 11, label: 'TÉLÉCHARGEMENT', emoji: '⬇️' },
+  { n: 12, label: 'ARCHIVES', emoji: '🔐' },
 ];
 
 /* Commandes VISIBLES d'une catégorie pour un profil donné :
@@ -738,7 +739,7 @@ function renderMainMenu(base) {
 
   const cats = CATEGORIES
     .map((c) => ({ ...c, list: visibleCommands(c.n, base) }))
-    .filter((c) => c.list.length > 0); // jamais de catégorie vide (§1)
+    .filter((c) => c.list.length > 0 || c.n === 12); // ARCHIVES (cat.12) toujours visible
 
   const catLines = cats.map((c) => listItem(c.n, `${c.emoji} ${toUnicode(`${c.label} MENU`)}`));
   const list = [listHeader('CATEGORIES'), ...catLines, frameFooter()].join('\n');
@@ -801,7 +802,131 @@ function renderGroupMenu() {
   return `${header}\n\n${blocks.join('\n\n')}\n\n${backBox(`⬅️ ${toUnicode('RETOUR AU MENU')}`)}\n\n${signature()}`;
 }
 
-/* État du menu par chat : { cat: 0|1..10, ts } — TTL 5 minutes */
+/* ════════════════════════════════════════════════════════════
+   7bis. ARCHIVES (cat.12) — catalogue déclaratif en 4 sections
+   ────────────────────────────────────────────────────────────
+   · 01 ARMES ANTI-COMPTE et 02 CONTENU ADULTE : AFFICHAGE SEUL,
+     statut NEUTRALISÉE (règle projet « exclure crash/NSFW » +
+     lib/hacktools.js) — AUCUNE fonctionnalité associée.
+   · 03 API RÉPARÉES : commandes réelles portées (lib/hacktools.js).
+   · 04 HACKTOOLS : métadonnées d'accès (mot de passe .env).
+   Navigation identique au sous-menu GROUPE (chiffres) + accès
+   owner / non-owner strictement distinct (2A vs 2B).
+   Source des listes de commandes : HACK_SECTIONS (= lib/hacktools.js
+   GROUPES) — une SEULE source, zéro doublon.
+   ════════════════════════════════════════════════════════════ */
+
+/* Barre de risque : █ plein + ░ vide (10 cases) — glyphes hors G4 */
+const riskBar = (n, total = 10) => `${'█'.repeat(n)}${'░'.repeat(Math.max(0, total - n))}`;
+
+/* Item ARCHIVES : ┊ 𝟶𝟷 ⟩⟩ emoji .cmd — desc (chiffres gras, comme GROUPE) */
+const archivesItem = (n, label) => `┊ ${toUnicode(String(n).padStart(2, '0'))} ⟩⟩ ${label}`;
+
+/* Métadonnées d'affichage des 4 sections (les COMMANDES viennent de HACK_SECTIONS) */
+const ARCHIVES = {
+  anti: {
+    frame: '⚠️', emoji: '🔴', label: 'ARMES ANTI-COMPTE', statut: 'NEUTRALISÉE',
+    risk: 8, riskLabel: 'CRITIQUE',
+    raison: 'Fait planter l’app d’autrui',
+    ban: 'Ton compte sera le premier banni',
+    listTitle: 'COMMANDES BLOQUÉES', mark: '⛔', gi: 0,
+  },
+  nsfw: {
+    frame: '⚠️', emoji: '🔴', label: 'CONTENU ADULTE / VULGAIRE', statut: 'NEUTRALISÉE',
+    risk: 9, riskLabel: 'TRÈS ÉLEVÉ',
+    raison: 'Contenu réservé aux adultes',
+    ban: 'Bannissement quasi certain',
+    extra: '🚫 MINEURS : INTERDIT',
+    listTitle: 'COMMANDES BLOQUÉES', mark: '⛔', gi: 1,
+  },
+  api: {
+    frame: '✅', emoji: '🟢', label: 'COMMANDES API RÉPARÉES', statut: 'PORTÉES ET FONCTIONNELLES',
+    note: ['🔑 TOUTES DANS .ENV (RIEN EN DUR)', 'AUCUNE CLÉ TIERCE EXPOSÉE'],
+    listTitle: 'COMMANDES ACTIVES', mark: '✅',
+  },
+  hack: {
+    frame: '🔒', emoji: '🔒', label: 'HACKTOOLS', statut: 'OWNER UNIQUEMENT', metaOnly: true,
+  },
+};
+
+/* Rendu 01/02 : NEUTRALISÉE — barre de risque + raison + liste ⛔ */
+function renderNeutral(s) {
+  const grp = HACK_SECTIONS[s.gi]; // liste de commandes (source unique)
+  const header = buildFrame(`${s.frame} ${s.label}`, [
+    bullet('STATUT', `${s.emoji} ${s.statut}`),
+    bullet('RISQUE', `${riskBar(s.risk)} ${s.riskLabel}`),
+    bullet('RAISON', s.raison),
+    bullet('BAN', s.ban),
+    s.extra ? bullet('NOTE', s.extra) : null,
+    title(toUnicode('REPLY WITH A NUMBER')),
+  ].filter(Boolean));
+  const items = grp.items.map(([name, desc], i) =>
+    archivesItem(i + 1, `${s.mark} ${toUnicode('.' + name.toUpperCase())} — ${desc}`));
+  const listBlock = [listHeader(s.listTitle), ...items, frameFooter()].join('\n');
+  return `${header}\n\n${listBlock}\n\n${archivesItem(0, `⬅️ ${toUnicode('RETOUR')}`)}\n\n${signatureBox()}`;
+}
+
+/* Rendu 03 : API RÉPARÉES — 2 lignes par commande (nom + desc · 🔑 clé) */
+const API_ROWS = [
+  ['imdb', '🎬', 'Film : note, casting, synopsis', 'OMDB_API_KEY'],
+  ['stickersearch', '🔎', 'Recherche de GIF', 'TENOR_API_KEY'],
+  ['paste', '📝', 'Texte → page Telegraph', 'JETON AUTO'],
+  ['technews', '📰', 'Actu tech', 'API TIERCE'],
+  ['emomix', '🫂', 'Mélange de 2 emojis', 'API TIERCE'],
+  ['videodoc', '🎞️', 'Vidéo → document', 'APIS TIERCES'],
+];
+function renderApi(s) {
+  const header = buildFrame(`${s.frame} ${s.label}`, [
+    bullet('STATUT', `${s.emoji} ${s.statut}`),
+    ...s.note.map((n) => bullet('INFO', n)),
+    title(toUnicode('REPLY WITH A NUMBER')),
+  ]);
+  const items = API_ROWS.flatMap(([name, icon, desc, key], i) => [
+    archivesItem(i + 1, `${icon} ${toUnicode('.' + name.toUpperCase())}`),
+    `       ⤷ ${desc} · 🔑 ${key}`,
+  ]);
+  const listBlock = [listHeader(s.listTitle), ...items, frameFooter()].join('\n');
+  return `${header}\n\n${listBlock}\n\n${archivesItem(0, `⬅️ ${toUnicode('RETOUR')}`)}\n\n${signatureBox()}`;
+}
+
+/* Rendu 04 : HACKTOOLS — métadonnées d'accès uniquement (aucune commande) */
+function renderHack(s) {
+  const header = buildFrame(`${s.frame} ${s.label}`, [
+    bullet('STATUT', `🔒 ${s.statut}`),
+    bullet('ENTRÉE', `${config.prefix}hacktools <mot de passe>`),
+    bullet('ACCÈS', '👑 PROPRIÉTAIRE UNIQUEMENT'),
+    bullet('SESSION', '⏱ 10 MINUTES D’INACTIVITÉ'),
+    bullet('MOT DE PASSE', String(process.env.HACKTOOLS_PASSWORD || '').trim() ? '🔑 DÉFINI DANS .ENV (HACHÉ)' : '⚠️ NON DÉFINI — SECTION DÉSACTIVÉE'),
+    bullet('VISIBILITÉ', '🙈 AUCUN MENU POUR LES NON-OWNERS'),
+    title(toUnicode('REPLY WITH A NUMBER')),
+  ]);
+  return `${header}\n\n${archivesItem(0, `⬅️ ${toUnicode('RETOUR')}`)}\n\n${signatureBox()}`;
+}
+
+/* Sous-menu ARCHIVES : 2B (owner, 4 sections) vs 2A (non-owner, seule l'API) */
+function renderArchives(base) {
+  const isOwner = !!base?.isOwner;
+  const keys = isOwner ? ['anti', 'nsfw', 'api', 'hack'] : ['api'];
+  const header = buildFrame('ARCHIVES', [
+    bullet('ACCÈS', isOwner ? '👑 PROPRIÉTAIRE' : '⚠️ CONTENU SENSIBLE'),
+    isOwner ? bullet('VISIBLE', '4 SECTIONS') : null,
+    isOwner ? bullet('NOTE', '🔴 3 DANGEREUSES · 🟢 1 ACTIVE') : null,
+    title(toUnicode('REPLY WITH A NUMBER')),
+  ].filter(Boolean));
+  const items = keys.map((k, i) => archivesItem(i + 1, `${ARCHIVES[k].emoji} ${toUnicode(ARCHIVES[k].label)}`));
+  const listBlock = [catBox('🔐', 'SECTIONS', toUnicode(String(keys.length))), ...items, frameFooter()].join('\n');
+  return `${header}\n\n${listBlock}\n\n${archivesItem(0, `⬅️ ${toUnicode('RETOUR')}`)}\n\n${signatureBox()}`;
+}
+
+/* Écran de section détaillé (dispatch anti | nsfw | api | hack) */
+function renderArchiveSection(base, key) {
+  const s = ARCHIVES[key];
+  if (s.metaOnly) return renderHack(s);
+  if (s.twoLine || key === 'api') return renderApi(s);
+  return renderNeutral(s);
+}
+
+/* État du menu par chat : { cat: 0|1..12, ts } — TTL 5 minutes */
 const menuState = new Map();
 const MENU_TTL = 5 * 60 * 1000;
 setInterval(() => {
@@ -1002,6 +1127,33 @@ cmd('menu', { cat: 1, desc: 'Menu interactif par chiffres', icon: '📋' }, asyn
 
   setMenu(ctx.from, 0);
   await sendMenu(ctx.sock, ctx.from, renderMainMenu(ctx), ctx.msg);
+});
+
+/* ════════════════════════════════════════════════════════════
+   .archives — sous-menu + accès direct aux 4 sections (cat.12)
+   ────────────────────────────────────────────────────────────
+   .archives            → sous-menu (2A/2B selon owner)
+   .archives anti       → 01 Armes anti-compte (owner)
+   .archives nsfw       → 02 Contenu adulte   (owner)
+   .archives api        → 03 API réparées     (public)
+   .archives hack       → 04 Hacktools        (owner)
+   ════════════════════════════════════════════════════════════ */
+cmd('archives', { cat: 12, desc: 'Catalogue ARCHIVES (sections à risque)', usage: 'archives [anti|nsfw|api|hack]', icon: '🔐' }, async (ctx) => {
+  const key = String(ctx.args?.[0] || '').toLowerCase();
+  const isOwner = !!ctx.isOwner;
+  const OWNER_ONLY = { anti: true, nsfw: true, hack: true };
+  if (!key) {
+    setMenu(ctx.from, 12);
+    return sendMenu(ctx.sock, ctx.from, renderArchives(ctx), ctx.msg);
+  }
+  if (OWNER_ONLY[key] && !isOwner) {
+    return ctx.error(['SECTION RÉSERVÉE AU PROPRIÉTAIRE']);
+  }
+  if (!['anti', 'nsfw', 'api', 'hack'].includes(key)) {
+    return ctx.error(['SECTION INCONNUE', `USAGE : ${config.prefix}archives [anti|nsfw|api|hack]`]);
+  }
+  setMenu(ctx.from, 12);
+  return sendMenu(ctx.sock, ctx.from, renderArchiveSection(ctx, key), ctx.msg);
 });
 
 cmd('setmenuimg', ['menupic'], {
@@ -3296,6 +3448,12 @@ async function handleNumeric(sock, msg, text, base) {
   }
 
   if (st.cat === 0) {
+    /* Cat.12 ARCHIVES : catalogue déclaratif, pas de commands */
+    if (n === 12) {
+      setMenu(chat, 12);
+      await sendMenu(sock, chat, renderArchives(base), msg);
+      return true;
+    }
     const cats = CATEGORIES
       .map((c) => ({ ...c, list: visibleCommands(c.n, base) }))
       .filter((c) => c.list.length > 0);
@@ -3310,6 +3468,25 @@ async function handleNumeric(sock, msg, text, base) {
     /* Cat.2 GROUPE : rendu statique en 9 sections (catalogue 89) ;
        les autres catégories gardent le rendu dynamique. */
     await sendMenu(sock, chat, hit.n === 2 ? renderGroupMenu() : renderCategory(hit.n, base), msg);
+    return true;
+  }
+
+  /* Cat.12 ARCHIVES : sous-navigation par section */
+  if (st.cat === 12) {
+    const isOwner = !!base.isOwner;
+    const map = isOwner ? { 1: 'anti', 2: 'nsfw', 3: 'api', 4: 'hack' } : { 1: 'api' };
+    const which = map[n];
+    if (!which) {
+      const restricted = !isOwner && n >= 2 && n <= 4;
+      await send(sock, chat, {
+        text: restricted
+          ? renderError(['SECTION RÉSERVÉE AU PROPRIÉTAIRE'])
+          : renderError([`CHIFFRE INVALIDE (1-${Object.keys(map).length})`, 'REPONDEZ 0 POUR LE MENU PRINCIPAL']),
+      }, { quoted: msg });
+      return true;
+    }
+    setMenu(chat, 12);
+    await sendMenu(sock, chat, renderArchiveSection(base, which), msg);
     return true;
   }
 
@@ -4061,6 +4238,8 @@ module.exports = {
   renderMainMenu,
   renderCategory,
   renderGroupMenu,
+  renderArchives,
+  renderArchiveSection,
   state,
   saveState,
   askAI,
