@@ -129,3 +129,78 @@ test('humanDelayMs : bornes respectées sur 25 tirages + coupure', () => {
   process.env.HUMAN_DELAY = '0';
   assert.equal(waSend.humanDelayMs(), 0);
 });
+
+
+test('file globale : les envois simultanés sont exécutés dans l’ordre', async () => {
+  process.env.HUMAN_DELAY = '0';
+  const order = [];
+  let active = 0;
+  let maxActive = 0;
+  const sock = {
+    sendMessage: async (_jid, content) => {
+      active += 1;
+      maxActive = Math.max(maxActive, active);
+      order.push('start:' + content.text);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+      order.push('end:' + content.text);
+      active -= 1;
+      return { text: content.text };
+    },
+    sendPresenceUpdate: async () => {},
+  };
+  const results = await Promise.all([
+    waSend.send(sock, 'a@s.whatsapp.net', { text: 'un' }),
+    waSend.send(sock, 'b@s.whatsapp.net', { text: 'deux' }),
+    waSend.send(sock, 'c@s.whatsapp.net', { text: 'trois' }),
+  ]);
+  assert.deepEqual(results.map((x) => x.text), ['un', 'deux', 'trois']);
+  assert.deepEqual(order, ['start:un', 'end:un', 'start:deux', 'end:deux', 'start:trois', 'end:trois']);
+  assert.equal(maxActive, 1);
+});
+
+test('erreur d’un envoi : les suivants continuent à passer', async () => {
+  process.env.HUMAN_DELAY = '0';
+  const sent = [];
+  const sock = {
+    sendMessage: async (_jid, content) => {
+      sent.push(content.text);
+      if (content.text === 'échoue') throw new Error('erreur de test');
+      return { ok: true };
+    },
+    sendPresenceUpdate: async () => {},
+  };
+  const first = waSend.send(sock, 'a@s.whatsapp.net', { text: 'échoue' });
+  const second = waSend.send(sock, 'a@s.whatsapp.net', { text: 'après' });
+  await assert.rejects(first, /erreur de test/);
+  assert.deepEqual(await second, { ok: true });
+  assert.deepEqual(sent, ['échoue', 'après']);
+});
+
+test('file pleine : rejet explicite, puis reprise après vidage', async () => {
+  const oldMax = process.env.WA_SEND_QUEUE_MAX;
+  process.env.WA_SEND_QUEUE_MAX = '1';
+  process.env.HUMAN_DELAY = '0';
+  let release;
+  const sock = {
+    sendMessage: async (_jid, content) => {
+      if (content.text === 'bloqué') await new Promise((resolve) => { release = resolve; });
+      return { ok: true };
+    },
+    sendPresenceUpdate: async () => {},
+  };
+  try {
+    const first = waSend.send(sock, 'a@s.whatsapp.net', { text: 'bloqué' });
+    await new Promise((resolve) => setImmediate(resolve));
+    await assert.rejects(
+      waSend.send(sock, 'a@s.whatsapp.net', { text: 'refusé' }),
+      (error) => error.code === 'WA_SEND_QUEUE_FULL'
+    );
+    release();
+    await first;
+    assert.equal(waSend.getQueueState().pending, 0);
+    assert.deepEqual(await waSend.send(sock, 'a@s.whatsapp.net', { text: 'repris' }), { ok: true });
+  } finally {
+    if (oldMax === undefined) delete process.env.WA_SEND_QUEUE_MAX;
+    else process.env.WA_SEND_QUEUE_MAX = oldMax;
+  }
+});
