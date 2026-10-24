@@ -11,6 +11,7 @@ session/
 sessions/
 session-*/
 data/
+!website/data/
 creds.json
 lid-mapping-*.json
 state.json

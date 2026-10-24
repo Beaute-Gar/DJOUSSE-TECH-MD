@@ -1,0 +1,73 @@
+{
+  "name": "DJOUSSE TECH MD",
+  "tagline": "Des solutions fiables pour un avenir sans limites",
+  "pitch": "Un assistant WhatsApp 100 % texte : modération de groupe, IA, médias et outils, pilotés par un menu à chiffres.",
+  "version": "4.0.0",
+  "siteOrigin": "https://djousse-tech-md.vercel.app",
+  "stats": {
+    "categories": 11,
+    "commands_menu": 363,
+    "commands_registry": "TODO: confirmer via npm run audit (README ancien : 855)",
+    "aliases": "TODO: confirmer (README ancien : 948)",
+    "protections": 13
+  },
+  "links": {
+    "github": "https://github.com/Beaute-Gar/DJOUSSE-TECH-MD",
+    "issues": "https://github.com/Beaute-Gar/DJOUSSE-TECH-MD/issues",
+    "site": "https://djousse-tech-md.vercel.app",
+    "portfolio": "https://beaute-gar.github.io/Beaute-Gar/",
+    "baileys": "https://github.com/WhiskeySockets/Baileys"
+  },
+  "categories": [
+    { "n": 1, "icon": "🌟", "name": "Général", "count": 9 },
+    { "n": 2, "icon": "👥", "name": "Groupe", "count": 41 },
+    { "n": 3, "icon": "🛡️", "name": "Protection", "count": 41 },
+    { "n": 4, "icon": "🖼️", "name": "Sticker & Media", "count": 37 },
+    { "n": 5, "icon": "🧰", "name": "Outils", "count": 58 },
+    { "n": 6, "icon": "🤖", "name": "IA", "count": 3 },
+    { "n": 7, "icon": "🎲", "name": "Fun", "count": 83 },
+    { "n": 8, "icon": "🔍", "name": "Recherche", "count": 6 },
+    { "n": 9, "icon": "👑", "name": "Owner", "count": 71 },
+    { "n": 10, "icon": "📦", "name": "Divers", "count": 11 },
+    { "n": 11, "icon": "⬇️", "name": "Téléchargement", "count": 3 }
+  ],
+  "guard": [
+    { "n": 1, "id": "antilink", "effect": "Liens interdits (whitelist de domaines)" },
+    { "n": 2, "id": "antibad", "effect": "Mots interdits" },
+    { "n": 3, "id": "antitag", "effect": "Mentions abusives" },
+    { "n": 4, "id": "antispam", "effect": "Rafale de messages" },
+    { "n": 5, "id": "antiflood", "effect": "Flood configurable" },
+    { "n": 6, "id": "antimedia", "effect": "Médias non sollicités" },
+    { "n": 7, "id": "antisticker", "effect": "Stickers en masse" },
+    { "n": 8, "id": "antivoice", "effect": "Vocaux non sollicités" },
+    { "n": 9, "id": "antistatus", "effect": "Mention de statut" },
+    { "n": 10, "id": "antiforward", "effect": "Transferts" },
+    { "n": 11, "id": "antivirtex", "effect": "Message géant / corruption" },
+    { "n": 12, "id": "anticontact", "effect": "Envoi de contacts" },
+    { "n": 13, "id": "antipoll", "effect": "Sondages intempestifs" }
+  ],
+  "modes": [
+    { "name": "Baileys", "scope": "Groupes et commandes complètes", "risk": "Risque normal lié à l’usage de Baileys; aucune garantie d’absence de restriction." },
+    { "name": "Agent officiel", "scope": "Créateur de l’agent uniquement; limites fixées par WhatsApp", "risk": "Canal officiel annoncé sans risque de bannissement uniquement pour le créateur de l’agent." },
+    { "name": "Hybride", "scope": "Agent officiel personnel et Baileys à côté, avec deux identités", "risk": "Le canal Baileys conserve son risque normal; les limites officielles ne sont pas étendues." }
+  ],
+  "features": {
+    "pillars": [
+      { "icon": "🧠", "title": "Un seul cerveau", "text": "handler.js centralise toutes les commandes; index.js ne fait que la connexion." },
+      { "icon": "🛡️", "title": "DJOUSSE GUARD", "text": "Un moteur de protections de groupe isolé dans guard/ et évalué par priorité." },
+      { "icon": "⌨️", "title": "Zéro bouton natif", "text": "100 % messages texte et menu par chiffres, y compris sur les anciens clients." }
+    ],
+    "ai": [
+      { "command": ".ai", "text": "Conversation avec Gemini; repli OpenRouter lorsque configuré." },
+      { "command": ".analyse", "text": "OCR d’une image ou transcription d’un message vocal." },
+      { "command": ".summarize", "text": "Résumé d’un document." }
+    ],
+    "media": [
+      "Image ou vidéo vers sticker avec .s; récupération avec .take.",
+      "Conversion sticker vers image et vidéo vers MP3.",
+      "Récupération view-once, albums, conversion et redimensionnement.",
+      "Recherche YouTube avec .yt, musique MP3 avec .play, vidéo MP4 avec .video."
+    ]
+  },
+  "attribution": "Créé par Djousse Uriel"
+}

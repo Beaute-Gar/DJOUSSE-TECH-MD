@@ -1,0 +1,30 @@
+{
+  "partial": true,
+  "notice": "Catalogue partiel issu des commandes explicitement citées dans le README. Les descriptions, usages et niveaux d’accès non détaillés doivent être confirmés dans le registre; exécutez scripts/export-commands.js pour régénérer le catalogue réel.",
+  "commands": [
+    { "name": "sticker", "aliases": ["s"], "category": 4, "description": "Convertit une image ou une vidéo en sticker.", "usage": ".sticker (en répondant à une image)", "access": "public", "accessConfirmed": false },
+    { "name": "take", "aliases": [], "category": 4, "description": "Commande citée dans la liste des outils média; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "ai", "aliases": [], "category": 6, "description": "Conversation avec Gemini; repli automatique sur OpenRouter si configuré.", "usage": ".ai <question>", "access": "public", "accessConfirmed": false },
+    { "name": "analyse", "aliases": [], "category": 6, "description": "OCR d’une image ou transcription d’un message vocal.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "summarize", "aliases": [], "category": 6, "description": "Résume un document.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "yt", "aliases": [], "category": 11, "description": "Recherche YouTube.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "play", "aliases": [], "category": 11, "description": "Télécharge une musique en MP3.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "video", "aliases": [], "category": 11, "description": "Télécharge une vidéo au format MP4.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "translate", "aliases": ["tr"], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "calc", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "qr", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "base64", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "binary", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "weather", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "wiki", "aliases": [], "category": 8, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "github", "aliases": [], "category": 8, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "convert", "aliases": [], "category": 5, "description": "Convertit des devises à partir des taux de change.", "usage": "", "access": "public", "accessConfirmed": false },
+    { "name": "kick", "aliases": [], "category": 2, "description": "Commande de gestion de groupe citée dans le README; détail à confirmer dans le registre.", "usage": "", "access": "admin", "accessConfirmed": false },
+    { "name": "tagall", "aliases": [], "category": 2, "description": "Commande de gestion de groupe citée dans le README; détail à confirmer dans le registre.", "usage": "", "access": "admin", "accessConfirmed": false },
+    { "name": "security", "aliases": [], "category": 3, "description": "Commande associée à DJOUSSE GUARD; détail à confirmer dans le registre.", "usage": "", "access": "admin", "accessConfirmed": false },
+    { "name": "sanction", "aliases": [], "category": 3, "description": "Commande associée à DJOUSSE GUARD; détail à confirmer dans le registre.", "usage": "", "access": "admin", "accessConfirmed": false },
+    { "name": "journal", "aliases": [], "category": 3, "description": "Consulte le journal des sanctions, entrées/sorties et connexions.", "usage": ".journal [type] [n]", "access": "owner", "accessConfirmed": false },
+    { "name": "diag", "aliases": [], "category": 1, "description": "Affiche l’état du socket, la version WhatsApp, les conflits et la mémoire.", "usage": ".diag", "access": "public", "accessConfirmed": false },
+    { "name": "vv", "aliases": [], "category": 4, "description": "Récupère une vue unique citée (photo, vidéo, vocal, document ou sticker) et la sauvegarde dans downloads/.", "usage": ".vv", "access": "public", "accessConfirmed": false }
+  ]
+}
