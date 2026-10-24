@@ -4,16 +4,18 @@
 
 **Bot WhatsApp intelligent — DJOUSSE TECH EVOLUTION**
 
+> **Des solutions fiables pour un avenir sans limites**
+
 <img
-  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=363+commandes+%C2%B7+11+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+13+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
-  alt="855 commandes · 11 catégories · Moteur DJOUSSE GUARD · IA Gemini"
+  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=852+commandes+%C2%B7+12+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+14+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
+  alt="852 commandes · 12 catégories · Moteur DJOUSSE GUARD · IA Gemini"
 />
 
 <br/>
 
 <img src="https://img.shields.io/badge/version-4.0.0-2ECC71?style=flat-square" alt="Version 4.0.0" />
-<img src="https://img.shields.io/badge/commandes-855-00b894?style=flat-square" alt="855 commandes" />
-<img src="https://img.shields.io/badge/cat%C3%A9gories-11-111b26?style=flat-square" alt="11 catégories" />
+<img src="https://img.shields.io/badge/commandes-852-00b894?style=flat-square" alt="852 commandes" />
+<img src="https://img.shields.io/badge/cat%C3%A9gories-12-111b26?style=flat-square" alt="12 catégories" />
 <img src="https://img.shields.io/badge/Baileys-6.7.24-25D366?style=flat-square&logo=whatsapp&logoColor=white" alt="Baileys 6.7.24" />
 <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 18+" />
 <img src="https://img.shields.io/badge/licence-MIT-E67E22?style=flat-square" alt="Licence MIT" />
@@ -37,7 +39,7 @@
 <br/>
 
 <a href="#-présentation">Présentation</a> •
-<a href="#-les-11-catégories">Commandes</a> •
+<a href="#-les-12-catégories">Commandes</a> •
 <a href="#-djousse-guard">Guard</a> •
 <a href="#-installation">Installation</a> •
 <a href="#-sécurité">Sécurité</a> •
@@ -156,24 +158,26 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 
 ---
 
-## 🗂️ Les 11 catégories
+## 🗂️ Les 12 catégories
 
 | # | Catégorie | | Commandes |
 |:-:|---|:-:|--:|
 | 1 | 🌟 **GÉNÉRAL** | | 9 |
-| 2 | 👥 **GROUPE** | | 41 |
-| 3 | 🛡️ **PROTECTION** | | 41 |
-| 4 | 🖼️ **STICKER & MEDIA** | | 37 |
+| 2 | 👥 **GROUPE** | | 92 |
+| 3 | 🛡️ **PROTECTION** | | 58 |
+| 4 | 🖼️ **STICKER & MEDIA** | | 446 |
 | 5 | 🧰 **OUTILS** | | 58 |
-| 6 | 🤖 **IA** | | 3 |
+| 6 | 🤖 **IA** | | 4 |
 | 7 | 🎲 **FUN** | | 83 |
 | 8 | 🔍 **RECHERCHE** | | 6 |
 | 9 | 👑 **OWNER** | | 71 |
-| 10 | 📦 **DIVERS** | | 11 |
+| 10 | 📦 **DIVERS** | | 13 |
 | 11 | ⬇️ **TÉLÉCHARGEMENT** | | 3 |
-| | | | **Total** | **855** |
+| 12 | 🔐 **ARCHIVES** | | 1 |
+| | | | **Total (visibles)** | **844** |
 
-> **+ 948 alias** (1803 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
+> **+ 8 commandes hors menus** (accès direct, ex. `.hacktools`) — total **852**.
+> **+ 751 alias** (1603 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
 
 ---
 
@@ -298,7 +302,7 @@ Crée un fichier `.env` à la racine (il est **ignoré par git**, ne sera jamais
 # ── Identité ─────────────────────────────────────
 BOT_NAME=DJOUSSE TECH
 OWNER_NAME=Beaute Gar
-OWNER_NUMBER=237693978044
+OWNER_NUMBER=2376XXXXXXXXX
 AUTO_OWNER=1
 
 # ── Commandes ────────────────────────────────────
@@ -448,7 +452,7 @@ sur VPS, Docker, Render, Fly.io, Railway, Heroku ou Replit. Fichiers livrés :
 ```
 DJOUSSE-TECH-MD/
 ├── index.js          # Point d'entrée : connexion Baileys, QR/pairing, reconnexion
-├── handler.js        # 🧠 Cerveau unique — 855 commandes, menu, moteur d'événements
+├── handler.js        # 🧠 Cerveau unique - 852 commandes, menu, moteur d'événements
 ├── config.js         # Toutes les constantes lues depuis .env (aucune logique métier)
 ├── style.js          # 🎨 Source unique du rendu (cadres ╭┄┄『 』┄❍, alphabet officiel)
 │

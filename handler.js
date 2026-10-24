@@ -1156,6 +1156,68 @@ cmd('archives', { cat: 12, desc: 'Catalogue ARCHIVES (sections à risque)', usag
   return sendMenu(ctx.sock, ctx.from, renderArchiveSection(ctx, key), ctx.msg);
 });
 
+/* ════════════════════════════════════════════════════════════
+   .repo / .support / .ia — équivalents MAISON des commandes tierces
+   ────────────────────────────────────────────────────────────
+   Enregistrées AVANT loadSilvaPlugins : la règle « jamais d'écrasement »
+   (lib/silva-loader.js) fait que les versions tierces (repo.js → dépôt
+   d'un autre auteur, call.js → réseaux + numéro personnel, silva-agent)
+   sont automatiquement ignorées. Aucun fichier de plugins/silva/ n'est
+   modifié. .repo lit les données RÉELLES du dépôt officiel via l'API
+   GitHub (aucune donnée simulée).
+   ════════════════════════════════════════════════════════════ */
+cmd(['repo', 'repository'], {
+  cat: 10, desc: 'Dépôt officiel — étoiles, forks, dernière MAJ', usage: 'repo', icon: '📦',
+}, async (ctx) => {
+  try {
+    const j = await withNetworkTimeout(async (signal) => {
+      const res = await fetch('https://api.github.com/repos/Beaute-Gar/DJOUSSE-TECH-MD', { signal });
+      if (!res.ok) throw new Error(`GitHub HTTP ${res.status}`);
+      return res.json();
+    }, 15000, 'Dépôt GitHub');
+    const maj = j.pushed_at ? new Date(j.pushed_at).toLocaleString('fr-FR', { timeZone: 'Africa/Douala' }) : '—';
+    await ctx.reply(
+      `📦 *${j.full_name}*\n` +
+      `📝 ${j.description || '—'}\n` +
+      `⭐ ${j.stargazers_count} · 🍴 ${j.forks_count} · 🐛 ${j.open_issues_count} ouverts\n` +
+      `🧩 ${j.language || 'JavaScript'} · 📄 ${j.license?.spdx_id || 'MIT'} · ${(Number(j.size || 0) / 1024).toFixed(1)} Mo\n` +
+      `🕒 Dernier push : ${maj}\n\n` +
+      `🔗 ${j.html_url}\n` +
+      `🌐 ${config.social.website}\n\n` +
+      `_${config.slogan}_`
+    );
+  } catch (e) {
+    await ctx.reply(`❌ GitHub : ${e.message}`);
+  }
+});
+
+cmd('support', {
+  cat: 10, desc: 'Support & signalement officiels', usage: 'support', icon: '🛟',
+}, async (ctx) => {
+  await ctx.reply(
+    `🛟 *SUPPORT — DJOUSSE TECH*\n\n` +
+    `🐛 Bug ou problème : ${config.social.github}/issues\n` +
+    `💡 Idée / demande : ${config.social.github}/issues\n` +
+    `📦 Code source : ${config.social.github}\n` +
+    `🌐 Site : ${config.social.website}\n\n` +
+    `_${config.slogan}_`
+  );
+});
+
+/* .ia : porte d'entrée VISIBLE de l'assistant (l'historique .silva reste
+   joignable en direct mais est retiré des menus — cf. HORS_MENUS dans
+   lib/silva-loader.js). On délègue au même gestionnaire : aucun
+   comportement perdu. */
+cmd('ia', {
+  cat: 6, desc: 'Assistant IA — commandes, contenu, recherche web', usage: 'ia <question>', icon: '🤖',
+}, async (ctx) => {
+  const entry = commands.get('silva');
+  if (!entry || typeof entry.handler !== 'function') {
+    return ctx.error(['ASSISTANT INDISPONIBLE', 'REDEMARRE LE BOT']);
+  }
+  return entry.handler(ctx);
+});
+
 cmd('setmenuimg', ['menupic'], {
   cat: 9, desc: 'Définir l’image du .menu (répondre à une photo)', usage: 'setmenuimg', owner: true, icon: '🖼️',
 }, async (ctx) => {

@@ -206,7 +206,11 @@ test('SERVE_SITE — site statique servi, traversée de chemins bloquée', async
     assert.match(home.headers.get('content-type') || '', /text\/html/);
     assert.match(await home.text(), /DJOUSSE/);
 
-    const man = await fetch(`${b.base}/manifest.json`);
+    /* Manifest PWA : l'arborescence du site nomme le fichier
+       manifest.json (ancienne forme) ou manifest.webmanifest
+       (standard PWA) — les deux doivent être servis. */
+    let man = await fetch(`${b.base}/manifest.webmanifest`);
+    if (man.status !== 200) man = await fetch(`${b.base}/manifest.json`);
     assert.strictEqual(man.status, 200);
     assert.match(man.headers.get('content-type') || '', /json/);
 

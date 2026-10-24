@@ -38,6 +38,7 @@ module.exports = {
   // Identité du bot
   botName: process.env.BOT_NAME || 'DJOUSSE TECH',
   botOwnerName: process.env.OWNER_NAME || 'Beaute Gar',
+  slogan: process.env.SLOGAN || 'Des solutions fiables pour un avenir sans limites',
   menuPictureMode: ['random', 'local', 'off'].includes(menuPictureMode) ? menuPictureMode : 'random',
   menuPicturePath: process.env.MENU_PICTURE_PATH || 'assets/anime-profile.jpg',
   // Numéros owner (.env). Au connect, le numéro de la session est AJOUTÉ automatiquement.
@@ -193,6 +194,7 @@ module.exports = {
   // Réseaux
   social: {
     github: 'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD',
+    website: 'https://djousse-tech-md.vercel.app',
   },
 
   version: (() => {

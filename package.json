@@ -4,12 +4,15 @@
     "description": "DJOUSSE TECH MD - WhatsApp Bot minimal (7 fichiers)",
     "main": "index.js",
     "type": "commonjs",
+    "engines": {
+        "node": ">=18"
+    },
     "scripts": {
         "start": "node index.js",
         "prestart": "node scripts/audit.js",
         "audit": "node scripts/audit.js",
         "audit:deps": "node scripts/audit.js --deps",
-        "test": "node --test test/ai.test.js test/archives.test.js test/auth.test.js test/auto-status.test.js test/command-access.test.js test/config-env.test.js test/conflict.test.js test/extras-commands.test.js test/guard-protections.test.js test/hacktools.test.js test/hacktools-menu.test.js test/handler-options.test.js test/http-get.test.js test/message-cache.test.js test/network-timeout.test.js test/pairing-api.test.js test/ported-auto.test.js test/ported-audio.test.js test/ported-fun.test.js test/ported-group.test.js test/ported-foot.test.js test/ported-logo.test.js test/ported-shot.test.js test/purge-watchdog.test.js test/silva-loader.test.js test/silva-style.test.js test/style.test.js test/public-mode.test.js test/wa-agent.test.js test/wa-send.test.js",
+        "test": "node --test test/ai.test.js test/archives.test.js test/auth.test.js test/auto-status.test.js test/identite.test.js test/command-access.test.js test/config-env.test.js test/conflict.test.js test/extras-commands.test.js test/guard-protections.test.js test/hacktools.test.js test/hacktools-menu.test.js test/handler-options.test.js test/http-get.test.js test/message-cache.test.js test/network-timeout.test.js test/pairing-api.test.js test/ported-auto.test.js test/ported-audio.test.js test/ported-fun.test.js test/ported-group.test.js test/ported-foot.test.js test/ported-logo.test.js test/ported-shot.test.js test/purge-watchdog.test.js test/silva-loader.test.js test/silva-style.test.js test/style.test.js test/public-mode.test.js test/wa-agent.test.js test/wa-send.test.js",
         "check": "node --check index.js && node --check handler.js && node --check config.js && node --check scripts/audit.js"
     },
     "keywords": [
