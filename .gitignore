@@ -4,6 +4,7 @@ node_modules/
 # Secrets (jamais commités)
 .env
 .env.*
+!.env.example
 
 # Session WhatsApp + état dynamique du bot
 session/

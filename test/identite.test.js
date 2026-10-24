@@ -4,7 +4,8 @@
    2. commandes tierces dangereuses/identitaires neutralisées côté chargeur ;
    3. commandes maison .repo / .support / .ia en place, silva hors menus ;
    4. URLs tierces réécrites vers les destinations officielles ;
-   5. slogan + chiffres du README cohérents avec le registre réel. */
+   5. slogan + chiffres du README cohérents avec le registre réel ;
+   6. ancien logo tierce en repli réécrit vers le logo officiel maison. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -14,6 +15,7 @@ const h = require('../handler');
 const { toUnicode } = require('../style');
 const {
   retirerSignatureTierce, BLOQUES_IDENTITE, INTERDITS,
+  normaliserContenu, URL_LOGO_TIERCE, URL_LOGO_OFFICIEL,
 } = require('../lib/silva-loader');
 
 const MARQUE = /\bSilva\b|SilvaTech|Silvatech|SILVA MD|TEDDY-XMD|Chez TEDDY|silva\.tech|SilvaTechB/i;
@@ -101,6 +103,22 @@ test('retirerSignatureTierce : aides de commandes en minuscules intactes', () =>
 test('INTERDITS (crash/NSFW) inchangés', () => {
   assert.ok(INTERDITS.test('loccrash') && INTERDITS.test('hentai'));
   assert.ok(!INTERDITS.test('menu'));
+});
+
+test('logo maison : repli visuel tierce réécrit (11 plugins couverts)', () => {
+  /* envoi d'image direct (alive, menu, repo, music, getpp…) */
+  const c1 = normaliserContenu({ image: { url: URL_LOGO_TIERCE }, caption: 'test' });
+  assert.equal(c1.image.url, URL_LOGO_OFFICIEL, 'image d’envoi → logo officiel');
+  /* vignette de lien (facebook, instagram, statussave, owner) */
+  const c2 = normaliserContenu({
+    contextInfo: { externalAdReply: { thumbnailUrl: URL_LOGO_TIERCE, title: 'x' } },
+  });
+  assert.equal(c2.contextInfo.externalAdReply.thumbnailUrl, URL_LOGO_OFFICIEL,
+    'vignette externalAdReply → logo officiel');
+  /* aucune autre image n'est touchée */
+  const c3 = normaliserContenu({ image: { url: 'https://example.com/photo.jpg' } });
+  assert.equal(c3.image.url, 'https://example.com/photo.jpg');
+  assert.notEqual(URL_LOGO_TIERCE, URL_LOGO_OFFICIEL);
 });
 
 /* ── 4. config : identité + slogan ── */
