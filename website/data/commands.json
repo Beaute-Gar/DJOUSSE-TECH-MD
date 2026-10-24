@@ -1,30 +1,8174 @@
 {
-  "partial": true,
-  "notice": "Catalogue partiel issu des commandes explicitement citées dans le README. Les descriptions, usages et niveaux d’accès non détaillés doivent être confirmés dans le registre; exécutez scripts/export-commands.js pour régénérer le catalogue réel.",
+  "partial": false,
+  "generatedFrom": "handler.js",
   "commands": [
-    { "name": "sticker", "aliases": ["s"], "category": 4, "description": "Convertit une image ou une vidéo en sticker.", "usage": ".sticker (en répondant à une image)", "access": "public", "accessConfirmed": false },
-    { "name": "take", "aliases": [], "category": 4, "description": "Commande citée dans la liste des outils média; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "ai", "aliases": [], "category": 6, "description": "Conversation avec Gemini; repli automatique sur OpenRouter si configuré.", "usage": ".ai <question>", "access": "public", "accessConfirmed": false },
-    { "name": "analyse", "aliases": [], "category": 6, "description": "OCR d’une image ou transcription d’un message vocal.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "summarize", "aliases": [], "category": 6, "description": "Résume un document.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "yt", "aliases": [], "category": 11, "description": "Recherche YouTube.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "play", "aliases": [], "category": 11, "description": "Télécharge une musique en MP3.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "video", "aliases": [], "category": 11, "description": "Télécharge une vidéo au format MP4.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "translate", "aliases": ["tr"], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "calc", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "qr", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "base64", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "binary", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "weather", "aliases": [], "category": 5, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "wiki", "aliases": [], "category": 8, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "github", "aliases": [], "category": 8, "description": "Commande citée dans la liste des outils; détail à confirmer dans le registre.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "convert", "aliases": [], "category": 5, "description": "Convertit des devises à partir des taux de change.", "usage": "", "access": "public", "accessConfirmed": false },
-    { "name": "kick", "aliases": [], "category": 2, "description": "Commande de gestion de groupe citée dans le README; détail à confirmer dans le registre.", "usage": "", "access": "admin", "accessConfirmed": false },
-    { "name": "tagall", "aliases": [], "category": 2, "description": "Commande de gestion de groupe citée dans le README; détail à confirmer dans le registre.", "usage": "", "access": "admin", "accessConfirmed": false },
-    { "name": "security", "aliases": [], "category": 3, "description": "Commande associée à DJOUSSE GUARD; détail à confirmer dans le registre.", "usage": "", "access": "admin", "accessConfirmed": false },
-    { "name": "sanction", "aliases": [], "category": 3, "description": "Commande associée à DJOUSSE GUARD; détail à confirmer dans le registre.", "usage": "", "access": "admin", "accessConfirmed": false },
-    { "name": "journal", "aliases": [], "category": 3, "description": "Consulte le journal des sanctions, entrées/sorties et connexions.", "usage": ".journal [type] [n]", "access": "owner", "accessConfirmed": false },
-    { "name": "diag", "aliases": [], "category": 1, "description": "Affiche l’état du socket, la version WhatsApp, les conflits et la mémoire.", "usage": ".diag", "access": "public", "accessConfirmed": false },
-    { "name": "vv", "aliases": [], "category": 4, "description": "Récupère une vue unique citée (photo, vidéo, vocal, document ou sticker) et la sauvegarde dans downloads/.", "usage": ".vv", "access": "public", "accessConfirmed": false }
-  ]
+    {
+      "name": "claim",
+      "aliases": [
+        "claimsudo"
+      ],
+      "category": 1,
+      "description": "Activer un accès sudo avec un code",
+      "usage": "claim <CODE>",
+      "access": "public"
+    },
+    {
+      "name": "diag",
+      "aliases": [
+        "diagnostic"
+      ],
+      "category": 1,
+      "description": "Diagnostic connexion Baileys",
+      "usage": "diag",
+      "access": "owner"
+    },
+    {
+      "name": "info",
+      "aliases": [],
+      "category": 1,
+      "description": "Informations du bot",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "list",
+      "aliases": [],
+      "category": 1,
+      "description": "Toutes les commandes",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "menu",
+      "aliases": [],
+      "category": 1,
+      "description": "Menu interactif par chiffres",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "owner",
+      "aliases": [],
+      "category": 1,
+      "description": "Contacter le propriétaire",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "ping",
+      "aliases": [],
+      "category": 1,
+      "description": "Latence du bot",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "source",
+      "aliases": [],
+      "category": 1,
+      "description": "Code source du bot",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "uptime",
+      "aliases": [],
+      "category": 1,
+      "description": "Temps de fonctionnement",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "addfilter",
+      "aliases": [
+        "filterword",
+        "blockword"
+      ],
+      "category": 2,
+      "description": "Auto-delete messages containing a word. Usage: .addfilter <word>",
+      "usage": "addfilter",
+      "access": "admin"
+    },
+    {
+      "name": "addmode",
+      "aliases": [],
+      "category": 2,
+      "description": "Qui peut ajouter des membres",
+      "usage": "addmode all|admins",
+      "access": "admin"
+    },
+    {
+      "name": "addnote",
+      "aliases": [
+        "delnote",
+        "delallnotes",
+        "getnote",
+        "getnotes",
+        "notes",
+        "updatenote",
+        "adminnotes",
+        "admindelnote",
+        "adminclearnotes",
+        "adminupdatenote",
+        "allnotes"
+      ],
+      "category": 2,
+      "description": "Personal notes — save, view, update and delete your notes",
+      "usage": "addnote",
+      "access": "public"
+    },
+    {
+      "name": "admin",
+      "aliases": [
+        "unadmin"
+      ],
+      "category": 2,
+      "description": "Promote or demote a group member (reply or mention)",
+      "usage": "admin",
+      "access": "admin"
+    },
+    {
+      "name": "admins",
+      "aliases": [
+        "tagadmins",
+        "mentionadmins",
+        "@admins"
+      ],
+      "category": 2,
+      "description": "Mention all group admins",
+      "usage": "admins",
+      "access": "public"
+    },
+    {
+      "name": "analytics",
+      "aliases": [
+        "activity",
+        "topusers",
+        "peakhours"
+      ],
+      "category": 2,
+      "description": "View group chat analytics — top members, peak hours, activity stats",
+      "usage": "analytics",
+      "access": "public"
+    },
+    {
+      "name": "anon",
+      "aliases": [
+        "anonymous",
+        "anonmsg"
+      ],
+      "category": 2,
+      "description": "Send an anonymous message to this group. Only bot knows who sent it.",
+      "usage": "anon",
+      "access": "public"
+    },
+    {
+      "name": "auditlog",
+      "aliases": [
+        "audit",
+        "adminlog",
+        "actionlog",
+        "grouplog"
+      ],
+      "category": 2,
+      "description": "View admin action audit log — tracks kicks, promotes, demotes, settings changes",
+      "usage": "auditlog",
+      "access": "admin"
+    },
+    {
+      "name": "automute",
+      "aliases": [],
+      "category": 2,
+      "description": "Ferme le groupe automatiquement à une heure",
+      "usage": "automute HH:MM | automute del",
+      "access": "admin"
+    },
+    {
+      "name": "autounmute",
+      "aliases": [],
+      "category": 2,
+      "description": "Ouvre le groupe automatiquement à une heure",
+      "usage": "autounmute HH:MM | autounmute del",
+      "access": "admin"
+    },
+    {
+      "name": "backupgroup",
+      "aliases": [
+        "restoregroup",
+        "listbackups"
+      ],
+      "category": 2,
+      "description": "Backup and restore group settings and configurations",
+      "usage": "backupgroup",
+      "access": "admin"
+    },
+    {
+      "name": "blocknum",
+      "aliases": [
+        "unblocknum"
+      ],
+      "category": 2,
+      "description": "Block or unblock a WhatsApp number at the account level",
+      "usage": "blocknum",
+      "access": "owner"
+    },
+    {
+      "name": "blockuser",
+      "aliases": [],
+      "category": 2,
+      "description": "Block a number",
+      "usage": "blockuser",
+      "access": "owner"
+    },
+    {
+      "name": "broadcast2",
+      "aliases": [
+        "bcastmembers"
+      ],
+      "category": 2,
+      "description": "DM a message to all members of the current group (owner only)",
+      "usage": "broadcast2",
+      "access": "owner"
+    },
+    {
+      "name": "bye2",
+      "aliases": [],
+      "category": 2,
+      "description": "Goodbye in many languages",
+      "usage": "bye2",
+      "access": "public"
+    },
+    {
+      "name": "chatstats",
+      "aliases": [
+        "toptalkers",
+        "whotalks"
+      ],
+      "category": 2,
+      "description": "Show who talks most in this group",
+      "usage": "chatstats",
+      "access": "public"
+    },
+    {
+      "name": "clearfilters",
+      "aliases": [
+        "resetfilters"
+      ],
+      "category": 2,
+      "description": "Remove all word filters from this group",
+      "usage": "clearfilters",
+      "access": "admin"
+    },
+    {
+      "name": "close",
+      "aliases": [],
+      "category": 2,
+      "description": "Fermer le groupe (admins)",
+      "usage": "",
+      "access": "admin"
+    },
+    {
+      "name": "commapprove",
+      "aliases": [],
+      "category": 2,
+      "description": "Approuver une demande d’adhésion",
+      "usage": "commapprove @user|num",
+      "access": "admin"
+    },
+    {
+      "name": "comminfo",
+      "aliases": [],
+      "category": 2,
+      "description": "Métadonnées communauté / groupe",
+      "usage": "comminfo",
+      "access": "public"
+    },
+    {
+      "name": "comminvite",
+      "aliases": [],
+      "category": 2,
+      "description": "Code / lien d’invitation",
+      "usage": "comminvite",
+      "access": "admin"
+    },
+    {
+      "name": "commreject",
+      "aliases": [],
+      "category": 2,
+      "description": "Refuser une demande d’adhésion",
+      "usage": "commreject @user|num",
+      "access": "admin"
+    },
+    {
+      "name": "commrequests",
+      "aliases": [],
+      "category": 2,
+      "description": "Demandes d’adhésion en attente",
+      "usage": "commrequests",
+      "access": "admin"
+    },
+    {
+      "name": "commrevoke",
+      "aliases": [],
+      "category": 2,
+      "description": "Révoquer le lien d’invitation",
+      "usage": "commrevoke",
+      "access": "admin"
+    },
+    {
+      "name": "community",
+      "aliases": [
+        "communaute"
+      ],
+      "category": 2,
+      "description": "Communautés WhatsApp (API native)",
+      "usage": "community create|list|info|link|revoke|leave|join|inviteinfo|subject|desc|announce|lock|joinmode|addmode|ephemeral|requests|approve|reject|add|remove",
+      "access": "admin"
+    },
+    {
+      "name": "dailychallenge",
+      "aliases": [
+        "challenge",
+        "setchallenge",
+        "challengeoff",
+        "challengenow"
+      ],
+      "category": 2,
+      "description": "Auto-post daily trivia, puzzles, or word games in groups",
+      "usage": "dailychallenge",
+      "access": "admin"
+    },
+    {
+      "name": "demote",
+      "aliases": [
+        "removeadmin"
+      ],
+      "category": 2,
+      "description": "Retirer le statut admin",
+      "usage": "demote @user",
+      "access": "admin"
+    },
+    {
+      "name": "disappear",
+      "aliases": [
+        "ephemeral"
+      ],
+      "category": 2,
+      "description": "Messages éphémères du chat",
+      "usage": "disappear off|24h|7d|90d",
+      "access": "admin"
+    },
+    {
+      "name": "dmmembers",
+      "aliases": [
+        "msgall"
+      ],
+      "category": 2,
+      "description": "Send a DM to every member of the current group (owner only)",
+      "usage": "dmmembers",
+      "access": "owner"
+    },
+    {
+      "name": "expense",
+      "aliases": [
+        "addexpense",
+        "expenses",
+        "settle",
+        "clearexpenses",
+        "balances"
+      ],
+      "category": 2,
+      "description": "Group expense tracker and bill splitter (like Splitwise)",
+      "usage": "expense",
+      "access": "public"
+    },
+    {
+      "name": "getjid",
+      "aliases": [
+        "jid",
+        "whois",
+        "userinfo",
+        "jidinfo",
+        "chatinfo"
+      ],
+      "category": 2,
+      "description": "Advanced JID & account intelligence — user, group, business, LID, country, bio and more",
+      "usage": "getjid",
+      "access": "public"
+    },
+    {
+      "name": "ginvite",
+      "aliases": [
+        "invite"
+      ],
+      "category": 2,
+      "description": "Envoyer l'invitation du groupe en message natif",
+      "usage": "ginvite",
+      "access": "public"
+    },
+    {
+      "name": "glog",
+      "aliases": [],
+      "category": 2,
+      "description": "Annoncer les changements du groupe",
+      "usage": "glog on|off | glog off all",
+      "access": "admin"
+    },
+    {
+      "name": "groupbackup",
+      "aliases": [],
+      "category": 2,
+      "description": "Sauvegarde des infos du groupe",
+      "usage": "groupbackup",
+      "access": "public"
+    },
+    {
+      "name": "groupcron",
+      "aliases": [],
+      "category": 2,
+      "description": "Voir les fermetures/ouvertures auto du groupe",
+      "usage": "groupcron",
+      "access": "public"
+    },
+    {
+      "name": "groupinfo",
+      "aliases": [
+        "ginfo"
+      ],
+      "category": 2,
+      "description": "Infos du groupe",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "grouprules",
+      "aliases": [],
+      "category": 2,
+      "description": "Règles du groupe",
+      "usage": "grouprules [définir|règles]",
+      "access": "admin"
+    },
+    {
+      "name": "groupstatus",
+      "aliases": [
+        "grpinfo",
+        "gstatus",
+        "adminlist",
+        "gadmins",
+        "joinlog",
+        "gjoinlog",
+        "groupage",
+        "gage",
+        "exportgroup",
+        "gexport"
+      ],
+      "category": 2,
+      "description": "Detailed group info, admin list, activity stats, join/leave log, age and export",
+      "usage": "groupstatus",
+      "access": "public"
+    },
+    {
+      "name": "gstats",
+      "aliases": [
+        "groupinfo2"
+      ],
+      "category": 2,
+      "description": "Detailed group statistics",
+      "usage": "gstats",
+      "access": "public"
+    },
+    {
+      "name": "hidetag",
+      "aliases": [],
+      "category": 2,
+      "description": "Mention invisible",
+      "usage": "hidetag [message]",
+      "access": "admin"
+    },
+    {
+      "name": "htag",
+      "aliases": [
+        "stag",
+        "silenttag"
+      ],
+      "category": 2,
+      "description": "Silently mention all group members — they get notified but are not visibly tagged",
+      "usage": "htag",
+      "access": "admin"
+    },
+    {
+      "name": "hug",
+      "aliases": [
+        "kiss",
+        "pat",
+        "slap",
+        "poke",
+        "bite",
+        "bonk",
+        "cuddle",
+        "wave",
+        "blush",
+        "smile",
+        "cry",
+        "laugh",
+        "dance",
+        "wink",
+        "shoot",
+        "happy",
+        "baka",
+        "nod"
+      ],
+      "category": 2,
+      "description": "Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot",
+      "usage": "hug",
+      "access": "public"
+    },
+    {
+      "name": "inviteinfo",
+      "aliases": [],
+      "category": 2,
+      "description": "Infos d'un lien d'invitation",
+      "usage": "inviteinfo <lien|code>",
+      "access": "public"
+    },
+    {
+      "name": "invitelink",
+      "aliases": [
+        "groupinvite"
+      ],
+      "category": 2,
+      "description": "Get the group invite link (bot must be admin)",
+      "usage": "invitelink",
+      "access": "admin"
+    },
+    {
+      "name": "joingroup",
+      "aliases": [],
+      "category": 2,
+      "description": "Join a group by link",
+      "usage": "joingroup",
+      "access": "owner"
+    },
+    {
+      "name": "joinmode",
+      "aliases": [],
+      "category": 2,
+      "description": "Entrée des membres sur approbation",
+      "usage": "joinmode on|off",
+      "access": "admin"
+    },
+    {
+      "name": "joinv4",
+      "aliases": [],
+      "category": 2,
+      "description": "Accepter une invitation V4 (répondre à la carte)",
+      "usage": "joinv4 (répondre à une carte d'invitation)",
+      "access": "public"
+    },
+    {
+      "name": "kick",
+      "aliases": [
+        "remove"
+      ],
+      "category": 2,
+      "description": "Expulser un membre",
+      "usage": "kick @user",
+      "access": "admin"
+    },
+    {
+      "name": "leavegroup",
+      "aliases": [
+        "quit"
+      ],
+      "category": 2,
+      "description": "Leave a group",
+      "usage": "leavegroup",
+      "access": "owner"
+    },
+    {
+      "name": "link",
+      "aliases": [
+        "grouplink"
+      ],
+      "category": 2,
+      "description": "Lien d’invitation",
+      "usage": "",
+      "access": "admin"
+    },
+    {
+      "name": "listadmins",
+      "aliases": [],
+      "category": 2,
+      "description": "Liste des admins du groupe",
+      "usage": "listadmins",
+      "access": "public"
+    },
+    {
+      "name": "listblock",
+      "aliases": [],
+      "category": 2,
+      "description": "Show the bot's blocked numbers list — owner only",
+      "usage": "listblock",
+      "access": "owner"
+    },
+    {
+      "name": "listfilters",
+      "aliases": [
+        "filterlist",
+        "wordfilters"
+      ],
+      "category": 2,
+      "description": "List active word filters in this group",
+      "usage": "listfilters",
+      "access": "public"
+    },
+    {
+      "name": "listmembers",
+      "aliases": [
+        "members"
+      ],
+      "category": 2,
+      "description": "Liste des membres (rôles + compteurs)",
+      "usage": "listmembers",
+      "access": "public"
+    },
+    {
+      "name": "lock",
+      "aliases": [],
+      "category": 2,
+      "description": "Verrouiller le groupe (admins)",
+      "usage": "lock",
+      "access": "admin"
+    },
+    {
+      "name": "massbc",
+      "aliases": [],
+      "category": 2,
+      "description": "Broadcast to all groups",
+      "usage": "massbc",
+      "access": "owner"
+    },
+    {
+      "name": "mentionall",
+      "aliases": [
+        "pingall"
+      ],
+      "category": 2,
+      "description": "Mention all members in the group",
+      "usage": "mentionall",
+      "access": "admin"
+    },
+    {
+      "name": "mutelist",
+      "aliases": [],
+      "category": 2,
+      "description": "Mute/unmute specific members (bot removes their messages automatically)",
+      "usage": "mutelist",
+      "access": "admin"
+    },
+    {
+      "name": "muteuser",
+      "aliases": [],
+      "category": 2,
+      "description": "Mute a user in group",
+      "usage": "muteuser",
+      "access": "admin"
+    },
+    {
+      "name": "mygroups",
+      "aliases": [],
+      "category": 2,
+      "description": "Tous les groupes où est le bot",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "newsletter",
+      "aliases": [
+        "followchannel",
+        "unfollowchannel",
+        "channelinfo",
+        "mutechannel",
+        "unmutechannel"
+      ],
+      "category": 2,
+      "description": "Newsletter/channel follow management",
+      "usage": "newsletter",
+      "access": "owner"
+    },
+    {
+      "name": "open",
+      "aliases": [],
+      "category": 2,
+      "description": "Ouvrir le groupe",
+      "usage": "",
+      "access": "admin"
+    },
+    {
+      "name": "pair",
+      "aliases": [
+        "marry",
+        "divorce"
+      ],
+      "category": 2,
+      "description": "Pair/marry two users in a group",
+      "usage": "pair",
+      "access": "public"
+    },
+    {
+      "name": "pin",
+      "aliases": [],
+      "category": 2,
+      "description": "Épingler un message (24h)",
+      "usage": "pin (répondre au message)",
+      "access": "admin"
+    },
+    {
+      "name": "pinmsg",
+      "aliases": [
+        "unpinmsg"
+      ],
+      "category": 2,
+      "description": "Pin or unpin any message in a group (reply to the message)",
+      "usage": "pinmsg",
+      "access": "admin"
+    },
+    {
+      "name": "poll",
+      "aliases": [
+        "sondage"
+      ],
+      "category": 2,
+      "description": "Créer un sondage",
+      "usage": "poll Question | option1 | option2",
+      "access": "public"
+    },
+    {
+      "name": "promote",
+      "aliases": [
+        "makeadmin"
+      ],
+      "category": 2,
+      "description": "Promouvoir admin",
+      "usage": "promote @user",
+      "access": "admin"
+    },
+    {
+      "name": "rank",
+      "aliases": [
+        "xp",
+        "leaderboard",
+        "lb",
+        "levels"
+      ],
+      "category": 2,
+      "description": "XP leveling system — earn XP by chatting, unlock titles",
+      "usage": "rank",
+      "access": "public"
+    },
+    {
+      "name": "removefilter",
+      "aliases": [
+        "unfilter",
+        "unblockword"
+      ],
+      "category": 2,
+      "description": "Remove a word filter",
+      "usage": "removefilter",
+      "access": "admin"
+    },
+    {
+      "name": "reportuser",
+      "aliases": [],
+      "category": 2,
+      "description": "Report a user to admins",
+      "usage": "reportuser",
+      "access": "public"
+    },
+    {
+      "name": "resetlink",
+      "aliases": [
+        "newlink"
+      ],
+      "category": 2,
+      "description": "Revoke and reset the group invite link",
+      "usage": "resetlink",
+      "access": "admin"
+    },
+    {
+      "name": "revoke",
+      "aliases": [
+        "revokelink"
+      ],
+      "category": 2,
+      "description": "Révoquer le lien",
+      "usage": "",
+      "access": "admin"
+    },
+    {
+      "name": "revokev4",
+      "aliases": [],
+      "category": 2,
+      "description": "Retirer l'invitation V4 d'un membre",
+      "usage": "revokev4 @user",
+      "access": "admin"
+    },
+    {
+      "name": "rules",
+      "aliases": [
+        "setrules",
+        "delrules"
+      ],
+      "category": 2,
+      "description": "Set/show/delete group rules",
+      "usage": "rules",
+      "access": "admin"
+    },
+    {
+      "name": "setdesc",
+      "aliases": [
+        "setdescription"
+      ],
+      "category": 2,
+      "description": "Changer la description",
+      "usage": "setdesc <texte>",
+      "access": "admin"
+    },
+    {
+      "name": "setname",
+      "aliases": [],
+      "category": 2,
+      "description": "Changer le nom du groupe",
+      "usage": "setname <nom>",
+      "access": "admin"
+    },
+    {
+      "name": "setwelcome",
+      "aliases": [
+        "setgoodbye",
+        "welcomeoff",
+        "goodbyeoff"
+      ],
+      "category": 2,
+      "description": "Auto-welcome new members and farewell members who leave",
+      "usage": "setwelcome",
+      "access": "admin"
+    },
+    {
+      "name": "subbot",
+      "aliases": [
+        "subbots",
+        "mybotinfo",
+        "kicksubbot",
+        "restartsubbot"
+      ],
+      "category": 2,
+      "description": "Manage active sub-bot instances (lent bot sessions)",
+      "usage": "subbot",
+      "access": "owner"
+    },
+    {
+      "name": "tagadmin",
+      "aliases": [],
+      "category": 2,
+      "description": "Mentionner tous les admins du groupe",
+      "usage": "tagadmin [message]",
+      "access": "public"
+    },
+    {
+      "name": "tagall",
+      "aliases": [
+        "all"
+      ],
+      "category": 2,
+      "description": "Mentionner tout le groupe",
+      "usage": "tagall [message]",
+      "access": "admin"
+    },
+    {
+      "name": "terminategc",
+      "aliases": [],
+      "category": 2,
+      "description": "Kick all members from the group and leave — permanently terminates the group.",
+      "usage": "terminategc",
+      "access": "owner"
+    },
+    {
+      "name": "time",
+      "aliases": [
+        "clock"
+      ],
+      "category": 2,
+      "description": "Get the current time in any city or timezone",
+      "usage": "time",
+      "access": "public"
+    },
+    {
+      "name": "togglestatus",
+      "aliases": [
+        "swgc"
+      ],
+      "category": 2,
+      "description": "Send text / image / video / audio as group status",
+      "usage": "togstatus",
+      "access": "public"
+    },
+    {
+      "name": "togstatus",
+      "aliases": [
+        "swgc"
+      ],
+      "category": 2,
+      "description": "Send text / image / video / audio as group status",
+      "usage": "togstatus",
+      "access": "public"
+    },
+    {
+      "name": "tz",
+      "aliases": [
+        "worldclock"
+      ],
+      "category": 2,
+      "description": "World clock",
+      "usage": "tz",
+      "access": "public"
+    },
+    {
+      "name": "unblockuser",
+      "aliases": [],
+      "category": 2,
+      "description": "Unblock a number",
+      "usage": "unblockuser",
+      "access": "owner"
+    },
+    {
+      "name": "unlock",
+      "aliases": [],
+      "category": 2,
+      "description": "Déverrouiller le groupe",
+      "usage": "unlock",
+      "access": "admin"
+    },
+    {
+      "name": "unmuteuser",
+      "aliases": [],
+      "category": 2,
+      "description": "Unmute a user in group",
+      "usage": "unmuteuser",
+      "access": "admin"
+    },
+    {
+      "name": "unpin",
+      "aliases": [],
+      "category": 2,
+      "description": "Désépingler un message",
+      "usage": "unpin (répondre au message)",
+      "access": "admin"
+    },
+    {
+      "name": "vcfgen",
+      "aliases": [
+        "savecontacts",
+        "exportvcf",
+        "contactsave",
+        "vcfgroup",
+        "vcfnumber",
+        "vcfread",
+        "readvcf",
+        "vcfview"
+      ],
+      "category": 2,
+      "description": "Generate VCF contact files with names from WhatsApp and Truecaller",
+      "usage": "vcfgen",
+      "access": "public"
+    },
+    {
+      "name": "warnreset",
+      "aliases": [
+        "warnlist"
+      ],
+      "category": 2,
+      "description": "Warn group members. Auto-kick after 3 warnings.",
+      "usage": "warnreset",
+      "access": "admin"
+    },
+    {
+      "name": "welcomequiz",
+      "aliases": [
+        "setquiz",
+        "quizoff",
+        "quizsettings"
+      ],
+      "category": 2,
+      "description": "Welcome quiz — new members must answer a question to stay",
+      "usage": "welcomequiz",
+      "access": "admin"
+    },
+    {
+      "name": "acceptall",
+      "aliases": [
+        "reject",
+        "rejectall",
+        "listrequests",
+        "add",
+        "everyone",
+        "gcdesc",
+        "gcpp",
+        "getgcpp",
+        "getlid",
+        "groupname",
+        "groupsettings",
+        "killgc",
+        "newgroup",
+        "online",
+        "resetgroup",
+        "setantilink",
+        "vcf",
+        "antigroupmention",
+        "antipromote",
+        "setantibad",
+        "setantigcmentionwarnlimit",
+        "setgroupevents",
+        "welcomemessage",
+        "goodbyemessage",
+        "disapp",
+        "left",
+        "antibadwarn",
+        "antilinkwarn",
+        "menus"
+      ],
+      "category": 3,
+      "description": "Extended group management commands",
+      "usage": "acceptall",
+      "access": "admin"
+    },
+    {
+      "name": "addbad",
+      "aliases": [],
+      "category": 3,
+      "description": "Ajouter un mot interdit",
+      "usage": "addbad <mot>",
+      "access": "admin"
+    },
+    {
+      "name": "addword",
+      "aliases": [
+        "addban",
+        "banword"
+      ],
+      "category": 3,
+      "description": "Add a custom word to the bad-words filter for this group",
+      "usage": "addword",
+      "access": "admin"
+    },
+    {
+      "name": "allowcodes",
+      "aliases": [],
+      "category": 3,
+      "description": "Indicatifs pays autorisés",
+      "usage": "allowcodes 237 33",
+      "access": "admin"
+    },
+    {
+      "name": "antibad",
+      "aliases": [],
+      "category": 3,
+      "description": "Filtrer les gros mots",
+      "usage": "antibad on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antibadword",
+      "aliases": [
+        "badword"
+      ],
+      "category": 3,
+      "description": "Toggle anti-bad words",
+      "usage": "antibadword",
+      "access": "admin"
+    },
+    {
+      "name": "antibadwords",
+      "aliases": [
+        "antiswear",
+        "noswear"
+      ],
+      "category": 3,
+      "description": "Toggle anti-bad-words filter in a group — auto-deletes profanity",
+      "usage": "antibadwords",
+      "access": "admin"
+    },
+    {
+      "name": "antibot",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-bot : vire/avertit les bots qui entrent",
+      "usage": "antibot on|off|action/remove|warn|delete",
+      "access": "admin"
+    },
+    {
+      "name": "anticontact",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Contact on/off",
+      "usage": "anticontact on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antidel",
+      "aliases": [],
+      "category": 3,
+      "description": "Toggle anti-delete — recovers deleted and edited messages and forwards them to you",
+      "usage": "antidel",
+      "access": "owner"
+    },
+    {
+      "name": "antidelete",
+      "aliases": [],
+      "category": 3,
+      "description": "Renvoyer les messages supprimés",
+      "usage": "antidelete on|off | antidelete off all",
+      "access": "admin"
+    },
+    {
+      "name": "antidemote",
+      "aliases": [],
+      "category": 3,
+      "description": "Kick anyone who demotes a group admin (requires bot to be admin)",
+      "usage": "antidemote",
+      "access": "admin"
+    },
+    {
+      "name": "antifake",
+      "aliases": [],
+      "category": 3,
+      "description": "Expulser les indicatifs non autorisés",
+      "usage": "antifake on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antiflood",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Flood on/off",
+      "usage": "antiflood on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antiforward",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Forward on/off",
+      "usage": "antiforward on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antigm",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti group mention — prevent @everyone mass-mention spam in groups. Actions: delete | warn | kick",
+      "usage": "antigm",
+      "access": "admin"
+    },
+    {
+      "name": "antilink",
+      "aliases": [],
+      "category": 3,
+      "description": "Supprimer les liens",
+      "usage": "antilink on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antilink2",
+      "aliases": [
+        "toggleantilink"
+      ],
+      "category": 3,
+      "description": "Toggle anti-link per group",
+      "usage": "antilink2",
+      "access": "admin"
+    },
+    {
+      "name": "antimedia",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Media on/off",
+      "usage": "antimedia on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antipoll",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Sondage on/off",
+      "usage": "antipoll on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antiscam",
+      "aliases": [
+        "scamcheck",
+        "checkscam"
+      ],
+      "category": 3,
+      "description": "Auto-detect and act on scam/fraud messages in groups",
+      "usage": "antiscam",
+      "access": "admin"
+    },
+    {
+      "name": "antispam",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Spam on/off",
+      "usage": "antispam on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antistatus",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Status-Mention on/off",
+      "usage": "antistatus on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antisticker",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Sticker on/off",
+      "usage": "antisticker on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antitag",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Tag on/off",
+      "usage": "antitag on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antivirtex",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Virtex on/off",
+      "usage": "antivirtex on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antivoice",
+      "aliases": [],
+      "category": 3,
+      "description": "Anti-Voice on/off",
+      "usage": "antivoice on|off",
+      "access": "admin"
+    },
+    {
+      "name": "antivv",
+      "aliases": [
+        "avv"
+      ],
+      "category": 3,
+      "description": "Toggle automatic view-once reveal on/off",
+      "usage": "antivv",
+      "access": "owner"
+    },
+    {
+      "name": "autojoin",
+      "aliases": [],
+      "category": 3,
+      "description": "Manually trigger group auto-join (owner only)",
+      "usage": "autojoin",
+      "access": "owner"
+    },
+    {
+      "name": "badwordslist",
+      "aliases": [
+        "badwords",
+        "bannedwords"
+      ],
+      "category": 3,
+      "description": "Show all banned words in this group",
+      "usage": "badwordslist",
+      "access": "admin"
+    },
+    {
+      "name": "blacklist",
+      "aliases": [],
+      "category": 3,
+      "description": "Ajouter au blacklist (mute total)",
+      "usage": "blacklist @user",
+      "access": "owner"
+    },
+    {
+      "name": "delbad",
+      "aliases": [],
+      "category": 3,
+      "description": "Retirer un mot interdit",
+      "usage": "delbad <mot>",
+      "access": "admin"
+    },
+    {
+      "name": "flood",
+      "aliases": [],
+      "category": 3,
+      "description": "Toggle anti-flood",
+      "usage": "flood",
+      "access": "admin"
+    },
+    {
+      "name": "floodoff",
+      "aliases": [
+        "floodon",
+        "floodlimit"
+      ],
+      "category": 3,
+      "description": "Auto-kick members who spam messages too fast",
+      "usage": "floodoff",
+      "access": "admin"
+    },
+    {
+      "name": "floodset",
+      "aliases": [],
+      "category": 3,
+      "description": "Réglage anti-flood",
+      "usage": "floodset <msgs> <sec>",
+      "access": "admin"
+    },
+    {
+      "name": "forward",
+      "aliases": [
+        "pp",
+        "fullpp",
+        "setmode",
+        "setsudo",
+        "delsudo",
+        "getsudo",
+        "resetsudo",
+        "setownername",
+        "setownernumber",
+        "cmd",
+        "cachedmeta",
+        "tostatus",
+        "vv2",
+        "update",
+        "return",
+        "setpmpermit",
+        "setpackname",
+        "setpackauthor",
+        "setbotpic",
+        "setbotrepo",
+        "setcaption",
+        "setchatbot",
+        "setchatbotmode",
+        "setdmpresence",
+        "setfooter",
+        "setgcjid",
+        "setgcpresence",
+        "setnewsletterjid",
+        "setnewsletterurl",
+        "setstartmsg",
+        "setstatusemojis",
+        "setstatusreplytext",
+        "settimezone",
+        "setytlink",
+        "setautolikestatus",
+        "setautoreact",
+        "setautoread",
+        "setautoreadstatus",
+        "setautoreplystatus",
+        "setautoblock",
+        "setautobio",
+        "setanticall",
+        "setantidelete",
+        "setantiedit",
+        "getsetting",
+        "setsetting",
+        "resetsetting",
+        "resetallsettings",
+        "resetdb"
+      ],
+      "category": 3,
+      "description": "Extended owner/admin control commands",
+      "usage": "forward",
+      "access": "owner"
+    },
+    {
+      "name": "goodbye",
+      "aliases": [],
+      "category": 3,
+      "description": "Message de départ",
+      "usage": "goodbye on|off | goodbye off all",
+      "access": "admin"
+    },
+    {
+      "name": "groupstats",
+      "aliases": [],
+      "category": 3,
+      "description": "Statistiques de protection",
+      "usage": "groupstats",
+      "access": "admin"
+    },
+    {
+      "name": "linkallow",
+      "aliases": [],
+      "category": 3,
+      "description": "Domaines de liens autorisés",
+      "usage": "linkallow add|del|list <domaine>",
+      "access": "admin"
+    },
+    {
+      "name": "maxtext",
+      "aliases": [],
+      "category": 3,
+      "description": "Taille max des messages (anti-virtex)",
+      "usage": "maxtext <500-20000>",
+      "access": "admin"
+    },
+    {
+      "name": "mute",
+      "aliases": [],
+      "category": 3,
+      "description": "Rendre muet un membre",
+      "usage": "mute @user 30m",
+      "access": "admin"
+    },
+    {
+      "name": "muteminutes",
+      "aliases": [],
+      "category": 3,
+      "description": "Durée de mute (min)",
+      "usage": "muteminutes <min>",
+      "access": "admin"
+    },
+    {
+      "name": "nightmode",
+      "aliases": [
+        "modenuit"
+      ],
+      "category": 3,
+      "description": "Fermer le groupe la nuit",
+      "usage": "nightmode on|off",
+      "access": "admin"
+    },
+    {
+      "name": "nightset",
+      "aliases": [],
+      "category": 3,
+      "description": "Horaires du mode nuit",
+      "usage": "nightset 22:00 06:00",
+      "access": "admin"
+    },
+    {
+      "name": "onwarnlimit",
+      "aliases": [],
+      "category": 3,
+      "description": "Action au seuil de warns",
+      "usage": "onwarnlimit kick|mute",
+      "access": "admin"
+    },
+    {
+      "name": "removeword",
+      "aliases": [
+        "unbanword",
+        "delword"
+      ],
+      "category": 3,
+      "description": "Remove a word from the bad-words filter",
+      "usage": "removeword",
+      "access": "admin"
+    },
+    {
+      "name": "sanction",
+      "aliases": [],
+      "category": 3,
+      "description": "Sanction sur infraction",
+      "usage": "sanction delete|warn|kick",
+      "access": "admin"
+    },
+    {
+      "name": "security",
+      "aliases": [],
+      "category": 3,
+      "description": "Toutes les protections on/off",
+      "usage": "security on|off",
+      "access": "admin"
+    },
+    {
+      "name": "settings",
+      "aliases": [
+        "config"
+      ],
+      "category": 3,
+      "description": "Configuration du groupe",
+      "usage": "settings",
+      "access": "admin"
+    },
+    {
+      "name": "spam",
+      "aliases": [],
+      "category": 3,
+      "description": "Toggle anti-spam",
+      "usage": "spam",
+      "access": "admin"
+    },
+    {
+      "name": "tagmax",
+      "aliases": [],
+      "category": 3,
+      "description": "Mentions max par message",
+      "usage": "tagmax <n>",
+      "access": "admin"
+    },
+    {
+      "name": "unblacklist",
+      "aliases": [],
+      "category": 3,
+      "description": "Retirer du blacklist",
+      "usage": "unblacklist @user",
+      "access": "owner"
+    },
+    {
+      "name": "unmute",
+      "aliases": [],
+      "category": 3,
+      "description": "Rétablir un membre",
+      "usage": "unmute @user",
+      "access": "admin"
+    },
+    {
+      "name": "unwarn",
+      "aliases": [
+        "resetwarn"
+      ],
+      "category": 3,
+      "description": "Retirer les avertissements",
+      "usage": "unwarn @user",
+      "access": "admin"
+    },
+    {
+      "name": "warn",
+      "aliases": [],
+      "category": 3,
+      "description": "Avertir un membre",
+      "usage": "warn @user [raison]",
+      "access": "admin"
+    },
+    {
+      "name": "warnings",
+      "aliases": [],
+      "category": 3,
+      "description": "Voir les avertissements",
+      "usage": "warnings @user",
+      "access": "admin"
+    },
+    {
+      "name": "warnlimit",
+      "aliases": [],
+      "category": 3,
+      "description": "Limite d'avertissements",
+      "usage": "warnlimit <1-20>",
+      "access": "admin"
+    },
+    {
+      "name": "welcome",
+      "aliases": [],
+      "category": 3,
+      "description": "Message de bienvenue",
+      "usage": "welcome on|off | welcome off all",
+      "access": "admin"
+    },
+    {
+      "name": "__advanced_onmessage__",
+      "aliases": [],
+      "category": 4,
+      "description": "Internal onMessage hook for word filter and slowmode",
+      "usage": "__advanced_onmessage__",
+      "access": "public"
+    },
+    {
+      "name": "aboutme",
+      "aliases": [
+        "myprofile"
+      ],
+      "category": 4,
+      "description": "Create an about me",
+      "usage": "aboutme",
+      "access": "public"
+    },
+    {
+      "name": "abs",
+      "aliases": [
+        "absolute"
+      ],
+      "category": 4,
+      "description": "Absolute value",
+      "usage": "abs",
+      "access": "public"
+    },
+    {
+      "name": "acronym",
+      "aliases": [
+        "abbrev"
+      ],
+      "category": 4,
+      "description": "Common acronyms",
+      "usage": "acronym",
+      "access": "public"
+    },
+    {
+      "name": "advancedglow",
+      "aliases": [
+        "americanflag",
+        "blackpinklogo",
+        "blackpinkstyle",
+        "cartoonstyle",
+        "deletingtext",
+        "effectclouds",
+        "galaxy",
+        "galaxystyle",
+        "glitchtext",
+        "glossysilver",
+        "glowingtext",
+        "gradienttext",
+        "lighteffect",
+        "logo1917",
+        "logomaker",
+        "luxurygold",
+        "makingneon",
+        "neonglitch",
+        "nigerianflag",
+        "papercut",
+        "pixelglitch",
+        "sandsummer",
+        "summerbeach",
+        "texteffect",
+        "typographytext",
+        "underwater",
+        "writetext"
+      ],
+      "category": 4,
+      "description": "Logo maker and text effect generator",
+      "usage": "advancedglow",
+      "access": "public"
+    },
+    {
+      "name": "advice",
+      "aliases": [
+        "tip"
+      ],
+      "category": 4,
+      "description": "Get a random piece of advice",
+      "usage": "advice",
+      "access": "public"
+    },
+    {
+      "name": "aesthetic",
+      "aliases": [
+        "vaporwave"
+      ],
+      "category": 4,
+      "description": "Aesthetic/vaporwave text",
+      "usage": "aesthetic",
+      "access": "public"
+    },
+    {
+      "name": "affirmation",
+      "aliases": [
+        "affirm"
+      ],
+      "category": 4,
+      "description": "Daily affirmation",
+      "usage": "affirmation",
+      "access": "public"
+    },
+    {
+      "name": "afkcheck",
+      "aliases": [
+        "whoafk"
+      ],
+      "category": 4,
+      "description": "Check who is AFK",
+      "usage": "afkcheck",
+      "access": "public"
+    },
+    {
+      "name": "age",
+      "aliases": [
+        "agecalc"
+      ],
+      "category": 4,
+      "description": "Calculate age",
+      "usage": "age",
+      "access": "public"
+    },
+    {
+      "name": "album",
+      "aliases": [],
+      "category": 4,
+      "description": "Envoyer un album (répondre à plusieurs images ou une image)",
+      "usage": "album (répondre image) | envoie plusieurs images puis .album",
+      "access": "public"
+    },
+    {
+      "name": "albumadd",
+      "aliases": [],
+      "category": 4,
+      "description": "Ajouter une image au buffer album",
+      "usage": "albumadd (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "albumclear",
+      "aliases": [],
+      "category": 4,
+      "description": "Vider le buffer album",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "albumsend",
+      "aliases": [],
+      "category": 4,
+      "description": "Envoyer le buffer comme album",
+      "usage": "albumsend [légende]",
+      "access": "public"
+    },
+    {
+      "name": "alive",
+      "aliases": [
+        "bot",
+        "botinfo"
+      ],
+      "category": 4,
+      "description": "Show bot status with full theme styling",
+      "usage": "alive",
+      "access": "public"
+    },
+    {
+      "name": "anagram",
+      "aliases": [
+        "isanagram"
+      ],
+      "category": 4,
+      "description": "Check if anagram",
+      "usage": "anagram",
+      "access": "public"
+    },
+    {
+      "name": "animalfact",
+      "aliases": [
+        "animalf"
+      ],
+      "category": 4,
+      "description": "Random animal fact",
+      "usage": "animalfact",
+      "access": "public"
+    },
+    {
+      "name": "anime",
+      "aliases": [
+        "animesearch",
+        "manga"
+      ],
+      "category": 4,
+      "description": "Search for anime or manga info from MyAnimeList",
+      "usage": "anime",
+      "access": "public"
+    },
+    {
+      "name": "ans",
+      "aliases": [],
+      "category": 4,
+      "description": "Answer trivia",
+      "usage": "ans",
+      "access": "public"
+    },
+    {
+      "name": "antiban",
+      "aliases": [
+        "safemode",
+        "antibansettings"
+      ],
+      "category": 4,
+      "description": "Anti-ban safety settings",
+      "usage": "antiban",
+      "access": "owner"
+    },
+    {
+      "name": "antonym",
+      "aliases": [
+        "ant",
+        "opposite"
+      ],
+      "category": 4,
+      "description": "Find antonyms",
+      "usage": "antonym",
+      "access": "public"
+    },
+    {
+      "name": "apk",
+      "aliases": [
+        "apkdl",
+        "getapk"
+      ],
+      "category": 4,
+      "description": "Search and download an APK from Aptoide",
+      "usage": "apk",
+      "access": "public"
+    },
+    {
+      "name": "ascii2",
+      "aliases": [
+        "charcode"
+      ],
+      "category": 4,
+      "description": "ASCII character codes",
+      "usage": "ascii2",
+      "access": "public"
+    },
+    {
+      "name": "ascii3",
+      "aliases": [
+        "textart2",
+        "arttext"
+      ],
+      "category": 4,
+      "description": "Text art patterns",
+      "usage": "ascii3",
+      "access": "public"
+    },
+    {
+      "name": "audiofx",
+      "aliases": [],
+      "category": 4,
+      "description": "Voir tous les effets audio disponibles",
+      "usage": "audiofx",
+      "access": "public"
+    },
+    {
+      "name": "autonce",
+      "aliases": [
+        "autoonce"
+      ],
+      "category": 4,
+      "description": "Sauvegarde auto des vue uniques",
+      "usage": "autonce on|off",
+      "access": "public"
+    },
+    {
+      "name": "autoread",
+      "aliases": [
+        "autoreadpm",
+        "readall"
+      ],
+      "category": 4,
+      "description": "Toggle auto-read for private messages",
+      "usage": "autoread",
+      "access": "owner"
+    },
+    {
+      "name": "average",
+      "aliases": [
+        "avg",
+        "mean"
+      ],
+      "category": 4,
+      "description": "Calculate average",
+      "usage": "average",
+      "access": "public"
+    },
+    {
+      "name": "awaymsg",
+      "aliases": [
+        "setaway",
+        "awayoff"
+      ],
+      "category": 4,
+      "description": "Set scheduled auto-reply messages (e.g., away from 10pm-8am)",
+      "usage": "awaymsg",
+      "access": "public"
+    },
+    {
+      "name": "b64",
+      "aliases": [],
+      "category": 4,
+      "description": "Encode or decode Base64 text",
+      "usage": "b64",
+      "access": "public"
+    },
+    {
+      "name": "back",
+      "aliases": [],
+      "category": 4,
+      "description": "Owner AFK mode — bot auto-replies to everyone while you are away",
+      "usage": "back",
+      "access": "owner"
+    },
+    {
+      "name": "backwards",
+      "aliases": [
+        "reversewords"
+      ],
+      "category": 4,
+      "description": "Reverse word order",
+      "usage": "backwards",
+      "access": "public"
+    },
+    {
+      "name": "ban",
+      "aliases": [
+        "unban",
+        "banlist"
+      ],
+      "category": 4,
+      "description": "Permanently ban / unban users from using bot commands (persisted across restarts)",
+      "usage": "ban",
+      "access": "admin"
+    },
+    {
+      "name": "banner",
+      "aliases": [
+        "textbanner"
+      ],
+      "category": 4,
+      "description": "Create text banner",
+      "usage": "banner",
+      "access": "public"
+    },
+    {
+      "name": "bard",
+      "aliases": [],
+      "category": 4,
+      "description": "Ask Gemini AI a question",
+      "usage": "bard",
+      "access": "public"
+    },
+    {
+      "name": "bass",
+      "aliases": [],
+      "category": 4,
+      "description": "Basses amplifiées — audio",
+      "usage": "bass (répondre à un audio)",
+      "access": "public"
+    },
+    {
+      "name": "bgm",
+      "aliases": [
+        "addmusic",
+        "videomusic",
+        "musicvideo",
+        "addbgm"
+      ],
+      "category": 4,
+      "description": "Add background music to a video. Reply to a video with audio (or vice versa).",
+      "usage": "bgm",
+      "access": "public"
+    },
+    {
+      "name": "bible",
+      "aliases": [
+        "verse",
+        "scripture"
+      ],
+      "category": 4,
+      "description": "Look up a Bible verse or get a random daily verse",
+      "usage": "bible",
+      "access": "public"
+    },
+    {
+      "name": "bin",
+      "aliases": [],
+      "category": 4,
+      "description": "Convert to binary",
+      "usage": "bin",
+      "access": "public"
+    },
+    {
+      "name": "bio",
+      "aliases": [
+        "updatebio"
+      ],
+      "category": 4,
+      "description": "Update bot bio/status",
+      "usage": "bio",
+      "access": "owner"
+    },
+    {
+      "name": "bio2",
+      "aliases": [
+        "bioideas"
+      ],
+      "category": 4,
+      "description": "Random bio ideas",
+      "usage": "bio2",
+      "access": "public"
+    },
+    {
+      "name": "bitcoin",
+      "aliases": [
+        "btc"
+      ],
+      "category": 4,
+      "description": "Crypto info",
+      "usage": "bitcoin",
+      "access": "public"
+    },
+    {
+      "name": "blur",
+      "aliases": [],
+      "category": 4,
+      "description": "Filtre image : blur",
+      "usage": "blur (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "bmi",
+      "aliases": [
+        "bodymass"
+      ],
+      "category": 4,
+      "description": "Calculate BMI",
+      "usage": "bmi",
+      "access": "public"
+    },
+    {
+      "name": "bodyfact",
+      "aliases": [
+        "bodyf",
+        "humanfact"
+      ],
+      "category": 4,
+      "description": "Random human body fact",
+      "usage": "bodyfact",
+      "access": "public"
+    },
+    {
+      "name": "bodyfat",
+      "aliases": [
+        "bfp"
+      ],
+      "category": 4,
+      "description": "Body fat percentage estimate",
+      "usage": "bodyfat",
+      "access": "public"
+    },
+    {
+      "name": "bold",
+      "aliases": [
+        "b"
+      ],
+      "category": 4,
+      "description": "Make text bold",
+      "usage": "bold",
+      "access": "public"
+    },
+    {
+      "name": "border",
+      "aliases": [
+        "textborder",
+        "box"
+      ],
+      "category": 4,
+      "description": "Put text in a box",
+      "usage": "border",
+      "access": "public"
+    },
+    {
+      "name": "botsettings",
+      "aliases": [
+        "config2"
+      ],
+      "category": 4,
+      "description": "View bot settings",
+      "usage": "botsettings",
+      "access": "owner"
+    },
+    {
+      "name": "brain",
+      "aliases": [
+        "brainsize",
+        "expanding"
+      ],
+      "category": 4,
+      "description": "Expanding brain meme",
+      "usage": "brain",
+      "access": "public"
+    },
+    {
+      "name": "bubble",
+      "aliases": [
+        "circled"
+      ],
+      "category": 4,
+      "description": "Bubble text",
+      "usage": "bubble",
+      "access": "public"
+    },
+    {
+      "name": "budget",
+      "aliases": [
+        "money"
+      ],
+      "category": 4,
+      "description": "Simple budget tracker",
+      "usage": "budget",
+      "access": "public"
+    },
+    {
+      "name": "caesar",
+      "aliases": [],
+      "category": 4,
+      "description": "ROT13 cipher",
+      "usage": "caesar",
+      "access": "public"
+    },
+    {
+      "name": "calculate",
+      "aliases": [
+        "math"
+      ],
+      "category": 4,
+      "description": "Evaluate a math expression",
+      "usage": "calculate",
+      "access": "public"
+    },
+    {
+      "name": "calendar",
+      "aliases": [
+        "cal"
+      ],
+      "category": 4,
+      "description": "Show calendar",
+      "usage": "calendar",
+      "access": "public"
+    },
+    {
+      "name": "calories",
+      "aliases": [
+        "calorie",
+        "food"
+      ],
+      "category": 4,
+      "description": "Food calorie lookup",
+      "usage": "calories",
+      "access": "public"
+    },
+    {
+      "name": "camel",
+      "aliases": [
+        "camelcase"
+      ],
+      "category": 4,
+      "description": "Convert to camelCase",
+      "usage": "camel",
+      "access": "public"
+    },
+    {
+      "name": "capcut",
+      "aliases": [
+        "capcutdl"
+      ],
+      "category": 4,
+      "description": "Download CapCut videos without watermark",
+      "usage": "capcut",
+      "access": "public"
+    },
+    {
+      "name": "capitalanswer",
+      "aliases": [
+        "ca"
+      ],
+      "category": 4,
+      "description": "Answer capital quiz",
+      "usage": "capitalanswer",
+      "access": "public"
+    },
+    {
+      "name": "capitalquiz",
+      "aliases": [
+        "cq",
+        "guesscapital"
+      ],
+      "category": 4,
+      "description": "Guess the capital city",
+      "usage": "capitalquiz",
+      "access": "public"
+    },
+    {
+      "name": "caption",
+      "aliases": [
+        "what",
+        "imgcaption",
+        "seethis",
+        "analyze"
+      ],
+      "category": 4,
+      "description": "AI describes/analyzes an image — reply to any photo and ask what it is",
+      "usage": "caption",
+      "access": "public"
+    },
+    {
+      "name": "car",
+      "aliases": [
+        "carinfo",
+        "vehicle"
+      ],
+      "category": 4,
+      "description": "Car brand info",
+      "usage": "car",
+      "access": "public"
+    },
+    {
+      "name": "carbon",
+      "aliases": [
+        "codeimg",
+        "code2img"
+      ],
+      "category": 4,
+      "description": "Convert code to a beautiful image via Carbon",
+      "usage": "carbon",
+      "access": "public"
+    },
+    {
+      "name": "catbreed",
+      "aliases": [
+        "catinfo"
+      ],
+      "category": 4,
+      "description": "Cat breed info",
+      "usage": "catbreed",
+      "access": "public"
+    },
+    {
+      "name": "celsius",
+      "aliases": [
+        "tocelsius",
+        "ftoc"
+      ],
+      "category": 4,
+      "description": "Fahrenheit to Celsius",
+      "usage": "celsius",
+      "access": "public"
+    },
+    {
+      "name": "chatai",
+      "aliases": [],
+      "category": 4,
+      "description": "Ask DJOUSSE-TECH-MD Chat AI a question",
+      "usage": "chatai",
+      "access": "public"
+    },
+    {
+      "name": "chatat",
+      "aliases": [
+        "chat"
+      ],
+      "category": 4,
+      "description": "Ask ch.at AI a question",
+      "usage": "chatat",
+      "access": "public"
+    },
+    {
+      "name": "chmod",
+      "aliases": [
+        "permissions"
+      ],
+      "category": 4,
+      "description": "Unix permissions calculator",
+      "usage": "chmod",
+      "access": "public"
+    },
+    {
+      "name": "circle",
+      "aliases": [],
+      "category": 4,
+      "description": "Filtre image : circle",
+      "usage": "circle (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "clap",
+      "aliases": [
+        "clapback"
+      ],
+      "category": 4,
+      "description": "Add clap emoji between words",
+      "usage": "clap",
+      "access": "public"
+    },
+    {
+      "name": "clearcache",
+      "aliases": [
+        "cleartmp",
+        "cleanup"
+      ],
+      "category": 4,
+      "description": "Clear temporary files",
+      "usage": "clearcache",
+      "access": "owner"
+    },
+    {
+      "name": "clearigsession",
+      "aliases": [
+        "rmigsession"
+      ],
+      "category": 4,
+      "description": "Remove saved Instagram session cookie (owner only)",
+      "usage": "clearigsession",
+      "access": "owner"
+    },
+    {
+      "name": "clearwarn",
+      "aliases": [],
+      "category": 4,
+      "description": "Reset warnings",
+      "usage": "clearwarn",
+      "access": "admin"
+    },
+    {
+      "name": "climate",
+      "aliases": [
+        "mosam"
+      ],
+      "category": 4,
+      "description": "Get current weather for a location",
+      "usage": "climate",
+      "access": "public"
+    },
+    {
+      "name": "color2",
+      "aliases": [],
+      "category": 4,
+      "description": "Color information",
+      "usage": "color2",
+      "access": "public"
+    },
+    {
+      "name": "colorinfo",
+      "aliases": [
+        "hex"
+      ],
+      "category": 4,
+      "description": "Get color information from a HEX code",
+      "usage": "colorinfo",
+      "access": "public"
+    },
+    {
+      "name": "compliment",
+      "aliases": [
+        "comp",
+        "praise"
+      ],
+      "category": 4,
+      "description": "Send a random compliment",
+      "usage": "compliment",
+      "access": "public"
+    },
+    {
+      "name": "compound",
+      "aliases": [
+        "interest"
+      ],
+      "category": 4,
+      "description": "Compound interest",
+      "usage": "compound",
+      "access": "public"
+    },
+    {
+      "name": "confess",
+      "aliases": [
+        "confession"
+      ],
+      "category": 4,
+      "description": "Anonymous confession",
+      "usage": "confess",
+      "access": "public"
+    },
+    {
+      "name": "copypasta",
+      "aliases": [
+        "pasta"
+      ],
+      "category": 4,
+      "description": "Random copypasta",
+      "usage": "copypasta",
+      "access": "public"
+    },
+    {
+      "name": "count",
+      "aliases": [
+        "charcount"
+      ],
+      "category": 4,
+      "description": "Count characters/words",
+      "usage": "count",
+      "access": "public"
+    },
+    {
+      "name": "countdown2",
+      "aliases": [
+        "daysto"
+      ],
+      "category": 4,
+      "description": "Days until date",
+      "usage": "countdown2",
+      "access": "public"
+    },
+    {
+      "name": "countdown3",
+      "aliases": [
+        "eventcountdown"
+      ],
+      "category": 4,
+      "description": "Event countdown",
+      "usage": "countdown3",
+      "access": "public"
+    },
+    {
+      "name": "country",
+      "aliases": [
+        "countryinfo"
+      ],
+      "category": 4,
+      "description": "Get detailed information about any country",
+      "usage": "country",
+      "access": "public"
+    },
+    {
+      "name": "countryfact",
+      "aliases": [
+        "countryf"
+      ],
+      "category": 4,
+      "description": "Random country fact",
+      "usage": "countryfact",
+      "access": "public"
+    },
+    {
+      "name": "couple",
+      "aliases": [
+        "love"
+      ],
+      "category": 4,
+      "description": "Calculate love compatibility between two people",
+      "usage": "couple",
+      "access": "public"
+    },
+    {
+      "name": "createpoll",
+      "aliases": [
+        "vote"
+      ],
+      "category": 4,
+      "description": "Create a native WhatsApp poll. Usage: .poll Question | Option1 | Option2 | ...",
+      "usage": "createpoll",
+      "access": "public"
+    },
+    {
+      "name": "creator",
+      "aliases": [],
+      "category": 4,
+      "description": "Show bot owner contact information",
+      "usage": "creator",
+      "access": "public"
+    },
+    {
+      "name": "cron",
+      "aliases": [
+        "cronhelp"
+      ],
+      "category": 4,
+      "description": "Cron expression helper",
+      "usage": "cron",
+      "access": "public"
+    },
+    {
+      "name": "currency",
+      "aliases": [],
+      "category": 4,
+      "description": "Convert between currencies",
+      "usage": "currency",
+      "access": "public"
+    },
+    {
+      "name": "dare",
+      "aliases": [
+        "dareq"
+      ],
+      "category": 4,
+      "description": "Dare challenge",
+      "usage": "dare",
+      "access": "public"
+    },
+    {
+      "name": "darkjoke",
+      "aliases": [
+        "dark"
+      ],
+      "category": 4,
+      "description": "Dark humor joke",
+      "usage": "darkjoke",
+      "access": "public"
+    },
+    {
+      "name": "date",
+      "aliases": [
+        "today"
+      ],
+      "category": 4,
+      "description": "Current date and time",
+      "usage": "date",
+      "access": "public"
+    },
+    {
+      "name": "dec2hex",
+      "aliases": [
+        "dectohex"
+      ],
+      "category": 4,
+      "description": "Decimal to hex",
+      "usage": "dec2hex",
+      "access": "public"
+    },
+    {
+      "name": "decode64",
+      "aliases": [
+        "unbase64"
+      ],
+      "category": 4,
+      "description": "Decode from base64",
+      "usage": "decode64",
+      "access": "public"
+    },
+    {
+      "name": "deep",
+      "aliases": [],
+      "category": 4,
+      "description": "Voix très grave (ralenti + baissé) — audio",
+      "usage": "deep (répondre à un audio)",
+      "access": "public"
+    },
+    {
+      "name": "device",
+      "aliases": [
+        "devicecheck",
+        "checkdevice",
+        "wainfo"
+      ],
+      "category": 4,
+      "description": "Check WhatsApp account type, linked devices, status and more",
+      "usage": "device",
+      "access": "public"
+    },
+    {
+      "name": "diary",
+      "aliases": [],
+      "category": 4,
+      "description": "Daily journal",
+      "usage": "diary",
+      "access": "public"
+    },
+    {
+      "name": "dict",
+      "aliases": [
+        "meaning",
+        "definition"
+      ],
+      "category": 4,
+      "description": "Look up the definition of an English word",
+      "usage": "dict",
+      "access": "public"
+    },
+    {
+      "name": "disappearing",
+      "aliases": [],
+      "category": 4,
+      "description": "Toggle disappearing messages in a chat",
+      "usage": "disappearing",
+      "access": "admin"
+    },
+    {
+      "name": "discount",
+      "aliases": [
+        "sale",
+        "pricecalc"
+      ],
+      "category": 4,
+      "description": "Discount calculator",
+      "usage": "discount",
+      "access": "public"
+    },
+    {
+      "name": "divide",
+      "aliases": [
+        "div"
+      ],
+      "category": 4,
+      "description": "Divide numbers",
+      "usage": "divide",
+      "access": "public"
+    },
+    {
+      "name": "dnslookup",
+      "aliases": [
+        "nslookup"
+      ],
+      "category": 4,
+      "description": "DNS lookup for a domain",
+      "usage": "dnslookup",
+      "access": "public"
+    },
+    {
+      "name": "dogbreed",
+      "aliases": [
+        "dog",
+        "breed"
+      ],
+      "category": 4,
+      "description": "Dog breed info",
+      "usage": "dogbreed",
+      "access": "public"
+    },
+    {
+      "name": "domain",
+      "aliases": [
+        "domaininfo"
+      ],
+      "category": 4,
+      "description": "WHOIS lookup for a domain",
+      "usage": "domain",
+      "access": "public"
+    },
+    {
+      "name": "dreammeaning",
+      "aliases": [
+        "dream"
+      ],
+      "category": 4,
+      "description": "Dream interpretation",
+      "usage": "dreammeaning",
+      "access": "public"
+    },
+    {
+      "name": "ebinary",
+      "aliases": [
+        "debinary",
+        "ebase",
+        "dbase",
+        "fancy",
+        "ttp",
+        "domaincheck",
+        "rename",
+        "tinyurl",
+        "rebrandly",
+        "vgd",
+        "vurl",
+        "adfoc",
+        "cleanuri",
+        "createpdf",
+        "createqr",
+        "readqr",
+        "shortener",
+        "sspc",
+        "ssphone",
+        "sstab",
+        "ssur",
+        "ssweb",
+        "web2zip",
+        "photoeditor",
+        "remini",
+        "met"
+      ],
+      "category": 4,
+      "description": "Extended tools and utilities",
+      "usage": "ebinary",
+      "access": "public"
+    },
+    {
+      "name": "editmsg",
+      "aliases": [
+        "correct"
+      ],
+      "category": 4,
+      "description": "Edit a previously sent bot message (reply to the bot's message)",
+      "usage": "editmsg",
+      "access": "admin"
+    },
+    {
+      "name": "element",
+      "aliases": [
+        "chem",
+        "periodic"
+      ],
+      "category": 4,
+      "description": "Periodic table lookup",
+      "usage": "element",
+      "access": "public"
+    },
+    {
+      "name": "emoji",
+      "aliases": [
+        "emojicombo"
+      ],
+      "category": 4,
+      "description": "Random emoji combination",
+      "usage": "emoji",
+      "access": "public"
+    },
+    {
+      "name": "emoji2",
+      "aliases": [
+        "emojimeaning"
+      ],
+      "category": 4,
+      "description": "Emoji meaning",
+      "usage": "emoji2",
+      "access": "public"
+    },
+    {
+      "name": "emojianswer",
+      "aliases": [
+        "ea"
+      ],
+      "category": 4,
+      "description": "Answer emoji guess",
+      "usage": "emojianswer",
+      "access": "public"
+    },
+    {
+      "name": "emojify",
+      "aliases": [
+        "textemoji"
+      ],
+      "category": 4,
+      "description": "Convert letters to emoji",
+      "usage": "emojify",
+      "access": "public"
+    },
+    {
+      "name": "emojiguess",
+      "aliases": [
+        "guessemoji",
+        "eg"
+      ],
+      "category": 4,
+      "description": "Guess the emoji meaning",
+      "usage": "emojiguess",
+      "access": "public"
+    },
+    {
+      "name": "encode",
+      "aliases": [
+        "decode",
+        "hex2text",
+        "rot13"
+      ],
+      "category": 4,
+      "description": "Encode/decode text: base64, hex, binary, rot13",
+      "usage": "encode",
+      "access": "public"
+    },
+    {
+      "name": "encode64",
+      "aliases": [],
+      "category": 4,
+      "description": "Encode to base64",
+      "usage": "encode64",
+      "access": "public"
+    },
+    {
+      "name": "eval",
+      "aliases": [
+        "exec",
+        "run",
+        "$",
+        "js"
+      ],
+      "category": 4,
+      "description": "Execute JavaScript with full bot access (owner only)",
+      "usage": "eval",
+      "access": "owner"
+    },
+    {
+      "name": "exchange",
+      "aliases": [
+        "forex"
+      ],
+      "category": 4,
+      "description": "Currency info",
+      "usage": "exchange",
+      "access": "public"
+    },
+    {
+      "name": "excuse",
+      "aliases": [
+        "randomexcuse"
+      ],
+      "category": 4,
+      "description": "Random excuse",
+      "usage": "excuse",
+      "access": "public"
+    },
+    {
+      "name": "facebook",
+      "aliases": [
+        "fb",
+        "fbdl"
+      ],
+      "category": 4,
+      "description": "Download a Facebook video",
+      "usage": "facebook",
+      "access": "public"
+    },
+    {
+      "name": "factorial",
+      "aliases": [],
+      "category": 4,
+      "description": "Factorial",
+      "usage": "factorial",
+      "access": "public"
+    },
+    {
+      "name": "facts",
+      "aliases": [
+        "funfact"
+      ],
+      "category": 4,
+      "description": "Get a random interesting fact",
+      "usage": "facts",
+      "access": "public"
+    },
+    {
+      "name": "fahrenheit",
+      "aliases": [
+        "tofahrenheit",
+        "ctof"
+      ],
+      "category": 4,
+      "description": "Celsius to Fahrenheit",
+      "usage": "fahrenheit",
+      "access": "public"
+    },
+    {
+      "name": "fakeaddress",
+      "aliases": [
+        "address"
+      ],
+      "category": 4,
+      "description": "Generate random address",
+      "usage": "fakeaddress",
+      "access": "public"
+    },
+    {
+      "name": "fakeemail",
+      "aliases": [
+        "email"
+      ],
+      "category": 4,
+      "description": "Generate random email",
+      "usage": "fakeemail",
+      "access": "public"
+    },
+    {
+      "name": "fakehack",
+      "aliases": [],
+      "category": 4,
+      "description": "Fake hack animation",
+      "usage": "fakehack",
+      "access": "public"
+    },
+    {
+      "name": "fakeid",
+      "aliases": [
+        "identity"
+      ],
+      "category": 4,
+      "description": "Generate fake identity",
+      "usage": "fakeid",
+      "access": "public"
+    },
+    {
+      "name": "fakename",
+      "aliases": [
+        "randomname",
+        "name"
+      ],
+      "category": 4,
+      "description": "Generate random name",
+      "usage": "fakename",
+      "access": "public"
+    },
+    {
+      "name": "fakephone",
+      "aliases": [
+        "phone"
+      ],
+      "category": 4,
+      "description": "Generate random phone",
+      "usage": "fakephone",
+      "access": "public"
+    },
+    {
+      "name": "fetch",
+      "aliases": [
+        "get"
+      ],
+      "category": 4,
+      "description": "Fetch a URL and return its content or file",
+      "usage": "fetch",
+      "access": "public"
+    },
+    {
+      "name": "fibonacci",
+      "aliases": [
+        "fib"
+      ],
+      "category": 4,
+      "description": "Fibonacci sequence",
+      "usage": "fibonacci",
+      "access": "public"
+    },
+    {
+      "name": "figlet",
+      "aliases": [
+        "art",
+        "textart"
+      ],
+      "category": 4,
+      "description": "Convert text to ASCII art",
+      "usage": "figlet",
+      "access": "public"
+    },
+    {
+      "name": "findsticker",
+      "aliases": [
+        "giphy"
+      ],
+      "category": 4,
+      "description": "Search and send animated stickers/GIFs",
+      "usage": "findsticker",
+      "access": "public"
+    },
+    {
+      "name": "flag",
+      "aliases": [
+        "countryflag"
+      ],
+      "category": 4,
+      "description": "Country flag emoji",
+      "usage": "flag",
+      "access": "public"
+    },
+    {
+      "name": "flaganswer",
+      "aliases": [
+        "fa"
+      ],
+      "category": 4,
+      "description": "Answer flag quiz",
+      "usage": "flaganswer",
+      "access": "public"
+    },
+    {
+      "name": "flagquiz",
+      "aliases": [
+        "guessflag",
+        "fq"
+      ],
+      "category": 4,
+      "description": "Guess the country from flag",
+      "usage": "flagquiz",
+      "access": "public"
+    },
+    {
+      "name": "flashcard",
+      "aliases": [
+        "fc",
+        "study"
+      ],
+      "category": 4,
+      "description": "Flashcard study tool",
+      "usage": "flashcard",
+      "access": "public"
+    },
+    {
+      "name": "flip",
+      "aliases": [
+        "dice"
+      ],
+      "category": 4,
+      "description": "Flip a coin or roll dice",
+      "usage": "flip",
+      "access": "public"
+    },
+    {
+      "name": "flipcoin",
+      "aliases": [
+        "coinflip"
+      ],
+      "category": 4,
+      "description": "Flip a coin",
+      "usage": "flipcoin",
+      "access": "public"
+    },
+    {
+      "name": "foodfact",
+      "aliases": [
+        "foodf"
+      ],
+      "category": 4,
+      "description": "Random food fact",
+      "usage": "foodfact",
+      "access": "public"
+    },
+    {
+      "name": "fortune",
+      "aliases": [
+        "fortunecookie"
+      ],
+      "category": 4,
+      "description": "Fortune cookie",
+      "usage": "fortune",
+      "access": "public"
+    },
+    {
+      "name": "fortune2",
+      "aliases": [
+        "luckynumber"
+      ],
+      "category": 4,
+      "description": "Lucky numbers",
+      "usage": "fortune2",
+      "access": "public"
+    },
+    {
+      "name": "fwd",
+      "aliases": [
+        "transfert"
+      ],
+      "category": 4,
+      "description": "Transférer le message cité vers un destinataire",
+      "usage": "fwd @user|numéro (répondre au message)",
+      "access": "public"
+    },
+    {
+      "name": "games",
+      "aliases": [
+        "diceai",
+        "diceend",
+        "dicejoin",
+        "tttai",
+        "tttboard",
+        "tttend",
+        "tttjoin",
+        "w",
+        "wcg",
+        "wcgai",
+        "wcgbegin",
+        "wcgend",
+        "wcgjoin",
+        "wcgscores"
+      ],
+      "category": 4,
+      "description": "Extended games — dice, word chain, tic-tac-toe multiplayer",
+      "usage": "games",
+      "access": "public"
+    },
+    {
+      "name": "gaytest",
+      "aliases": [
+        "gay"
+      ],
+      "category": 4,
+      "description": "Gay meter (for fun)",
+      "usage": "gaytest",
+      "access": "public"
+    },
+    {
+      "name": "gcd",
+      "aliases": [
+        "hcf"
+      ],
+      "category": 4,
+      "description": "Greatest common divisor",
+      "usage": "gcd",
+      "access": "public"
+    },
+    {
+      "name": "gdrive",
+      "aliases": [
+        "googledrive",
+        "gdl"
+      ],
+      "category": 4,
+      "description": "Get direct download link from Google Drive",
+      "usage": "gdrive",
+      "access": "public"
+    },
+    {
+      "name": "gif",
+      "aliases": [
+        "mp4togif"
+      ],
+      "category": 4,
+      "description": "Convert sticker or video to GIF",
+      "usage": "gif",
+      "access": "public"
+    },
+    {
+      "name": "giftedai",
+      "aliases": [],
+      "category": 4,
+      "description": "Ask Gifted AI a question",
+      "usage": "giftedai",
+      "access": "public"
+    },
+    {
+      "name": "gitclone",
+      "aliases": [],
+      "category": 4,
+      "description": "Download a GitHub repository as a ZIP file",
+      "usage": "gitclone",
+      "access": "public"
+    },
+    {
+      "name": "githubstalk",
+      "aliases": [
+        "ghstalk",
+        "gh"
+      ],
+      "category": 4,
+      "description": "Stalk a GitHub profile — repos, stars, bio, activity and more",
+      "usage": "githubstalk",
+      "access": "public"
+    },
+    {
+      "name": "goal",
+      "aliases": [
+        "goals",
+        "setgoal"
+      ],
+      "category": 4,
+      "description": "Goal setting",
+      "usage": "goal",
+      "access": "public"
+    },
+    {
+      "name": "google",
+      "aliases": [
+        "npm",
+        "apkmirror",
+        "happymod",
+        "ggleimage",
+        "unsplash",
+        "wallpapers",
+        "wattpad",
+        "yts",
+        "spotifysearch"
+      ],
+      "category": 4,
+      "description": "Extended search commands",
+      "usage": "google",
+      "access": "public"
+    },
+    {
+      "name": "gpt",
+      "aliases": [
+        "chatgpt"
+      ],
+      "category": 4,
+      "description": "Ask the AI a question",
+      "usage": "gpt",
+      "access": "public"
+    },
+    {
+      "name": "gpt4",
+      "aliases": [
+        "gpt-4"
+      ],
+      "category": 4,
+      "description": "Ask GPT-4 a question",
+      "usage": "gpt4",
+      "access": "public"
+    },
+    {
+      "name": "gpt4o",
+      "aliases": [
+        "gpt-4o"
+      ],
+      "category": 4,
+      "description": "Ask GPT-4o a question",
+      "usage": "gpt4o",
+      "access": "public"
+    },
+    {
+      "name": "gpt4o-mini",
+      "aliases": [],
+      "category": 4,
+      "description": "Ask GPT-4o Mini a question",
+      "usage": "gpt4o-mini",
+      "access": "public"
+    },
+    {
+      "name": "gratitude",
+      "aliases": [
+        "grateful"
+      ],
+      "category": 4,
+      "description": "Gratitude journal",
+      "usage": "gratitude",
+      "access": "public"
+    },
+    {
+      "name": "greet",
+      "aliases": [
+        "greeting",
+        "hi"
+      ],
+      "category": 4,
+      "description": "Greet in multiple languages",
+      "usage": "greet",
+      "access": "public"
+    },
+    {
+      "name": "grey",
+      "aliases": [],
+      "category": 4,
+      "description": "Filtre image : grey",
+      "usage": "grey (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "guess",
+      "aliases": [
+        "guessnum",
+        "numguess"
+      ],
+      "category": 4,
+      "description": "Number guessing game",
+      "usage": "guess",
+      "access": "public"
+    },
+    {
+      "name": "guessnumber",
+      "aliases": [],
+      "category": 4,
+      "description": "Number guessing game (1–100)",
+      "usage": "guessnumber",
+      "access": "public"
+    },
+    {
+      "name": "habit",
+      "aliases": [
+        "habittracker"
+      ],
+      "category": 4,
+      "description": "Habit tracker",
+      "usage": "habit",
+      "access": "public"
+    },
+    {
+      "name": "hashtag",
+      "aliases": [
+        "tags",
+        "generatetags"
+      ],
+      "category": 4,
+      "description": "Generate hashtags",
+      "usage": "hashtag",
+      "access": "public"
+    },
+    {
+      "name": "heartrate",
+      "aliases": [
+        "hr",
+        "maxhr"
+      ],
+      "category": 4,
+      "description": "Max heart rate calculator",
+      "usage": "heartrate",
+      "access": "public"
+    },
+    {
+      "name": "hello",
+      "aliases": [],
+      "category": 4,
+      "description": "Simple hello test command",
+      "usage": "hello",
+      "access": "public"
+    },
+    {
+      "name": "help",
+      "aliases": [
+        "cmds",
+        "commands"
+      ],
+      "category": 4,
+      "description": "Show all commands in a categorized menu — use .menu <number> for a category deep-dive",
+      "usage": "help",
+      "access": "public"
+    },
+    {
+      "name": "hex2dec",
+      "aliases": [
+        "hextodec"
+      ],
+      "category": 4,
+      "description": "Hex to decimal",
+      "usage": "hex2dec",
+      "access": "public"
+    },
+    {
+      "name": "historyfact",
+      "aliases": [
+        "historyf"
+      ],
+      "category": 4,
+      "description": "Random history fact",
+      "usage": "historyfact",
+      "access": "public"
+    },
+    {
+      "name": "hm",
+      "aliases": [],
+      "category": 4,
+      "description": "Hangman game",
+      "usage": "hm",
+      "access": "public"
+    },
+    {
+      "name": "horo",
+      "aliases": [],
+      "category": 4,
+      "description": "Get daily horoscope for a zodiac sign",
+      "usage": "horo",
+      "access": "public"
+    },
+    {
+      "name": "horoscope2",
+      "aliases": [
+        "dailyhoroscope"
+      ],
+      "category": 4,
+      "description": "Daily horoscope",
+      "usage": "horoscope2",
+      "access": "public"
+    },
+    {
+      "name": "httpcode",
+      "aliases": [
+        "statuscode",
+        "http"
+      ],
+      "category": 4,
+      "description": "HTTP status codes",
+      "usage": "httpcode",
+      "access": "public"
+    },
+    {
+      "name": "hydration",
+      "aliases": [
+        "waterintake"
+      ],
+      "category": 4,
+      "description": "Water intake calculator",
+      "usage": "hydration",
+      "access": "public"
+    },
+    {
+      "name": "idiom",
+      "aliases": [
+        "englishidiom"
+      ],
+      "category": 4,
+      "description": "English idiom with meaning",
+      "usage": "idiom",
+      "access": "public"
+    },
+    {
+      "name": "igcaption",
+      "aliases": [],
+      "category": 4,
+      "description": "Random caption ideas",
+      "usage": "igcaption",
+      "access": "public"
+    },
+    {
+      "name": "igstalk",
+      "aliases": [
+        "instastalk",
+        "iginfo",
+        "instagramstalk"
+      ],
+      "category": 4,
+      "description": "Stalk an Instagram profile — followers, bio, posts and more",
+      "usage": "igstalk",
+      "access": "public"
+    },
+    {
+      "name": "iloveyou",
+      "aliases": [
+        "ily",
+        "love2"
+      ],
+      "category": 4,
+      "description": "I love you in many languages",
+      "usage": "iloveyou",
+      "access": "public"
+    },
+    {
+      "name": "imagine",
+      "aliases": [
+        "generate",
+        "aiimage",
+        "img"
+      ],
+      "category": 4,
+      "description": "Generate an AI image from a text prompt",
+      "usage": "imagine",
+      "access": "public"
+    },
+    {
+      "name": "imgbb",
+      "aliases": [
+        "pixhost",
+        "githubcdn"
+      ],
+      "category": 4,
+      "description": "Upload images to various CDN/hosting services",
+      "usage": "imgbb",
+      "access": "public"
+    },
+    {
+      "name": "inflation",
+      "aliases": [
+        "inflationcalc"
+      ],
+      "category": 4,
+      "description": "Inflation calculator",
+      "usage": "inflation",
+      "access": "public"
+    },
+    {
+      "name": "inspire",
+      "aliases": [
+        "motivation"
+      ],
+      "category": 4,
+      "description": "Get a random inspirational quote",
+      "usage": "inspire",
+      "access": "public"
+    },
+    {
+      "name": "instagram",
+      "aliases": [
+        "igdl",
+        "ig",
+        "insta"
+      ],
+      "category": 4,
+      "description": "Download Instagram posts, reels, and stories",
+      "usage": "instagram",
+      "access": "public"
+    },
+    {
+      "name": "insult",
+      "aliases": [
+        "friendlyinsult"
+      ],
+      "category": 4,
+      "description": "Friendly insult",
+      "usage": "insult",
+      "access": "public"
+    },
+    {
+      "name": "invert",
+      "aliases": [],
+      "category": 4,
+      "description": "Filtre image : invert",
+      "usage": "invert (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "invest",
+      "aliases": [
+        "investtip",
+        "investadvice"
+      ],
+      "category": 4,
+      "description": "Investment tip",
+      "usage": "invest",
+      "access": "public"
+    },
+    {
+      "name": "ipinfo",
+      "aliases": [
+        "iplookup"
+      ],
+      "category": 4,
+      "description": "IP address info",
+      "usage": "ipinfo",
+      "access": "public"
+    },
+    {
+      "name": "iq",
+      "aliases": [
+        "iqtest"
+      ],
+      "category": 4,
+      "description": "IQ test (for fun)",
+      "usage": "iq",
+      "access": "public"
+    },
+    {
+      "name": "italic",
+      "aliases": [
+        "i"
+      ],
+      "category": 4,
+      "description": "Make text italic",
+      "usage": "italic",
+      "access": "public"
+    },
+    {
+      "name": "joke2",
+      "aliases": [
+        "dadjoke"
+      ],
+      "category": 4,
+      "description": "Dad joke",
+      "usage": "joke2",
+      "access": "public"
+    },
+    {
+      "name": "jokes",
+      "aliases": [],
+      "category": 4,
+      "description": "Get a random joke",
+      "usage": "jokes",
+      "access": "public"
+    },
+    {
+      "name": "json",
+      "aliases": [
+        "jsonformat",
+        "prettyjson"
+      ],
+      "category": 4,
+      "description": "Format JSON",
+      "usage": "json",
+      "access": "public"
+    },
+    {
+      "name": "lcm",
+      "aliases": [],
+      "category": 4,
+      "description": "Least common multiple",
+      "usage": "lcm",
+      "access": "public"
+    },
+    {
+      "name": "leetspeak",
+      "aliases": [
+        "leet",
+        "1337"
+      ],
+      "category": 4,
+      "description": "Convert to leet speak",
+      "usage": "leetspeak",
+      "access": "public"
+    },
+    {
+      "name": "letmegpt",
+      "aliases": [],
+      "category": 4,
+      "description": "Ask LetMeGPT a question",
+      "usage": "letmegpt",
+      "access": "public"
+    },
+    {
+      "name": "lifeadvice",
+      "aliases": [],
+      "category": 4,
+      "description": "Random life advice",
+      "usage": "lifeadvice",
+      "access": "public"
+    },
+    {
+      "name": "linkpreview",
+      "aliases": [
+        "summarizelink",
+        "readlink",
+        "tldr"
+      ],
+      "category": 4,
+      "description": "Summarize and preview any shared link/article",
+      "usage": "linkpreview",
+      "access": "public"
+    },
+    {
+      "name": "listonline",
+      "aliases": [],
+      "category": 4,
+      "description": "Request online presence",
+      "usage": "listonline",
+      "access": "admin"
+    },
+    {
+      "name": "livescore",
+      "aliases": [
+        "sportnews",
+        "standings",
+        "topscorers",
+        "upcomingmatches",
+        "surebet",
+        "gamehistory"
+      ],
+      "category": 4,
+      "description": "Sports scores, news, standings and betting tips",
+      "usage": "livescore",
+      "access": "public"
+    },
+    {
+      "name": "loan",
+      "aliases": [
+        "loancalc",
+        "mortgage"
+      ],
+      "category": 4,
+      "description": "Loan calculator",
+      "usage": "loan",
+      "access": "public"
+    },
+    {
+      "name": "loc",
+      "aliases": [
+        "localisation"
+      ],
+      "category": 4,
+      "description": "Envoyer une position GPS",
+      "usage": "loc <lat> <lng> [nom]",
+      "access": "public"
+    },
+    {
+      "name": "log",
+      "aliases": [
+        "logarithm"
+      ],
+      "category": 4,
+      "description": "Calculate logarithm",
+      "usage": "log",
+      "access": "public"
+    },
+    {
+      "name": "lorem",
+      "aliases": [
+        "loremipsum"
+      ],
+      "category": 4,
+      "description": "Generate lorem ipsum",
+      "usage": "lorem",
+      "access": "public"
+    },
+    {
+      "name": "lower",
+      "aliases": [
+        "lowercase"
+      ],
+      "category": 4,
+      "description": "Convert to lowercase",
+      "usage": "lower",
+      "access": "public"
+    },
+    {
+      "name": "lyric",
+      "aliases": [],
+      "category": 4,
+      "description": "Search song lyrics by artist and title",
+      "usage": "lyric",
+      "access": "public"
+    },
+    {
+      "name": "magic8",
+      "aliases": [],
+      "category": 4,
+      "description": "Ask the magic 8-ball a yes/no question",
+      "usage": "magic8",
+      "access": "public"
+    },
+    {
+      "name": "magicball",
+      "aliases": [
+        "eightball"
+      ],
+      "category": 4,
+      "description": "Magic 8-ball",
+      "usage": "magicball",
+      "access": "public"
+    },
+    {
+      "name": "makeqr",
+      "aliases": [],
+      "category": 4,
+      "description": "Generate QR code text",
+      "usage": "makeqr",
+      "access": "public"
+    },
+    {
+      "name": "mathanswer",
+      "aliases": [
+        "ma"
+      ],
+      "category": 4,
+      "description": "Answer math quiz",
+      "usage": "mathanswer",
+      "access": "public"
+    },
+    {
+      "name": "mathfact",
+      "aliases": [
+        "mathf"
+      ],
+      "category": 4,
+      "description": "Random math fact",
+      "usage": "mathfact",
+      "access": "public"
+    },
+    {
+      "name": "mathquiz",
+      "aliases": [
+        "mq",
+        "quickmath"
+      ],
+      "category": 4,
+      "description": "Quick math quiz",
+      "usage": "mathquiz",
+      "access": "public"
+    },
+    {
+      "name": "matrix",
+      "aliases": [],
+      "category": 4,
+      "description": "Generate a Matrix-style code rain with your text",
+      "usage": "matrix",
+      "access": "public"
+    },
+    {
+      "name": "matrixtext",
+      "aliases": [],
+      "category": 4,
+      "description": "Matrix-style text",
+      "usage": "matrixtext",
+      "access": "public"
+    },
+    {
+      "name": "md5",
+      "aliases": [
+        "sha256"
+      ],
+      "category": 4,
+      "description": "Hash text",
+      "usage": "md5",
+      "access": "public"
+    },
+    {
+      "name": "mediafire",
+      "aliases": [
+        "mf",
+        "mfdl"
+      ],
+      "category": 4,
+      "description": "Get MediaFire direct download link",
+      "usage": "mediafire",
+      "access": "public"
+    },
+    {
+      "name": "median",
+      "aliases": [],
+      "category": 4,
+      "description": "Calculate median",
+      "usage": "median",
+      "access": "public"
+    },
+    {
+      "name": "meditation",
+      "aliases": [
+        "meditate",
+        "breathe"
+      ],
+      "category": 4,
+      "description": "Breathing exercise",
+      "usage": "meditation",
+      "access": "public"
+    },
+    {
+      "name": "meme",
+      "aliases": [
+        "memequote"
+      ],
+      "category": 4,
+      "description": "Meme text",
+      "usage": "meme",
+      "access": "public"
+    },
+    {
+      "name": "memes",
+      "aliases": [],
+      "category": 4,
+      "description": "Get a random meme image",
+      "usage": "memes",
+      "access": "public"
+    },
+    {
+      "name": "memo",
+      "aliases": [],
+      "category": 4,
+      "description": "Save/view notes",
+      "usage": "memo",
+      "access": "public"
+    },
+    {
+      "name": "mixemoji",
+      "aliases": [
+        "emojiblend"
+      ],
+      "category": 4,
+      "description": "Mix two emojis together using Google Kitchen",
+      "usage": "mixemoji",
+      "access": "public"
+    },
+    {
+      "name": "mock",
+      "aliases": [
+        "spongebob"
+      ],
+      "category": 4,
+      "description": "sPoNgEbOb MoCk text",
+      "usage": "mock",
+      "access": "public"
+    },
+    {
+      "name": "mode2",
+      "aliases": [],
+      "category": 4,
+      "description": "Change bot mode",
+      "usage": "mode2",
+      "access": "owner"
+    },
+    {
+      "name": "morseencode",
+      "aliases": [
+        "morsedecode"
+      ],
+      "category": 4,
+      "description": "Encode or decode Morse code",
+      "usage": "morseencode",
+      "access": "public"
+    },
+    {
+      "name": "motivate",
+      "aliases": [],
+      "category": 4,
+      "description": "Motivational message",
+      "usage": "motivate",
+      "access": "public"
+    },
+    {
+      "name": "moviefact",
+      "aliases": [
+        "movief",
+        "filmfact"
+      ],
+      "category": 4,
+      "description": "Random movie fact",
+      "usage": "moviefact",
+      "access": "public"
+    },
+    {
+      "name": "multiply",
+      "aliases": [
+        "mul",
+        "times"
+      ],
+      "category": 4,
+      "description": "Multiply numbers",
+      "usage": "multiply",
+      "access": "public"
+    },
+    {
+      "name": "multipoll",
+      "aliases": [
+        "multivote"
+      ],
+      "category": 4,
+      "description": "Poll where users can pick multiple options. Usage: .multipoll Question | Opt1 | Opt2 ...",
+      "usage": "multipoll",
+      "access": "public"
+    },
+    {
+      "name": "musicfact",
+      "aliases": [
+        "musicf"
+      ],
+      "category": 4,
+      "description": "Random music fact",
+      "usage": "musicfact",
+      "access": "public"
+    },
+    {
+      "name": "myip",
+      "aliases": [
+        "serverip"
+      ],
+      "category": 4,
+      "description": "Show server info",
+      "usage": "myip",
+      "access": "public"
+    },
+    {
+      "name": "netspeed",
+      "aliases": [],
+      "category": 4,
+      "description": "Test the bot server internet speed",
+      "usage": "netspeed",
+      "access": "public"
+    },
+    {
+      "name": "networth",
+      "aliases": [
+        "nwcalc"
+      ],
+      "category": 4,
+      "description": "Net worth calculator",
+      "usage": "networth",
+      "access": "public"
+    },
+    {
+      "name": "neverhaveiever",
+      "aliases": [
+        "nhie"
+      ],
+      "category": 4,
+      "description": "Never have I ever",
+      "usage": "neverhaveiever",
+      "access": "public"
+    },
+    {
+      "name": "news",
+      "aliases": [
+        "headlines"
+      ],
+      "category": 4,
+      "description": "Get latest news headlines",
+      "usage": "news",
+      "access": "public"
+    },
+    {
+      "name": "nickname",
+      "aliases": [
+        "nick",
+        "randomnick"
+      ],
+      "category": 4,
+      "description": "Generate nickname",
+      "usage": "nickname",
+      "access": "public"
+    },
+    {
+      "name": "nightcore",
+      "aliases": [],
+      "category": 4,
+      "description": "Nightcore (accéléré + aigu) — audio",
+      "usage": "nightcore (répondre à un audio)",
+      "access": "public"
+    },
+    {
+      "name": "nitumie",
+      "aliases": [
+        "statussave"
+      ],
+      "category": 4,
+      "description": "Save a WhatsApp status (reply to a status with this command)",
+      "usage": "nitumie",
+      "access": "public"
+    },
+    {
+      "name": "numberfact",
+      "aliases": [
+        "numfact",
+        "number"
+      ],
+      "category": 4,
+      "description": "Get an interesting fact about a number",
+      "usage": "numberfact",
+      "access": "public"
+    },
+    {
+      "name": "oct",
+      "aliases": [
+        "octal"
+      ],
+      "category": 4,
+      "description": "Convert to/from octal",
+      "usage": "oct",
+      "access": "public"
+    },
+    {
+      "name": "openai",
+      "aliases": [],
+      "category": 4,
+      "description": "Ask OpenAI a question",
+      "usage": "openai",
+      "access": "public"
+    },
+    {
+      "name": "openphoto",
+      "aliases": [
+        "openvideo",
+        "vvphoto"
+      ],
+      "category": 4,
+      "description": "Manually reveal a view-once message (reply to it)",
+      "usage": "openphoto",
+      "access": "owner"
+    },
+    {
+      "name": "os",
+      "aliases": [
+        "osinfo"
+      ],
+      "category": 4,
+      "description": "Operating system info",
+      "usage": "os",
+      "access": "public"
+    },
+    {
+      "name": "packadd",
+      "aliases": [],
+      "category": 4,
+      "description": "Ajouter un sticker au pack en construction",
+      "usage": "packadd (répondre image/sticker)",
+      "access": "public"
+    },
+    {
+      "name": "packsend",
+      "aliases": [],
+      "category": 4,
+      "description": "Envoyer le pack construit",
+      "usage": "packsend [nom]",
+      "access": "public"
+    },
+    {
+      "name": "palindrome",
+      "aliases": [
+        "ispalindrome"
+      ],
+      "category": 4,
+      "description": "Check if palindrome",
+      "usage": "palindrome",
+      "access": "public"
+    },
+    {
+      "name": "passwd",
+      "aliases": [],
+      "category": 4,
+      "description": "Generate a strong random password",
+      "usage": "passwd",
+      "access": "public"
+    },
+    {
+      "name": "password2",
+      "aliases": [
+        "passgen",
+        "genpass"
+      ],
+      "category": 4,
+      "description": "Advanced password generator",
+      "usage": "password2",
+      "access": "public"
+    },
+    {
+      "name": "pastebin",
+      "aliases": [
+        "hastebin"
+      ],
+      "category": 4,
+      "description": "Paste text online and get a shareable link",
+      "usage": "pastebin",
+      "access": "public"
+    },
+    {
+      "name": "percentage",
+      "aliases": [
+        "percent",
+        "pct"
+      ],
+      "category": 4,
+      "description": "Calculate percentage",
+      "usage": "percentage",
+      "access": "public"
+    },
+    {
+      "name": "personality",
+      "aliases": [
+        "mbti"
+      ],
+      "category": 4,
+      "description": "Random MBTI type",
+      "usage": "personality",
+      "access": "public"
+    },
+    {
+      "name": "phone2",
+      "aliases": [
+        "phoneinfo"
+      ],
+      "category": 4,
+      "description": "Phone brand info",
+      "usage": "phone2",
+      "access": "public"
+    },
+    {
+      "name": "phonetic",
+      "aliases": [
+        "nato"
+      ],
+      "category": 4,
+      "description": "NATO phonetic alphabet",
+      "usage": "phonetic",
+      "access": "public"
+    },
+    {
+      "name": "phrasebook",
+      "aliases": [
+        "translate2",
+        "swahili"
+      ],
+      "category": 4,
+      "description": "Common Swahili phrases",
+      "usage": "phrasebook",
+      "access": "public"
+    },
+    {
+      "name": "pi",
+      "aliases": [],
+      "category": 4,
+      "description": "Show Pi digits",
+      "usage": "pi",
+      "access": "public"
+    },
+    {
+      "name": "pick",
+      "aliases": [
+        "decide"
+      ],
+      "category": 4,
+      "description": "Pick random option",
+      "usage": "pick",
+      "access": "public"
+    },
+    {
+      "name": "pickup",
+      "aliases": [
+        "pickupline",
+        "rizz"
+      ],
+      "category": 4,
+      "description": "Random pickup line",
+      "usage": "pickup",
+      "access": "public"
+    },
+    {
+      "name": "pig",
+      "aliases": [
+        "piglatin"
+      ],
+      "category": 4,
+      "description": "Convert to Pig Latin",
+      "usage": "pig",
+      "access": "public"
+    },
+    {
+      "name": "ping2",
+      "aliases": [
+        "latency",
+        "ms"
+      ],
+      "category": 4,
+      "description": "Check bot response latency",
+      "usage": "ping2",
+      "access": "public"
+    },
+    {
+      "name": "pinterest",
+      "aliases": [
+        "pindl"
+      ],
+      "category": 4,
+      "description": "Download Pinterest images and videos",
+      "usage": "pinterest",
+      "access": "public"
+    },
+    {
+      "name": "planet",
+      "aliases": [
+        "planetinfo"
+      ],
+      "category": 4,
+      "description": "Planet information",
+      "usage": "planet",
+      "access": "public"
+    },
+    {
+      "name": "poem",
+      "aliases": [
+        "poetry"
+      ],
+      "category": 4,
+      "description": "Random poem",
+      "usage": "poem",
+      "access": "public"
+    },
+    {
+      "name": "poll2",
+      "aliases": [
+        "quickpoll"
+      ],
+      "category": 4,
+      "description": "Quick text poll",
+      "usage": "poll2",
+      "access": "public"
+    },
+    {
+      "name": "pollresult",
+      "aliases": [
+        "pollresults",
+        "pollstats",
+        "votes"
+      ],
+      "category": 4,
+      "description": "Show live results of a poll (reply to the poll message)",
+      "usage": "pollresult",
+      "access": "public"
+    },
+    {
+      "name": "pomodoro",
+      "aliases": [
+        "focus"
+      ],
+      "category": 4,
+      "description": "Pomodoro timer",
+      "usage": "pomodoro",
+      "access": "public"
+    },
+    {
+      "name": "poststatus",
+      "aliases": [
+        "textstatus",
+        "mystatustext"
+      ],
+      "category": 4,
+      "description": "Post a text WhatsApp status from the bot",
+      "usage": "poststatus",
+      "access": "owner"
+    },
+    {
+      "name": "power",
+      "aliases": [
+        "pow",
+        "exponent"
+      ],
+      "category": 4,
+      "description": "Power/exponent",
+      "usage": "power",
+      "access": "public"
+    },
+    {
+      "name": "prefix",
+      "aliases": [
+        "changeprefix"
+      ],
+      "category": 4,
+      "description": "View or change the bot command prefix at runtime",
+      "usage": "prefix",
+      "access": "owner"
+    },
+    {
+      "name": "prefix2",
+      "aliases": [],
+      "category": 4,
+      "description": "Change command prefix",
+      "usage": "prefix2",
+      "access": "owner"
+    },
+    {
+      "name": "price",
+      "aliases": [],
+      "category": 4,
+      "description": "Get live cryptocurrency prices",
+      "usage": "price",
+      "access": "public"
+    },
+    {
+      "name": "prime",
+      "aliases": [
+        "isprime"
+      ],
+      "category": 4,
+      "description": "Check if prime",
+      "usage": "prime",
+      "access": "public"
+    },
+    {
+      "name": "programming",
+      "aliases": [
+        "lang",
+        "proginfo"
+      ],
+      "category": 4,
+      "description": "Programming language info",
+      "usage": "programming",
+      "access": "public"
+    },
+    {
+      "name": "proverb",
+      "aliases": [
+        "africanproverb",
+        "wisdom2"
+      ],
+      "category": 4,
+      "description": "African proverb",
+      "usage": "proverb",
+      "access": "public"
+    },
+    {
+      "name": "purge",
+      "aliases": [
+        "clear",
+        "delmsg"
+      ],
+      "category": 4,
+      "description": "Delete multiple messages (reply to start message)",
+      "usage": "purge",
+      "access": "admin"
+    },
+    {
+      "name": "qrcode",
+      "aliases": [],
+      "category": 4,
+      "description": "Generate a QR code for any text or URL",
+      "usage": "qrcode",
+      "access": "public"
+    },
+    {
+      "name": "quote2",
+      "aliases": [
+        "dailyquote",
+        "dq"
+      ],
+      "category": 4,
+      "description": "Daily quote",
+      "usage": "quote2",
+      "access": "public"
+    },
+    {
+      "name": "quotly",
+      "aliases": [
+        "quote2img",
+        "q2s",
+        "quotesticker"
+      ],
+      "category": 4,
+      "description": "Convert a quoted text message into a beautiful styled quote image/sticker",
+      "usage": "quotly",
+      "access": "public"
+    },
+    {
+      "name": "rainbow",
+      "aliases": [
+        "colortext"
+      ],
+      "category": 4,
+      "description": "Rainbow text",
+      "usage": "rainbow",
+      "access": "public"
+    },
+    {
+      "name": "random",
+      "aliases": [
+        "rand",
+        "rng"
+      ],
+      "category": 4,
+      "description": "Random number",
+      "usage": "random",
+      "access": "public"
+    },
+    {
+      "name": "rateme",
+      "aliases": [],
+      "category": 4,
+      "description": "Rate something",
+      "usage": "rateme",
+      "access": "public"
+    },
+    {
+      "name": "reaction",
+      "aliases": [],
+      "category": 4,
+      "description": "React to a replied message with an emoji. Usage: .react 😍",
+      "usage": "reaction",
+      "access": "public"
+    },
+    {
+      "name": "readreceipt",
+      "aliases": [
+        "bluetick",
+        "readtick",
+        "receipt"
+      ],
+      "category": 4,
+      "description": "Toggle read receipts (blue ticks) on or off",
+      "usage": "readreceipt",
+      "access": "owner"
+    },
+    {
+      "name": "readtext",
+      "aliases": [
+        "textfromimage"
+      ],
+      "category": 4,
+      "description": "Extract text from an image (OCR)",
+      "usage": "readtext",
+      "access": "public"
+    },
+    {
+      "name": "recipe",
+      "aliases": [
+        "quickrecipe"
+      ],
+      "category": 4,
+      "description": "Quick recipe",
+      "usage": "recipe",
+      "access": "public"
+    },
+    {
+      "name": "recording",
+      "aliases": [
+        "busy",
+        "offline"
+      ],
+      "category": 4,
+      "description": "Set bot presence status in a chat",
+      "usage": "recording",
+      "access": "owner"
+    },
+    {
+      "name": "reddit",
+      "aliases": [
+        "rdl"
+      ],
+      "category": 4,
+      "description": "Download Reddit images and videos",
+      "usage": "reddit",
+      "access": "public"
+    },
+    {
+      "name": "regex",
+      "aliases": [
+        "testregex"
+      ],
+      "category": 4,
+      "description": "Test regex pattern",
+      "usage": "regex",
+      "access": "public"
+    },
+    {
+      "name": "remind2",
+      "aliases": [
+        "setmsg"
+      ],
+      "category": 4,
+      "description": "Schedule a message to be sent after a delay",
+      "usage": "remind2",
+      "access": "owner"
+    },
+    {
+      "name": "reminder",
+      "aliases": [
+        "remindme"
+      ],
+      "category": 4,
+      "description": "Set a timed reminder. Usage: .remind 10m Buy groceries",
+      "usage": "reminder",
+      "access": "public"
+    },
+    {
+      "name": "reminders",
+      "aliases": [
+        "myreminders",
+        "listreminders"
+      ],
+      "category": 4,
+      "description": "List your active reminders",
+      "usage": "reminders",
+      "access": "public"
+    },
+    {
+      "name": "removebg",
+      "aliases": [
+        "rmbg"
+      ],
+      "category": 4,
+      "description": "Supprimer le fond (remove.bg)",
+      "usage": "removebg (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "repeat",
+      "aliases": [
+        "rep"
+      ],
+      "category": 4,
+      "description": "Repeat text",
+      "usage": "repeat",
+      "access": "public"
+    },
+    {
+      "name": "resize",
+      "aliases": [],
+      "category": 4,
+      "description": "Redimensionner image",
+      "usage": "resize 512 512 (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "restart2",
+      "aliases": [
+        "reboot"
+      ],
+      "category": 4,
+      "description": "Restart bot",
+      "usage": "restart2",
+      "access": "owner"
+    },
+    {
+      "name": "rev",
+      "aliases": [],
+      "category": 4,
+      "description": "Reverse text",
+      "usage": "rev",
+      "access": "public"
+    },
+    {
+      "name": "reverse",
+      "aliases": [],
+      "category": 4,
+      "description": "Audio inversé — audio",
+      "usage": "reverse (répondre à un audio)",
+      "access": "public"
+    },
+    {
+      "name": "rhyme",
+      "aliases": [
+        "rhymes"
+      ],
+      "category": 4,
+      "description": "Find rhyming words",
+      "usage": "rhyme",
+      "access": "public"
+    },
+    {
+      "name": "roast",
+      "aliases": [
+        "roastme"
+      ],
+      "category": 4,
+      "description": "Friendly roast",
+      "usage": "roast",
+      "access": "public"
+    },
+    {
+      "name": "rolldice",
+      "aliases": [],
+      "category": 4,
+      "description": "Roll dice",
+      "usage": "rolldice",
+      "access": "public"
+    },
+    {
+      "name": "roman",
+      "aliases": [
+        "toroman"
+      ],
+      "category": 4,
+      "description": "Convert to Roman numerals",
+      "usage": "roman",
+      "access": "public"
+    },
+    {
+      "name": "round",
+      "aliases": [],
+      "category": 4,
+      "description": "Round number",
+      "usage": "round",
+      "access": "public"
+    },
+    {
+      "name": "rps",
+      "aliases": [
+        "rockpaperscissors"
+      ],
+      "category": 4,
+      "description": "Rock Paper Scissors",
+      "usage": "rps",
+      "access": "public"
+    },
+    {
+      "name": "rremind",
+      "aliases": [
+        "recurringremind",
+        "repeatremind",
+        "stopremind",
+        "clearreminders"
+      ],
+      "category": 4,
+      "description": "Set recurring reminders (daily, weekly, hourly, etc.)",
+      "usage": "rremind",
+      "access": "public"
+    },
+    {
+      "name": "runtime",
+      "aliases": [],
+      "category": 4,
+      "description": "Show bot uptime and system stats",
+      "usage": "runtime",
+      "access": "public"
+    },
+    {
+      "name": "salary",
+      "aliases": [
+        "salarycalc"
+      ],
+      "category": 4,
+      "description": "Salary breakdown",
+      "usage": "salary",
+      "access": "public"
+    },
+    {
+      "name": "save",
+      "aliases": [
+        "saved",
+        "bookmarks",
+        "delbookmark",
+        "clearbookmarks"
+      ],
+      "category": 4,
+      "description": "Save/bookmark messages to retrieve later via DM",
+      "usage": "save",
+      "access": "public"
+    },
+    {
+      "name": "save2",
+      "aliases": [
+        "bm"
+      ],
+      "category": 4,
+      "description": "Save bookmarks/links",
+      "usage": "save2",
+      "access": "public"
+    },
+    {
+      "name": "savings",
+      "aliases": [
+        "savingscalc"
+      ],
+      "category": 4,
+      "description": "Savings calculator",
+      "usage": "savings",
+      "access": "public"
+    },
+    {
+      "name": "saying",
+      "aliases": [
+        "adage"
+      ],
+      "category": 4,
+      "description": "Get a random proverb, wise saying, or adage",
+      "usage": "saying",
+      "access": "public"
+    },
+    {
+      "name": "scanurl",
+      "aliases": [
+        "urlscan",
+        "checksafe"
+      ],
+      "category": 4,
+      "description": "Scan a URL with VirusTotal",
+      "usage": "scanurl",
+      "access": "public"
+    },
+    {
+      "name": "sched",
+      "aliases": [],
+      "category": 4,
+      "description": "Simple scheduler",
+      "usage": "sched",
+      "access": "public"
+    },
+    {
+      "name": "sciencefact",
+      "aliases": [
+        "sciencef"
+      ],
+      "category": 4,
+      "description": "Random science fact",
+      "usage": "sciencefact",
+      "access": "public"
+    },
+    {
+      "name": "scramblesentence",
+      "aliases": [],
+      "category": 4,
+      "description": "Scramble words in sentence",
+      "usage": "scramblesentence",
+      "access": "public"
+    },
+    {
+      "name": "senddoc",
+      "aliases": [
+        "doc"
+      ],
+      "category": 4,
+      "description": "Envoyer le média cité en document (qualité préservée)",
+      "usage": "senddoc [légende] (répondre à un média)",
+      "access": "public"
+    },
+    {
+      "name": "sepia",
+      "aliases": [],
+      "category": 4,
+      "description": "Filtre image : sepia",
+      "usage": "sepia (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "setabout",
+      "aliases": [
+        "about"
+      ],
+      "category": 4,
+      "description": "Set the bot WhatsApp About/Bio",
+      "usage": "setabout",
+      "access": "owner"
+    },
+    {
+      "name": "setbgm",
+      "aliases": [
+        "delbgm",
+        "listbgm",
+        "clearbgm",
+        "bgmlist",
+        "removebgm"
+      ],
+      "category": 4,
+      "description": "Word-triggered audio autoresponder. Set audios that play when trigger words are detected.",
+      "usage": "setbgm",
+      "access": "owner"
+    },
+    {
+      "name": "setgreet",
+      "aliases": [
+        "getgreet",
+        "delgreet",
+        "greeton",
+        "greetoff"
+      ],
+      "category": 4,
+      "description": "Auto-greeting sent once per day to anyone who DMs the bot",
+      "usage": "setgreet",
+      "access": "owner"
+    },
+    {
+      "name": "setigsession",
+      "aliases": [
+        "igsession"
+      ],
+      "category": 4,
+      "description": "Set Instagram session cookie for downloads (owner only)",
+      "usage": "setigsession",
+      "access": "owner"
+    },
+    {
+      "name": "sh",
+      "aliases": [
+        "bash",
+        "terminal",
+        "shell"
+      ],
+      "category": 4,
+      "description": "Run a shell/terminal command on the server (owner only)",
+      "usage": "sh",
+      "access": "owner"
+    },
+    {
+      "name": "sha1",
+      "aliases": [],
+      "category": 4,
+      "description": "Generate MD5, SHA1, SHA256 hashes",
+      "usage": "sha1",
+      "access": "public"
+    },
+    {
+      "name": "sharecontact",
+      "aliases": [],
+      "category": 4,
+      "description": "Share contact card",
+      "usage": "sharecontact",
+      "access": "public"
+    },
+    {
+      "name": "shazam",
+      "aliases": [
+        "identify"
+      ],
+      "category": 4,
+      "description": "Identify a song from a replied audio/video message using AudD",
+      "usage": "shazam",
+      "access": "public"
+    },
+    {
+      "name": "shipping",
+      "aliases": [
+        "lovematch"
+      ],
+      "category": 4,
+      "description": "Ship two people",
+      "usage": "shipping",
+      "access": "public"
+    },
+    {
+      "name": "shorten",
+      "aliases": [],
+      "category": 4,
+      "description": "Shorten a URL using TinyURL",
+      "usage": "shorten",
+      "access": "public"
+    },
+    {
+      "name": "shorturl",
+      "aliases": [],
+      "category": 4,
+      "description": "Shorten URL",
+      "usage": "shorturl",
+      "access": "public"
+    },
+    {
+      "name": "shuffle",
+      "aliases": [
+        "scramble"
+      ],
+      "category": 4,
+      "description": "Shuffle text",
+      "usage": "shuffle",
+      "access": "public"
+    },
+    {
+      "name": "simp",
+      "aliases": [
+        "simpmeter"
+      ],
+      "category": 4,
+      "description": "Simp meter",
+      "usage": "simp",
+      "access": "public"
+    },
+    {
+      "name": "slang",
+      "aliases": [
+        "genslang",
+        "genz"
+      ],
+      "category": 4,
+      "description": "Gen Z slang dictionary",
+      "usage": "slang",
+      "access": "public"
+    },
+    {
+      "name": "sleep",
+      "aliases": [
+        "sleepcalc"
+      ],
+      "category": 4,
+      "description": "Sleep calculator",
+      "usage": "sleep",
+      "access": "public"
+    },
+    {
+      "name": "slot",
+      "aliases": [
+        "slots",
+        "slotmachine"
+      ],
+      "category": 4,
+      "description": "Slot machine game",
+      "usage": "slot",
+      "access": "public"
+    },
+    {
+      "name": "slow",
+      "aliases": [],
+      "category": 4,
+      "description": "Ralenti — audio",
+      "usage": "slow (répondre à un audio)",
+      "access": "public"
+    },
+    {
+      "name": "slowmode",
+      "aliases": [],
+      "category": 4,
+      "description": "Set a cooldown between messages per user. Usage: .slowmode 30 (seconds) or .slowmode off",
+      "usage": "slowmode",
+      "access": "admin"
+    },
+    {
+      "name": "smallcaps",
+      "aliases": [],
+      "category": 4,
+      "description": "Convert to small caps",
+      "usage": "smallcaps",
+      "access": "public"
+    },
+    {
+      "name": "smeme",
+      "aliases": [
+        "stickermeme"
+      ],
+      "category": 4,
+      "description": "Meme sticker (texte haut | bas)",
+      "usage": "smeme haut | bas (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "smooth",
+      "aliases": [],
+      "category": 4,
+      "description": "Fluidité 120 fps (vidéo) — vidéo",
+      "usage": "smooth (répondre à un vidéo)",
+      "access": "public"
+    },
+    {
+      "name": "snake",
+      "aliases": [
+        "snakecase"
+      ],
+      "category": 4,
+      "description": "Convert to snake_case",
+      "usage": "snake",
+      "access": "public"
+    },
+    {
+      "name": "socialinfo",
+      "aliases": [
+        "platform"
+      ],
+      "category": 4,
+      "description": "Social media platform info",
+      "usage": "socialinfo",
+      "access": "public"
+    },
+    {
+      "name": "solve",
+      "aliases": [],
+      "category": 4,
+      "description": "Solve riddle",
+      "usage": "solve",
+      "access": "public"
+    },
+    {
+      "name": "soundcloud",
+      "aliases": [
+        "scdl",
+        "sc"
+      ],
+      "category": 4,
+      "description": "Download SoundCloud audio",
+      "usage": "soundcloud",
+      "access": "public"
+    },
+    {
+      "name": "space",
+      "aliases": [
+        "spaced"
+      ],
+      "category": 4,
+      "description": "Add spaces between letters",
+      "usage": "space",
+      "access": "public"
+    },
+    {
+      "name": "spacefact",
+      "aliases": [
+        "spacef"
+      ],
+      "category": 4,
+      "description": "Random space fact",
+      "usage": "spacefact",
+      "access": "public"
+    },
+    {
+      "name": "speak",
+      "aliases": [
+        "voice"
+      ],
+      "category": 4,
+      "description": "Convert text to speech audio",
+      "usage": "speak",
+      "access": "public"
+    },
+    {
+      "name": "speed",
+      "aliases": [],
+      "category": 4,
+      "description": "Bot speed test",
+      "usage": "speed",
+      "access": "public"
+    },
+    {
+      "name": "spell",
+      "aliases": [
+        "spellcheck"
+      ],
+      "category": 4,
+      "description": "Spell a word",
+      "usage": "spell",
+      "access": "public"
+    },
+    {
+      "name": "split",
+      "aliases": [
+        "splitbill",
+        "billsplit"
+      ],
+      "category": 4,
+      "description": "Bill splitter",
+      "usage": "split",
+      "access": "public"
+    },
+    {
+      "name": "sportfact",
+      "aliases": [
+        "sportf"
+      ],
+      "category": 4,
+      "description": "Random sport fact",
+      "usage": "sportfact",
+      "access": "public"
+    },
+    {
+      "name": "spotify",
+      "aliases": [
+        "spoti",
+        "spdl"
+      ],
+      "category": 4,
+      "description": "Search and download a song as audio (via YouTube)",
+      "usage": "spotify",
+      "access": "public"
+    },
+    {
+      "name": "spp",
+      "aliases": [
+        "profile",
+        "getpp"
+      ],
+      "category": 4,
+      "description": "Get a user's profile picture",
+      "usage": "spp",
+      "access": "public"
+    },
+    {
+      "name": "sqrt",
+      "aliases": [
+        "squareroot"
+      ],
+      "category": 4,
+      "description": "Square root",
+      "usage": "sqrt",
+      "access": "public"
+    },
+    {
+      "name": "status2",
+      "aliases": [
+        "whatsappstatus"
+      ],
+      "category": 4,
+      "description": "Random status ideas",
+      "usage": "status2",
+      "access": "public"
+    },
+    {
+      "name": "steal",
+      "aliases": [
+        "stealsticker",
+        "takesticker"
+      ],
+      "category": 4,
+      "description": "Convert any replied image/video/sticker to a bot-branded sticker",
+      "usage": "steal",
+      "access": "public"
+    },
+    {
+      "name": "step",
+      "aliases": [
+        "steps",
+        "stepcalc"
+      ],
+      "category": 4,
+      "description": "Steps to distance calculator",
+      "usage": "step",
+      "access": "public"
+    },
+    {
+      "name": "stext",
+      "aliases": [
+        "textstick"
+      ],
+      "category": 4,
+      "description": "Create styled text stickers with various themes",
+      "usage": "stext",
+      "access": "public"
+    },
+    {
+      "name": "sticker",
+      "aliases": [
+        "s"
+      ],
+      "category": 4,
+      "description": "Image/vidéo → sticker",
+      "usage": "sticker (réponds à une image)",
+      "access": "public"
+    },
+    {
+      "name": "stickerpack",
+      "aliases": [
+        "pack"
+      ],
+      "category": 4,
+      "description": "Pack de stickers (répondre à une image = cover+1 sticker)",
+      "usage": "stickerpack [nom]",
+      "access": "public"
+    },
+    {
+      "name": "stickertoimg",
+      "aliases": [
+        "unwebp"
+      ],
+      "category": 4,
+      "description": "Convert sticker to JPEG image",
+      "usage": "stickertoimg",
+      "access": "public"
+    },
+    {
+      "name": "stock",
+      "aliases": [
+        "stockprice",
+        "shares"
+      ],
+      "category": 4,
+      "description": "Get live stock price from Yahoo Finance",
+      "usage": "stock",
+      "access": "public"
+    },
+    {
+      "name": "stopwatch",
+      "aliases": [
+        "sw"
+      ],
+      "category": 4,
+      "description": "Stopwatch",
+      "usage": "stopwatch",
+      "access": "public"
+    },
+    {
+      "name": "stretch",
+      "aliases": [
+        "stretching"
+      ],
+      "category": 4,
+      "description": "Stretching routine",
+      "usage": "stretch",
+      "access": "public"
+    },
+    {
+      "name": "strike",
+      "aliases": [
+        "strikethrough"
+      ],
+      "category": 4,
+      "description": "Strike through text",
+      "usage": "strike",
+      "access": "public"
+    },
+    {
+      "name": "subtract",
+      "aliases": [
+        "minus",
+        "sub"
+      ],
+      "category": 4,
+      "description": "Subtract numbers",
+      "usage": "subtract",
+      "access": "public"
+    },
+    {
+      "name": "sum",
+      "aliases": [
+        "plus"
+      ],
+      "category": 4,
+      "description": "Add numbers",
+      "usage": "sum",
+      "access": "public"
+    },
+    {
+      "name": "summary",
+      "aliases": [
+        "brief"
+      ],
+      "category": 4,
+      "description": "AI summarizes any long text, article, or quoted message",
+      "usage": "summary",
+      "access": "public"
+    },
+    {
+      "name": "superhero",
+      "aliases": [
+        "hero"
+      ],
+      "category": 4,
+      "description": "Superhero info",
+      "usage": "superhero",
+      "access": "public"
+    },
+    {
+      "name": "superpower",
+      "aliases": [
+        "randompower"
+      ],
+      "category": 4,
+      "description": "Random superpower",
+      "usage": "superpower",
+      "access": "public"
+    },
+    {
+      "name": "sus",
+      "aliases": [
+        "susmeter"
+      ],
+      "category": 4,
+      "description": "Sus meter",
+      "usage": "sus",
+      "access": "public"
+    },
+    {
+      "name": "synonym",
+      "aliases": [
+        "syn"
+      ],
+      "category": 4,
+      "description": "Find synonyms",
+      "usage": "synonym",
+      "access": "public"
+    },
+    {
+      "name": "take",
+      "aliases": [],
+      "category": 4,
+      "description": "Re-sticker avec ton pack",
+      "usage": "take [pack|author]",
+      "access": "public"
+    },
+    {
+      "name": "tax",
+      "aliases": [
+        "taxcalc",
+        "incometax"
+      ],
+      "category": 4,
+      "description": "Simple tax calculator",
+      "usage": "tax",
+      "access": "public"
+    },
+    {
+      "name": "techfact",
+      "aliases": [
+        "techf"
+      ],
+      "category": 4,
+      "description": "Random tech fact",
+      "usage": "techfact",
+      "access": "public"
+    },
+    {
+      "name": "tempinbox",
+      "aliases": [
+        "readmail",
+        "delmail",
+        "tempmailhelp"
+      ],
+      "category": 4,
+      "description": "Extended temporary mail commands",
+      "usage": "tempinbox",
+      "access": "public"
+    },
+    {
+      "name": "tempmail",
+      "aliases": [
+        "tmpmail",
+        "fakemail",
+        "disposable"
+      ],
+      "category": 4,
+      "description": "Generate a temporary disposable email address and check its inbox",
+      "usage": "tempmail",
+      "access": "public"
+    },
+    {
+      "name": "tempo",
+      "aliases": [],
+      "category": 4,
+      "description": "Tempo ralenti — audio",
+      "usage": "tempo (répondre à un audio)",
+      "access": "public"
+    },
+    {
+      "name": "testhandler",
+      "aliases": [],
+      "category": 4,
+      "description": "Internal diagnostics — owner only",
+      "usage": "testhandler",
+      "access": "owner"
+    },
+    {
+      "name": "textsticker",
+      "aliases": [
+        "tsticker"
+      ],
+      "category": 4,
+      "description": "Texte → sticker",
+      "usage": "textsticker <texte>",
+      "access": "public"
+    },
+    {
+      "name": "thankyou",
+      "aliases": [
+        "thanks2"
+      ],
+      "category": 4,
+      "description": "Thank you in many languages",
+      "usage": "thankyou",
+      "access": "public"
+    },
+    {
+      "name": "theme",
+      "aliases": [
+        "themes",
+        "settheme"
+      ],
+      "category": 4,
+      "description": "List available themes or switch the bot theme at runtime",
+      "usage": "theme",
+      "access": "owner"
+    },
+    {
+      "name": "thisorthat",
+      "aliases": [
+        "tot"
+      ],
+      "category": 4,
+      "description": "This or that",
+      "usage": "thisorthat",
+      "access": "public"
+    },
+    {
+      "name": "threads",
+      "aliases": [
+        "threadsdl"
+      ],
+      "category": 4,
+      "description": "Download Threads videos and images",
+      "usage": "threads",
+      "access": "public"
+    },
+    {
+      "name": "tiktok",
+      "aliases": [
+        "tt",
+        "ttdl",
+        "tiktokdl"
+      ],
+      "category": 4,
+      "description": "Download a TikTok video without watermark",
+      "usage": "tiktok",
+      "access": "public"
+    },
+    {
+      "name": "tiktokstalk",
+      "aliases": [
+        "ttstalk",
+        "tksearch",
+        "ttuser",
+        "tikstalk"
+      ],
+      "category": 4,
+      "description": "Stalk a TikTok profile — followers, videos, likes, bio and more",
+      "usage": "tiktokstalk",
+      "access": "public"
+    },
+    {
+      "name": "timer",
+      "aliases": [
+        "countdown"
+      ],
+      "category": 4,
+      "description": "Set a timer",
+      "usage": "timer",
+      "access": "public"
+    },
+    {
+      "name": "timestamp",
+      "aliases": [
+        "epoch",
+        "unixtime"
+      ],
+      "category": 4,
+      "description": "Unix timestamp",
+      "usage": "timestamp",
+      "access": "public"
+    },
+    {
+      "name": "tipcalc",
+      "aliases": [],
+      "category": 4,
+      "description": "Tip calculator",
+      "usage": "tipcalc",
+      "access": "public"
+    },
+    {
+      "name": "title",
+      "aliases": [
+        "titlecase"
+      ],
+      "category": 4,
+      "description": "Title case text",
+      "usage": "title",
+      "access": "public"
+    },
+    {
+      "name": "toaudio",
+      "aliases": [],
+      "category": 4,
+      "description": "Vidéo → mp3",
+      "usage": "toaudio (réponds à une vidéo)",
+      "access": "public"
+    },
+    {
+      "name": "tod",
+      "aliases": [],
+      "category": 4,
+      "description": "Truth or Dare game",
+      "usage": "tod",
+      "access": "public"
+    },
+    {
+      "name": "todo",
+      "aliases": [
+        "todolist",
+        "task"
+      ],
+      "category": 4,
+      "description": "Todo list",
+      "usage": "todo",
+      "access": "public"
+    },
+    {
+      "name": "togif",
+      "aliases": [],
+      "category": 4,
+      "description": "Vidéo → GIF",
+      "usage": "togif (répondre vidéo)",
+      "access": "public"
+    },
+    {
+      "name": "tohex",
+      "aliases": [],
+      "category": 4,
+      "description": "Convert to hex",
+      "usage": "tohex",
+      "access": "public"
+    },
+    {
+      "name": "toimg",
+      "aliases": [],
+      "category": 4,
+      "description": "Sticker → image",
+      "usage": "toimg (réponds à un sticker)",
+      "access": "public"
+    },
+    {
+      "name": "tojpeg",
+      "aliases": [],
+      "category": 4,
+      "description": "Image → JPEG",
+      "usage": "tojpeg (répondre image)",
+      "access": "public"
+    },
+    {
+      "name": "tomp3",
+      "aliases": [
+        "tovn",
+        "audio"
+      ],
+      "category": 4,
+      "description": "Convert a video or voice message to an MP3 audio file",
+      "usage": "tomp3",
+      "access": "public"
+    },
+    {
+      "name": "tongue",
+      "aliases": [
+        "tonguetwister",
+        "twister"
+      ],
+      "category": 4,
+      "description": "Tongue twister",
+      "usage": "tongue",
+      "access": "public"
+    },
+    {
+      "name": "topanime",
+      "aliases": [
+        "topmanga",
+        "seasonal",
+        "airing",
+        "upcoming",
+        "character",
+        "animequote",
+        "animegenre",
+        "animeinfo",
+        "mangainfo",
+        "studio"
+      ],
+      "category": 4,
+      "description": "Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,",
+      "usage": "topanime",
+      "access": "public"
+    },
+    {
+      "name": "toptt",
+      "aliases": [
+        "tovideo",
+        "sendaudio",
+        "sendvideo",
+        "snack",
+        "video"
+      ],
+      "category": 4,
+      "description": "Additional converters and downloaders",
+      "usage": "toptt",
+      "access": "public"
+    },
+    {
+      "name": "tourl",
+      "aliases": [
+        "imgtourl",
+        "imgurl",
+        "geturl",
+        "upload"
+      ],
+      "category": 4,
+      "description": "Upload a media file to Catbox and get a shareable URL",
+      "usage": "tourl",
+      "access": "public"
+    },
+    {
+      "name": "transcribe",
+      "aliases": [
+        "voicetotext",
+        "vtt",
+        "speech"
+      ],
+      "category": 4,
+      "description": "Transcribe voice messages to text (reply to a voice note)",
+      "usage": "transcribe",
+      "access": "public"
+    },
+    {
+      "name": "troll",
+      "aliases": [
+        "trollface"
+      ],
+      "category": 4,
+      "description": "Troll text art",
+      "usage": "troll",
+      "access": "public"
+    },
+    {
+      "name": "truth",
+      "aliases": [
+        "truthq"
+      ],
+      "category": 4,
+      "description": "Truth question",
+      "usage": "truth",
+      "access": "public"
+    },
+    {
+      "name": "ttt",
+      "aliases": [],
+      "category": 4,
+      "description": "Tic Tac Toe",
+      "usage": "ttt",
+      "access": "public"
+    },
+    {
+      "name": "twitter",
+      "aliases": [
+        "xdl",
+        "twdl",
+        "tw"
+      ],
+      "category": 4,
+      "description": "Download Twitter/X videos",
+      "usage": "twitter",
+      "access": "public"
+    },
+    {
+      "name": "typecheck",
+      "aliases": [
+        "tc"
+      ],
+      "category": 4,
+      "description": "Check typing race",
+      "usage": "typecheck",
+      "access": "public"
+    },
+    {
+      "name": "typerace",
+      "aliases": [
+        "typing2"
+      ],
+      "category": 4,
+      "description": "Typing race challenge",
+      "usage": "typerace",
+      "access": "public"
+    },
+    {
+      "name": "typing",
+      "aliases": [
+        "typingtest",
+        "wpm"
+      ],
+      "category": 4,
+      "description": "Typing speed test",
+      "usage": "typing",
+      "access": "public"
+    },
+    {
+      "name": "unbinary",
+      "aliases": [
+        "frombin"
+      ],
+      "category": 4,
+      "description": "Convert from binary",
+      "usage": "unbinary",
+      "access": "public"
+    },
+    {
+      "name": "unhex",
+      "aliases": [
+        "fromhex"
+      ],
+      "category": 4,
+      "description": "Convert from hex",
+      "usage": "unhex",
+      "access": "public"
+    },
+    {
+      "name": "unitconvert",
+      "aliases": [],
+      "category": 4,
+      "description": "Unit converter",
+      "usage": "unitconvert",
+      "access": "public"
+    },
+    {
+      "name": "unmorse",
+      "aliases": [
+        "demorse"
+      ],
+      "category": 4,
+      "description": "Convert from Morse code",
+      "usage": "unmorse",
+      "access": "public"
+    },
+    {
+      "name": "unscramble2",
+      "aliases": [
+        "wordchallenge"
+      ],
+      "category": 4,
+      "description": "Unscramble challenge",
+      "usage": "unscramble2",
+      "access": "public"
+    },
+    {
+      "name": "unscrambleanswer",
+      "aliases": [
+        "usa"
+      ],
+      "category": 4,
+      "description": "Answer unscramble",
+      "usage": "unscrambleanswer",
+      "access": "public"
+    },
+    {
+      "name": "upper",
+      "aliases": [
+        "uppercase",
+        "caps"
+      ],
+      "category": 4,
+      "description": "Convert to uppercase",
+      "usage": "upper",
+      "access": "public"
+    },
+    {
+      "name": "upsidedown",
+      "aliases": [],
+      "category": 4,
+      "description": "Flip text upside down",
+      "usage": "upsidedown",
+      "access": "public"
+    },
+    {
+      "name": "urldecode",
+      "aliases": [
+        "decodeurl"
+      ],
+      "category": 4,
+      "description": "URL decode",
+      "usage": "urldecode",
+      "access": "public"
+    },
+    {
+      "name": "urlencode",
+      "aliases": [
+        "encodeurl"
+      ],
+      "category": 4,
+      "description": "URL encode",
+      "usage": "urlencode",
+      "access": "public"
+    },
+    {
+      "name": "useragent",
+      "aliases": [
+        "ua"
+      ],
+      "category": 4,
+      "description": "Random user agent",
+      "usage": "useragent",
+      "access": "public"
+    },
+    {
+      "name": "uuid",
+      "aliases": [
+        "guid"
+      ],
+      "category": 4,
+      "description": "Generate UUID",
+      "usage": "uuid",
+      "access": "public"
+    },
+    {
+      "name": "uwu",
+      "aliases": [
+        "uwuify"
+      ],
+      "category": 4,
+      "description": "UwUify text",
+      "usage": "uwu",
+      "access": "public"
+    },
+    {
+      "name": "venice",
+      "aliases": [],
+      "category": 4,
+      "description": "Ask Venice AI a question",
+      "usage": "venice",
+      "access": "public"
+    },
+    {
+      "name": "viewonce",
+      "aliases": [
+        "vo"
+      ],
+      "category": 4,
+      "description": "Renvoyer un média en vue unique",
+      "usage": "viewonce (réponds à une image/vidéo)",
+      "access": "public"
+    },
+    {
+      "name": "vocab",
+      "aliases": [
+        "wordoftheday",
+        "wotd"
+      ],
+      "category": 4,
+      "description": "Word of the day",
+      "usage": "vocab",
+      "access": "public"
+    },
+    {
+      "name": "vowels",
+      "aliases": [
+        "novowels"
+      ],
+      "category": 4,
+      "description": "Remove vowels",
+      "usage": "vowels",
+      "access": "public"
+    },
+    {
+      "name": "vv",
+      "aliases": [],
+      "category": 4,
+      "description": "Récupérer un média en vue unique",
+      "usage": "vv (réponds à un média vue unique)",
+      "access": "public"
+    },
+    {
+      "name": "waifu",
+      "aliases": [
+        "neko",
+        "maid",
+        "husbando",
+        "shinobu",
+        "megumin",
+        "uniform",
+        "selfies",
+        "raiden",
+        "rias",
+        "kamisato"
+      ],
+      "category": 4,
+      "description": "Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more",
+      "usage": "waifu",
+      "access": "public"
+    },
+    {
+      "name": "wanted",
+      "aliases": [],
+      "category": 4,
+      "description": "Poster Wanted (répondre image)",
+      "usage": "wanted [nom]",
+      "access": "public"
+    },
+    {
+      "name": "warning",
+      "aliases": [],
+      "category": 4,
+      "description": "Warn a user",
+      "usage": "warning",
+      "access": "admin"
+    },
+    {
+      "name": "waves",
+      "aliases": [
+        "textwave"
+      ],
+      "category": 4,
+      "description": "Wave text effect",
+      "usage": "waves",
+      "access": "public"
+    },
+    {
+      "name": "webshot",
+      "aliases": [],
+      "category": 4,
+      "description": "Take a screenshot of any website",
+      "usage": "webshot",
+      "access": "public"
+    },
+    {
+      "name": "whatsapp",
+      "aliases": [],
+      "category": 4,
+      "description": "View a user WhatsApp profile info",
+      "usage": "whatsapp",
+      "access": "public"
+    },
+    {
+      "name": "wikipedia",
+      "aliases": [
+        "search"
+      ],
+      "category": 4,
+      "description": "Search Wikipedia for any topic",
+      "usage": "wikipedia",
+      "access": "public"
+    },
+    {
+      "name": "wisdom",
+      "aliases": [
+        "wisdomquote"
+      ],
+      "category": 4,
+      "description": "Random wisdom",
+      "usage": "wisdom",
+      "access": "public"
+    },
+    {
+      "name": "wordcount",
+      "aliases": [
+        "wc"
+      ],
+      "category": 4,
+      "description": "Detailed word count",
+      "usage": "wordcount",
+      "access": "public"
+    },
+    {
+      "name": "wordscramble",
+      "aliases": [
+        "unscramble",
+        "scrambleword"
+      ],
+      "category": 4,
+      "description": "Word scramble game",
+      "usage": "wordscramble",
+      "access": "public"
+    },
+    {
+      "name": "workout",
+      "aliases": [
+        "exercise",
+        "wod"
+      ],
+      "category": 4,
+      "description": "Random workout",
+      "usage": "workout",
+      "access": "public"
+    },
+    {
+      "name": "wouldyou",
+      "aliases": [
+        "wyd"
+      ],
+      "category": 4,
+      "description": "What would you do scenario",
+      "usage": "wouldyou",
+      "access": "public"
+    },
+    {
+      "name": "wouldyourather",
+      "aliases": [
+        "wyr"
+      ],
+      "category": 4,
+      "description": "Would you rather",
+      "usage": "wouldyourather",
+      "access": "public"
+    },
+    {
+      "name": "ws",
+      "aliases": [],
+      "category": 4,
+      "description": "Unscramble the word game",
+      "usage": "ws",
+      "access": "public"
+    },
+    {
+      "name": "yoga",
+      "aliases": [
+        "yogapose"
+      ],
+      "category": 4,
+      "description": "Random yoga pose",
+      "usage": "yoga",
+      "access": "public"
+    },
+    {
+      "name": "ytmp4",
+      "aliases": [
+        "ytvideo",
+        "ytv"
+      ],
+      "category": 4,
+      "description": "Download YouTube video (up to 10 min)",
+      "usage": "ytmp4",
+      "access": "public"
+    },
+    {
+      "name": "ytvid-audio",
+      "aliases": [
+        "ytaudio2"
+      ],
+      "category": 4,
+      "description": "Download YouTube audio as MP3 by URL",
+      "usage": "ytvid-audio",
+      "access": "public"
+    },
+    {
+      "name": "zalgo",
+      "aliases": [
+        "creepy"
+      ],
+      "category": 4,
+      "description": "Zalgo creepy text",
+      "usage": "zalgo",
+      "access": "public"
+    },
+    {
+      "name": "zodiac",
+      "aliases": [
+        "horoscope",
+        "starsign"
+      ],
+      "category": 4,
+      "description": "Zodiac sign info",
+      "usage": "zodiac",
+      "access": "public"
+    },
+    {
+      "name": "zodiacmatch",
+      "aliases": [
+        "zmatch"
+      ],
+      "category": 4,
+      "description": "Zodiac compatibility",
+      "usage": "zodiacmatch",
+      "access": "public"
+    },
+    {
+      "name": "arena",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « arena » (effet texte)",
+      "usage": "arena <texte>",
+      "access": "public"
+    },
+    {
+      "name": "ascii",
+      "aliases": [],
+      "category": 5,
+      "description": "Convertir en art ASCII (5 lignes)",
+      "usage": "ascii <texte>",
+      "access": "public"
+    },
+    {
+      "name": "base64",
+      "aliases": [],
+      "category": 5,
+      "description": "Encoder/décoder base64",
+      "usage": "base64 [decode] <texte>",
+      "access": "public"
+    },
+    {
+      "name": "binary",
+      "aliases": [],
+      "category": 5,
+      "description": "Encoder/décoder binaire",
+      "usage": "binary [decode] <texte>",
+      "access": "public"
+    },
+    {
+      "name": "bookmark",
+      "aliases": [],
+      "category": 5,
+      "description": "Marque-pages de liens",
+      "usage": "bookmark <lien> | bookmark list",
+      "access": "public"
+    },
+    {
+      "name": "boomlg",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « boomlg » (effet texte)",
+      "usage": "boomlg <texte>",
+      "access": "public"
+    },
+    {
+      "name": "calc",
+      "aliases": [],
+      "category": 5,
+      "description": "Calculatrice",
+      "usage": "calc 2+2*3",
+      "access": "public"
+    },
+    {
+      "name": "calllink",
+      "aliases": [],
+      "category": 5,
+      "description": "Lien d'appel WhatsApp (sans appel sortant bot)",
+      "usage": "calllink [vidéo]",
+      "access": "public"
+    },
+    {
+      "name": "cat",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « cat » (effet texte)",
+      "usage": "cat <texte>",
+      "access": "public"
+    },
+    {
+      "name": "color",
+      "aliases": [],
+      "category": 5,
+      "description": "Couleur aléatoire ou par nom",
+      "usage": "color [nom|hex]",
+      "access": "public"
+    },
+    {
+      "name": "crypto",
+      "aliases": [],
+      "category": 5,
+      "description": "Prix d'une crypto (CoinGecko)",
+      "usage": "crypto bitcoin",
+      "access": "public"
+    },
+    {
+      "name": "define",
+      "aliases": [],
+      "category": 5,
+      "description": "Définition d'un mot (Wiktionnaire)",
+      "usage": "define <mot>",
+      "access": "public"
+    },
+    {
+      "name": "del",
+      "aliases": [
+        "delete"
+      ],
+      "category": 5,
+      "description": "Supprimer un message (pour tous si admin/bot)",
+      "usage": "del (répondre au message)",
+      "access": "public"
+    },
+    {
+      "name": "devil",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « devil » (effet texte)",
+      "usage": "devil <texte>",
+      "access": "public"
+    },
+    {
+      "name": "didong",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « didong » (effet texte)",
+      "usage": "didong <texte>",
+      "access": "public"
+    },
+    {
+      "name": "dns",
+      "aliases": [],
+      "category": 5,
+      "description": "Enregistrements DNS",
+      "usage": "dns <domaine>",
+      "access": "public"
+    },
+    {
+      "name": "dragonball",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « dragonball » (effet texte)",
+      "usage": "dragonball <texte>",
+      "access": "public"
+    },
+    {
+      "name": "edit",
+      "aliases": [],
+      "category": 5,
+      "description": "Modifier un message envoyé par le bot",
+      "usage": "edit <nouveau texte> (répondre au message)",
+      "access": "public"
+    },
+    {
+      "name": "glitch",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « glitch » (effet texte)",
+      "usage": "glitch <texte>",
+      "access": "public"
+    },
+    {
+      "name": "gold",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « gold » (effet texte)",
+      "usage": "gold <texte>",
+      "access": "public"
+    },
+    {
+      "name": "greenneon",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « greenneon » (effet texte)",
+      "usage": "greenneon <texte>",
+      "access": "public"
+    },
+    {
+      "name": "harrypotter",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « harrypotter » (effet texte)",
+      "usage": "harrypotter <texte>",
+      "access": "public"
+    },
+    {
+      "name": "hash",
+      "aliases": [],
+      "category": 5,
+      "description": "Hasher un texte (MD5/SHA256)",
+      "usage": "hash <texte>",
+      "access": "public"
+    },
+    {
+      "name": "incandescent",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « incandescent » (effet texte)",
+      "usage": "incandescent <texte>",
+      "access": "public"
+    },
+    {
+      "name": "ip",
+      "aliases": [],
+      "category": 5,
+      "description": "Infos IP (ip-api gratuit)",
+      "usage": "ip [adresse]",
+      "access": "public"
+    },
+    {
+      "name": "lightglow",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « lightglow » (effet texte)",
+      "usage": "lightglow <texte>",
+      "access": "public"
+    },
+    {
+      "name": "location",
+      "aliases": [],
+      "category": 5,
+      "description": "Envoyer un point GPS",
+      "usage": "location <lat>, <lng> [nom]",
+      "access": "public"
+    },
+    {
+      "name": "logolist",
+      "aliases": [],
+      "category": 5,
+      "description": "Voir tous les effets de logo",
+      "usage": "logolist",
+      "access": "public"
+    },
+    {
+      "name": "lyrics",
+      "aliases": [
+        "paroles"
+      ],
+      "category": 5,
+      "description": "Paroles d'une chanson (lrclib.net)",
+      "usage": "lyrics <artiste> <titre>",
+      "access": "public"
+    },
+    {
+      "name": "morse",
+      "aliases": [],
+      "category": 5,
+      "description": "Texte → code morse",
+      "usage": "morse <texte>",
+      "access": "public"
+    },
+    {
+      "name": "naruto",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « naruto » (effet texte)",
+      "usage": "naruto <texte>",
+      "access": "public"
+    },
+    {
+      "name": "neon",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « neon » (effet texte)",
+      "usage": "neon <texte>",
+      "access": "public"
+    },
+    {
+      "name": "neonlight",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « neonlight » (effet texte)",
+      "usage": "neonlight <texte>",
+      "access": "public"
+    },
+    {
+      "name": "note",
+      "aliases": [],
+      "category": 5,
+      "description": "Note personnelle (ajouter/lister)",
+      "usage": "note <texte> | note list",
+      "access": "public"
+    },
+    {
+      "name": "onwa",
+      "aliases": [],
+      "category": 5,
+      "description": "Vérifier si un numéro a WhatsApp",
+      "usage": "onwa <numéro>",
+      "access": "public"
+    },
+    {
+      "name": "password",
+      "aliases": [
+        "mdp"
+      ],
+      "category": 5,
+      "description": "Générer un mot de passe sécurisé",
+      "usage": "password [longueur]",
+      "access": "public"
+    },
+    {
+      "name": "purple",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « purple » (effet texte)",
+      "usage": "purple <texte>",
+      "access": "public"
+    },
+    {
+      "name": "qr",
+      "aliases": [],
+      "category": 5,
+      "description": "Générer un QR code",
+      "usage": "qr <texte>",
+      "access": "public"
+    },
+    {
+      "name": "react",
+      "aliases": [],
+      "category": 5,
+      "description": "Réagir à un message",
+      "usage": "react 🔥 (répondre au message)",
+      "access": "public"
+    },
+    {
+      "name": "remind",
+      "aliases": [
+        "rappel"
+      ],
+      "category": 5,
+      "description": "Rappel simple",
+      "usage": "remind 5m raison",
+      "access": "public"
+    },
+    {
+      "name": "screenshot",
+      "aliases": [
+        "ss"
+      ],
+      "category": 5,
+      "description": "Capture d'écran d'un site web",
+      "usage": "screenshot <url> [full|width=N|crop=N|wait=N|png|iphoneX|…]",
+      "access": "public"
+    },
+    {
+      "name": "seen",
+      "aliases": [],
+      "category": 5,
+      "description": "Présence en direct d'un contact",
+      "usage": "seen @mention|numéro",
+      "access": "public"
+    },
+    {
+      "name": "short",
+      "aliases": [
+        "tiny"
+      ],
+      "category": 5,
+      "description": "Raccourcir une URL (is.gd gratuit)",
+      "usage": "short <url>",
+      "access": "public"
+    },
+    {
+      "name": "snow",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « snow » (effet texte)",
+      "usage": "snow <texte>",
+      "access": "public"
+    },
+    {
+      "name": "speedtest",
+      "aliases": [],
+      "category": 5,
+      "description": "Vitesse de réponse du bot",
+      "usage": "speedtest",
+      "access": "public"
+    },
+    {
+      "name": "star",
+      "aliases": [],
+      "category": 5,
+      "description": "Épingler un message en favori (répondre)",
+      "usage": "star (répondre)",
+      "access": "public"
+    },
+    {
+      "name": "summer",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « summer » (effet texte)",
+      "usage": "summer <texte>",
+      "access": "public"
+    },
+    {
+      "name": "thunder",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « thunder » (effet texte)",
+      "usage": "thunder <texte>",
+      "access": "public"
+    },
+    {
+      "name": "timezone",
+      "aliases": [
+        "heure"
+      ],
+      "category": 5,
+      "description": "Heure dans un fuseau",
+      "usage": "timezone [ville]",
+      "access": "public"
+    },
+    {
+      "name": "tour",
+      "aliases": [],
+      "category": 5,
+      "description": "Upload média → lien temporaire (0x0.st)",
+      "usage": "tour (répondre média)",
+      "access": "public"
+    },
+    {
+      "name": "transformer",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « transformer » (effet texte)",
+      "usage": "transformer <texte>",
+      "access": "public"
+    },
+    {
+      "name": "translate",
+      "aliases": [
+        "tr"
+      ],
+      "category": 5,
+      "description": "Traduire un texte",
+      "usage": "translate [langue] <texte>",
+      "access": "public"
+    },
+    {
+      "name": "tts",
+      "aliases": [
+        "parle"
+      ],
+      "category": 5,
+      "description": "Texte → voix (TTS gratuit)",
+      "usage": "tts [lang] <texte>",
+      "access": "public"
+    },
+    {
+      "name": "unstar",
+      "aliases": [],
+      "category": 5,
+      "description": "Retirer un message des favoris (répondre)",
+      "usage": "unstar (répondre)",
+      "access": "public"
+    },
+    {
+      "name": "wall",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « wall » (effet texte)",
+      "usage": "wall <texte>",
+      "access": "public"
+    },
+    {
+      "name": "water",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « water » (effet texte)",
+      "usage": "water <texte>",
+      "access": "public"
+    },
+    {
+      "name": "weather",
+      "aliases": [
+        "meteo"
+      ],
+      "category": 5,
+      "description": "Météo d’une ville",
+      "usage": "weather <ville>",
+      "access": "public"
+    },
+    {
+      "name": "whitegold",
+      "aliases": [],
+      "category": 5,
+      "description": "Logo « whitegold » (effet texte)",
+      "usage": "whitegold <texte>",
+      "access": "public"
+    },
+    {
+      "name": "ai",
+      "aliases": [
+        "gemini"
+      ],
+      "category": 6,
+      "description": "Pose une question à l’IA",
+      "usage": "ai <question>",
+      "access": "public"
+    },
+    {
+      "name": "analyse",
+      "aliases": [
+        "ocr"
+      ],
+      "category": 6,
+      "description": "IA : lire une image, transcrire un vocal, résumer un document",
+      "usage": "analyse [question] (réponds à un média)",
+      "access": "public"
+    },
+    {
+      "name": "ia",
+      "aliases": [],
+      "category": 6,
+      "description": "Assistant IA — commandes, contenu, recherche web",
+      "usage": "ia <question>",
+      "access": "public"
+    },
+    {
+      "name": "summarize",
+      "aliases": [
+        "resume"
+      ],
+      "category": 6,
+      "description": "Résumer un texte cité",
+      "usage": "summarize (réponds à un texte)",
+      "access": "public"
+    },
+    {
+      "name": "8ball",
+      "aliases": [],
+      "category": 7,
+      "description": "Boule magique",
+      "usage": "8ball <question>",
+      "access": "public"
+    },
+    {
+      "name": "ablush",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « blush » (GIF, otakugifs)",
+      "usage": "ablush",
+      "access": "public"
+    },
+    {
+      "name": "acry",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « cry » (GIF, otakugifs)",
+      "usage": "acry",
+      "access": "public"
+    },
+    {
+      "name": "acuddle",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « cuddle » (GIF, otakugifs)",
+      "usage": "acuddle",
+      "access": "public"
+    },
+    {
+      "name": "adance",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « dance » (GIF, otakugifs)",
+      "usage": "adance",
+      "access": "public"
+    },
+    {
+      "name": "afacepalm",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « facepalm » (GIF, otakugifs)",
+      "usage": "afacepalm",
+      "access": "public"
+    },
+    {
+      "name": "ahappy",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « happy » (GIF, otakugifs)",
+      "usage": "ahappy",
+      "access": "public"
+    },
+    {
+      "name": "ahug",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « hug » (GIF, otakugifs)",
+      "usage": "ahug",
+      "access": "public"
+    },
+    {
+      "name": "akiss",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « kiss » (GIF, otakugifs)",
+      "usage": "akiss",
+      "access": "public"
+    },
+    {
+      "name": "alaugh",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « laugh » (GIF, otakugifs)",
+      "usage": "alaugh",
+      "access": "public"
+    },
+    {
+      "name": "angry",
+      "aliases": [],
+      "category": 7,
+      "description": "Animation « angry » (message animé)",
+      "usage": "angry",
+      "access": "public"
+    },
+    {
+      "name": "answer",
+      "aliases": [
+        "repondre"
+      ],
+      "category": 7,
+      "description": "Répondre à une question",
+      "usage": "answer <réponse>",
+      "access": "public"
+    },
+    {
+      "name": "apat",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « pat » (GIF, otakugifs)",
+      "usage": "apat",
+      "access": "public"
+    },
+    {
+      "name": "ashrug",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « shrug » (GIF, otakugifs)",
+      "usage": "ashrug",
+      "access": "public"
+    },
+    {
+      "name": "asmile",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « smile » (GIF, otakugifs)",
+      "usage": "asmile",
+      "access": "public"
+    },
+    {
+      "name": "astare",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « stare » (GIF, otakugifs)",
+      "usage": "astare",
+      "access": "public"
+    },
+    {
+      "name": "athumbsup",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « thumbsup » (GIF, otakugifs)",
+      "usage": "athumbsup",
+      "access": "public"
+    },
+    {
+      "name": "awave",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « wave » (GIF, otakugifs)",
+      "usage": "awave",
+      "access": "public"
+    },
+    {
+      "name": "awink",
+      "aliases": [],
+      "category": 7,
+      "description": "Réaction anime « wink » (GIF, otakugifs)",
+      "usage": "awink",
+      "access": "public"
+    },
+    {
+      "name": "bundesliga_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "Bundesliga — rencontres",
+      "usage": "bundesliga_matchday",
+      "access": "public"
+    },
+    {
+      "name": "bundesliga_table",
+      "aliases": [],
+      "category": 7,
+      "description": "Bundesliga — classement",
+      "usage": "bundesliga_table",
+      "access": "public"
+    },
+    {
+      "name": "bundesliga_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "Bundesliga — meilleurs passeurs",
+      "usage": "bundesliga_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "bundesliga_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "Bundesliga — meilleurs buteurs",
+      "usage": "bundesliga_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "choose",
+      "aliases": [],
+      "category": 7,
+      "description": "Choisir entre options",
+      "usage": "choose a, b, c",
+      "access": "public"
+    },
+    {
+      "name": "cl_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "Champions League — rencontres",
+      "usage": "cl_matchday",
+      "access": "public"
+    },
+    {
+      "name": "cl_table",
+      "aliases": [],
+      "category": 7,
+      "description": "Champions League — classement",
+      "usage": "cl_table",
+      "access": "public"
+    },
+    {
+      "name": "cl_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "Champions League — meilleurs passeurs",
+      "usage": "cl_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "cl_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "Champions League — meilleurs buteurs",
+      "usage": "cl_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "coin",
+      "aliases": [],
+      "category": 7,
+      "description": "Pile ou face",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "de",
+      "aliases": [
+        "dice"
+      ],
+      "category": 7,
+      "description": "LUDO : lancer le dé",
+      "usage": "de",
+      "access": "public"
+    },
+    {
+      "name": "emojimix",
+      "aliases": [
+        "emix"
+      ],
+      "category": 7,
+      "description": "Mélanger 2 emojis",
+      "usage": "emojimix 😀+🔥",
+      "access": "public"
+    },
+    {
+      "name": "epl_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "Premier League — rencontres",
+      "usage": "epl_matchday",
+      "access": "public"
+    },
+    {
+      "name": "epl_table",
+      "aliases": [],
+      "category": 7,
+      "description": "Premier League — classement",
+      "usage": "epl_table",
+      "access": "public"
+    },
+    {
+      "name": "epl_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "Premier League — meilleurs passeurs",
+      "usage": "epl_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "epl_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "Premier League — meilleurs buteurs",
+      "usage": "epl_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "eredivisie_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "Eredivisie — rencontres",
+      "usage": "eredivisie_matchday",
+      "access": "public"
+    },
+    {
+      "name": "eredivisie_table",
+      "aliases": [],
+      "category": 7,
+      "description": "Eredivisie — classement",
+      "usage": "eredivisie_table",
+      "access": "public"
+    },
+    {
+      "name": "eredivisie_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "Eredivisie — meilleurs passeurs",
+      "usage": "eredivisie_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "eredivisie_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "Eredivisie — meilleurs buteurs",
+      "usage": "eredivisie_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "fact",
+      "aliases": [],
+      "category": 7,
+      "description": "Fait aléatoire (API gratuite)",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "football",
+      "aliases": [],
+      "category": 7,
+      "description": "Voir les 36 commandes football",
+      "usage": "football",
+      "access": "public"
+    },
+    {
+      "name": "hang",
+      "aliases": [],
+      "category": 7,
+      "description": "Lettre du pendu",
+      "usage": "hang <lettre>",
+      "access": "public"
+    },
+    {
+      "name": "hangman",
+      "aliases": [
+        "pendu"
+      ],
+      "category": 7,
+      "description": "Jeu du pendu — devine le mot",
+      "usage": "hangman (puis lettre avec .hang <lettre>)",
+      "access": "public"
+    },
+    {
+      "name": "happi",
+      "aliases": [],
+      "category": 7,
+      "description": "Animation « happi » (message animé)",
+      "usage": "happi",
+      "access": "public"
+    },
+    {
+      "name": "heart",
+      "aliases": [],
+      "category": 7,
+      "description": "Animation « heart » (message animé)",
+      "usage": "heart",
+      "access": "public"
+    },
+    {
+      "name": "joke",
+      "aliases": [],
+      "category": 7,
+      "description": "Une blague",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "jokeen",
+      "aliases": [],
+      "category": 7,
+      "description": "Blague EN (API gratuite)",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "laliga_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "La Liga — rencontres",
+      "usage": "laliga_matchday",
+      "access": "public"
+    },
+    {
+      "name": "laliga_table",
+      "aliases": [],
+      "category": 7,
+      "description": "La Liga — classement",
+      "usage": "laliga_table",
+      "access": "public"
+    },
+    {
+      "name": "laliga_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "La Liga — meilleurs passeurs",
+      "usage": "laliga_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "laliga_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "La Liga — meilleurs buteurs",
+      "usage": "laliga_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "liga_portugal_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "Liga Portugal — rencontres",
+      "usage": "liga_portugal_matchday",
+      "access": "public"
+    },
+    {
+      "name": "liga_portugal_table",
+      "aliases": [],
+      "category": 7,
+      "description": "Liga Portugal — classement",
+      "usage": "liga_portugal_table",
+      "access": "public"
+    },
+    {
+      "name": "liga_portugal_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "Liga Portugal — meilleurs passeurs",
+      "usage": "liga_portugal_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "liga_portugal_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "Liga Portugal — meilleurs buteurs",
+      "usage": "liga_portugal_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "ligue1_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "Ligue 1 — rencontres",
+      "usage": "ligue1_matchday",
+      "access": "public"
+    },
+    {
+      "name": "ligue1_table",
+      "aliases": [],
+      "category": 7,
+      "description": "Ligue 1 — classement",
+      "usage": "ligue1_table",
+      "access": "public"
+    },
+    {
+      "name": "ligue1_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "Ligue 1 — meilleurs passeurs",
+      "usage": "ligue1_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "ligue1_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "Ligue 1 — meilleurs buteurs",
+      "usage": "ligue1_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "ludo",
+      "aliases": [
+        "ludogame"
+      ],
+      "category": 7,
+      "description": "LUDO 2-4 joueurs : .ludo creer | solo | rejoindre | start | pos | plateau",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "moon",
+      "aliases": [],
+      "category": 7,
+      "description": "Animation « moon » (message animé)",
+      "usage": "moon",
+      "access": "public"
+    },
+    {
+      "name": "nguess",
+      "aliases": [
+        "ng"
+      ],
+      "category": 7,
+      "description": "Ta devinette",
+      "usage": "nguess <nombre>",
+      "access": "public"
+    },
+    {
+      "name": "numberguess",
+      "aliases": [
+        "devinette"
+      ],
+      "category": 7,
+      "description": "Devine le nombre (1-100)",
+      "usage": "numberguess",
+      "access": "public"
+    },
+    {
+      "name": "pion",
+      "aliases": [
+        "pawn"
+      ],
+      "category": 7,
+      "description": "LUDO : déplacer un pion",
+      "usage": "pion 1-4",
+      "access": "public"
+    },
+    {
+      "name": "quote",
+      "aliases": [
+        "citation"
+      ],
+      "category": 7,
+      "description": "Citation aléatoire (API gratuite)",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "rate",
+      "aliases": [],
+      "category": 7,
+      "description": "Noter un sujet",
+      "usage": "rate <chose>",
+      "access": "public"
+    },
+    {
+      "name": "riddle",
+      "aliases": [
+        "enigme"
+      ],
+      "category": 7,
+      "description": "Une énigme à résoudre",
+      "usage": "riddle",
+      "access": "public"
+    },
+    {
+      "name": "roll",
+      "aliases": [],
+      "category": 7,
+      "description": "Lancer de dé",
+      "usage": "roll [faces]",
+      "access": "public"
+    },
+    {
+      "name": "sad",
+      "aliases": [],
+      "category": 7,
+      "description": "Animation « sad » (message animé)",
+      "usage": "sad",
+      "access": "public"
+    },
+    {
+      "name": "seriea_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "Serie A — rencontres",
+      "usage": "seriea_matchday",
+      "access": "public"
+    },
+    {
+      "name": "seriea_table",
+      "aliases": [],
+      "category": 7,
+      "description": "Serie A — classement",
+      "usage": "seriea_table",
+      "access": "public"
+    },
+    {
+      "name": "seriea_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "Serie A — meilleurs passeurs",
+      "usage": "seriea_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "seriea_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "Serie A — meilleurs buteurs",
+      "usage": "seriea_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "ship",
+      "aliases": [],
+      "category": 7,
+      "description": "Taux de compatibilité",
+      "usage": "ship @a @b",
+      "access": "public"
+    },
+    {
+      "name": "shy",
+      "aliases": [],
+      "category": 7,
+      "description": "Animation « shy » (message animé)",
+      "usage": "shy",
+      "access": "public"
+    },
+    {
+      "name": "tictactoe",
+      "aliases": [
+        "morpion"
+      ],
+      "category": 7,
+      "description": "Morpion à 2 joueurs (1v1)",
+      "usage": "tictactoe @adversaire",
+      "access": "public"
+    },
+    {
+      "name": "trivia",
+      "aliases": [
+        "quiz"
+      ],
+      "category": 7,
+      "description": "Question de culture générale",
+      "usage": "trivia",
+      "access": "public"
+    },
+    {
+      "name": "tttmove",
+      "aliases": [
+        "tttm"
+      ],
+      "category": 7,
+      "description": "Coup au morpion",
+      "usage": "tttmove <1-9>",
+      "access": "public"
+    },
+    {
+      "name": "wc_matchday",
+      "aliases": [],
+      "category": 7,
+      "description": "Coupe du monde — rencontres",
+      "usage": "wc_matchday",
+      "access": "public"
+    },
+    {
+      "name": "wc_table",
+      "aliases": [],
+      "category": 7,
+      "description": "Coupe du monde — classement",
+      "usage": "wc_table",
+      "access": "public"
+    },
+    {
+      "name": "wc_top_assist",
+      "aliases": [],
+      "category": 7,
+      "description": "Coupe du monde — meilleurs passeurs",
+      "usage": "wc_top_assist",
+      "access": "public"
+    },
+    {
+      "name": "wc_top_scorer",
+      "aliases": [],
+      "category": 7,
+      "description": "Coupe du monde — meilleurs buteurs",
+      "usage": "wc_top_scorer",
+      "access": "public"
+    },
+    {
+      "name": "wordgame",
+      "aliases": [
+        "motcache"
+      ],
+      "category": 7,
+      "description": "Devine le mot caché (lettres mélangées)",
+      "usage": "wordgame",
+      "access": "public"
+    },
+    {
+      "name": "biblie",
+      "aliases": [],
+      "category": 8,
+      "description": "Verset de la Bible (bible-api.com)",
+      "usage": "biblie <référence> (ex: john 3:16)",
+      "access": "public"
+    },
+    {
+      "name": "convert",
+      "aliases": [],
+      "category": 8,
+      "description": "Conversion de devises",
+      "usage": "convert 100 USD EUR",
+      "access": "public"
+    },
+    {
+      "name": "describe",
+      "aliases": [],
+      "category": 8,
+      "description": "Définition (Urban Dictionary)",
+      "usage": "describe <mot>",
+      "access": "public"
+    },
+    {
+      "name": "elements",
+      "aliases": [],
+      "category": 8,
+      "description": "Élément du tableau périodique",
+      "usage": "elements <nom|symbole>",
+      "access": "public"
+    },
+    {
+      "name": "github",
+      "aliases": [],
+      "category": 8,
+      "description": "Profil GitHub",
+      "usage": "github <utilisateur>",
+      "access": "public"
+    },
+    {
+      "name": "wiki",
+      "aliases": [],
+      "category": 8,
+      "description": "Résumé Wikipédia",
+      "usage": "wiki <sujet>",
+      "access": "public"
+    },
+    {
+      "name": "accept",
+      "aliases": [
+        "autoriser"
+      ],
+      "category": 9,
+      "description": "Autoriser des utilisateurs à utiliser le bot",
+      "usage": "accept @user1 @user2 [30m|24h|7d|permanent]",
+      "access": "owner"
+    },
+    {
+      "name": "accepted",
+      "aliases": [
+        "acceptes"
+      ],
+      "category": 9,
+      "description": "Liste des utilisateurs acceptés",
+      "usage": "accepted",
+      "access": "owner"
+    },
+    {
+      "name": "alwaysonline",
+      "aliases": [],
+      "category": 9,
+      "description": "Rester en ligne en permanence",
+      "usage": "alwaysonline on|off",
+      "access": "owner"
+    },
+    {
+      "name": "archive",
+      "aliases": [],
+      "category": 9,
+      "description": "Archiver / désarchiver le chat",
+      "usage": "archive [on|off]",
+      "access": "owner"
+    },
+    {
+      "name": "authcode",
+      "aliases": [
+        "codeauth"
+      ],
+      "category": 9,
+      "description": "Générer un code pour activer un sudo",
+      "usage": "authcode",
+      "access": "owner"
+    },
+    {
+      "name": "autobio",
+      "aliases": [],
+      "category": 9,
+      "description": "Changer la bio du bot",
+      "usage": "autobio on|off <texte>",
+      "access": "owner"
+    },
+    {
+      "name": "autodlstatus",
+      "aliases": [],
+      "category": 9,
+      "description": "Sauvegarder les médias des statuts reçus",
+      "usage": "autodlstatus on|off",
+      "access": "owner"
+    },
+    {
+      "name": "autolike",
+      "aliases": [
+        "autoreact"
+      ],
+      "category": 9,
+      "description": "Réaction automatique aux statuts",
+      "usage": "autolike on|off",
+      "access": "owner"
+    },
+    {
+      "name": "autorecord",
+      "aliases": [],
+      "category": 9,
+      "description": "Afficher « en train d'enregistrer » sur les messages reçus",
+      "usage": "autorecord on|off",
+      "access": "owner"
+    },
+    {
+      "name": "autoreply",
+      "aliases": [],
+      "category": 9,
+      "description": "Réponse automatique aux messages privés",
+      "usage": "autoreply on|off [texte]",
+      "access": "owner"
+    },
+    {
+      "name": "autosettings",
+      "aliases": [],
+      "category": 9,
+      "description": "Voir tous les réglages auto",
+      "usage": "autosettings",
+      "access": "owner"
+    },
+    {
+      "name": "autostatus",
+      "aliases": [
+        "statusconfig"
+      ],
+      "category": 9,
+      "description": "Panneau Auto-Status (vue · réaction · réponse)",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "autotyping",
+      "aliases": [],
+      "category": 9,
+      "description": "Afficher « en train d'écrire » sur les messages reçus",
+      "usage": "autotyping on|off",
+      "access": "owner"
+    },
+    {
+      "name": "autoview",
+      "aliases": [],
+      "category": 9,
+      "description": "Vue automatique des statuts",
+      "usage": "autoview on|off",
+      "access": "owner"
+    },
+    {
+      "name": "block",
+      "aliases": [],
+      "category": 9,
+      "description": "Bloquer un numéro",
+      "usage": "block <numéro>",
+      "access": "owner"
+    },
+    {
+      "name": "blocklist",
+      "aliases": [],
+      "category": 9,
+      "description": "Numéros bloqués par le bot",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "bots",
+      "aliases": [],
+      "category": 9,
+      "description": "Bots liés au compte (appareils liés)",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "broadcast",
+      "aliases": [
+        "bc"
+      ],
+      "category": 9,
+      "description": "Diffuser un message",
+      "usage": "broadcast <texte>",
+      "access": "owner"
+    },
+    {
+      "name": "callinfo",
+      "aliases": [],
+      "category": 9,
+      "description": "Info appels (API limitée / risquée)",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "chatlog",
+      "aliases": [
+        "msgs"
+      ],
+      "category": 9,
+      "description": "Historique des messages (base locale)",
+      "usage": "chatlog [n] [@mention] [ici]",
+      "access": "owner"
+    },
+    {
+      "name": "chcreate",
+      "aliases": [
+        "newslettercreate"
+      ],
+      "category": 9,
+      "description": "Créer un channel (si API dispo)",
+      "usage": "chcreate <nom>",
+      "access": "owner"
+    },
+    {
+      "name": "chdel",
+      "aliases": [],
+      "category": 9,
+      "description": "Supprimer un channel (irréversible)",
+      "usage": "chdel <id@newsletter> confirm",
+      "access": "owner"
+    },
+    {
+      "name": "chdemote",
+      "aliases": [],
+      "category": 9,
+      "description": "Rétrograder un admin du channel",
+      "usage": "chdemote <id@newsletter> @user",
+      "access": "owner"
+    },
+    {
+      "name": "chdesc",
+      "aliases": [],
+      "category": 9,
+      "description": "Description du channel",
+      "usage": "chdesc <id@newsletter> <texte>",
+      "access": "owner"
+    },
+    {
+      "name": "chfetch",
+      "aliases": [],
+      "category": 9,
+      "description": "Derniers messages d’un channel",
+      "usage": "chfetch <id@newsletter> [1-20]",
+      "access": "owner"
+    },
+    {
+      "name": "chfollow",
+      "aliases": [
+        "cfollow"
+      ],
+      "category": 9,
+      "description": "Suivre un channel WhatsApp",
+      "usage": "chfollow <id@newsletter>",
+      "access": "owner"
+    },
+    {
+      "name": "chinfo",
+      "aliases": [],
+      "category": 9,
+      "description": "Infos d’un channel (live abonnés + admins)",
+      "usage": "chinfo <id@newsletter>",
+      "access": "owner"
+    },
+    {
+      "name": "chmsg",
+      "aliases": [
+        "chsend"
+      ],
+      "category": 9,
+      "description": "Poster un texte sur un channel (admin)",
+      "usage": "chmsg <id@newsletter> | <texte>",
+      "access": "owner"
+    },
+    {
+      "name": "chmute",
+      "aliases": [],
+      "category": 9,
+      "description": "Mute un channel",
+      "usage": "chmute <id@newsletter>",
+      "access": "owner"
+    },
+    {
+      "name": "chowner",
+      "aliases": [],
+      "category": 9,
+      "description": "Transférer la propriété du channel",
+      "usage": "chowner <id@newsletter> @user",
+      "access": "owner"
+    },
+    {
+      "name": "chpic",
+      "aliases": [],
+      "category": 9,
+      "description": "Photo du channel (image en réponse) ou delete",
+      "usage": "chpic <id@newsletter> (image) · chpic delete <id@newsletter>",
+      "access": "owner"
+    },
+    {
+      "name": "chreact",
+      "aliases": [],
+      "category": 9,
+      "description": "Réagir à un message channel",
+      "usage": "chreact <id@newsletter> <serverId> <emoji>",
+      "access": "owner"
+    },
+    {
+      "name": "chrename",
+      "aliases": [],
+      "category": 9,
+      "description": "Renommer un channel",
+      "usage": "chrename <id@newsletter> <nom>",
+      "access": "owner"
+    },
+    {
+      "name": "chunfollow",
+      "aliases": [
+        "newsletterunfollow"
+      ],
+      "category": 9,
+      "description": "Ne plus suivre un channel",
+      "usage": "chunfollow <id@newsletter>",
+      "access": "owner"
+    },
+    {
+      "name": "chunmute",
+      "aliases": [],
+      "category": 9,
+      "description": "Unmute un channel",
+      "usage": "chunmute <id@newsletter>",
+      "access": "owner"
+    },
+    {
+      "name": "conflicts",
+      "aliases": [
+        "conflit"
+      ],
+      "category": 9,
+      "description": "Lister les chats en pause (conflit bot↔bot)",
+      "usage": "conflicts",
+      "access": "owner"
+    },
+    {
+      "name": "derniers",
+      "aliases": [
+        "historique"
+      ],
+      "category": 9,
+      "description": "Mémoire : derniers messages du chat",
+      "usage": "derniers [1-10]",
+      "access": "owner"
+    },
+    {
+      "name": "dmall",
+      "aliases": [],
+      "category": 9,
+      "description": "Message privé à tous les membres",
+      "usage": "dmall <message>",
+      "access": "owner"
+    },
+    {
+      "name": "fetchstatus",
+      "aliases": [],
+      "category": 9,
+      "description": "Lire le status texte d’un contact",
+      "usage": "fetchstatus <numéro>",
+      "access": "owner"
+    },
+    {
+      "name": "join",
+      "aliases": [],
+      "category": 9,
+      "description": "Rejoindre un groupe via lien",
+      "usage": "join <lien>",
+      "access": "owner"
+    },
+    {
+      "name": "journal",
+      "aliases": [
+        "events"
+      ],
+      "category": 9,
+      "description": "Journal d’événements (base locale)",
+      "usage": "journal [type] [n] · journal purge [jours]",
+      "access": "owner"
+    },
+    {
+      "name": "label",
+      "aliases": [],
+      "category": 9,
+      "description": "Étiquettes Business (chat / message)",
+      "usage": "label list [@chat] · add|rem <@chat> <id> · msg|msgrem <id> (répondre) · create <id> <nom>",
+      "access": "owner"
+    },
+    {
+      "name": "leave",
+      "aliases": [],
+      "category": 9,
+      "description": "Quitter le groupe",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "logout",
+      "aliases": [],
+      "category": 9,
+      "description": "Déconnecter le bot du WhatsApp",
+      "usage": "logout confirm",
+      "access": "owner"
+    },
+    {
+      "name": "mutechat",
+      "aliases": [
+        "mutec"
+      ],
+      "category": 9,
+      "description": "Mettre le chat en sourdine (8h)",
+      "usage": "mutechat [heures]",
+      "access": "owner"
+    },
+    {
+      "name": "mycatalog",
+      "aliases": [],
+      "category": 9,
+      "description": "Catalogue produits (WhatsApp Business)",
+      "usage": "mycatalog · add <nom> | <prix> | <desc> · del <id> · edit <id> · collections",
+      "access": "owner"
+    },
+    {
+      "name": "orderinfo",
+      "aliases": [],
+      "category": 9,
+      "description": "Détails d’une commande (répondre à la carte)",
+      "usage": "orderinfo (répondre à la carte de commande)",
+      "access": "owner"
+    },
+    {
+      "name": "pmpermit",
+      "aliases": [],
+      "category": 9,
+      "description": "Avertir les inconnus qui écrivent en privé",
+      "usage": "pmpermit on|off",
+      "access": "owner"
+    },
+    {
+      "name": "presence",
+      "aliases": [],
+      "category": 9,
+      "description": "Présence bot (available/composing/unavailable)",
+      "usage": "presence available|unavailable",
+      "access": "owner"
+    },
+    {
+      "name": "privacy",
+      "aliases": [],
+      "category": 9,
+      "description": "Réglages privacy : lecture + écriture",
+      "usage": "privacy [set <clé> <valeur>]",
+      "access": "owner"
+    },
+    {
+      "name": "public",
+      "aliases": [],
+      "category": 9,
+      "description": "Mode tout le monde",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "read",
+      "aliases": [
+        "markread"
+      ],
+      "category": 9,
+      "description": "Marquer le message cité comme lu",
+      "usage": "read (répondre)",
+      "access": "owner"
+    },
+    {
+      "name": "rejectcall",
+      "aliases": [],
+      "category": 9,
+      "description": "Info rejet d’appels (REJECT_CALL=.env)",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "schedule",
+      "aliases": [
+        "planifier"
+      ],
+      "category": 9,
+      "description": "Planifier un message",
+      "usage": "schedule 5m Texte  |  schedule 18:30 Texte",
+      "access": "owner"
+    },
+    {
+      "name": "schedules",
+      "aliases": [
+        "jobs"
+      ],
+      "category": 9,
+      "description": "Liste des messages planifiés",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "self",
+      "aliases": [],
+      "category": 9,
+      "description": "Mode owner uniquement",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "sessionlist",
+      "aliases": [],
+      "category": 9,
+      "description": "Lister les sessions multi",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "sessionnew",
+      "aliases": [],
+      "category": 9,
+      "description": "Créer un dossier multi-session",
+      "usage": "sessionnew <nom>",
+      "access": "owner"
+    },
+    {
+      "name": "sessions",
+      "aliases": [],
+      "category": 9,
+      "description": "Info multi-session",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "setbio",
+      "aliases": [
+        "botbio"
+      ],
+      "category": 9,
+      "description": "Changer la bio (status) du bot",
+      "usage": "setbio <texte>",
+      "access": "owner"
+    },
+    {
+      "name": "setbotname",
+      "aliases": [
+        "botname"
+      ],
+      "category": 9,
+      "description": "Changer le nom affiché du bot",
+      "usage": "setbotname <nom>",
+      "access": "owner"
+    },
+    {
+      "name": "setmenuimg",
+      "aliases": [
+        "menupic"
+      ],
+      "category": 9,
+      "description": "Définir l’image du .menu (répondre à une photo)",
+      "usage": "setmenuimg",
+      "access": "owner"
+    },
+    {
+      "name": "setpp",
+      "aliases": [
+        "setpic"
+      ],
+      "category": 9,
+      "description": "Photo de profil du bot (setpp delete = retirer)",
+      "usage": "setpp (image) · setpp delete",
+      "access": "owner"
+    },
+    {
+      "name": "setprefix",
+      "aliases": [],
+      "category": 9,
+      "description": "Changer le préfixe",
+      "usage": "setprefix <caractère>",
+      "access": "owner"
+    },
+    {
+      "name": "statut",
+      "aliases": [
+        "status"
+      ],
+      "category": 9,
+      "description": "Publier un texte en statut WhatsApp",
+      "usage": "statut <texte>",
+      "access": "owner"
+    },
+    {
+      "name": "sudo",
+      "aliases": [],
+      "category": 9,
+      "description": "Gérer les sudo (co-owners autorisés)",
+      "usage": "sudo add|del|list <numéro>",
+      "access": "owner"
+    },
+    {
+      "name": "unaccept",
+      "aliases": [
+        "deaccept"
+      ],
+      "category": 9,
+      "description": "Retirer un accès accordé par .accept",
+      "usage": "unaccept @user|numéro",
+      "access": "owner"
+    },
+    {
+      "name": "unblock",
+      "aliases": [],
+      "category": 9,
+      "description": "Débloquer un numéro",
+      "usage": "unblock <numéro>",
+      "access": "owner"
+    },
+    {
+      "name": "unmutechat",
+      "aliases": [
+        "unmutec"
+      ],
+      "category": 9,
+      "description": "Retirer la sourdine du chat",
+      "usage": "",
+      "access": "owner"
+    },
+    {
+      "name": "unpause",
+      "aliases": [
+        "reprendre"
+      ],
+      "category": 9,
+      "description": "Reprendre un chat mis en pause (conflit bot↔bot)",
+      "usage": "unpause · unpause all",
+      "access": "owner"
+    },
+    {
+      "name": "unschedule",
+      "aliases": [
+        "unsched"
+      ],
+      "category": 9,
+      "description": "Annuler un job",
+      "usage": "unschedule <id>",
+      "access": "owner"
+    },
+    {
+      "name": "afk",
+      "aliases": [],
+      "category": 10,
+      "description": "Se déclarer AFK",
+      "usage": "afk [raison]",
+      "access": "public"
+    },
+    {
+      "name": "asknum",
+      "aliases": [
+        "demander-num"
+      ],
+      "category": 10,
+      "description": "Demander le numéro du destinataire",
+      "usage": "asknum [@user|numéro]",
+      "access": "public"
+    },
+    {
+      "name": "bizprofile",
+      "aliases": [],
+      "category": 10,
+      "description": "Profil business d’un numéro",
+      "usage": "bizprofile <numéro>",
+      "access": "public"
+    },
+    {
+      "name": "event",
+      "aliases": [
+        "rdv"
+      ],
+      "category": 10,
+      "description": "Créer un événement WhatsApp",
+      "usage": "event <titre> | <lieu> | <JJ/MM/AAAA HH:MM> | <description>",
+      "access": "public"
+    },
+    {
+      "name": "level",
+      "aliases": [],
+      "category": 10,
+      "description": "Niveau et expérience",
+      "usage": "level [@user]",
+      "access": "public"
+    },
+    {
+      "name": "pix",
+      "aliases": [],
+      "category": 10,
+      "description": "Envoyer un code PIX / paiement texte",
+      "usage": "pix <clé> | <montant> | [label]",
+      "access": "public"
+    },
+    {
+      "name": "product",
+      "aliases": [
+        "produit"
+      ],
+      "category": 10,
+      "description": "Envoyer une carte produit (business)",
+      "usage": "product <titre> | <prix> | <desc>",
+      "access": "public"
+    },
+    {
+      "name": "repo",
+      "aliases": [
+        "repository"
+      ],
+      "category": 10,
+      "description": "Dépôt officiel — étoiles, forks, dernière MAJ",
+      "usage": "repo",
+      "access": "public"
+    },
+    {
+      "name": "report",
+      "aliases": [],
+      "category": 10,
+      "description": "Signaler un problème au owner",
+      "usage": "report <message>",
+      "access": "public"
+    },
+    {
+      "name": "sharenum",
+      "aliases": [
+        "monnum"
+      ],
+      "category": 10,
+      "description": "Partager son numéro dans la discussion",
+      "usage": "sharenum",
+      "access": "public"
+    },
+    {
+      "name": "stats",
+      "aliases": [],
+      "category": 10,
+      "description": "Statistiques du bot",
+      "usage": "",
+      "access": "public"
+    },
+    {
+      "name": "support",
+      "aliases": [],
+      "category": 10,
+      "description": "Support & signalement officiels",
+      "usage": "support",
+      "access": "public"
+    },
+    {
+      "name": "vcard",
+      "aliases": [
+        "contact"
+      ],
+      "category": 10,
+      "description": "Envoyer une carte de contact",
+      "usage": "vcard <numéro> [@mention] [nom]",
+      "access": "public"
+    },
+    {
+      "name": "play",
+      "aliases": [
+        "mp3"
+      ],
+      "category": 11,
+      "description": "Télécharger une musique en MP3",
+      "usage": "play <titre ou lien>",
+      "access": "public"
+    },
+    {
+      "name": "video",
+      "aliases": [
+        "ytmp4"
+      ],
+      "category": 11,
+      "description": "Télécharger une vidéo YouTube",
+      "usage": "video <titre ou lien>",
+      "access": "public"
+    },
+    {
+      "name": "yt",
+      "aliases": [
+        "ytsearch"
+      ],
+      "category": 11,
+      "description": "Rechercher une vidéo YouTube",
+      "usage": "yt <titre>",
+      "access": "public"
+    },
+    {
+      "name": "archives",
+      "aliases": [],
+      "category": 12,
+      "description": "Catalogue ARCHIVES (sections à risque)",
+      "usage": "archives [anti|nsfw|api|hack]",
+      "access": "public"
+    }
+  ],
+  "categories": [
+    {
+      "n": 1,
+      "name": "GÉNÉRal",
+      "icon": "🌟",
+      "count": 9
+    },
+    {
+      "n": 2,
+      "name": "Groupe",
+      "icon": "👥",
+      "count": 92
+    },
+    {
+      "n": 3,
+      "name": "Protection",
+      "icon": "🛡️",
+      "count": 58
+    },
+    {
+      "n": 4,
+      "name": "Sticker & Media",
+      "icon": "🖼️",
+      "count": 443
+    },
+    {
+      "n": 5,
+      "name": "Outils",
+      "icon": "🧰",
+      "count": 58
+    },
+    {
+      "n": 6,
+      "name": "Ia",
+      "icon": "🤖",
+      "count": 4
+    },
+    {
+      "n": 7,
+      "name": "Fun",
+      "icon": "🎲",
+      "count": 83
+    },
+    {
+      "n": 8,
+      "name": "Recherche",
+      "icon": "🔍",
+      "count": 6
+    },
+    {
+      "n": 9,
+      "name": "Owner",
+      "icon": "👑",
+      "count": 71
+    },
+    {
+      "n": 10,
+      "name": "Divers",
+      "icon": "📦",
+      "count": 13
+    },
+    {
+      "n": 11,
+      "name": "TÉLÉChargement",
+      "icon": "⬇️",
+      "count": 3
+    },
+    {
+      "n": 12,
+      "name": "Archives",
+      "icon": "🔐",
+      "count": 1
+    }
+  ],
+  "totals": {
+    "commands": 841,
+    "aliases": 889
+  }
 }

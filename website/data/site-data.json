@@ -6,9 +6,9 @@
   "siteOrigin": "https://djousse-tech-md.vercel.app",
   "stats": {
     "categories": 11,
-    "commands_menu": 363,
-    "commands_registry": "TODO: confirmer via npm run audit (README ancien : 855)",
-    "aliases": "TODO: confirmer (README ancien : 948)",
+    "commands_menu": 841,
+    "commands_registry": 851,
+    "aliases": 747,
     "protections": 13
   },
   "links": {
@@ -20,15 +20,15 @@
   },
   "categories": [
     { "n": 1, "icon": "🌟", "name": "Général", "count": 9 },
-    { "n": 2, "icon": "👥", "name": "Groupe", "count": 41 },
-    { "n": 3, "icon": "🛡️", "name": "Protection", "count": 41 },
-    { "n": 4, "icon": "🖼️", "name": "Sticker & Media", "count": 37 },
+    { "n": 2, "icon": "👥", "name": "Groupe", "count": 92 },
+    { "n": 3, "icon": "🛡️", "name": "Protection", "count": 58 },
+    { "n": 4, "icon": "🖼️", "name": "Sticker & Media", "count": 443 },
     { "n": 5, "icon": "🧰", "name": "Outils", "count": 58 },
-    { "n": 6, "icon": "🤖", "name": "IA", "count": 3 },
+    { "n": 6, "icon": "🤖", "name": "IA", "count": 4 },
     { "n": 7, "icon": "🎲", "name": "Fun", "count": 83 },
     { "n": 8, "icon": "🔍", "name": "Recherche", "count": 6 },
     { "n": 9, "icon": "👑", "name": "Owner", "count": 71 },
-    { "n": 10, "icon": "📦", "name": "Divers", "count": 11 },
+    { "n": 10, "icon": "📦", "name": "Divers", "count": 13 },
     { "n": 11, "icon": "⬇️", "name": "Téléchargement", "count": 3 }
   ],
   "guard": [

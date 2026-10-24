@@ -37,6 +37,8 @@ if (!(handler.commands instanceof Map) || !Array.isArray(handler.CATEGORIES)) {
 const unique = new Map();
 for (const entry of handler.commands.values()) {
   if (!entry || typeof entry.name !== 'string' || !entry.name.trim()) continue;
+  // Catégorie 99 = commandes hors menus (assistant interne + hacktools) : jamais listées publiquement.
+  if (Number(entry.cat) === 99) continue;
   const name = entry.name.trim().toLowerCase();
   const category = Number(entry.cat) || 1;
   const access = entry.owner || category === 9 ? 'owner' : (entry.admin || entry.botAdmin) ? 'admin' : 'public';
