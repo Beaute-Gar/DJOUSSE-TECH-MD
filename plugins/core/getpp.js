@@ -19,7 +19,7 @@ module.exports = {
             }
 
             const pp = await sock.profilePictureUrl(user, 'image').catch(() =>
-                'https://files.catbox.moe/5uli5p.jpeg'
+                'https://files.catbox.moe/h6zdty.png'
             );
 
             const name = user.split('@')[0];

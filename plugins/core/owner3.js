@@ -307,7 +307,7 @@ module.exports = {
         }
 
         if (cmd === 'settimezone') {
-            if (!text) return send('❌ *Usage:* `.settimezone <timezone>`\n\nExample: `.settimezone Africa/Nairobi`');
+            if (!text) return send('❌ *Usage:* `.settimezone <timezone>`\n\nExample: `.settimezone Africa/Douala`');
             process.env.TZ = text;
             config.TIMEZONE = text;
             return send(`✅ Timezone set to *${text}*`);

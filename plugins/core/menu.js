@@ -7,7 +7,7 @@ const { getStr } = require('../lib/theme');
 const moment  = require('moment-timezone');
 
 const WEBSITE = 'https://silvatech.co.ke';
-const TZ      = 'Africa/Nairobi';
+const TZ      = 'Africa/Douala';
 
 // ── Category definitions ──────────────────────────────────────────────────────
 // Each has a numeric ID for `.menu 3` style read-more
@@ -191,7 +191,7 @@ module.exports = {
         const botName = getStr('botName') || config.BOT_NAME || 'Silva MD';
         const mode    = (config.MODE || 'public').toUpperCase();
         const pfx     = prefix || '.';
-        const imgUrl  = getStr('pic1') || config.ALIVE_IMG || 'https://files.catbox.moe/5uli5p.jpeg';
+        const imgUrl  = getStr('pic1') || config.ALIVE_IMG || 'https://files.catbox.moe/h6zdty.png';
 
         const rawCmd = (
             message.message?.extendedTextMessage?.text ||

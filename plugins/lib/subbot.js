@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Shim SILVA → DJOUSSE : '../lib/subbot' (fonction sous-bot).
+ * Shim DJOUSSE : '../lib/subbot' (fonction sous-bot).
  * Un sous-bot = une session secondaire qui relaie des commandes.
  * Volontairement neutralisé ici (jamais deux instances par numéro,
  * sinon les sessions se détruisent). L'API existe, elle répond

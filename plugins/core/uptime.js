@@ -12,7 +12,7 @@ module.exports = {
     run: async (sock, message, args, { sender, contextInfo }) => {
         try {
             const botName = getStr('botName') || 'Silva MD';
-            const pic     = getStr('pic1') || 'https://files.catbox.moe/5uli5p.jpeg';
+            const pic     = getStr('pic1') || 'https://files.catbox.moe/h6zdty.png';
 
             const uptime  = process.uptime();
             const h = Math.floor(uptime / 3600);

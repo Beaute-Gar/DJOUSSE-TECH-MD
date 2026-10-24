@@ -215,7 +215,7 @@ module.exports = {
                     externalAdReply: {
                         title:                 'Facebook Downloader',
                         body:                  'Powered by ' + (getStr('botName') || 'Silva MD'),
-                        thumbnailUrl:          'https://files.catbox.moe/5uli5p.jpeg',
+                        thumbnailUrl:          'https://files.catbox.moe/h6zdty.png',
                         sourceUrl:             url,
                         mediaType:             1,
                         renderLargerThumbnail: true,

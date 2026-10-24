@@ -121,14 +121,14 @@ module.exports = {
                 }, { quoted: message });
             }
 
-            challengeSettings[jid] = { enabled: true, time, timezone: 'Africa/Nairobi' };
+            challengeSettings[jid] = { enabled: true, time, timezone: 'Africa/Douala' };
             saveSettings(challengeSettings);
 
             if (activeTimers.has(jid)) clearInterval(activeTimers.get(jid));
             const timer = setInterval(async () => {
                 try {
                     const now = new Date();
-                    const formatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: false, timeZone: 'Africa/Nairobi' });
+                    const formatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: false, timeZone: 'Africa/Douala' });
                     const parts = formatter.formatToParts(now);
                     const currentTime = `${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value.padStart(2, '0')}`;
                     if (currentTime === time) {
@@ -142,7 +142,7 @@ module.exports = {
             activeTimers.set(jid, timer);
 
             return sock.sendMessage(jid, {
-                text: `✅ *Daily challenge scheduled!*\n\n🕐 *Time:* ${time} (Africa/Nairobi)\n\nA random trivia, puzzle, or word game will be posted daily.\n\nUse \`.challengenow\` for an instant challenge!\nUse \`.challengeoff\` to disable.`,
+                text: `✅ *Daily challenge scheduled!*\n\n🕐 *Time:* ${time} (Africa/Douala)\n\nA random trivia, puzzle, or word game will be posted daily.\n\nUse \`.challengenow\` for an instant challenge!\nUse \`.challengeoff\` to disable.`,
                 contextInfo
             }, { quoted: message });
         }

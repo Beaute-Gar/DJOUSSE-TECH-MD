@@ -629,7 +629,7 @@ module.exports = [
             const externalAdReply = {
                 title:                 'Instagram Download',
                 body:                  `Powered by ${botName}`,
-                thumbnailUrl:          getStr('pic1') || 'https://files.catbox.moe/5uli5p.jpeg',
+                thumbnailUrl:          getStr('pic1') || 'https://files.catbox.moe/h6zdty.png',
                 sourceUrl:             url,
                 mediaType:             1,
                 renderLargerThumbnail: true,

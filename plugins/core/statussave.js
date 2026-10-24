@@ -42,7 +42,7 @@ module.exports = {
                     externalAdReply: {
                         title:        'Status Saved ✅',
                         body:         (getStr('botName') || 'Silva MD') + ' · Status Downloader',
-                        thumbnailUrl: getStr('pic1') || 'https://files.catbox.moe/5uli5p.jpeg',
+                        thumbnailUrl: getStr('pic1') || 'https://files.catbox.moe/h6zdty.png',
                         mediaType:    1
                     }
                 }

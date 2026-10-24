@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Shim SILVA → DJOUSSE : '../lib/phone-utils'
+ * Shim DJOUSSE : '../lib/phone-utils'
  *   resolvePhoneJid(x) → JID WhatsApp normalisé depuis un numéro brut
  *   getCountry(phone)  → indicatif + nom de zone (approximatif)
  */

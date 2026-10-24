@@ -16,7 +16,7 @@ const { toUnicode } = require('../style');
 const {
   retirerSignatureTierce, BLOQUES_IDENTITE, INTERDITS,
   normaliserContenu, URL_LOGO_TIERCE, URL_LOGO_OFFICIEL,
-} = require('../lib/silva-loader');
+} = require('../lib/plugin-loader');
 
 const MARQUE = /\bSilva\b|SilvaTech|Silvatech|SILVA MD|TEDDY-XMD|Chez TEDDY|silva\.tech|SilvaTechB/i;
 const site = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
@@ -46,7 +46,11 @@ test('descriptions du registre : aucune marque tierce', () => {
 });
 
 test('README : identité, slogan et chiffres cohérents', () => {
-  assert.ok(!/\bSilva\b|SilvaTech|TEDDY-XMD/i.test(site), 'README sans marque tierce');
+  /* La SEULE zone autorisée à citer l'ancienne identité est la section
+     « Crédits et licences tierces » : l'avis MIT est une OBLIGATION
+     légale (cf. NOTICE). Partout ailleurs : zéro marque. */
+  const sansCredits = site.replace(/### Crédits et licences tierces[\s\S]*?(?=\n---|\n# |\n## |$)/, '');
+  assert.ok(!/\bSilva\b|SilvaTech|TEDDY-XMD/i.test(sansCredits), 'README sans marque tierce (hors section Crédits)');
   assert.ok(site.includes('Des solutions fiables pour un avenir sans limites'), 'slogan présent');
   assert.ok(site.includes('Beaute-Gar/DJOUSSE-TECH-MD'), 'dépôt officiel cité');
   assert.ok(!site.includes('237693978044'), 'numéro owner non exposé');
@@ -77,9 +81,14 @@ test('versions tierces remplacées : .repo/.support/.ia maison', () => {
   }
   assert.match(h.commands.get('support').desc, /Support & signalement/);
   assert.equal(h.commands.get('ia').cat, 6, '.ia visible en IA');
-  /* l'historique reste joignable en direct mais sort des menus */
+  /* l'historique reste joignable en direct mais sort des menus :
+     .djousse est le nom principal, .silva l'alias hérité */
+  const djousse = h.commands.get('djousse');
+  assert.ok(djousse, '.djousse enregistré (assistant maison)');
+  assert.equal(djousse.cat, 99, '.djousse retiré des menus (.ia est la porte visible)');
   const silva = h.commands.get('silva');
-  assert.ok(silva, '.silva toujours joignable (aucun usage cassé)');
+  assert.ok(silva, '.silva toujours joignable (alias hérité, aucun usage cassé)');
+  assert.equal(silva, djousse, '.silva pointe sur le même gestionnaire que .djousse');
   assert.equal(silva.cat, 99, '.silva retiré des menus');
 });
 
@@ -144,6 +153,6 @@ test('alerte hacktools sans ancienne marque', () => {
 /* ── 6. Le registre total reste cohérent (pas de commande fantôme) ── */
 test('chiffres du registre : totaux README vérifiables', () => {
   const vus = new Set(h.commands.values());
-  assert.equal(vus.size, 852, '852 commandes distinctes (README)');
-  assert.equal(h.commands.size, 1603, '1603 noms au registre (README)');
+  assert.equal(vus.size, 851, '851 commandes distinctes (README)');
+  assert.equal(h.commands.size, 1598, '1598 noms au registre (README)');
 });

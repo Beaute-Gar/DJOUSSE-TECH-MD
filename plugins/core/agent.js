@@ -22,8 +22,8 @@ function getMemory(jid) {
 function buildContextPrompt(jid, currentQuery) {
     const mem = getMemory(jid).slice(-6); // last 6 turns
     if (!mem.length) return currentQuery;
-    const history = mem.map(m => `${m.role === 'user' ? 'User' : 'Silva'}: ${m.text}`).join('\n');
-    return `You are Silva, a smart, friendly WhatsApp AI assistant. Stay in character. Be concise and helpful.\n\nConversation so far:\n${history}\n\nUser: ${currentQuery}\nSilva:`;
+    const history = mem.map(m => `${m.role === 'user' ? 'User' : 'Djousse'}: ${m.text}`).join('\n');
+    return `You are Djousse, a smart, friendly WhatsApp AI assistant. Stay in character. Be concise and helpful.\n\nConversation so far:\n${history}\n\nUser: ${currentQuery}\nDjousse:`;
 }
 const os = require('os');
 
@@ -40,15 +40,15 @@ function detectPlatform() {
 }
 
 const BOT_IDENTITY = {
-    name: 'Silva MD',
+    name: 'DJOUSSE-TECH-MD',
     version: '4.0.1',
     language: 'Node.js',
-    library: 'Baileys (silva-baileys)',
-    repo: 'https://github.com/SilvaTechB/silva-md-bot',
-    website: 'https://silvatech.co.ke',
+    library: 'Baileys',
+    repo: 'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD',
+    website: 'https://djousse-tech-md.vercel.app',
     get platform() { return detectPlatform(); },
-    developer: 'SilvaTech',
-    ownerName: config.OWNER_NAME || 'Silva MD',
+    developer: 'DJOUSSE TECH',
+    ownerName: config.OWNER_NAME || 'Beauté Gar',
     ownerNumber: config.OWNER_NUMBER || '',
     features: [
         'Auto View Status', 'Anti-Delete Messages', 'Download Songs & Videos',
@@ -170,7 +170,7 @@ const intentMap = [
     { pattern: /\bwikipedia\b|\bwiki\b/i,                                                cmd: 'wiki',        label: '📚 Searching Wikipedia',        strip: /\bwikipedia\b|\bwiki\b/gi },
     { pattern: /\btranslate\b|\btranslation\b/i,                                         cmd: 'translate',   label: '🌐 Translating',                strip: /\btranslate\b|\btranslation\b/gi },
     { pattern: /\bdefine\b|\bdefinition\b|\bdictionary\b/i,                              cmd: 'define',      label: '📖 Looking up definition',      strip: /\bdefine\b|\bdefinition\b|\bdictionary\b/gi },
-    // NOTE: \bgithub\b only fires for plain user profiles (not repo paths / silvatech)
+    // NOTE: \bgithub\b only fires for plain user profiles (not repo paths)
     { pattern: /\bgithub\b(?!.*\/)/i,                                                    cmd: 'githubstalk', label: '🐙 Fetching GitHub profile',    strip: /\bgithub\b/gi },
 
     // ── Productivity ─────────────────────────────────────────────────────────
@@ -190,9 +190,6 @@ const intentMap = [
     { pattern: /\briddle\b/i,                                                            cmd: 'riddle',      label: '🧩 Getting a riddle',           strip: /\briddle\b/gi },
     { pattern: /\bproverb\b|\bsaying\b|\bwisdom\b|\badage\b/i,                         cmd: 'proverb',     label: '📜 Fetching a proverb',         strip: /\bproverb\b|\bsaying\b|\bwisdom\b|\badage\b/gi },
     { pattern: /\brhyme\b/i,                                                             cmd: 'rhyme',       label: '🎵 Finding rhymes',             strip: /\brhyme\b/gi },
-
-    // ── GitHub SilvaTechB ────────────────────────────────────────────────────
-    { pattern: /\bsilvatech\b.*\b(repos?|github|projects?)\b|\b(silvatech|silvarepos)\b/i, cmd: 'silvatech', label: '🐙 Fetching SilvaTechB repos',  strip: /\bsilvatech\b|\bsilvarepos?\b/gi },
 
     // ── Bot Status ───────────────────────────────────────────────────────────
     { pattern: /\buptime\b|\bruntime\b/i,                                                cmd: 'uptime',      label: '⏱️ Checking uptime',           strip: /\buptime\b|\bruntime\b/gi },
@@ -217,7 +214,7 @@ function findIntent(query) {
 // ── Built-in smart conversation engine (no API key needed) ───────────────────
 const smartResponses = [
     { p: /^(hi+|hello+|hey+|howdy|sup|yo+|hii+|ello)\b/i,
-      r: [`Hey! 👋 What can I do for you today?`, `Hello! 😊 How can I help you?`, `Hey there! I'm Silva, your WhatsApp assistant. What do you need? 🤖`] },
+      r: [`Hey! 👋 What can I do for you today?`, `Hello! 😊 How can I help you?`, `Hey there! I'm Djousse, your WhatsApp assistant. What do you need? 🤖`] },
     { p: /how (are you|r u|are u|do you do)|what('?s| is) (up|good)|wassup|wyd\b/i,
       r: [`All systems go! ⚡ I'm here and ready to help. What do you need?`, `Running perfectly! 🤖 What can I do for you?`, `Doing great, thanks for asking! 😊 Ready to assist.`] },
     { p: /thank(s| you|u)|thx|ty\b/i,
@@ -225,7 +222,7 @@ const smartResponses = [
     { p: /good (morning|mornin|afternoon|evening|night)/i,
       r: [`Good morning! ☀️ Hope you have an amazing day!`, `Hey! 😊 Hope your day is going great!`, `Good day! 🌟 What can I help you with?`] },
     { p: /i('?m| am) bored|bored\b/i,
-      r: [`Let's fix that! 🎮 Try:\n• \`silva play <your fav song>\`\n• \`.joke\` for a laugh\n• \`.wyr\` for Would You Rather\n• \`.8ball will today be fun?\``] },
+      r: [`Let's fix that! 🎮 Try:\n• \`djousse play <your fav song>\`\n• \`.joke\` for a laugh\n• \`.wyr\` for Would You Rather\n• \`.8ball will today be fun?\``] },
     { p: /i (love|like|adore) you|luv u|❤️/i,
       r: [`Aww! 🥰 I love you too (in a bot kind of way)! What can I help with?`, `That's sweet! 😊 Always here for you. What do you need?`] },
     { p: /you('?re| are) (great|amazing|awesome|the best|good|nice|cool|smart|brilliant)/i,
@@ -233,13 +230,13 @@ const smartResponses = [
     { p: /you (suck|('re|are) (bad|terrible|useless|stupid|trash))/i,
       r: [`That hurts 😢 but I'll try to do better! Let me know what went wrong.`, `I'm always improving! 🤖 Tell me what I can do better.`] },
     { p: /what('?s| is) your name|your name\b|who are you\b/i,
-      r: [`I'm *Silva* 🤖 — your intelligent WhatsApp assistant! Built on ${BOT_IDENTITY.name} v${BOT_IDENTITY.version}.`] },
+      r: [`I'm *Djousse* 🤖 — your intelligent WhatsApp assistant! Built on ${BOT_IDENTITY.name} v${BOT_IDENTITY.version}.`] },
     { p: /what can you do|your (capabilities|powers|features|abilities)\b/i,
-      r: [`I can: 🎵 play music, 📸 make stickers, ⬇️ download from TikTok/Instagram/YouTube, 🌤️ check weather, 📚 search Wikipedia, 🌐 translate text, 👥 manage groups, and 1400+ commands! Type \`silva help\` to see everything.`] },
+      r: [`I can: 🎵 play music, 📸 make stickers, ⬇️ download from TikTok/Instagram/YouTube, 🌤️ check weather, 📚 search Wikipedia, 🌐 translate text, 👥 manage groups, and 1400+ commands! Type \`djousse help\` to see everything.`] },
     { p: /what time is it|current time|time now\b/i,
-      fn: () => `🕐 Current time: *${new Date().toLocaleTimeString('en-US', { timeZone: config.TIMEZONE || 'Africa/Nairobi', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}*` },
+      fn: () => `🕐 Current time: *${new Date().toLocaleTimeString('en-US', { timeZone: config.TIMEZONE || 'Africa/Douala', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}*` },
     { p: /what('?s| is) today|what day|current date\b/i,
-      fn: () => `📅 Today is *${new Date().toLocaleDateString('en-US', { timeZone: config.TIMEZONE || 'Africa/Nairobi', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}*` },
+      fn: () => `📅 Today is *${new Date().toLocaleDateString('en-US', { timeZone: config.TIMEZONE || 'Africa/Douala', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}*` },
     { p: /are you (a bot|ai|robot|human|real)\??/i,
       r: [`I'm an AI-powered WhatsApp bot 🤖 — not human, but I try to be as helpful as one! Created by ${BOT_IDENTITY.developer}.`] },
     { p: /(\d+)\s*[\+\-\*\/\%\^]\s*(\d+)/,
@@ -249,7 +246,7 @@ const smartResponses = [
     { p: /bye|goodbye|see you|cya|ttyl|later\b/i,
       r: [`Goodbye! 👋 Come back anytime!`, `See you later! 😊 Take care!`, `Bye! 👋 I'll be here when you need me!`] },
     { p: /help\b/i,
-      r: [`Type \`silva\` (no prefix needed) to see everything I can do! Or try:\n• \`silva play <song name>\`\n• \`silva weather <city>\`\n• \`silva wiki <topic>\`\n• \`silva sticker\` (reply to a photo)`] },
+      r: [`Type \`djousse\` (no prefix needed) to see everything I can do! Or try:\n• \`djousse play <song name>\`\n• \`djousse weather <city>\`\n• \`djousse wiki <topic>\`\n• \`djousse sticker\` (reply to a photo)`] },
 ];
 
 function getSmartResponse(query) {
@@ -275,7 +272,7 @@ async function callChAt(prompt) {
                 CHAT_ENDPOINT,
                 { message: prompt },
                 {
-                    headers: { 'Content-Type': 'application/json', 'User-Agent': 'SilvaMD-Bot/2.0' },
+                    headers: { 'Content-Type': 'application/json', 'User-Agent': 'DJOUSSE-TECH-MD/2.0' },
                     timeout: 12000,
                 }
             );
@@ -323,7 +320,7 @@ function offlineSmartReply(query, pluginKeys) {
     for (const [pattern, builder] of intents) {
         if (pattern.test(q)) {
             const match = q.match(/\b[a-z]{3,}\b/g)?.filter(w => !['what','that','this','with','have','your','from','about','does','will','when','where'].includes(w));
-            return `🤖 *Silva*\n\n` + builder(match?.slice(-2).join(' ') || '');
+            return `🤖 *Djousse*\n\n` + builder(match?.slice(-2).join(' ') || '');
         }
     }
 
@@ -334,16 +331,16 @@ function offlineSmartReply(query, pluginKeys) {
             `🤔 Interesting! My AI brain is having a moment. Try \`.ask ${query.slice(0, 40)}\` again in a few seconds — I'll get it.`,
             `💡 Good question! My connection is a bit slow right now. Type \`.wiki ${query.slice(0, 30)}\` for a quick answer, or retry in a moment!`,
         ];
-        return `🤖 *Silva*\n\n` + responses[Math.floor(Math.random() * responses.length)];
+        return `🤖 *Djousse*\n\n` + responses[Math.floor(Math.random() * responses.length)];
     }
 
     // Generic catch-all — always acknowledges and gives direction
     const catchAll = [
         `Got your message! 👋 My AI is connecting… try again in a moment or type \`.menu\` to see what I can do.`,
         `I'm here! 🤖 Having a brief connection blip. Retry in a few seconds — ch.at will pick it up. Or try \`.ask ${query.slice(0, 30)}\``,
-        `Silva here! 💬 My response engine is warming up. One more try should do it — or use \`.menu\` to browse all commands!`,
+        `Djousse here! 💬 My response engine is warming up. One more try should do it — or use \`.menu\` to browse all commands!`,
     ];
-    return `🤖 *Silva*\n\n` + catchAll[Math.floor(Math.random() * catchAll.length)];
+    return `🤖 *Djousse*\n\n` + catchAll[Math.floor(Math.random() * catchAll.length)];
 }
 
 // ── Main AI dispatcher ────────────────────────────────────────────────────────
@@ -377,7 +374,7 @@ async function askFreeAI(query, jid, systemPrompt, _pluginKeys) {
     // popcat is fast — fire as an extra parallel contestant
     const popcatPromise = axios.get(
         'https://api.popcat.xyz/chatbot?msg=' + encodeURIComponent(query.slice(0, 200)) +
-        '&owner=' + encodeURIComponent(config.OWNER_NAME || 'Silva') + '&botname=Silva',
+        '&owner=' + encodeURIComponent(config.OWNER_NAME || 'Djousse') + '&botname=DJOUSSE-TECH-MD',
         { timeout: 7000 }
     ).then(r => r.data?.response || null).catch(() => null);
 
@@ -450,10 +447,10 @@ const agentActions = {
 
     // ── Info ─────────────────────────────────────────────────────────────────
     menu:           /^(show\s+)?(menu|commands|help|list\s+commands)/i,
-    about_bot:      /about\s*(the\s*)?(bot|silva|yourself)|who\s*are\s*you|what\s*are\s*you|tell\s*me\s*about\s*(yourself|silva|this\s*bot)/i,
-    about_platform: /platform|server|hosting|where\s*(are\s*you|is\s*(the\s*bot|silva))\s*(running|hosted)|system\s*info|server\s*info|specs/i,
+    about_bot:      /about\s*(the\s*)?(bot|silva|djousse|yourself)|who\s*are\s*you|what\s*are\s*you|tell\s*me\s*about\s*(yourself|silva|this\s*bot)/i,
+    about_platform: /platform|server|hosting|where\s*(are\s*you|is\s*(the\s*bot|silva|djousse))\s*(running|hosted)|system\s*info|server\s*info|specs/i,
     about_owner:    /who\s*(is\s*)?(the\s*)?(owner|creator|developer|made|built|coded)|your\s*(owner|creator|dev)/i,
-    features:       /features|what\s*can\s*(you|the\s*bot|silva)\s*do|capabilities|abilities|powers/i,
+    features:       /features|what\s*can\s*(you|the\s*bot|silva|djousse)\s*do|capabilities|abilities|powers/i,
     settings:       /settings|config|current\s*settings|bot\s*settings|show\s*settings/i,
     plugin_list:    /list\s*plugins|how\s*many\s*(commands|plugins)|plugin\s*count|total\s*commands/i,
     sudo:           /sudo\s*(list|users|info)|who\s*(are|is)\s*(the\s*)?sudo/i,
@@ -464,12 +461,9 @@ const agentActions = {
     date:     /what\s*(date|day|today)|current\s*date|today/i,
     calc:     /calc|compute|math|solve|\d+\s*[\+\-\*\/\%\^]\s*\d+/i,
 
-    // ── GitHub SilvaTechB (read-only) ─────────────────────────────────────────
-    github_silvatech: /\b(silvatech|silvatechwb|silvatechb|silvarepos)\b|\bsilvatech\s+(repos?|github|projects?|code|files?|zip|download)\b/i,
-
-    // ── GitHub repo file/zip fetch ("send me a clip of SilvaTechB/repo") ──────
+    // ── GitHub (read-only, profils utilisateur) ──────────────────────────────
     github_repo_zip:  /\b(clip|zip|archive|download|send\s+me)\b.*\b([\w-]+\/[\w-]+)\b|\b([\w-]+\/[\w-]+)\b.*\b(zip|clone|download)\b/i,
-    github_repo_file: /\b(get|fetch|read|show|send)\b.+\b(from|in|of)\b.+\b([\w\/-]+\/[\w\/-]+\.[\w]+)\b|\b(readme|package\.json|index\.js|config|\.env)\b.*\b(from|in|of)\b.+\bsilva/i,
+    github_repo_file: /\b(get|fetch|read|show|send)\b.+\b(from|in|of)\b.+\b([\w\/-]+\/[\w\/-]+\.[\w]+)\b|\b(readme|package\.json|index\.js|config|\.env)\b.*\b(from|in|of)\b.+\bdjousse/i,
 
     // ── Fun & knowledge ───────────────────────────────────────────────────────
     riddle_agent:  /\b(riddle|puzzle|brain\s*teaser|solve\s*this)\b/i,
@@ -501,8 +495,8 @@ const agentActions = {
 };
 
 module.exports = {
-    commands: ['silva', 'agent', 'do', 'assistant', 'ask'],
-    description: 'Silva - AI assistant that runs commands, creates content, searches the web, and knows everything about the bot',
+    commands: ['djousse', 'silva', 'agent', 'do', 'assistant', 'ask'],
+    description: 'Djousse - AI assistant that runs commands, creates content, searches the web, and knows everything about the bot',
     permission: 'public',
     run: async (sock, message, args, ctx) => {
         const { jid, reply, safeSend, isOwner, isGroup, isAdmin, isBotAdmin } = ctx;
@@ -511,52 +505,51 @@ module.exports = {
             `🤖 *${BOT_IDENTITY.name} Agent v${BOT_IDENTITY.version}*\n\n` +
             `Your intelligent WhatsApp assistant — just talk naturally!\n\n` +
             `🎵 *Music & Media*\n` +
-            `• "silva play <song>" • "silva lyrics <song>"\n` +
-            `• "silva tiktok <url>" • "silva youtube video <name>"\n` +
-            `• "silva speak Hello world" _(text-to-speech)_\n\n` +
+            `• "djousse play <song>" • "djousse lyrics <song>"\n` +
+            `• "djousse tiktok <url>" • "djousse youtube video <name>"\n` +
+            `• "djousse speak Hello world" _(text-to-speech)_\n\n` +
             `🎨 *AI & Images*\n` +
-            `• "silva generate image of a lion in space"\n` +
-            `• "silva describe" _(reply to any photo)_\n` +
-            `• "silva summarize" _(reply to a long message)_\n` +
-            `• "silva quotly" _(reply to a message → quote sticker)_\n\n` +
+            `• "djousse generate image of a lion in space"\n` +
+            `• "djousse describe" _(reply to any photo)_\n` +
+            `• "djousse summarize" _(reply to a long message)_\n` +
+            `• "djousse quotly" _(reply to a message → quote sticker)_\n\n` +
             `🧩 *Fun & Knowledge*\n` +
-            `• "silva riddle" — get a brain teaser\n` +
-            `• "silva proverb" / "silva wisdom" — wise saying\n` +
-            `• "silva rhyme moon" — words that rhyme\n\n` +
+            `• "djousse riddle" — get a brain teaser\n` +
+            `• "djousse proverb" / "djousse wisdom" — wise saying\n` +
+            `• "djousse rhyme moon" — words that rhyme\n\n` +
             `🐙 *GitHub*\n` +
-            `• "silva silvatech repos" — list SilvaTechB repos\n` +
-            `• ".silvatech <repo>" — repo stats & files\n` +
-            `• ".silvatech zip <repo>" — download link\n\n` +
+            `• "djousse github <user>" — GitHub profile\n` +
+            `• ".repo" — official bot repository\n\n` +
             `📲 *Downloads*\n` +
-            `• "silva instagram <url>" • "silva facebook <url>"\n` +
-            `• "silva spotify <name>" • "silva pinterest <query>"\n\n` +
+            `• "djousse instagram <url>" • "djousse facebook <url>"\n` +
+            `• "djousse spotify <name>" • "djousse pinterest <query>"\n\n` +
             `⏰ *Productivity*\n` +
-            `• "silva remind me in 30m to call mom"\n` +
-            `• "silva save note shopping: milk, eggs"\n` +
-            `• "silva get my notes"\n` +
-            `• "silva create a poll: Question | A | B | C"\n` +
-            `• "silva schedule message at 9pm: team meeting"\n\n` +
+            `• "djousse remind me in 30m to call mom"\n` +
+            `• "djousse save note shopping: milk, eggs"\n` +
+            `• "djousse get my notes"\n` +
+            `• "djousse create a poll: Question | A | B | C"\n` +
+            `• "djousse schedule message at 9pm: team meeting"\n\n` +
             `🛠️ *Tools*\n` +
-            `• "silva sticker" _(reply to photo)_\n` +
-            `• "silva translate hello to french"\n` +
-            `• "silva wiki artificial intelligence"\n` +
-            `• "silva weather Nairobi"\n` +
-            `• "silva qr code https://example.com"\n\n` +
+            `• "djousse sticker" _(reply to photo)_\n` +
+            `• "djousse translate hello to french"\n` +
+            `• "djousse wiki artificial intelligence"\n` +
+            `• "djousse weather Douala"\n` +
+            `• "djousse qr code https://example.com"\n\n` +
             `👥 *Group Management*\n` +
-            `• "silva change group name to X"\n` +
-            `• "silva mute/unmute group"\n` +
-            `• "silva tag all members"\n` +
-            `• "silva kick @user" • "silva promote @user"\n` +
-            `• "silva create a poll: Vote | Yes | No"\n\n` +
+            `• "djousse change group name to X"\n` +
+            `• "djousse mute/unmute group"\n` +
+            `• "djousse tag all members"\n` +
+            `• "djousse kick @user" • "djousse promote @user"\n` +
+            `• "djousse create a poll: Vote | Yes | No"\n\n` +
             `✍️ *Content Creation*\n` +
-            `• "silva create a bio / welcome / rules / poem"\n` +
-            `• "silva write an email about X"\n\n` +
+            `• "djousse create a bio / welcome / rules / poem"\n` +
+            `• "djousse write an email about X"\n\n` +
             `🌐 *Info & Web*\n` +
-            `• "silva weather / news / search / ip info"\n` +
-            `• "silva about bot / platform / owner / settings"\n\n` +
+            `• "djousse weather / news / search / ip info"\n` +
+            `• "djousse about bot / platform / owner / settings"\n\n` +
             `🧠 *AI Chat* — Ask me anything! I remember our conversation.\n` +
-            `• "silva forget" — clears chat memory\n\n` +
-            `📋 *Run Any Command:* "silva run <command>"\n\n` +
+            `• "djousse forget" — clears chat memory\n\n` +
+            `📋 *Run Any Command:* "djousse run <command>"\n\n` +
             `_${pluginMap().size}+ commands available • Platform: ${BOT_IDENTITY.platform}_`
         );
 
@@ -637,9 +630,9 @@ module.exports = {
             const sudoCount = global.sudoUsers?.size || 0;
             response =
                 `👑 *Bot Owner*\n\n` +
-                `• Name: *${config.OWNER_NAME || 'Silva MD'}*\n` +
+                `• Name: *${config.OWNER_NAME || 'Beauté Gar'}*\n` +
                 `• Number: *+${(config.OWNER_NUMBER || '').replace(/\D/g, '')}*\n` +
-                `• Bot: *${config.BOT_NAME || 'Silva MD'}*\n` +
+                `• Bot: *${config.BOT_NAME || 'DJOUSSE-TECH-MD'}*\n` +
                 `• Developer: *${BOT_IDENTITY.developer}*\n` +
                 `• Website: ${BOT_IDENTITY.website}\n` +
                 `• GitHub: ${BOT_IDENTITY.repo}\n` +
@@ -927,11 +920,11 @@ module.exports = {
 
         else if (agentActions.time.test(query)) {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', { timeZone: 'Africa/Nairobi', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            response = `🕐 *Current Time*\n\n${timeStr} (EAT - Africa/Nairobi)`;
+            const timeStr = now.toLocaleTimeString('en-US', { timeZone: 'Africa/Douala', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            response = `🕐 *Current Time*\n\n${timeStr} (EAT - Africa/Douala)`;
         } else if (agentActions.date.test(query)) {
             const now = new Date();
-            const dateStr = now.toLocaleDateString('en-US', { timeZone: 'Africa/Nairobi', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const dateStr = now.toLocaleDateString('en-US', { timeZone: 'Africa/Douala', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             response = `📅 *Today's Date*\n\n${dateStr}`;
         } else if (agentActions.calc.test(query)) {
             try {
@@ -1039,7 +1032,7 @@ module.exports = {
                 response = '📰 News service temporarily unavailable.';
             }
         } else if (agentActions.weather.test(query)) {
-            const city = query.replace(/weather|temperature|forecast|climate|in|at|for/gi, '').trim() || 'Nairobi';
+            const city = query.replace(/weather|temperature|forecast|climate|in|at|for/gi, '').trim() || 'Douala';
             try {
                 const res = await axios.get(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, { timeout: 8000 });
                 const cur = res.data?.current_condition?.[0];
@@ -1062,7 +1055,7 @@ module.exports = {
         } else if (agentActions.help.test(query)) {
             const pm = pluginMap();
             response =
-                `🤖 *Silva — Full Capabilities*\n\n` +
+                `🤖 *Djousse — Full Capabilities*\n\n` +
                 `📋 *Run Commands* (${pm.size} available)\n` +
                 `• "run menu" • "do alive" • "use sticker"\n` +
                 `• "run <any command name>"\n\n` +
@@ -1073,14 +1066,14 @@ module.exports = {
                 `• Jokes • Quotes • Captions\n` +
                 `• Letters • Emails • Essays\n\n` +
                 `👥 *Group Management*\n` +
-                `• "silva change group name to X"\n` +
-                `• "silva set group description to X"\n` +
-                `• "silva mute/unmute group"\n` +
-                `• "silva lock/unlock group"\n` +
-                `• "silva get group link"\n` +
-                `• "silva tag all members"\n` +
-                `• "silva list admins"\n` +
-                `• "silva kick/add/promote/demote"\n\n` +
+                `• "djousse change group name to X"\n` +
+                `• "djousse set group description to X"\n` +
+                `• "djousse mute/unmute group"\n` +
+                `• "djousse lock/unlock group"\n` +
+                `• "djousse get group link"\n` +
+                `• "djousse tag all members"\n` +
+                `• "djousse list admins"\n` +
+                `• "djousse kick/add/promote/demote"\n\n` +
                 `🌐 *Web Access*\n` +
                 `• Search • News • Weather • IP lookup\n\n` +
                 `ℹ️ *Bot Knowledge*\n` +
@@ -1101,7 +1094,7 @@ module.exports = {
             if (!isAdmin && !isOwner) return reply(`⛔ You need admin permission to rename the group.`);
             if (!isBotAdmin) return reply(`⛔ I need to be an admin to rename the group. Please promote me first.`);
             const newName = query.replace(agentActions.group_rename, '').trim();
-            if (!newName) return reply(`❓ What should I rename the group to?\n\nExample: _silva change group name to Study Squad_`);
+            if (!newName) return reply(`❓ What should I rename the group to?\n\nExample: _djousse change group name to Study Squad_`);
             if (newName.length > 100) return reply(`❌ Group name cannot exceed 100 characters.`);
             try {
                 await sock.groupUpdateSubject(jid, newName);
@@ -1114,7 +1107,7 @@ module.exports = {
             if (!isAdmin && !isOwner) return reply(`⛔ You need admin permission to update the description.`);
             if (!isBotAdmin) return reply(`⛔ I need to be an admin to update the description. Please promote me first.`);
             const newDesc = query.replace(agentActions.group_desc, '').trim();
-            if (!newDesc) return reply(`❓ What should the group description say?\n\nExample: _silva set group description to Welcome to our group!_`);
+            if (!newDesc) return reply(`❓ What should the group description say?\n\nExample: _djousse set group description to Welcome to our group!_`);
             if (newDesc.length > 512) return reply(`❌ Description cannot exceed 512 characters.`);
             try {
                 await sock.groupUpdateDescription(jid, newDesc);
@@ -1187,7 +1180,7 @@ module.exports = {
             if (!isBotAdmin) return reply(`⛔ I need to be an admin to kick members.`);
             // Get mentioned/quoted user
             const mentioned = ctx.mentionedJid?.[0] || message.message?.extendedTextMessage?.contextInfo?.participant;
-            if (!mentioned) return reply(`💡 Reply to a member's message and say: _silva kick_\n\nOr tag them: _silva kick @member_`);
+            if (!mentioned) return reply(`💡 Reply to a member's message and say: _djousse kick_\n\nOr tag them: _djousse kick @member_`);
             try {
                 await sock.groupParticipantsUpdate(jid, [mentioned], 'remove');
                 reply(`✅ @${mentioned.split('@')[0]} has been kicked from the group.`);
@@ -1199,7 +1192,7 @@ module.exports = {
             if (!isAdmin && !isOwner) return reply(`⛔ Admin permission required.`);
             if (!isBotAdmin) return reply(`⛔ I need to be an admin to add members.`);
             const numMatch = query.match(/(\+?[\d]{7,15})/);
-            if (!numMatch) return reply(`💡 Provide a phone number.\n\nExample: _silva add +254712345678_`);
+            if (!numMatch) return reply(`💡 Provide a phone number.\n\nExample: _djousse add +254712345678_`);
             const phone = numMatch[1].replace(/\D/g, '');
             try {
                 await sock.groupParticipantsUpdate(jid, [`${phone}@s.whatsapp.net`], 'add');
@@ -1212,7 +1205,7 @@ module.exports = {
             if (!isAdmin && !isOwner) return reply(`⛔ Admin permission required.`);
             if (!isBotAdmin) return reply(`⛔ I need to be an admin to promote members.`);
             const mentioned = ctx.mentionedJid?.[0] || message.message?.extendedTextMessage?.contextInfo?.participant;
-            if (!mentioned) return reply(`💡 Reply to a member's message and say: _silva promote_\n\nOr tag them: _silva promote @member_`);
+            if (!mentioned) return reply(`💡 Reply to a member's message and say: _djousse promote_\n\nOr tag them: _djousse promote @member_`);
             try {
                 await sock.groupParticipantsUpdate(jid, [mentioned], 'promote');
                 reply(`⭐ @${mentioned.split('@')[0]} has been promoted to admin!`);
@@ -1224,7 +1217,7 @@ module.exports = {
             if (!isAdmin && !isOwner) return reply(`⛔ Admin permission required.`);
             if (!isBotAdmin) return reply(`⛔ I need to be an admin to demote members.`);
             const mentioned = ctx.mentionedJid?.[0] || message.message?.extendedTextMessage?.contextInfo?.participant;
-            if (!mentioned) return reply(`💡 Reply to a member's message and say: _silva demote_\n\nOr tag them: _silva demote @member_`);
+            if (!mentioned) return reply(`💡 Reply to a member's message and say: _djousse demote_\n\nOr tag them: _djousse demote @member_`);
             try {
                 await sock.groupParticipantsUpdate(jid, [mentioned], 'demote');
                 reply(`📉 @${mentioned.split('@')[0]} has been demoted from admin.`);
@@ -1285,7 +1278,7 @@ module.exports = {
 
         // ── Productivity handlers ─────────────────────────────────────────────
         } else if (agentActions.remind.test(query)) {
-            // "silva remind me in 30 minutes to check email"
+            // "djousse remind me in 30 minutes to check email"
             const pm = pluginMap();
             const plugin = pm.get('remind') || pm.get('reminder');
             const cleaned = query.replace(agentActions.remind, '').trim();
@@ -1305,7 +1298,7 @@ module.exports = {
             const pm = pluginMap();
             const plugin = pm.get('notes') || pm.get('note');
             const noteContent = query.replace(agentActions.note_save, '').trim();
-            if (!noteContent) return reply(`❓ What should I save?\n\nExample: _silva save note shopping list: milk, eggs, bread_`);
+            if (!noteContent) return reply(`❓ What should I save?\n\nExample: _djousse save note shopping list: milk, eggs, bread_`);
             if (plugin) {
                 try { await plugin.run(sock, message, ['save', ...noteContent.split(/\s+/)], ctx); }
                 catch { await plugin.run(sock, message, noteContent.split(/\s+/), ctx); }
@@ -1329,13 +1322,13 @@ module.exports = {
         } else if (agentActions.poll.test(query)) {
             const pm = pluginMap();
             const plugin = pm.get('poll');
-            // Parse "silva create a poll: Question | Option A | Option B | Option C"
+            // Parse "djousse create a poll: Question | Option A | Option B | Option C"
             const pollContent = query.replace(agentActions.poll, '').replace(/^[:\-\s]+/, '').trim();
             if (!pollContent) {
                 return reply(
                     `📊 *Create a Poll*\n\n` +
-                    `Format: _silva create a poll: Question | Option 1 | Option 2 | Option 3_\n\n` +
-                    `Example: _silva create a poll: Favorite color? | Red | Blue | Green_`
+                    `Format: _djousse create a poll: Question | Option 1 | Option 2 | Option 3_\n\n` +
+                    `Example: _djousse create a poll: Favorite color? | Red | Blue | Green_`
                 );
             }
             if (plugin) {
@@ -1377,7 +1370,7 @@ module.exports = {
                 .replace(/\b(generate|create|make|draw|paint|design|sketch|imagine)\s+(an?\s+)?(ai\s+)?(image|photo|picture|art|artwork|illustration|wallpaper|thumbnail)\b/gi, '')
                 .replace(/\bimagine\b/gi, '')
                 .trim();
-            if (!prompt) return reply(`🎨 What image should I generate?\n\nExample: _silva generate an image of a lion wearing a gold crown in a forest_`);
+            if (!prompt) return reply(`🎨 What image should I generate?\n\nExample: _djousse generate an image of a lion wearing a gold crown in a forest_`);
             await safeSend({ text: `🎨 _Generating: "${prompt}"..._` }, { quoted: message });
             if (plugin) {
                 try { await plugin.run(sock, message, prompt.split(/\s+/), ctx); }
@@ -1402,7 +1395,7 @@ module.exports = {
             // Also check quoted message for text to speak
             const quotedText = message.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation || '';
             const speakText = text || quotedText;
-            if (!speakText) return reply(`🔊 What should I say?\n\nExample: _silva speak Hello everyone!_`);
+            if (!speakText) return reply(`🔊 What should I say?\n\nExample: _djousse speak Hello everyone!_`);
             if (plugin) {
                 try { await plugin.run(sock, message, speakText.split(/\s+/), ctx); }
                 catch (e) { reply(`❌ Failed: ${e.message}`); }
@@ -1477,32 +1470,17 @@ module.exports = {
             reply(`🧹 *Memory cleared!*\n\nI've forgotten our conversation history. Fresh start! 🤖`);
             return;
 
-        // ── GitHub SilvaTechB (read-only) ─────────────────────────────────────
-        } else if (agentActions.github_silvatech.test(query)) {
-            const pm = pluginMap();
-            const ghPlugin = pm.get('silvatech') || pm.get('silvarepos');
-            // Pass the cleaned query as args so the plugin can parse subcommands
-            const cleanedArgs = query
-                .replace(/\b(silvatech|silvatechwb|silvatechb|silvarepos)\b/gi, '')
-                .replace(/\b(repos?|list|show|get|github|projects?)\b/gi, '')
-                .trim().split(/\s+/).filter(Boolean);
-            if (ghPlugin) {
-                try { await ghPlugin.run(sock, message, cleanedArgs, ctx); return; }
-                catch (e) { reply(`❌ GitHub error: ${e.message}`); return; }
-            }
-            return;
-
-        // ── GitHub repo ZIP download ("send me a clip of SilvaTechB/silva-md-bot") ──
+        // ── GitHub repo ZIP download ("send me a clip of owner/repo") ──
         } else if (agentActions.github_repo_zip.test(query)) {
             const repoMatch = query.match(/\b([\w-]+\/[\w-]+)\b/);
             const fullRepo = repoMatch ? repoMatch[1] : null;
-            if (!fullRepo || fullRepo.includes('silva') === false && !fullRepo.includes('/')) {
-                return reply(`📦 Please specify the repo in *owner/repo* format.\n\nExample: _silva send me a clip of SilvaTechB/silva-md-bot_`);
+            if (!fullRepo) {
+                return reply(`📦 Please specify the repo in *owner/repo* format.\n\nExample: _djousse send me a clip of Beaute-Gar/DJOUSSE-TECH-MD_`);
             }
             const [owner, repo] = fullRepo.split('/');
             await safeSend({ text: `📦 _Preparing download link for *${fullRepo}*..._` }, { quoted: message });
             try {
-                const ghHeaders = { 'User-Agent': 'SilvaMD-Bot/2.0', 'Accept': 'application/vnd.github+json' };
+                const ghHeaders = { 'User-Agent': 'DJOUSSE-TECH-MD/2.0', 'Accept': 'application/vnd.github+json' };
                 const res = await axios.get(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, { headers: ghHeaders, timeout: 8000 });
                 const r = res.data;
                 const branch = r.default_branch || 'main';
@@ -1513,8 +1491,7 @@ module.exports = {
                     `*⬇️ Download Links*\n` +
                     `• ZIP: https://github.com/${r.full_name}/archive/refs/heads/${branch}.zip\n` +
                     `• Tarball: https://github.com/${r.full_name}/archive/refs/heads/${branch}.tar.gz\n\n` +
-                    `*🔗 View on GitHub*\n${r.html_url}\n\n` +
-                    `_Use \`.silvatech ${repo} <filepath>\` to read specific files._`
+                    `*🔗 View on GitHub*\n${r.html_url}`
                 );
             } catch (err) {
                 const branch = 'main';
@@ -1534,10 +1511,10 @@ module.exports = {
             const repoFileMatch = query.match(/\b([\w-]+\/[\w-]+)\/([\w./\-]+)\b/) ||
                                   query.match(/\b(readme|package\.json|index\.js|\.env)\b/i);
             const repoMatch = query.match(/\b([\w-]+\/[\w-]+)\b/);
-            const fileKeyword = query.match(/\b(readme|package\.json|index\.js|config|handler|silva)\b/i)?.[1] || '';
+            const fileKeyword = query.match(/\b(readme|package\.json|index\.js|config|handler|djousse)\b/i)?.[1] || '';
 
             if (!repoMatch) {
-                return reply(`📄 Specify the repo and file.\n\nExamples:\n• _silva get README from SilvaTechB/silva-md-bot_\n• _.silvatech silva-md-bot README.md_`);
+                return reply(`📄 Specify the repo and file.\n\nExamples:\n• _djousse get README from Beaute-Gar/DJOUSSE-TECH-MD_\n• _.silvatech silva-md-bot README.md_`);
             }
 
             const [owner, repo] = repoMatch[1].split('/');
@@ -1546,7 +1523,7 @@ module.exports = {
 
             await safeSend({ text: `📄 _Fetching \`${filePath}\` from *${owner}/${repo}*..._` }, { quoted: message });
             try {
-                const ghHeaders = { 'User-Agent': 'SilvaMD-Bot/2.0', 'Accept': 'application/vnd.github+json' };
+                const ghHeaders = { 'User-Agent': 'DJOUSSE-TECH-MD/2.0', 'Accept': 'application/vnd.github+json' };
                 const res = await axios.get(
                     `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(filePath)}`,
                     { headers: ghHeaders, timeout: 10000 }
@@ -1563,7 +1540,7 @@ module.exports = {
                 }
             } catch (err) {
                 if (err.response?.status === 404) {
-                    reply(`❌ File not found: \`${owner}/${repo}/${filePath}\`\n\n_Use \`.silvatech ${repo}\` to browse available files._`);
+                    reply(`❌ File not found: \`${owner}/${repo}/${filePath}\`\n\n_Use \`.repo\` for the official repository._`);
                 } else {
                     reply(`❌ Could not fetch file: ${err.message}`);
                 }
@@ -1648,7 +1625,7 @@ module.exports = {
                     reply(`🎵 Use \`.rhyme <word>\` to find words that rhyme!`);
                 }
             } else {
-                reply(`🎵 *Rhyme Finder*\n\nExample: _silva what rhymes with moon_\n\nOr use: \`.rhyme <word>\``);
+                reply(`🎵 *Rhyme Finder*\n\nExample: _djousse what rhymes with moon_\n\nOr use: \`.rhyme <word>\``);
             }
             return;
 
@@ -1695,7 +1672,7 @@ module.exports = {
             // Step 3: instant built-in smart responses (no API call)
             const smart = getSmartResponse(query);
             if (smart) {
-                response = `🤖 *Silva*\n\n${smart}`;
+                response = `🤖 *Djousse*\n\n${smart}`;
                 rememberMessage(jid, 'user', query);
                 rememberMessage(jid, 'bot', smart);
             } else {
@@ -1708,8 +1685,8 @@ module.exports = {
                 // Build a strong system prompt that tells ch.at exactly when to route a plugin
                 const toolList = [...pm.keys()].slice(0, 100).join(', ');
                 const systemPrompt =
-                    `You are Silva, a smart WhatsApp bot assistant. ` +
-                    `Owner: ${config.OWNER_NAME || 'Silva'}. Bot: ${config.BOT_NAME || 'Silva MD'}.\n` +
+                    `You are Djousse, a smart WhatsApp bot assistant. ` +
+                    `Owner: ${config.OWNER_NAME || 'Djousse'}. Bot: ${config.BOT_NAME || 'DJOUSSE-TECH-MD'}.\n` +
                     `Available bot commands: ${toolList}.\n\n` +
                     `ROUTING RULES (follow exactly):\n` +
                     `• If the user wants music/songs → reply: TOOL:play|<song name>\n` +
@@ -1744,7 +1721,7 @@ module.exports = {
                             const mem = getMemory(jid).slice(-6);
                             const geminiHistory = [
                                 { role: 'user',  parts: [{ text: systemPrompt }] },
-                                { role: 'model', parts: [{ text: `Got it! I'm Silva, ready to help. 🤖` }] },
+                                { role: 'model', parts: [{ text: `Got it! I'm Djousse, ready to help. 🤖` }] },
                                 ...mem.slice(0, -1).map(m => ({
                                     role: m.role === 'user' ? 'user' : 'model',
                                     parts: [{ text: m.text }],
@@ -1790,7 +1767,7 @@ module.exports = {
                 }
 
                 // Conversational response (may come from ch.at, Gemini, or offline fallback)
-                response = aiReply.startsWith('🤖 *Silva*') ? aiReply : `🤖 *Silva*\n\n${aiReply}`;
+                response = aiReply.startsWith('🤖 *Djousse*') ? aiReply : `🤖 *Djousse*\n\n${aiReply}`;
                 rememberMessage(jid, 'bot', aiReply.slice(0, 300));
             }
         }

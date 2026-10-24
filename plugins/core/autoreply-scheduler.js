@@ -14,7 +14,7 @@ function saveSchedules(data) {
 
 function isInSchedule(schedule) {
     const now = new Date();
-    const tz = schedule.timezone || 'Africa/Nairobi';
+    const tz = schedule.timezone || 'Africa/Douala';
     const formatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: false, timeZone: tz });
     const parts = formatter.formatToParts(now);
     const h = parseInt(parts.find(p => p.type === 'hour').value);
@@ -97,7 +97,7 @@ module.exports = {
             start: startTime,
             end: endTime,
             message: replyMsg,
-            timezone: 'Africa/Nairobi'
+            timezone: 'Africa/Douala'
         };
         saveSchedules(schedules);
         global.autoReplySchedules = schedules;

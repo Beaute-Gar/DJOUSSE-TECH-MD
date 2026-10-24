@@ -37,7 +37,7 @@ const { commandAccess } = require('./lib/command-access');
 const { withNetworkTimeout } = require('./lib/network-timeout');
 const { registerExtras } = require('./lib/extras');
 const { registerHackTools, GROUPES: HACK_SECTIONS } = require('./lib/hacktools');
-const { loadSilvaPlugins } = require('./lib/silva-loader');
+const { loadCorePlugins } = require('./lib/plugin-loader');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('./lib/ported-auto');
 const portedGroup = require('./lib/ported-group');
 const portedAudio = require('./lib/ported-audio');
@@ -1159,12 +1159,12 @@ cmd('archives', { cat: 12, desc: 'Catalogue ARCHIVES (sections à risque)', usag
 /* ════════════════════════════════════════════════════════════
    .repo / .support / .ia — équivalents MAISON des commandes tierces
    ────────────────────────────────────────────────────────────
-   Enregistrées AVANT loadSilvaPlugins : la règle « jamais d'écrasement »
-   (lib/silva-loader.js) fait que les versions tierces (repo.js → dépôt
-   d'un autre auteur, call.js → réseaux + numéro personnel, silva-agent)
-   sont automatiquement ignorées. Aucun fichier de plugins/silva/ n'est
-   modifié. .repo lit les données RÉELLES du dépôt officiel via l'API
-   GitHub (aucune donnée simulée).
+   Enregistrées AVANT loadCorePlugins : la règle « jamais d'écrasement »
+   (lib/plugin-loader.js) fait que toute version tierce de ces noms serait
+   automatiquement ignorée. Les fichiers tierces correspondants (repo.js,
+   call.js) ont été supprimés à la source : .repo/.support existent
+   UNIQUEMENT en version maison. .repo lit les données RÉELLES du dépôt
+   officiel via l'API GitHub (aucune donnée simulée).
    ════════════════════════════════════════════════════════════ */
 cmd(['repo', 'repository'], {
   cat: 10, desc: 'Dépôt officiel — étoiles, forks, dernière MAJ', usage: 'repo', icon: '📦',
@@ -1204,14 +1204,14 @@ cmd('support', {
   );
 });
 
-/* .ia : porte d'entrée VISIBLE de l'assistant (l'historique .silva reste
+/* .ia : porte d'entrée VISIBLE de l'assistant (le nom historique reste
    joignable en direct mais est retiré des menus — cf. HORS_MENUS dans
-   lib/silva-loader.js). On délègue au même gestionnaire : aucun
+   lib/plugin-loader.js). On délègue au même gestionnaire : aucun
    comportement perdu. */
 cmd('ia', {
   cat: 6, desc: 'Assistant IA — commandes, contenu, recherche web', usage: 'ia <question>', icon: '🤖',
 }, async (ctx) => {
-  const entry = commands.get('silva');
+  const entry = commands.get('djousse') || commands.get('silva');
   if (!entry || typeof entry.handler !== 'function') {
     return ctx.error(['ASSISTANT INDISPONIBLE', 'REDEMARRE LE BOT']);
   }
@@ -2944,14 +2944,14 @@ try {
   console.error('[EXTRAS] enregistrement:', e.message);
 }
 
-/* ── PLUGINS SILVA-MD (222 fichiers, adaptés au registre DJOUSE) ── */
+/* ── PLUGINS TIERS — plugins/core/, adaptés au registre DJOUSE ── */
 try {
-  const rap = loadSilvaPlugins(cmd, {
+  const rap = loadCorePlugins(cmd, {
     config, send,
     exists: (n) => commands.has(String(n).toLowerCase()),
     /* styles DJOUSE injectés : les messages d'erreur/succès des plugins
-       silva sont réencadrés dans NOTRE charte (renderError/renderSuccess),
-       et la marque tierce (« Silva MD ») est réécrite en identité maison. */
+       tiers sont réencadrés dans NOTRE charte (renderError/renderSuccess),
+       et toute marque tierce résiduelle est réécrite en identité maison. */
     style: { renderError, renderSuccess, botName: config.botName },
     /* Téléchargement de médias fourni aux plugins qui le déstructurent
        (`const { download } = ctx`). Accepte un WAMessage complet ou un
@@ -2964,14 +2964,14 @@ try {
       return downloadMediaMessage(cible, 'buffer', {}, {});
     },
   });
-  console.log(`[SILVA] ${rap.charges} plugins chargés · ${rap.commandes} commandes/alias enregistrés · ${rap.ignores} ignorés`);
+  console.log(`[CORE] ${rap.charges} plugins chargés · ${rap.commandes} commandes/alias enregistrés · ${rap.ignores} ignorés`);
   if (rap.echecs.length) {
-    console.log(`[SILVA] ${rap.echecs.length} fichier(s) ignoré(s) :`);
+    console.log(`[CORE] ${rap.echecs.length} fichier(s) ignoré(s) :`);
     for (const e of rap.echecs.slice(0, 15)) console.log(`   - ${e}`);
     if (rap.echecs.length > 15) console.log(`   … et ${rap.echecs.length - 15} autres`);
   }
 } catch (e) {
-  console.error('[SILVA] chargement interrompu:', e.message);
+  console.error('[CORE] chargement interrompu:', e.message);
 }
 
 /* ── PHASE B — suppressions de NOMS (règle absolue : 1 nom + 1 alias max).

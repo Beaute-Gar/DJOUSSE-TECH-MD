@@ -97,7 +97,7 @@ test('les commandes interdites (crash/NSFW) ne sont PAS enregistrées', () => {
 test('aucun plugin silva ne pose de listener (pas de double écoute)', () => {
   const fs = require('fs');
   const path = require('path');
-  const dir = path.join(process.cwd(), 'plugins', 'silva');
+  const dir = path.join(process.cwd(), 'plugins', 'core');
   const fichiers = fs.readdirSync(dir).filter((f) => f.endsWith('.js'));
   const coupables = [];
   for (const f of fichiers) {

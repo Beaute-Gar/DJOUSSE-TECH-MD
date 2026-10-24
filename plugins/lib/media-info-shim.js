@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Shim SILVA → DJOUSSE : accès à mediaInfo de DJOUSE sans importer
+ * Shim DJOUSSE : accès à mediaInfo de DJOUSE sans importer
  * handler.js au chargement (lazy → pas de cycle de require).
  */
 module.exports = {

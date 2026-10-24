@@ -7,14 +7,14 @@
 > **Des solutions fiables pour un avenir sans limites**
 
 <img
-  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=852+commandes+%C2%B7+12+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+14+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
-  alt="852 commandes · 12 catégories · Moteur DJOUSSE GUARD · IA Gemini"
+  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=851+commandes+%C2%B7+12+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+14+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
+  alt="851 commandes · 12 catégories · Moteur DJOUSSE GUARD · IA Gemini"
 />
 
 <br/>
 
 <img src="https://img.shields.io/badge/version-4.0.0-2ECC71?style=flat-square" alt="Version 4.0.0" />
-<img src="https://img.shields.io/badge/commandes-852-00b894?style=flat-square" alt="852 commandes" />
+<img src="https://img.shields.io/badge/commandes-851-00b894?style=flat-square" alt="851 commandes" />
 <img src="https://img.shields.io/badge/cat%C3%A9gories-12-111b26?style=flat-square" alt="12 catégories" />
 <img src="https://img.shields.io/badge/Baileys-6.7.24-25D366?style=flat-square&logo=whatsapp&logoColor=white" alt="Baileys 6.7.24" />
 <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 18+" />
@@ -176,8 +176,8 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 | 12 | 🔐 **ARCHIVES** | | 1 |
 | | | | **Total (visibles)** | **844** |
 
-> **+ 8 commandes hors menus** (accès direct, ex. `.hacktools`) — total **852**.
-> **+ 751 alias** (1603 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
+> **+ 8 commandes hors menus** (accès direct, ex. `.hacktools`) — total **851**.
+> **+ 747 alias** (1598 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
 
 ---
 
@@ -296,7 +296,7 @@ npm install
 
 ### 2. Configuration
 
-Crée un fichier `.env` à la racine (il est **ignoré par git**, ne sera jamais commité) :
+Crée un fichier `.env` à la racine en copiant `.env.example` puis en renseignant tes valeurs (il est **ignoré par git**, ne sera jamais commité) :
 
 ```env
 # ── Identité ─────────────────────────────────────
@@ -452,7 +452,7 @@ sur VPS, Docker, Render, Fly.io, Railway, Heroku ou Replit. Fichiers livrés :
 ```
 DJOUSSE-TECH-MD/
 ├── index.js          # Point d'entrée : connexion Baileys, QR/pairing, reconnexion
-├── handler.js        # 🧠 Cerveau unique - 852 commandes, menu, moteur d'événements
+├── handler.js        # 🧠 Cerveau unique - 851 commandes, menu, moteur d'événements
 ├── config.js         # Toutes les constantes lues depuis .env (aucune logique métier)
 ├── style.js          # 🎨 Source unique du rendu (cadres ╭┄┄『 』┄❍, alphabet officiel)
 │
@@ -726,10 +726,14 @@ Toute contribution doit respecter les principes de sécurité et d'utilisation r
 
 ---
 
-# 📜 Licence
+# 📜 Licence & crédits
 
-Le projet est publié sous licence **MIT** (voir `package.json`).
+Le projet est publié sous licence **MIT** (voir le fichier `LICENSE`).
 Les dépendances externes restent soumises à leurs licences respectives — l'utilisation ou la redistribution d'un composant tiers doit respecter les conditions de sa licence.
+
+### Crédits et licences tierces
+
+Le dossier `plugins/core/` reprend du code de **« Silva MD Bot » (Silva Tech Nexus)**, publié sous licence MIT (<https://github.com/SilvaTechB/silva-md-bot>). Conformément à cette licence, l'avis de copyright d'origine est **conservé dans le fichier `NOTICE`** — ne pas le supprimer. Les anciens services liés à cette identité (`.getcode`, `.silvatech`, `.call`, la famille `.lend`…) ont été retirés du code source ; les équivalents `.repo`, `.support` et `.ia` sont désormais 100 % maison.
 
 ---
 

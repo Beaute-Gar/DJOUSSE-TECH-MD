@@ -31,7 +31,7 @@ module.exports = {
                 externalAdReply: {
                     title: '👑 Bot Owner',
                     body: 'Tap to view contact details',
-                    thumbnailUrl: config.ALIVE_IMG || 'https://files.catbox.moe/5uli5p.jpeg',
+                    thumbnailUrl: config.ALIVE_IMG || 'https://files.catbox.moe/h6zdty.png',
                     sourceUrl: 'https://github.com/SilvaTechB/silva-md-bot',
                     mediaType: 1,
                     renderLargerThumbnail: true

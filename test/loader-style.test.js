@@ -2,7 +2,7 @@
 /* Test réel : le proxy d'envoi normalise le style des plugins silva. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { normaliserStyle, wrapSock } = require('../lib/silva-loader');
+const { normaliserStyle, wrapSock } = require('../lib/plugin-loader');
 
 const style = {
   renderError: (lignes) => `[CADRE-ERREUR] ${lignes.join(' | ')}`,
@@ -66,7 +66,7 @@ test('proxy : si wa-send échoue, repli sur le sock brut', async () => {
 });
 
 /* ── Marque tierce « Silva » → identité maison ── */
-const { retirerSignatureTierce, normaliserContenu, loadSilvaPlugins } = require('../lib/silva-loader');
+const { retirerSignatureTierce, normaliserContenu, loadCorePlugins } = require('../lib/plugin-loader');
 
 test('« Powered by Silva MD » réécrit en identité maison', () => {
   const out = retirerSignatureTierce('_Powered by Silva MD_');
@@ -113,7 +113,7 @@ test('le ctx silva expose bien safeSend / jid / message / theme / download', asy
   } };`);
   let handler = null;
   const cmd = (noms, meta, fn) => { handler = fn; };
-  loadSilvaPlugins(cmd, {
+  loadCorePlugins(cmd, {
     dir,
     config: { prefix: '.', botName: 'DJOUSSE-TECH-MD' },
     send: async (sock, jid, c) => { envoyes.push(c.text); },

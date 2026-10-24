@@ -1,13 +1,13 @@
 'use strict';
 /**
- * Shim SILVA → DJOUSSE : '../lib/dlmedia' (téléchargement de médias).
+ * Shim DJOUSSE : '../lib/dlmedia' (téléchargement de médias).
  * Télécharge via l'API Baileys officielle (downloadMediaMessage)
  * + notre média-info interne. Autonome : aucune dépendance à handler.js.
  */
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const { mediaInfo } = require('./media-info-shim');
 
-/* silva : dlBuffer(msg, sock|type) → Buffer ou null */
+/* core : dlBuffer(msg, sock|type) → Buffer ou null */
 async function dlBuffer(msg, sockOrType, maybeSock) {
   try {
     const info = mediaInfo(msg);

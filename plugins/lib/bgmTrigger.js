@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Shim SILVA → DJOUSSE : '../lib/bgmTrigger' (son de fond sur les commandes).
+ * Shim DJOUSSE : '../lib/bgmTrigger' (son de fond sur les commandes).
  * Désactivé : l'envoi de médias automatiques déclenche facilement les
  * détections anti-spam de WhatsApp. L'API existe et répond proprement.
  */

@@ -1,7 +1,7 @@
 'use strict';
 
 const ZONES = {
-    nairobi:'Africa/Nairobi',kenya:'Africa/Nairobi',lagos:'Africa/Lagos',
+    nairobi:'Africa/Douala',kenya:'Africa/Douala',lagos:'Africa/Lagos',
     cairo:'Africa/Cairo',london:'Europe/London',paris:'Europe/Paris',
     berlin:'Europe/Berlin',dubai:'Asia/Dubai',india:'Asia/Kolkata',
     delhi:'Asia/Kolkata',tokyo:'Asia/Tokyo',japan:'Asia/Tokyo',
@@ -23,7 +23,7 @@ module.exports = {
         const { contextInfo } = ctx;
         const jid   = message.key.remoteJid;
         const input = args.join(' ').toLowerCase();
-        const tz    = ZONES[input] || ZONES[input.replace(/\s+/g,'')] || (args.join('/') || 'Africa/Nairobi');
+        const tz    = ZONES[input] || ZONES[input.replace(/\s+/g,'')] || (args.join('/') || 'Africa/Douala');
         const place = args.join(' ') || 'Nairobi';
         try {
             const now = new Date().toLocaleString('en-US', {

@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Shim SILVA → DJOUSSE : '../lib/theme'
+ * Shim DJOUSSE : '../lib/theme'
  * Autonome (aucune dépendance) : fournit l'API utilisée par les plugins
  * silva — getStr, fmt, getActiveTheme, setActiveTheme, listThemes.
  */
