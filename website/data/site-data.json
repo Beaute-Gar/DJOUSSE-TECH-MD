@@ -20,16 +20,16 @@
   },
   "categories": [
     { "n": 1, "icon": "🌟", "name": "Général", "count": 9 },
-    { "n": 2, "icon": "👥", "name": "Groupe", "count": 92 },
+    { "n": 2, "icon": "👥", "name": "Groupe", "count": 91 },
     { "n": 3, "icon": "🛡️", "name": "Protection", "count": 58 },
-    { "n": 4, "icon": "🖼️", "name": "Sticker & Media", "count": 443 },
-    { "n": 5, "icon": "🧰", "name": "Outils", "count": 58 },
-    { "n": 6, "icon": "🤖", "name": "IA", "count": 4 },
-    { "n": 7, "icon": "🎲", "name": "Fun", "count": 83 },
-    { "n": 8, "icon": "🔍", "name": "Recherche", "count": 6 },
-    { "n": 9, "icon": "👑", "name": "Owner", "count": 71 },
-    { "n": 10, "icon": "📦", "name": "Divers", "count": 13 },
-    { "n": 11, "icon": "⬇️", "name": "Téléchargement", "count": 3 }
+    { "n": 4, "icon": "🖼️", "name": "Sticker & Media", "count": 67 },
+    { "n": 5, "icon": "🧰", "name": "Outils", "count": 226 },
+    { "n": 6, "icon": "🤖", "name": "IA", "count": 36 },
+    { "n": 7, "icon": "🎲", "name": "Fun", "count": 165 },
+    { "n": 8, "icon": "🔍", "name": "Recherche", "count": 15 },
+    { "n": 9, "icon": "👑", "name": "Owner", "count": 76 },
+    { "n": 10, "icon": "📦", "name": "Divers", "count": 75 },
+    { "n": 11, "icon": "⬇️", "name": "Téléchargement", "count": 22 }
   ],
   "guard": [
     { "n": 1, "id": "antilink", "effect": "Liens interdits (whitelist de domaines)" },
