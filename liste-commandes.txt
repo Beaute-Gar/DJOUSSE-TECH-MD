@@ -1,0 +1,174 @@
+COMMANDES DJOUSE — 853 commandes / 1618 noms
+Format : primaire  ou  primaire(ali1,ali2…)  [familles = plusieurs noms]
+【1. GÉNÉRAL】 — 9 commandes (11 noms)
+  claim(claimsudo)  ·  diag(diagnostic)  ·  info  ·  list  ·  menu  ·  owner
+  ping  ·  source  ·  uptime
+
+【2. GROUPE】 — 92 commandes (214 noms)
+  addfilter(blockword)  ·  addmode  ·  addnote(adminclearnotes,admindelnote,adminnotes,adminupdatenote,allnotes,delallnotes,delnote,getnote,getnotes,notes,updatenote)  ·  admin(unadmin)  ·  admins(@admins)  ·  analytics(activity,peakhours,topusers)
+  anon(anonmsg)  ·  auditlog(audit)  ·  automute  ·  autounmute  ·  backupgroup(listbackups,restoregroup)  ·  blocknum(unblocknum)
+  blockuser  ·  broadcast2(bcastmembers)  ·  bye2  ·  chatstats(whotalks)  ·  clearfilters(resetfilters)  ·  close
+  commapprove  ·  comminfo  ·  comminvite  ·  commreject  ·  commrequests  ·  commrevoke
+  community(communaute)  ·  dailychallenge(challenge,challengenow,challengeoff,setchallenge)  ·  demote(removeadmin)  ·  disappear(ephemeral)  ·  dmmembers(msgall)  ·  expense(addexpense,balances,clearexpenses,expenses,settle)
+  getjid(whois)  ·  ginvite(invite)  ·  glog  ·  groupbackup  ·  groupcron  ·  groupinfo(ginfo)
+  grouprules  ·  groupstatus(adminlist,exportgroup,gadmins,gage,gexport,gjoinlog,groupage,grpinfo,gstatus,joinlog)  ·  gstats(groupinfo2)  ·  hidetag  ·  htag(stag)  ·  hug(baka,bite,blush,bonk,cry,cuddle,dance,happy,kiss,laugh,nod,pat,poke,shoot,slap,smile,wave,wink)
+  inviteinfo  ·  invitelink(groupinvite)  ·  joingroup  ·  joinmode  ·  joinv4  ·  kick(remove)
+  leavegroup(quit)  ·  link(grouplink)  ·  listadmins  ·  listblock  ·  listfilters(filterlist)  ·  listmembers(members)
+  lock  ·  massbc  ·  mentionall(pingall)  ·  mutelist  ·  muteuser  ·  mygroups
+  newsletter(channelinfo,followchannel,mutechannel,unfollowchannel,unmutechannel)  ·  open  ·  pair(divorce,marry)  ·  pin  ·  pinmsg(unpinmsg)  ·  poll(sondage)
+  promote(makeadmin)  ·  rank(lb,leaderboard,levels,xp)  ·  removefilter(unfilter)  ·  reportuser  ·  resetlink(newlink)  ·  revoke(revokelink)
+  revokev4  ·  rules(delrules,setrules)  ·  setdesc(setdescription)  ·  setname  ·  setwelcome(goodbyeoff,setgoodbye,welcomeoff)  ·  subbot(kicksubbot,mybotinfo,restartsubbot,subbots)
+  tagadmin  ·  tagall(all)  ·  terminategc  ·  time(clock)  ·  togglestatus(togstatus)  ·  togstatus(swgc)
+  tz(worldclock)  ·  unblockuser  ·  unlock  ·  unmuteuser  ·  unpin  ·  vcfgen(contactsave,exportvcf,readvcf,savecontacts,vcfgroup,vcfnumber,vcfread,vcfview)
+  warnreset(warnlist)  ·  welcomequiz(quizoff,quizsettings,setquiz)
+
+【3. PROTECTION】 — 58 commandes (151 noms)
+  acceptall(add,antibadwarn,antigroupmention,antilinkwarn,antipromote,disapp,everyone,gcdesc,gcpp,getgcpp,getlid,goodbyemessage,groupname,groupsettings,killgc,left,listrequests,menus,newgroup,online,reject,rejectall,resetgroup,setantibad,setantigcmentionwarnlimit,setantilink,setgroupevents,vcf,welcomemessage)  ·  addbad  ·  addword(addban)  ·  allowcodes  ·  antibad  ·  antibadword(badword)
+  antibadwords(noswear)  ·  antibot  ·  anticontact  ·  antidel  ·  antidelete  ·  antidemote
+  antifake  ·  antiflood  ·  antiforward  ·  antigm  ·  antilink  ·  antilink2(toggleantilink)
+  antimedia  ·  antipoll  ·  antiscam(checkscam,scamcheck)  ·  antispam  ·  antistatus  ·  antisticker
+  antitag  ·  antivirtex  ·  antivoice  ·  antivv(avv)  ·  autojoin  ·  badwordslist(badwords)
+  blacklist  ·  delbad  ·  flood  ·  floodoff(floodlimit,floodon)  ·  floodset  ·  forward(cachedmeta,cmd,delsudo,fullpp,getsetting,getsudo,jid,pp,resetallsettings,resetdb,resetsetting,resetsudo,return,setanticall,setantidelete,setantiedit,setautobio,setautoblock,setautolikestatus,setautoreact,setautoread,setautoreadstatus,setautoreplystatus,setbotpic,setbotrepo,setcaption,setchatbot,setchatbotmode,setdmpresence,setfooter,setgcjid,setgcpresence,setmode,setnewsletterjid,setnewsletterurl,setownername,setownernumber,setpackauthor,setpackname,setpmpermit,setsetting,setstartmsg,setstatusemojis,setstatusreplytext,setsudo,settimezone,setytlink,tostatus,update,vv2)
+  goodbye  ·  groupstats  ·  linkallow  ·  maxtext  ·  mute  ·  muteminutes
+  nightmode(modenuit)  ·  nightset  ·  onwarnlimit  ·  removeword(delword)  ·  sanction  ·  security
+  settings(config)  ·  spam  ·  tagmax  ·  unblacklist  ·  unmute  ·  unwarn(resetwarn)
+  warn  ·  warnings  ·  warnlimit  ·  welcome
+
+【4. STICKER & MEDIA】 — 452 commandes (938 noms)
+  __advanced_onmessage__  ·  aboutme(myprofile)  ·  abs(absolute)  ·  acronym(abbrev)  ·  advancedglow(americanflag,blackpinklogo,blackpinkstyle,cartoonstyle,deletingtext,effectclouds,galaxy,galaxystyle,glitchtext,glossysilver,glowingtext,gradienttext,lighteffect,logo1917,logomaker,luxurygold,makingneon,neonglitch,nigerianflag,papercut,pixelglitch,sandsummer,summerbeach,texteffect,typographytext,underwater,writetext)  ·  advice(tip)
+  aesthetic(vaporwave)  ·  affirmation(affirm)  ·  afkcheck(whoafk)  ·  age(agecalc)  ·  album  ·  albumadd
+  albumclear  ·  albumsend  ·  alive(bot)  ·  anagram(isanagram)  ·  animalfact(animalf)  ·  anime(animesearch,manga)
+  ans  ·  antiban(safemode)  ·  antonym(ant)  ·  apk(apkdl)  ·  ascii2(charcode)  ·  ascii3(arttext)
+  audiofx  ·  autonce(autoonce)  ·  autoread(readall)  ·  average(avg)  ·  awaymsg(awayoff,setaway)  ·  b64
+  back  ·  backwards(reversewords)  ·  ban(banlist,unban)  ·  banner(textbanner)  ·  bard  ·  bass
+  bgm(addbgm)  ·  bible(verse)  ·  bin  ·  bio(updatebio)  ·  bio2(bioideas)  ·  bitcoin(btc)
+  blur  ·  bmi(bodymass)  ·  bodyfact(bodyf)  ·  bodyfat(bfp)  ·  bold(b)  ·  border(box)
+  botsettings(config2)  ·  brain(brainsize)  ·  bubble(circled)  ·  budget(money)  ·  caesar  ·  calculate(math)
+  calendar(cal)  ·  call(support)  ·  calories(food)  ·  camel(camelcase)  ·  capcut(capcutdl)  ·  capitalanswer(ca)
+  capitalquiz(cq)  ·  caption(what)  ·  car(carinfo)  ·  carbon(codeimg)  ·  catbreed(catinfo)  ·  celsius(ftoc)
+  chatai  ·  chatat(chat)  ·  chmod(permissions)  ·  circle  ·  clap(clapback)  ·  clearcache(cleanup)
+  clearigsession(rmigsession)  ·  clearwarn  ·  climate(mosam)  ·  color2  ·  colorinfo(hex)  ·  compliment(comp)
+  compound(interest)  ·  confess(confession)  ·  copypasta(pasta)  ·  count(charcount)  ·  countdown2(daysto)  ·  countdown3(eventcountdown)
+  country(countryinfo)  ·  countryfact(countryf)  ·  couple(love)  ·  createpoll(vote)  ·  creator  ·  cron(cronhelp)
+  currency  ·  dare(dareq)  ·  darkjoke(dark)  ·  date(today)  ·  dec2hex(dectohex)  ·  decode64(unbase64)
+  deep  ·  device(wainfo)  ·  diary  ·  dict(meaning)  ·  disappearing  ·  discount(sale)
+  divide(div)  ·  dnslookup(nslookup)  ·  dogbreed(dog)  ·  domain(domaininfo)  ·  dreammeaning(dream)  ·  ebinary(adfoc,cleanuri,createpdf,createqr,dbase,debinary,domaincheck,ebase,fancy,met,photoeditor,readqr,rebrandly,remini,rename,shortener,sspc,ssphone,sstab,ssur,ssweb,tinyurl,ttp,vgd,vurl,web2zip)
+  editmsg(correct)  ·  element(chem)  ·  emoji(emojicombo)  ·  emoji2(emojimeaning)  ·  emojianswer(ea)  ·  emojify(textemoji)
+  emojiguess(eg)  ·  encode(decode,hex2text,rot13)  ·  encode64  ·  eval(js)  ·  exchange(forex)  ·  excuse(randomexcuse)
+  facebook(fb)  ·  factorial  ·  facts(funfact)  ·  fahrenheit(ctof)  ·  fakeaddress(address)  ·  fakeemail(email)
+  fakehack  ·  fakeid(identity)  ·  fakename(name)  ·  fakephone(phone)  ·  fetch(get)  ·  fibonacci(fib)
+  figlet(art,textart)  ·  findsticker(giphy)  ·  flag(countryflag)  ·  flaganswer(fa)  ·  flagquiz(fq)  ·  flashcard(fc)
+  flip  ·  flipcoin(coinflip)  ·  foodfact(foodf)  ·  fortune(fortunecookie)  ·  fortune2(luckynumber)  ·  fwd(transfert)
+  games(diceai,diceend,dicejoin,tttai,tttboard,tttend,tttjoin,w,wcg,wcgai,wcgbegin,wcgend,wcgjoin,wcgscores)  ·  gaytest(gay)  ·  gcd(hcf)  ·  gdrive(gdl)  ·  getcode(getpair)  ·  gif(mp4togif)
+  giftedai  ·  gitclone  ·  githubstalk(gh)  ·  goal(goals)  ·  google(apkmirror,ggleimage,happymod,npm,spotifysearch,unsplash,wallpapers,wattpad,yts)  ·  gpt(chatgpt)
+  gpt4(gpt-4)  ·  gpt4o(gpt-4o)  ·  gpt4o-mini  ·  gratitude(grateful)  ·  greet(hi)  ·  grey
+  guess(guessnum)  ·  guessnumber  ·  habit(habittracker)  ·  hashtag(tags)  ·  heartrate(hr)  ·  hello
+  help(cmds,commands)  ·  hex2dec(hextodec)  ·  historyfact(historyf)  ·  hm  ·  horo  ·  horoscope2(dailyhoroscope)
+  httpcode(http)  ·  hydration(waterintake)  ·  idiom(englishidiom)  ·  igcaption  ·  igstalk(iginfo)  ·  iloveyou(ily)
+  imagine(img)  ·  imgbb(githubcdn,pixhost)  ·  inflation(inflationcalc)  ·  inspire(motivation)  ·  instagram(ig)  ·  insult(friendlyinsult)
+  invert  ·  invest(investtip)  ·  ipinfo(iplookup)  ·  iq(iqtest)  ·  italic(i)  ·  joke2(dadjoke)
+  jokes  ·  json(jsonformat)  ·  lcm  ·  leetspeak(1337)  ·  lend(approvelend,lendlist,lendstatus,rejectlend,revokelend)  ·  lendlimit(expirelends,lendconfig,lendexpiry,lendstats)
+  letmegpt  ·  lifeadvice  ·  linkpreview(tldr)  ·  listonline  ·  livescore(gamehistory,sportnews,standings,surebet,topscorers,upcomingmatches)  ·  loan(loancalc)
+  loc(localisation)  ·  log(logarithm)  ·  lorem(loremipsum)  ·  lower(lowercase)  ·  lyric  ·  magic8
+  magicball(eightball)  ·  makeqr  ·  mathanswer(ma)  ·  mathfact(mathf)  ·  mathquiz(mq)  ·  matrix
+  matrixtext  ·  md5(sha256)  ·  mediafire(mf)  ·  median  ·  meditation(breathe)  ·  meme(memequote)
+  memes  ·  memo  ·  mixemoji(emojiblend)  ·  mock(spongebob)  ·  mode2  ·  morseencode(morsedecode)
+  motivate  ·  moviefact(movief)  ·  multiply(mul)  ·  multipoll(multivote)  ·  musicfact(musicf)  ·  myip(serverip)
+  netspeed  ·  networth(nwcalc)  ·  neverhaveiever(nhie)  ·  news(headlines)  ·  nickname(nick)  ·  nightcore
+  nitumie(statussave)  ·  numberfact(number)  ·  oct(octal)  ·  openai  ·  openphoto(vvphoto)  ·  os(osinfo)
+  packadd  ·  packsend  ·  palindrome(ispalindrome)  ·  passwd  ·  password2(genpass)  ·  pastebin(hastebin)
+  percentage(pct)  ·  personality(mbti)  ·  phone2(phoneinfo)  ·  phonetic(nato)  ·  phrasebook(swahili)  ·  pi
+  pick(decide)  ·  pickup(rizz)  ·  pig(piglatin)  ·  ping2(ms)  ·  pinterest(pindl)  ·  planet(planetinfo)
+  play(song)  ·  poem(poetry)  ·  poll2(quickpoll)  ·  pollresult(pollresults,pollstats,votes)  ·  pomodoro(focus)  ·  poststatus(textstatus)
+  power(pow)  ·  prefix(changeprefix)  ·  prefix2  ·  price  ·  prime(isprime)  ·  programming(lang)
+  proverb(wisdom2)  ·  purge(clear)  ·  qrcode  ·  quote2(dq)  ·  quotly(q2s)  ·  rainbow(colortext)
+  random(rng)  ·  rateme  ·  reaction  ·  readreceipt(receipt)  ·  readtext(textfromimage)  ·  recipe(quickrecipe)
+  recording(busy,offline)  ·  reddit(rdl)  ·  regex(testregex)  ·  remind2(setmsg)  ·  reminder(remindme)  ·  reminders(myreminders)
+  removebg(rmbg)  ·  repeat(rep)  ·  repo(repository)  ·  resize  ·  restart2(reboot)  ·  rev
+  reverse  ·  rhyme(rhymes)  ·  roast(roastme)  ·  rolldice  ·  roman(toroman)  ·  round
+  rps(rockpaperscissors)  ·  rremind(clearreminders,recurringremind,repeatremind,stopremind)  ·  runtime  ·  salary(salarycalc)  ·  save(bookmarks,clearbookmarks,delbookmark,saved)  ·  save2(bm)
+  savings(savingscalc)  ·  saying(adage)  ·  scanurl(urlscan)  ·  sched  ·  sciencefact(sciencef)  ·  scramblesentence
+  senddoc(doc)  ·  sepia  ·  setabout(about)  ·  setbgm(bgmlist,clearbgm,delbgm,listbgm,removebgm)  ·  setgreet(delgreet,getgreet,greetoff,greeton)  ·  setigsession(igsession)
+  sh(bash)  ·  sha1  ·  sharecontact  ·  shazam(identify)  ·  shipping(lovematch)  ·  shorten
+  shorturl  ·  shuffle(scramble)  ·  silva(agent,ask,assistant,do)  ·  silvatech(svrepo)  ·  simp(simpmeter)  ·  slang(genz)
+  sleep(sleepcalc)  ·  slot(slots)  ·  slow  ·  slowmode  ·  smallcaps  ·  smeme(stickermeme)
+  smooth  ·  snake(snakecase)  ·  socialinfo(platform)  ·  solve  ·  soundcloud(sc)  ·  space(spaced)
+  spacefact(spacef)  ·  speak(voice)  ·  speed  ·  spell(spellcheck)  ·  split(billsplit)  ·  sportfact(sportf)
+  spotify(spdl)  ·  spp(getpp)  ·  sqrt(squareroot)  ·  status2(whatsappstatus)  ·  steal(takesticker)  ·  step(steps)
+  stext(textstick)  ·  sticker(s)  ·  stickerpack(pack)  ·  stickertoimg(unwebp)  ·  stock(shares)  ·  stopwatch(sw)
+  stretch(stretching)  ·  strike(strikethrough)  ·  subtract(sub)  ·  sum(plus)  ·  summary(brief)  ·  superhero(hero)
+  superpower(randompower)  ·  sus(susmeter)  ·  synonym(syn)  ·  take  ·  tax(taxcalc)  ·  techfact(techf)
+  tempinbox(delmail,readmail,tempmailhelp)  ·  tempmail(tmpmail)  ·  tempo  ·  testhandler  ·  textsticker(tsticker)  ·  thankyou(thanks2)
+  theme(settheme,themes)  ·  thisorthat(tot)  ·  threads(threadsdl)  ·  tiktok(tt)  ·  tiktokstalk(ttuser)  ·  timer(countdown)
+  timestamp(epoch)  ·  tipcalc  ·  title(titlecase)  ·  toaudio  ·  tod  ·  todo(task)
+  togif  ·  tohex  ·  toimg  ·  tojpeg  ·  tomp3(audio,tovn)  ·  tongue(twister)
+  topanime(airing,animegenre,animeinfo,animequote,character,mangainfo,seasonal,studio,topmanga,upcoming)  ·  toptt(sendaudio,sendvideo,snack,tovideo)  ·  tourl(geturl)  ·  transcribe(vtt)  ·  troll(trollface)  ·  truth(truthq)
+  ttt  ·  twitter(tw)  ·  typecheck(tc)  ·  typerace(typing2)  ·  typing(wpm)  ·  unbinary(frombin)
+  unhex(fromhex)  ·  unitconvert  ·  unmorse(demorse)  ·  unscramble2(wordchallenge)  ·  unscrambleanswer(usa)  ·  upper(caps)
+  upsidedown  ·  urldecode(decodeurl)  ·  urlencode(encodeurl)  ·  useragent(ua)  ·  uuid(guid)  ·  uwu(uwuify)
+  venice  ·  viewonce(vo)  ·  vocab(wotd)  ·  vowels(novowels)  ·  vv  ·  waifu(husbando,kamisato,maid,megumin,neko,raiden,rias,selfies,shinobu,uniform)
+  wanted  ·  warning  ·  waves(textwave)  ·  webshot  ·  whatsapp  ·  wikipedia(search)
+  wisdom(wisdomquote)  ·  wordcount(wc)  ·  wordscramble(unscramble)  ·  workout(wod)  ·  wouldyou(wyd)  ·  wouldyourather(wyr)
+  ws  ·  yoga(yogapose)  ·  yt(youtube)  ·  ytmp4(ytv,ytvideo)  ·  ytvid-audio(ytaudio2)  ·  zalgo(creepy)
+  zodiac(starsign)  ·  zodiacmatch(zmatch)
+
+【5. OUTILS】 — 58 commandes (68 noms)
+  arena  ·  ascii  ·  base64  ·  binary  ·  bookmark  ·  boomlg
+  calc  ·  calllink  ·  cat  ·  color  ·  crypto  ·  define
+  del(delete)  ·  devil  ·  didong  ·  dns  ·  dragonball  ·  edit
+  glitch  ·  gold  ·  greenneon  ·  harrypotter  ·  hash  ·  incandescent
+  ip  ·  lightglow  ·  location  ·  logolist  ·  lyrics(paroles)  ·  morse
+  naruto  ·  neon  ·  neonlight  ·  note  ·  onwa  ·  password(mdp)
+  purple  ·  qr  ·  react  ·  remind(rappel)  ·  screenshot(ss)  ·  seen
+  short(tiny)  ·  snow  ·  speedtest  ·  star  ·  summer  ·  thunder
+  timezone(heure)  ·  tour  ·  transformer  ·  translate(tr)  ·  tts(parle)  ·  unstar
+  wall  ·  water  ·  weather(meteo)  ·  whitegold
+
+【6. IA】 — 3 commandes (6 noms)
+  ai(gemini)  ·  analyse(ocr)  ·  summarize(resume)
+
+【7. FUN】 — 83 commandes (97 noms)
+  8ball  ·  ablush  ·  acry  ·  acuddle  ·  adance  ·  afacepalm
+  ahappy  ·  ahug  ·  akiss  ·  alaugh  ·  angry  ·  answer(repondre)
+  apat  ·  ashrug  ·  asmile  ·  astare  ·  athumbsup  ·  awave
+  awink  ·  bundesliga_matchday  ·  bundesliga_table  ·  bundesliga_top_assist  ·  bundesliga_top_scorer  ·  choose
+  cl_matchday  ·  cl_table  ·  cl_top_assist  ·  cl_top_scorer  ·  coin  ·  de(dice)
+  emojimix(emix)  ·  epl_matchday  ·  epl_table  ·  epl_top_assist  ·  epl_top_scorer  ·  eredivisie_matchday
+  eredivisie_table  ·  eredivisie_top_assist  ·  eredivisie_top_scorer  ·  fact  ·  football  ·  hang
+  hangman(pendu)  ·  happi  ·  heart  ·  joke  ·  jokeen  ·  laliga_matchday
+  laliga_table  ·  laliga_top_assist  ·  laliga_top_scorer  ·  liga_portugal_matchday  ·  liga_portugal_table  ·  liga_portugal_top_assist
+  liga_portugal_top_scorer  ·  ligue1_matchday  ·  ligue1_table  ·  ligue1_top_assist  ·  ligue1_top_scorer  ·  ludo(ludogame)
+  moon  ·  nguess(ng)  ·  numberguess(devinette)  ·  pion(pawn)  ·  quote(citation)  ·  rate
+  riddle(enigme)  ·  roll  ·  sad  ·  seriea_matchday  ·  seriea_table  ·  seriea_top_assist
+  seriea_top_scorer  ·  ship  ·  shy  ·  tictactoe(morpion)  ·  trivia(quiz)  ·  tttmove(tttm)
+  wc_matchday  ·  wc_table  ·  wc_top_assist  ·  wc_top_scorer  ·  wordgame(motcache)
+
+【8. RECHERCHE】 — 6 commandes (6 noms)
+  biblie  ·  convert  ·  describe  ·  elements  ·  github  ·  wiki
+
+【9. OWNER】 — 71 commandes (98 noms)
+  accept(autoriser)  ·  accepted(acceptes)  ·  alwaysonline  ·  archive  ·  authcode(codeauth)  ·  autobio
+  autodlstatus  ·  autolike(autoreact)  ·  autorecord  ·  autoreply  ·  autosettings  ·  autostatus(statusconfig)
+  autotyping  ·  autoview  ·  block  ·  blocklist  ·  bots  ·  broadcast(bc)
+  callinfo  ·  chatlog(msgs)  ·  chcreate(newslettercreate)  ·  chdel  ·  chdemote  ·  chdesc
+  chfetch  ·  chfollow(cfollow)  ·  chinfo  ·  chmsg(chsend)  ·  chmute  ·  chowner
+  chpic  ·  chreact  ·  chrename  ·  chunfollow(newsletterunfollow)  ·  chunmute  ·  conflicts(conflit)
+  derniers(historique)  ·  dmall  ·  fetchstatus  ·  join  ·  journal(events)  ·  label
+  leave  ·  logout  ·  mutechat(mutec)  ·  mycatalog  ·  orderinfo  ·  pmpermit
+  presence  ·  privacy  ·  public  ·  read(markread)  ·  rejectcall  ·  schedule(planifier)
+  schedules(jobs)  ·  self  ·  sessionlist  ·  sessionnew  ·  sessions  ·  setbio(botbio)
+  setbotname(botname)  ·  setmenuimg(menupic)  ·  setpp(setpic)  ·  setprefix  ·  statut(status)  ·  sudo
+  unaccept(deaccept)  ·  unblock  ·  unmutechat(unmutec)  ·  unpause(reprendre)  ·  unschedule(unsched)
+
+【10. DIVERS】 — 11 commandes (16 noms)
+  afk  ·  asknum(demander-num)  ·  bizprofile  ·  event(rdv)  ·  level  ·  pix
+  product(produit)  ·  report  ·  sharenum(monnum)  ·  stats  ·  vcard(contact)
+
+【11. TÉLÉCHARGEMENT】 — 3 commandes (6 noms)
+  play(mp3)  ·  video(ytmp4)  ·  yt(ytsearch)
+
+【cat99】 — 7 commandes (7 noms)
+  emomix  ·  hacktools  ·  imdb  ·  paste  ·  stickersearch  ·  technews
+  videodoc
+
+TOTAL : 853 commandes · 1618 noms

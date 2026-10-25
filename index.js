@@ -130,7 +130,9 @@ function setBridgeStatus(status, lastError = '') {
   const changed = bridge.status !== status || bridge.lastError !== lastError;
   bridge.status = status;
   bridge.lastError = lastError;
-  if (changed && startupDashboardShown) showStartupDashboard();
+  if (changed && startupDashboardShown) {
+    rawLog(`[STATUS] WhatsApp : ${status}${lastError ? ` — ${lastError}` : ''}`);
+  }
 }
 
 console.error = (...args) => { if (!isIgnored(args[0])) rawError(...args); };

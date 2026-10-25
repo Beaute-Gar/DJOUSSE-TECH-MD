@@ -1,144 +1,321 @@
+
 'use strict';
+
 /**
- * style.js — Style DJOUSSE TECH (moteur de rendu centralisé)
- * ────────────────────────────────────────────────────────────
- * UNIQUE source de vérité du design : handler.js ET guard/ l'utilisent.
- * Toute modification de l'identité visuelle se fait ICI, puis se propage partout.
+ * style.js — DJOUSSE TECH EVOLUTION
+ * Console de démarrage et moteur de rendu centralisé.
+ * Compatible Node.js, CMD Windows et Termux.
+ * Conserve les fonctions utilisées par les autres modules.
  */
 
-/* Alphabet Unicode officiel (titres, labels, noms de commandes) */
 const MATH_MAP = {};
+
 const buildMathRange = (start, chars) => {
-  [...chars].forEach((c, i) => { MATH_MAP[c] = String.fromCodePoint(start + i); });
+  [...chars].forEach((c, i) => {
+    MATH_MAP[c] = String.fromCodePoint(start + i);
+  });
 };
+
 buildMathRange(0x1D670, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 buildMathRange(0x1D68A, 'abcdefghijklmnopqrstuvwxyz');
 buildMathRange(0x1D7F6, '0123456789');
 
 function toUnicode(str) {
-  return String(str).replace(/[A-Za-z0-9]/g, (ch) => MATH_MAP[ch] || ch);
+  return String(str).replace(/[A-Za-z0-9]/g, ch => MATH_MAP[ch] || ch);
 }
 
-const frameHeader = (title) => `╭┄┄『 ${toUnicode(title)} 』┄❍`;
-const frameFooter = () => `╰┄┄┄┄┄┄┄┄┄┄┄┄⪼`;
-const buildFrame = (title, lines) => [frameHeader(title), ...lines, frameFooter()].join('\n');
-const listHeader = (title) => `╭『 ${toUnicode(title)} 』`;
-/* Numérotation officielle : 1 ⟩⟩ … 10 ⟩⟩ (padStart 2, jamais « 1. ») */
-const listItem = (n, label) => `┊${String(n).padStart(2)} ⟩⟩ ${label}`;
-const bullet = (label, value) => `│✦ ${toUnicode(label)}${value === undefined ? '' : `: ${value}`}`;
+/* ─────────────── IDENTITÉ VISUELLE ─────────────── */
 
-/* ── Lignes de cadre : SEULE source de l'alphabet │ « » ✦ ───────────────
-   Aucun fichier hors de style.js ne doit écrire ces glyphes en dur
-   (contrôle G4 « style » de scripts/audit.js). */
-const row = (text) => `│ ${text}`;
+const frameHeader = title => `╭┄┄『 ${toUnicode(title)} 』┄❍`;
+const frameFooter = () => '╰┄┄┄┄┄┄┄┄┄┄┄┄⪼';
+
+const buildFrame = (title, lines) =>
+  [frameHeader(title), ...lines, frameFooter()].join('\n');
+
+const listHeader = title => `╭『 ${toUnicode(title)} 』`;
+const listItem = (n, label) =>
+  `┊${String(n).padStart(2)} ⟩⟩ ${label}`;
+
+const bullet = (label, value) =>
+  `│✦ ${toUnicode(label)}${value === undefined ? '' : `: ${value}`}`;
+
+const row = text => `│ ${text}`;
 const blank = () => '│';
-const title = (text) => `│「 ${text} 」`;
-const note = (text) => `│✦ ${text}`;
+const title = text => `│「 ${text} 」`;
+const note = text => `│✦ ${text}`;
 
-/* ── Cadres terminal (console) : SEULE source de l'alphabet ╔ ═ ║ ┌ ─ ┐ └ ┘ ── */
+/* ─────────────── COULEURS TERMINAL ─────────────── */
+
+const ANSI = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
+  cyan: '\x1b[96m',
+  blue: '\x1b[94m',
+  green: '\x1b[92m',
+  yellow: '\x1b[93m',
+  red: '\x1b[91m',
+  white: '\x1b[97m',
+  magenta: '\x1b[95m',
+  gray: '\x1b[90m'
+};
+
+function supportsColor() {
+  if (process.env.NO_COLOR !== undefined) return false;
+  if (process.env.FORCE_COLOR === '0') return false;
+
+  // Permet aussi les couleurs dans CMD Windows récent.
+  if (process.env.FORCE_COLOR) return true;
+
+  return Boolean(
+    process.stdout &&
+    process.stdout.isTTY &&
+    process.env.TERM !== 'dumb'
+  );
+}
+
+const paint = (text, color) =>
+  supportsColor() ? `${color}${text}${ANSI.reset}` : String(text);
+
+const cyan = text => paint(text, ANSI.cyan);
+const green = text => paint(text, ANSI.green);
+const yellow = text => paint(text, ANSI.yellow);
+const red = text => paint(text, ANSI.red);
+const gray = text => paint(text, ANSI.gray);
+const white = text => paint(text, ANSI.white);
+const bold = text => paint(text, ANSI.bold);
+const magenta = text => paint(text, ANSI.magenta);
+
+/* ─────────────── CADRES CONSOLE ─────────────── */
+
 const BOX_W = 48;
+
 const boxTop = () => `╔${'═'.repeat(BOX_W)}╗`;
 const boxRule = () => `╠${'═'.repeat(BOX_W)}╣`;
 const boxBottom = () => `╚${'═'.repeat(BOX_W)}╝`;
-const boxRow = (text) => `║${String(text).padEnd(BOX_W)}║`;
-/** Cadre de connexion : titre, filet, puis une ligne par entrée. */
-const box = (heading, rows = []) =>
-  [boxTop(), boxRow(heading), boxRule(), ...rows.map(boxRow), boxBottom()].join('\n');
-/** Bannière légère : une seule ligne encadrée (nom du bot, etc.). */
-const banner = (text, w = 46) =>
-  [`┌${'─'.repeat(w)}┐`, `│${String(text).padEnd(w)}│`, `└${'─'.repeat(w)}┘`].join('\n');
 
-function renderStartupDashboard(status) {
-  const fit = (value) => [...String(value)].slice(0, BOX_W).join('');
+const boxRow = text => {
+  const content = [...String(text)].slice(0, BOX_W - 2).join("");
+  return `║ ${content.padEnd(BOX_W - 2)} ║`;
+};
+const box = (heading, rows = []) =>
+  [
+    boxTop(),
+    boxRow(heading),
+    boxRule(),
+    ...rows.map(boxRow),
+    boxBottom()
+  ].join('\n');
+
+const banner = (text, w = 46) =>
+  [
+    `┌${'─'.repeat(w)}┐`,
+    `│${String(text).padEnd(w)}│`,
+    `└${'─'.repeat(w)}┘`
+  ].join('\n');
+
+/* ─────────────── TABLEAU DE BORD AU DÉMARRAGE ─────────────── */
+
+function renderStartupDashboard(status = {}) {
+  const fit = value => {
+    let result = String(value ?? 'Non disponible');
+
+    // Évite de casser le cadre avec des retours à la ligne.
+    result = result.replace(/[\r\n\t]/g, ' ');
+
+    return [...result].slice(0, BOX_W).join('');
+  };
+
+  const statusValue = (value, fallback = 'INCONNU') =>
+    value === undefined || value === null || value === ''
+      ? fallback
+      : String(value);
+
+  const connection = statusValue(status.connection);
+  const ai = statusValue(status.ai);
+  const lastError = statusValue(status.lastError, 'aucune');
+
   const rows = [
+    '',
     'DJOUSSE TECH EVOLUTION',
-    'DJOUSSE-TECH-MD - BOT WHATSAPP',
+    'WHATSAPP AUTOMATION SYSTEM',
     'Des solutions fiables pour un avenir',
     'sans limites',
     '',
     'SYSTEME',
-    `Processus : ${status.process}`,
-    `Version bot : ${status.version}`,
-    `Runtime Node.js : ${status.nodeVersion}`,
-    `Stockage : ${status.storage}`,
-    `Commandes : ${status.commands} chargees`,
-    `Plugins : ${status.plugins} charges`,
-    `Protections : ${status.protections}`,
-    `Intelligence IA : ${status.ai}`,
+    `Processus : ${statusValue(status.process)}`,
+    `Version bot : ${statusValue(status.version)}`,
+    `Runtime Node.js : ${statusValue(status.nodeVersion)}`,
+    `Stockage : ${statusValue(status.storage)}`,
+    `Commandes : ${statusValue(status.commands, '0')} chargees`,
+    `Plugins : ${statusValue(status.plugins, '0')} charges`,
+    `Protections : ${statusValue(status.protections)}`,
+    `Intelligence IA : ${ai}`,
     'Services externes : NON TESTES',
     '',
-    'SESSION',
-    `ID : ${status.sessionId}`,
-    `Connexion : ${status.connection}`,
-    `Sessions actives : ${status.activeSessions}`,
-    `Derniere erreur : ${status.lastError || 'aucune'}`,
+    'SESSION WHATSAPP',
+    `ID : ${statusValue(status.sessionId)}`,
+    `Connexion : ${connection}`,
+    `Sessions actives : ${statusValue(status.activeSessions, '0')}`,
+    `Derniere erreur : ${lastError}`,
+    '',
+    'DJOUSSE TECH EVOLUTION'
   ];
-  return box('DJOUSSE TECH EVOLUTION', rows.map(fit));
+
+  const header = boxTop() + '\n' +
+    boxRow('  DJOUSSE TECH | SYSTEM CONSOLE') + '\n' +
+    boxRule();
+
+  const content = rows.map((value, index) => {
+    let line = fit(value);
+
+    if (index === 1 || index === 2 || index === 3 || index === 4) {
+      line = cyan(line);
+    } else if (value === 'SYSTEME' || value === 'SESSION WHATSAPP') {
+      line = bold(magenta(line));
+    } else if (value.startsWith('Connexion :')) {
+      const state = connection.toLowerCase();
+      line = state.includes('connect') && !state.includes('disconnect')
+        ? green(line)
+        : state.includes('error') || state.includes('erreur')
+          ? red(line)
+          : yellow(line);
+    } else if (value.startsWith('Derniere erreur :')) {
+      line = lastError.toLowerCase() === 'aucune'
+        ? green(line)
+        : yellow(line);
+    } else if (value.startsWith('Intelligence IA :')) {
+      line = ai.toLowerCase().includes('activ')
+        ? green(line)
+        : yellow(line);
+    } else if (value === 'Services externes : NON TESTES') {
+      line = gray(line);
+    } else if (value === 'DJOUSSE TECH EVOLUTION') {
+      line = cyan(line);
+    } else if (value.trim() !== '') {
+      line = white(line);
+    }
+
+    return boxRow(line);
+  });
+
+  return [
+    header,
+    ...content,
+    boxBottom()
+  ].join('\n');
 }
 
-/* ── Cadre catégorie (┃ … ┗━┛) pour la liste complète `.list` ───────────
-   Le filet `━` s'adapte à la largeur du contenu pour un rendu aligné. */
-function dispWidth(s) {
-  /* Largeur visuelle approximative : emoji/symboles = 2 colonnes, reste = 1. */
-  let w = 0;
-  for (const ch of String(s)) {
-    const c = ch.codePointAt(0);
+/* ─────────────── AFFICHAGE DES CATÉGORIES ─────────────── */
+
+function dispWidth(str) {
+  let width = 0;
+
+  for (const ch of String(str)) {
+    const code = ch.codePointAt(0);
+
     if (
-      (c >= 0x1F000 && c <= 0x1FAFF) ||  /* emoji & symboles divers */
-      (c >= 0x2600 && c <= 0x27BF) ||    /* dingbats */
-      (c >= 0x2B00 && c <= 0x2BFF) ||    /* symboles divers */
-      (c >= 0xFE00 && c <= 0xFE0F)       /* sélecteurs de variation */
-    ) w += 2;
-    else w += 1;
+      (code >= 0x1F000 && code <= 0x1FAFF) ||
+      (code >= 0x2600 && code <= 0x27BF) ||
+      (code >= 0x2B00 && code <= 0x2BFF) ||
+      (code >= 0xFE00 && code <= 0xFE0F)
+    ) {
+      width += 2;
+    } else {
+      width += 1;
+    }
   }
-  return w;
+
+  return width;
 }
 
 const catBox = (emoji, label, count) => {
   const inner = `  ${emoji}  ${toUnicode(label)}  ⟨ ${count} ⟩`;
   const bar = '━'.repeat(Math.max(dispWidth(inner), 6));
+
   return `┏${bar}┓\n┃${inner}\n┗${bar}┛`;
 };
 
-/* Item numéroté `.list` : ┊ 𝟶𝟷 ⟩ .cmd (chiffres gras Unicode) */
-const numItem = (n, cmd) => `┊ ${toUnicode(String(n).padStart(2, '0'))} ⟩ .${cmd}`;
+const numItem = (n, cmd) =>
+  `┊ ${toUnicode(String(n).padStart(2, '0'))} ⟩ .${cmd}`;
 
-/* Bouton retour du sous-menu GROUPE : cadre ┄ réutilise le même pas
-   que frameFooter() pour rester symétrique (glyphe propriétaire). */
-const backBox = (label) => `╭${'┄'.repeat(14)}⪼\n${listItem(0, label)}\n${frameFooter()}`;
+const backBox = label =>
+  `╭${'┄'.repeat(14)}⪼\n${listItem(0, label)}\n${frameFooter()}`;
 
-/* Footer officiel — menus uniquement (pas sur les petits messages) */
+/* ─────────────── SIGNATURES ─────────────── */
+
 function signature() {
   return `${toUnicode('MULTI-DEVICE WHATSAPP BOT')}\n${toUnicode('MADE BY')} DJOUSSE TECH`;
 }
 
-/* Signature ENCADRÉE — écrans ARCHIVES (cat.12). Reprend le pas ┄ de
-   frameFooter() pour rester symétrique (glyphes autorisés ici seulement). */
 const signatureBox = () =>
-  `╭${'┄'.repeat(14)}⪼\n${signature().split('\n').map((l) => `│  ${l}`).join('\n')}\n${frameFooter()}`;
+  `╭${'┄'.repeat(14)}⪼\n${signature()
+    .split('\n')
+    .map(line => `│  ${line}`)
+    .join('\n')}\n${frameFooter()}`;
 
-/* Réponses système — titres et contenus suivent tous le même alphabet. */
+/* ─────────────── MESSAGES DU BOT ─────────────── */
+
 const renderNotice = (heading, lines) =>
-  buildFrame(heading, lines.map((line) => `│✦ ${toUnicode(line)}`));
-const renderInfo = (lines) => renderNotice('INFO', lines);
-const renderSuccess = (lines) => renderNotice('SUCCÈS', lines);
-const renderError = (lines) => renderNotice('ERREUR', lines);
-const renderSaisie = (hint) => renderNotice('SAISISSEZ REQUIS', [hint]);
+  buildFrame(
+    heading,
+    lines.map(line => `│✦ ${toUnicode(line)}`)
+  );
 
-const two = (n) => String(n).padStart(2, '0');
+const renderInfo = lines => renderNotice('INFO', lines);
+const renderSuccess = lines => renderNotice('SUCCÈS', lines);
+const renderError = lines => renderNotice('ERREUR', lines);
+const renderSaisie = hint => renderNotice('SAISISSEZ REQUIS', [hint]);
+
+/* ─────────────── DATE ET HEURE ─────────────── */
+
+const two = n => String(n).padStart(2, '0');
+
 function nowTime() {
-  const d = new Date();
-  return `${two(d.getHours())}:${two(d.getMinutes())}:${two(d.getSeconds())}`;
+  const date = new Date();
+
+  return `${two(date.getHours())}:${two(date.getMinutes())}:${two(date.getSeconds())}`;
 }
+
 function nowDate() {
-  const d = new Date();
-  return `${two(d.getDate())}/${two(d.getMonth() + 1)}/${d.getFullYear()}`;
+  const date = new Date();
+
+  return `${two(date.getDate())}/${two(date.getMonth() + 1)}/${date.getFullYear()}`;
 }
+
+/* ─────────────── EXPORTS COMPATIBLES ─────────────── */
 
 module.exports = {
-  toUnicode, frameHeader, frameFooter, buildFrame, listHeader, listItem, bullet,
-  row, blank, title, note, box, banner, renderStartupDashboard,
-  boxTop, boxRule, boxBottom, boxRow, BOX_W,
-  catBox, numItem, dispWidth, backBox, signatureBox,
-  signature, renderInfo, renderSuccess, renderError, renderSaisie, two, nowTime, nowDate,
+  toUnicode,
+  frameHeader,
+  frameFooter,
+  buildFrame,
+  listHeader,
+  listItem,
+  bullet,
+  row,
+  blank,
+  title,
+  note,
+  box,
+  banner,
+  renderStartupDashboard,
+  boxTop,
+  boxRule,
+  boxBottom,
+  boxRow,
+  BOX_W,
+  catBox,
+  numItem,
+  dispWidth,
+  backBox,
+  signatureBox,
+  signature,
+  renderInfo,
+  renderSuccess,
+  renderError,
+  renderSaisie,
+  two,
+  nowTime,
+  nowDate
 };
