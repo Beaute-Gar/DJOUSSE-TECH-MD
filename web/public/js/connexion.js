@@ -1,99 +1,75 @@
-import { ApiError, getPairingCode, getStatus } from './api.js';
+'use strict';
 
-const form = document.querySelector('[data-pair-form]');
-const submitButton = document.querySelector('[data-pair-submit]');
-const numberField = document.querySelector('[data-phone-number]');
-const countryField = document.querySelector('[data-country-code]');
-const codeBox = document.querySelector('[data-pair-code]');
-const statusLine = document.querySelector('[data-pair-message]');
-const connectionBadge = document.querySelector('[data-connection-status]');
-const copyCode = document.querySelector('[data-copy-pair-code]');
-const statusCount = document.querySelector('[data-status-connection]');
-let statusTimer;
-let controller;
+/**
+ * DJOUSSE TECH MD — Gestionnaire du formulaire de connexion et pairage
+ */
 
-function message(text, state = '') {
-  if (!statusLine) return;
-  statusLine.textContent = text;
-  statusLine.dataset.state = state;
-}
+document.addEventListener('DOMContentLoaded', () => {
+  const pairingForm = document.getElementById('pairing-form') || document.querySelector('form');
+  const phoneInput = document.getElementById('phone-input') || document.querySelector('input[type="tel"]');
+  const submitBtn = document.getElementById('submit-btn') || document.querySelector('button[type="submit"]');
+  const resultContainer = document.getElementById('pairing-result') || document.getElementById('status-message');
 
-function setConnectionStatus(status) {
-  if (!connectionBadge) return;
-  const isConnected = Boolean(status?.connected);
-  connectionBadge.dataset.state = isConnected ? 'online' : 'offline';
-  connectionBadge.textContent = isConnected ? 'Bot connecté' : 'Bot non connecté';
-  if (statusCount) statusCount.textContent = status?.active == null ? '—' : String(status.active);
-}
+  // Vérification de l'état du serveur au chargement de la page
+  checkServerStatus();
 
-async function refreshStatus() {
-  try {
-    const status = await getStatus();
-    setConnectionStatus(status);
-  } catch {
-    if (connectionBadge) {
-      connectionBadge.dataset.state = 'offline';
-      connectionBadge.textContent = 'Service de jumelage indisponible pour le moment.';
+  if (pairingForm) {
+    pairingForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!phoneInput) return;
+
+      const rawPhone = phoneInput.value.trim();
+      const cleanPhone = rawPhone.replace(/\D/g, '');
+
+      if (!cleanPhone || cleanPhone.length < 8 || cleanPhone.length > 15) {
+        showResult('Veuillez entrer un numéro valide avec l\'indicatif international (ex: 237XXXXXXXXX).', 'error');
+        return;
+      }
+
+      // Indique au système que la demande est en cours
+      setLoading(true);
+      showResult('Génération du code de pairage en cours...', 'info');
+
+      try {
+        const response = await window.ApiService.requestPairing(cleanPhone);
+        
+        if (response && (response.code || response.pairingCode)) {
+          const code = response.code || response.pairingCode;
+          showResult(`Votre code de pairage : <strong>${code}</strong><br><small>Ouvrez WhatsApp > Appareils liés > Lier avec un numéro de téléphone</small>`, 'success');
+        } else if (response && response.message) {
+          showResult(response.message, 'info');
+        } else {
+          showResult('Code généré. Vérifiez votre console ou relancez si nécessaire.', 'success');
+        }
+      } catch (error) {
+        showResult(`Échec du pairage : ${error.message}`, 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+  }
+
+  async function checkServerStatus() {
+    try {
+      const status = await window.ApiService.getStatus();
+      console.log('[Bot Status]:', status);
+    } catch (err) {
+      console.warn('[Bot Server Unreachable]: Le serveur Render semble endormi ou hors ligne.');
     }
-    if (statusCount) statusCount.textContent = '—';
-  }
-}
-
-function explainError(error) {
-  if (!(error instanceof ApiError)) return 'Service de jumelage indisponible pour le moment.';
-  if (error.kind === 'invalid') return 'Numéro invalide. Vérifie l’indicatif et saisis uniquement des chiffres.';
-  if (error.kind === 'session') return 'Une session est déjà enregistrée sur ce bot (HTTP 409). Le jumelage est refusé.';
-  if (error.kind === 'rate-limit') return 'Trop de tentatives. Patiente avant de demander un nouveau code.';
-  return 'Service de jumelage indisponible pour le moment.';
-}
-
-form?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const localValue = String(numberField?.value || '').trim();
-  const countryDigits = String(countryField?.value || '').replace(/\D/g, '');
-  const allDigits = `${countryDigits}${localValue}`;
-  if (!/^\d+$/.test(localValue) || !/^[1-9]\d{7,14}$/.test(allDigits)) {
-    message('Numéro invalide : vérifie l’indicatif et saisis entre 8 et 15 chiffres au total.', 'error');
-    numberField?.focus();
-    return;
   }
 
-  submitButton.disabled = true;
-  if (copyCode) copyCode.hidden = true;
-  if (codeBox) codeBox.textContent = '••••  ••••';
-  message('Demande du code en cours…');
-  controller?.abort();
-  controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 15000);
-  try {
-    const code = await getPairingCode(`+${allDigits}`, { signal: controller.signal });
-    if (codeBox) codeBox.textContent = `${code.slice(0, 4)} ${code.slice(4)}`;
-    if (copyCode) copyCode.hidden = false;
-    message('Code reçu. Saisis-le dans WhatsApp sur ton téléphone.', 'success');
-    await refreshStatus();
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      message('Délai dépassé après 15 secondes. Service de jumelage indisponible pour le moment.', 'error');
-    } else {
-      message(explainError(error), 'error');
+  function setLoading(isLoading) {
+    if (submitBtn) {
+      submitBtn.disabled = isLoading;
+      submitBtn.textContent = isLoading ? 'Connexion...' : 'Obtenir le code';
     }
-    if (codeBox) codeBox.textContent = '••••  ••••';
-  } finally {
-    window.clearTimeout(timeout);
-    submitButton.disabled = false;
   }
-});
 
-if (copyCode) {
-  copyCode.addEventListener('click', () => {
-    const value = codeBox?.textContent?.replace(/\s/g, '');
-    if (value && /^[A-Z0-9]{8}$/.test(value)) copyCode.dataset.copyText = value;
-  });
-}
-
-refreshStatus();
-statusTimer = window.setInterval(refreshStatus, 30000);
-window.addEventListener('pagehide', () => {
-  window.clearInterval(statusTimer);
-  controller?.abort();
+  function showResult(message, type) {
+    if (!resultContainer) return;
+    resultContainer.innerHTML = message;
+    resultContainer.className = `status-box status-${type}`;
+    resultContainer.style.display = 'block';
+  }
 });
