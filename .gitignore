@@ -22,3 +22,4 @@ _archive/
 .DS_Store
 Thumbs.db
 .vercel
+migration-log.txt
