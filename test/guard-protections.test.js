@@ -15,14 +15,14 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'djousse-guard-test-'));
 process.env.DATA_DIR = TMP;
 process.env.HUMAN_DELAY = '0';
 
-const antilink = require('../guard/src/protections/antilink');
-const antivirtex = require('../guard/src/protections/antivirtex');
-const guardDb = require('../guard/src/db');
-const { enforceAntiFake } = require('../guard/src/events');
-const { get: getCmd } = require('../guard/src/commands/registry');
-require('../guard/src/commands/join.js'); // enregistre .antifake + .allowcodes
-require('../guard/src/commands/protection.js'); // enregistre .security + .settings + .antilink…
-const { runProtections, PROTECTIONS } = require('../guard/src/engine');
+const antilink = require('../src/guard/protections/antilink');
+const antivirtex = require('../src/guard/protections/antivirtex');
+const guardDb = require('../src/guard/db');
+const { enforceAntiFake } = require('../src/guard/events');
+const { get: getCmd } = require('../src/guard/commands/registry');
+require('../src/guard/commands/join.js'); // enregistre .antifake + .allowcodes
+require('../src/guard/commands/protection.js'); // enregistre .security + .settings + .antilink…
+const { runProtections, PROTECTIONS } = require('../src/guard/engine');
 
 const g = (over = {}) => ({ ...guardDb.GROUP_DEFAULTS(), ...over });
 
@@ -244,7 +244,7 @@ test('.allowcodes sans argument → message d’usage, rien n’est écrit', asy
   await getCmd('allowcodes').run(c);
   /* ui.error() passe tout par le rendu stylisé de style.js : on compare
      avec le MÊME rendu — message d'usage exact, mot pour mot. */
-  const ui = require('../guard/src/ui');
+  const ui = require('../src/guard/ui');
   assert.equal(replies[0], ui.error(['UTILISATION : .allowcodes 237 33 241']));
   assert.deepEqual(guardDb.db().getGroup(gid).allowedCodes, []);
 });

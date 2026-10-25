@@ -4,7 +4,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 process.env.HACKTOOLS_PASSWORD = 'test-menu';
-const h = require('../handler');
+const h = require('../src/handlers/handler');
 
 const NOMS = ['hacktools', 'imdb', 'stickersearch', 'paste', 'technews', 'emomix', 'videodoc'];
 

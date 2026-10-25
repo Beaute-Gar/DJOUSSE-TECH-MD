@@ -3,7 +3,7 @@
    réelle des handlers des nouvelles commandes (aucune simulation). */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { registerExtras } = require('../lib/extras');
+const { registerExtras } = require('../src/lib/extras');
 
 const NEW = ['hangman', 'hang', 'trivia', 'answer', 'riddle', 'tictactoe', 'tttmove',
   'numberguess', 'nguess', 'wordgame', 'morse', 'hash', 'color', 'ascii', 'define',

@@ -3,7 +3,7 @@
    On mesure les VRAIS appels Baileys via des sockets espions. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const mod = require('../lib/ported-auto');
+const mod = require('../src/lib/ported-auto');
 
 const NOMS = ['alwaysonline', 'autotyping', 'autorecord', 'autobio',
   'autodlstatus', 'autoreply', 'pmpermit', 'autosettings'];

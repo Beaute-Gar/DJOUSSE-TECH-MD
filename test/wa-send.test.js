@@ -8,8 +8,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const waSend = require('../lib/wa-send');
-const config = require('../config');
+const waSend = require('../src/lib/wa-send');
+const config = require('../src/config/config');
 
 const savedAutoTyping = config.autoTyping;
 const savedEnv = {

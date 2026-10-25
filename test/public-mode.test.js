@@ -14,7 +14,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const { toUnicode } = require('../style.js');
+const { toUnicode } = require('../src/config/style.js');
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -48,7 +48,7 @@ function lancerInconnu(modeLine) {
 
   try {
     const script = `
-      const handler = require(${JSON.stringify(path.join(ROOT, 'handler.js'))});
+      const handler = require(${JSON.stringify(path.join(ROOT, 'src', 'handlers', 'handler.js'))});
       const envois = [];
       const sock = {
         user: { id: '237659809751:1@s.whatsapp.net' },

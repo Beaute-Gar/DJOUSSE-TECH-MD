@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { registerPortedFoot, COMPS, DONNEES, appelApi, getKey } = require('../lib/ported-foot');
+const { registerPortedFoot, COMPS, DONNEES, appelApi, getKey } = require('../src/lib/ported-foot');
 
 function boot() {
   const reg = new Map();

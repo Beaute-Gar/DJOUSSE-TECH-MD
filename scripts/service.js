@@ -26,7 +26,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const LOG_DIR = path.join(ROOT, 'logs');
+const LOG_DIR = path.join(ROOT, 'storage', 'logs');
 
 /* MODULE 5 : rythme du watchdog — vérification de vie toutes les 10 s
    (exporté et testé : test/purge-watchdog.test.js) */

@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { registerPortedShot, buildThum, DEVICES } = require('../lib/ported-shot');
+const { registerPortedShot, buildThum, DEVICES } = require('../src/lib/ported-shot');
 
 test('buildThum : URL et options correctement assemblées', () => {
   assert.equal(

@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { commandAccess } = require('../lib/command-access');
+const { commandAccess } = require('../src/lib/command-access');
 
 const context = (overrides = {}) => ({
   isOwner: false,

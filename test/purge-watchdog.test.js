@@ -16,8 +16,8 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'djousse-purge-test-'));
 process.env.DATA_DIR = TMP;
 process.env.DB_KEEP_DAYS = '';
 
-const db = require('../lib/db');
-const { MessageStore } = require('../lib/store');
+const db = require('../src/lib/db');
+const { MessageStore } = require('../src/lib/store');
 const { WATCH_INTERVAL_MS } = require('../scripts/service.js');
 
 const DAY = 86400000;

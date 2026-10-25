@@ -27,7 +27,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { builtinModules } = require('module');
+const { builtinModules, isBuiltin } = require('module');
 
 const ROOT = path.resolve(__dirname, '..');
 const WITH_DEPS = process.argv.includes('--deps');
@@ -62,7 +62,7 @@ function walk(dir, out = []) {
       /* Dossiers RUNTIME (gitignorés) : caches, sessions, logs, déploiement.
          Exclus du scan source : ce sont des données regénérées, pas du code,
          et un cache de messages contient naturellement des champs de l'API. */
-      if (['node_modules', '.git', 'session', 'sessions', 'logs', 'tmp', 'temp', 'downloads', 'data', '.vercel'].includes(n)) continue;
+      if (['node_modules', '.git', 'session', 'sessions', 'logs', 'tmp', 'temp', 'downloads', 'data', 'storage', '.vercel', '_archive'].includes(n)) continue;
       if (/^session[-.]/.test(n)) continue; // session.old-*, session-*
       walk(p, out);
     } else if (/\.(js|cjs|mjs|ts|json|md)$/.test(e.name)) {
@@ -112,8 +112,8 @@ function depsOf(pkg) {
 }
 
 /* Fichiers du code actif (charge au demarrage) */
-const ACTIVE_ROOT_FILES = ['index.js', 'handler.js', 'config.js', 'style.js'];
-const ACTIVE_DIRS = ['lib', 'guard', 'plugins', 'ludo'];
+const ACTIVE_ROOT_FILES = ['index.js'];
+const ACTIVE_DIRS = ['src'];
 function activeFiles() {
   const files = [];
   for (const f of ACTIVE_ROOT_FILES) if (fs.existsSync(path.join(ROOT, f))) files.push(path.join(ROOT, f));
@@ -182,7 +182,7 @@ const BAILEYS_EVENTS = [
 ];
 
 /** Dossier de reference pour tous les envois (G2). */
-const SEND_SERVICE = 'lib/wa-send.js';
+const SEND_SERVICE = 'src/lib/wa-send.js';
 
 /* ------------------------------------------------------------------ */
 /* G1 - Baileys officielle uniquement                                  */
@@ -372,9 +372,9 @@ function checkG2() {
     const r = rel(f);
     // lib/extras.js + lib/missing.js portent aussi des cmd() : les scanner
     // sinon G4 ignore 66 registrations (doublons lib↔handler invisibles).
-    if (r === 'handler.js' || r.startsWith('plugins/') || r.startsWith('lib/')) scanCmd(f);
+    if (r === 'src/handlers/handler.js' || r.startsWith('src/plugins/') || r.startsWith('src/lib/')) scanCmd(f);
   }
-  const guardDir = path.join(ROOT, 'guard', 'src', 'commands');
+  const guardDir = path.join(ROOT, 'src', 'guard', 'commands');
   if (fs.existsSync(guardDir)) {
     for (const f of fs.readdirSync(guardDir).filter((x) => x.endsWith('.js'))) {
       const p = path.join(guardDir, f);
@@ -399,7 +399,7 @@ function checkG2() {
      lib/plugin-loader.js est exclu aussi : il contient le repli brut
      (t.sendMessage) utilisé seulement si wa-send ne sait pas envoyer
      un contenu. Le contrôle statique s'applique à NOTRE code. */
-  const TIERS = ['plugins/core/', 'lib/plugin-loader.js'];
+  const TIERS = ['src/plugins/core/', 'src/lib/plugin-loader.js'];
   const senders = new Map();
   for (const f of productFiles()) {
     if (TIERS.some((t) => rel(f).startsWith(t))) continue;
@@ -524,11 +524,11 @@ function checkG4() {
   const glyphs = /[╭╰┄『』「」│╔═║╚╠╣]/;
   const offenders = [];
   for (const f of productFiles()) {
-    if (rel(f) === 'style.js') continue;
+    if (rel(f) === 'src/config/style.js') continue;
     /* tiers : les plugins de plugins/core/ ont leurs propres cadres ; leur
        rendu reste isolé (catégories déduites), la charte DJOUSSE s'applique
        à notre code. */
-    if (rel(f).startsWith('plugins/core/')) continue;
+    if (rel(f).startsWith('src/plugins/core/')) continue;
     const src = strip(read(f));
     const lines = src.split(/\r?\n/);
     const bad = [];
@@ -552,7 +552,7 @@ function checkG4() {
       const spec = m[1];
       const base = spec.startsWith('@') ? spec.split('/').slice(0, 2).join('/') : spec.split('/')[0];
       const bare = base.startsWith('node:') ? base.slice(5) : base;
-      if (builtinModules.includes(bare) || builtinModules.includes('node:' + bare)) continue;
+      if (isBuiltin(spec) || builtinModules.includes(bare)) continue;
       if (!declared.has(base)) missing.add(`${base} (${rel(f)})`);
     }
   }
@@ -561,11 +561,11 @@ function checkG4() {
 
   // 5. parseurs : une seule implementation par nom, au proprietaire designe
   const PARSERS = {
-    textOf: 'guard/src/utils/message.js',
-    ctxInfo: 'guard/src/utils/message.js',
-    unwrapInfo: 'guard/src/utils/message.js',
-    unwrap: 'guard/src/utils/message.js',
-    parse: 'guard/src/utils/message.js',
+    textOf: 'src/guard/utils/message.js',
+    ctxInfo: 'src/guard/utils/message.js',
+    unwrapInfo: 'src/guard/utils/message.js',
+    unwrap: 'src/guard/utils/message.js',
+    parse: 'src/guard/utils/message.js',
   };
   const parserHits = new Map(Object.keys(PARSERS).map((n) => [n, new Set()]));
   for (const f of productFiles()) {
@@ -586,10 +586,10 @@ function checkG4() {
     else if (uniq[0] !== PARSERS[name]) parserProblems.push(`${name} dans ${uniq[0]} au lieu de ${PARSERS[name]}`);
   }
   if (parserProblems.length) KO('G4', `parseurs dupliques : ${parserProblems.join(' | ')}`);
-  else OK('G4', `parseurs uniques au bon proprietaire (${Object.keys(PARSERS).length}/5 → guard/src/utils/message.js)`);
+  else OK('G4', `parseurs uniques au bon proprietaire (${Object.keys(PARSERS).length}/5 → src/guard/utils/message.js)`);
 
   // 6. les réponses encadrées partagent le moteur et les wrappers publics l'utilisent
-  const style = require(path.join(ROOT, 'style.js'));
+  const style = require(path.join(ROOT, 'src', 'config', 'style.js'));
   const sample = 'Status active 123';
   const expectedLine = `│✦ ${style.toUnicode(sample)}`;
   const rendered = [
@@ -603,7 +603,7 @@ function checkG4() {
     || !text.startsWith('╭┄┄『 ')
     || !text.endsWith('╰┄┄┄┄┄┄┄┄┄┄┄┄⪼')
   );
-  const handler = strip(read(path.join(ROOT, 'handler.js')));
+  const handler = strip(read(path.join(ROOT, 'src', 'handlers', 'handler.js')));
   const responseWrappers = [
     /error:\s*async\s*\([^)]*\)\s*=>\s*send\([\s\S]{0,180}?renderError\(/,
     /info:\s*async\s*\([^)]*\)\s*=>\s*send\([\s\S]{0,180}?renderInfo\(/,

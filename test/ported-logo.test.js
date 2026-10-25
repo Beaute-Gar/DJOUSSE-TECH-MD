@@ -2,7 +2,7 @@
 /* Vrais tests — lib/ported-logo.js (commandes portées TEDDY-XMD). */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { registerPortedLogo, registerPortedLookup, LOGOS } = require('../lib/ported-logo');
+const { registerPortedLogo, registerPortedLookup, LOGOS } = require('../src/lib/ported-logo');
 
 function reg2() {
   const reg = new Map();

@@ -3,7 +3,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 process.env.HACKTOOLS_PASSWORD = 'test';
-const h = require('../handler');
+const h = require('../src/handlers/handler');
 
 /* contexte d'exécution façon executeCommand() de handler.js */
 function ctx(args, from) {
@@ -28,7 +28,7 @@ function ctx(args, from) {
 
 /* Les plugins silva envoient via sock.sendMessage → le loader les proxifie
    par lib/wa-send.js. On espionne wa-send pour vérifier les DEUX chemins. */
-const waSend = require('../lib/wa-send');
+const waSend = require('../src/lib/wa-send');
 const origSend = waSend.send;
 let envoyesViaWaSend = [];
 function espionner() {
@@ -97,7 +97,7 @@ test('les commandes interdites (crash/NSFW) ne sont PAS enregistrées', () => {
 test('aucun plugin silva ne pose de listener (pas de double écoute)', () => {
   const fs = require('fs');
   const path = require('path');
-  const dir = path.join(process.cwd(), 'plugins', 'core');
+  const dir = path.join(process.cwd(), 'src', 'plugins', 'core');
   const fichiers = fs.readdirSync(dir).filter((f) => f.endsWith('.js'));
   const coupables = [];
   for (const f of fichiers) {

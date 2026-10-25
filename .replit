@@ -10,4 +10,4 @@
 modules = ["nodejs-20"]
 run = "npm start"
 entrypoint = "node index.js"
-hidden = ["node_modules", "sessions", "data", "logs", "downloads"]
+hidden = ["node_modules", "storage", ".git"]

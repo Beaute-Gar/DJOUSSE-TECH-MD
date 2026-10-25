@@ -5,8 +5,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 process.env.HACKTOOLS_PASSWORD = 'test-archives';
-const h = require('../handler');
-const { toUnicode } = require('../style');
+const h = require('../src/handlers/handler');
+const { toUnicode } = require('../src/config/style');
 
 const owner = { isOwner: true };
 const user = { isOwner: false };

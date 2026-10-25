@@ -33,7 +33,7 @@ test('défauts : AUTO_STATUS_SEEN=true · AUTO_STATUS_REACT=true · AUTO_STATUS_
   const env = { ...process.env };
   for (const k of ['AUTO_STATUS_SEEN', 'AUTO_STATUS_REACT', 'AUTO_STATUS_REPLY', 'AUTO_REPLY_STATUS']) delete env[k];
   env.ENV_FILE = emptyEnv;
-  const script = `const c=require(${JSON.stringify(path.join(__dirname, '..', 'config.js'))});` +
+  const script = `const c=require(${JSON.stringify(path.join(__dirname, '..', 'src', 'config', 'config.js'))});` +
     'console.log([c.autoStatusSeen,c.autoStatusReact,c.autoStatusReply].join(","));';
   const r = spawnSync(process.execPath, ['-e', script], { encoding: 'utf8', env, cwd: path.join(__dirname, '..') });
   assert.equal(r.status, 0, r.stderr);
@@ -42,8 +42,8 @@ test('défauts : AUTO_STATUS_SEEN=true · AUTO_STATUS_REACT=true · AUTO_STATUS_
 
 /* ═══ FIXTURES ═══ */
 
-const { handleStatus, effective, phoneJidOf, botPhoneJid } = require('../lib/auto-status');
-const config = require('../config');
+const { handleStatus, effective, phoneJidOf, botPhoneJid } = require('../src/lib/auto-status');
+const config = require('../src/config/config');
 
 const PHONE = '23765550001@s.whatsapp.net';
 const LID = '123456789012345@lid';
@@ -202,7 +202,7 @@ test('botPhoneJid : suffixe appareil retiré', () => {
 });
 
 test('pickEmoji : toujours un emoji de CUSTOM_REACT_EMOJIS', () => {
-  const { pickEmoji } = require('../lib/auto-status');
+  const { pickEmoji } = require('../src/lib/auto-status');
   const list = String(process.env.CUSTOM_REACT_EMOJIS || '').split(',').map((s) => s.trim()).filter(Boolean);
   assert.ok(list.length >= 1, 'liste d’emojis configurée');
   for (let i = 0; i < 20; i += 1) assert.ok(list.includes(pickEmoji()));
@@ -211,7 +211,7 @@ test('pickEmoji : toujours un emoji de CUSTOM_REACT_EMOJIS', () => {
 /* ═══ 6. INTÉGRATION — chaîne complète config → handler → module → socket ═══ */
 
 test('intégration : handleMessage() traite status@broadcast et émet les vrais appels', async () => {
-  const handler = require('../handler');
+  const handler = require('../src/handlers/handler');
   const sock = mockSock();
   const msg = statusMsg();
   await handler.handleMessage(sock, msg);

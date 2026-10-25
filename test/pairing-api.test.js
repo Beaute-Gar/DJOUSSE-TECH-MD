@@ -7,7 +7,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert');
-const { startPairingApi, RATE_MAX, resetRateForTests } = require('../lib/pairing-api');
+const { startPairingApi, RATE_MAX, resetRateForTests } = require('../src/lib/pairing-api');
 
 /** Démarre une API sur un port éphémère avec des callbacks contrôlés. */
 function boot(opts = {}) {

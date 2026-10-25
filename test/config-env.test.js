@@ -21,7 +21,7 @@ it('charge la configuration depuis ENV_FILE pour isoler chaque processus', () =>
       process.execPath,
       [
         '-e',
-        `const config = require(${JSON.stringify(path.resolve(__dirname, '../config.js'))});` +
+        `const config = require(${JSON.stringify(path.resolve(__dirname, '../src/config/config.js'))});` +
           'process.stdout.write(JSON.stringify({ prefix: config.prefix, method: config.connectMethod, phone: config.pairingPhone }));',
       ],
       { cwd: path.resolve(__dirname, '..'), env, encoding: 'utf8' },
@@ -53,7 +53,7 @@ function lirePublicMode(vars) {
       process.execPath,
       [
         '-e',
-        `const config = require(${JSON.stringify(path.resolve(__dirname, '../config.js'))});` +
+        `const config = require(${JSON.stringify(path.resolve(__dirname, '../src/config/config.js'))});` +
           'process.stdout.write(JSON.stringify({ publicMode: config.publicMode, selfMode: config.selfMode }));',
       ],
       { cwd: path.resolve(__dirname, '..'), env, encoding: 'utf8' },
@@ -93,7 +93,7 @@ it('HYBRID_MODE=on → Baileys lancé en plus de l’agent officiel', () => {
       process.execPath,
       [
         '-e',
-        `const config = require(${JSON.stringify(path.resolve(__dirname, '../config.js'))});` +
+        `const config = require(${JSON.stringify(path.resolve(__dirname, '../src/config/config.js'))});` +
           'process.stdout.write(JSON.stringify({ agentMode: config.agentMode, hybridMode: config.hybridMode }));',
       ],
       { cwd: path.resolve(__dirname, '..'), env, encoding: 'utf8' },
@@ -117,7 +117,7 @@ it('hybridMode désactivé par défaut (l’agent seul ne lance pas Baileys)', (
       process.execPath,
       [
         '-e',
-        `const config = require(${JSON.stringify(path.resolve(__dirname, '../config.js'))});config.hybridMode === false ? process.stdout.write('ok') : process.stdout.write('ko');`,
+        `const config = require(${JSON.stringify(path.resolve(__dirname, '../src/config/config.js'))});config.hybridMode === false ? process.stdout.write('ok') : process.stdout.write('ko');`,
       ],
       { cwd: path.resolve(__dirname, '..'), env, encoding: 'utf8' },
     );

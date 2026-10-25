@@ -774,3 +774,28 @@ Le dossier `plugins/core/` reprend du code de **« Silva MD Bot » (Silva Tech N
 **MIT** © [Beaute-Gar](https://github.com/Beaute-Gar) · `Made with ❤️ by DJOUSSE TECH`
 
 </div>
+
+## Structure du projet
+
+```text
+DJOUSSE-TECH-MD/
+├── index.js            point d'entrée
+├── src/
+│   ├── config/         config.js, style.js, paths.js (tous les chemins)
+│   ├── handlers/       handler.js (messages & évènements)
+│   ├── plugins/        commandes du bot (plugins/core)
+│   ├── lib/            utilitaires et services
+│   ├── guard/          protections de groupe
+│   ├── ludo/           module Ludo
+│   └── assets/         images du bot
+├── web/                site (public/), API Vercel (api/), scripts (scripts/)
+├── deployment/         Dockerfile, compose, Fly, Render, vercel.json
+├── storage/            sessions, data, logs, downloads, bin (ignoré par git)
+├── scripts/            audit.js, service.js (watchdog), outils
+├── test/  docs/
+└── .env  package.json  Procfile  app.json  .replit
+```
+
+Docker : `docker compose -f deployment/docker-compose.yml up -d --build`.
+Fly : `fly deploy --config deployment/fly.toml --dockerfile deployment/Dockerfile`.
+Voir `deployment/README.md`.

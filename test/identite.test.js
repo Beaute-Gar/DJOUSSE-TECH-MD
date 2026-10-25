@@ -11,12 +11,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 process.env.HACKTOOLS_PASSWORD = 'test-identite';
-const h = require('../handler');
-const { toUnicode } = require('../style');
+const h = require('../src/handlers/handler');
+const { toUnicode } = require('../src/config/style');
 const {
   retirerSignatureTierce, BLOQUES_IDENTITE, INTERDITS,
   normaliserContenu, URL_LOGO_TIERCE, URL_LOGO_OFFICIEL,
-} = require('../lib/plugin-loader');
+} = require('../src/lib/plugin-loader');
 
 const MARQUE = /\bSilva\b|SilvaTech|Silvatech|SILVA MD|TEDDY-XMD|Chez TEDDY|silva\.tech|SilvaTechB/i;
 const site = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
@@ -132,7 +132,7 @@ test('logo maison : repli visuel tierce réécrit (11 plugins couverts)', () => 
 
 /* ── 4. config : identité + slogan ── */
 test('config : identité officielle + slogan + liens', () => {
-  const config = require('../config');
+  const config = require('../src/config/config');
   /* BOT_NAME / OWNER_NAME / SLOGAN sont surchargeables par .env :
      on exige la cohérence d'identité, pas la valeur littérale. */
   assert.match(String(config.botName), /^DJOUSSE/, 'botName DJOUSE');
@@ -144,7 +144,7 @@ test('config : identité officielle + slogan + liens', () => {
 
 /* ── 5. hacktools : plus de marque tierce dans l'alerte affichée ── */
 test('alerte hacktools sans ancienne marque', () => {
-  const { GROUPES } = require('../lib/hacktools');
+  const { GROUPES } = require('../src/lib/hacktools');
   const alertes = GROUPES.map((g) => g.alerte || '').join('\n');
   assert.ok(!/TEDDY|Silva/i.test(alertes), 'alerte sans marque tierce');
   assert.ok(alertes.includes('clé API tierce') || alertes.includes('.env'), 'message conservé');

@@ -5,8 +5,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { MessageStore } = require('../lib/store');
-const { createMessageCache } = require('../lib/message-cache');
+const { MessageStore } = require('../src/lib/store');
+const { createMessageCache } = require('../src/lib/message-cache');
 
 function createTempStore(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'djou-anti-delete-'));

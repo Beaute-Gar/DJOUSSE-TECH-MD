@@ -1,7 +1,7 @@
 'use strict';
 /* Compte réel des commandes par catégorie, depuis le registre chargé. */
 try {
-  const h = require('../handler');
+  const h = require('../src/handlers/handler');
   const cmds = h.commands;
   if (!cmds || typeof cmds.size !== 'number') {
     console.log('REGISTRE INDISPONIBLE', Object.keys(h));

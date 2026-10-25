@@ -1,0 +1,28 @@
+# Ce qui ne doit JAMAIS entrer dans l'image du bot
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Secrets (passés au runtime via --env-file / env_file)
+.env
+.env.*
+
+# État vivant : monté en volume au runtime, jamais dans les couches
+session/
+storage/
+session-*/
+storage/
+storage/
+storage/
+tmp/
+temp/
+
+# Site vitrine (déployé séparément sur Vercel) + VCS
+web/
+vercel.json
+.git/
+.github/
+.replit
+
+# Tout le reste (test/, README.md, scripts/, style.js…) reste présent :
+# l'audit de build (scripts/audit.js) s'exécute dessus dans l'image.

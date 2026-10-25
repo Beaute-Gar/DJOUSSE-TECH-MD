@@ -2,11 +2,11 @@
 /* Vrais tests node:test — lib/ported-fun.js (commandes portées TEDDY-XMD). */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { registerPortedFun, ANIMS, WEEB, playAnim } = require('../lib/ported-fun');
+const { registerPortedFun, ANIMS, WEEB, playAnim } = require('../src/lib/ported-fun');
 
 test('les 22 commandes fun/réactions sont enregistrées (nikal/hand exclus)', () => {
   const reg = new Map();
-  const mod = require('../lib/ported-fun');
+  const mod = require('../src/lib/ported-fun');
   mod.registerPortedFun((...a) => {
     const fn = a[a.length - 1];
     if (typeof fn === 'function') reg.set(a[0], fn);
@@ -26,7 +26,7 @@ test('playAnim : éditions protocolMessage type 14 sur le bon message', async ()
   const sock = {
     relayMessage: async (jid, msg) => { edits.push({ jid, type: msg.protocolMessage.type, key: msg.protocolMessage.key }); },
   };
-  const mod = require('../lib/ported-fun');
+  const mod = require('../src/lib/ported-fun');
   /* injection du send via le register (comme en production) */
   mod.registerPortedFun(() => {}, {
     config: { prefix: '.' },

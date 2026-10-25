@@ -2,7 +2,7 @@
 /* Test réel : le proxy d'envoi normalise le style des plugins silva. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { normaliserStyle, wrapSock } = require('../lib/plugin-loader');
+const { normaliserStyle, wrapSock } = require('../src/lib/plugin-loader');
 
 const style = {
   renderError: (lignes) => `[CADRE-ERREUR] ${lignes.join(' | ')}`,
@@ -66,7 +66,7 @@ test('proxy : si wa-send échoue, repli sur le sock brut', async () => {
 });
 
 /* ── Marque tierce « Silva » → identité maison ── */
-const { retirerSignatureTierce, normaliserContenu, loadCorePlugins } = require('../lib/plugin-loader');
+const { retirerSignatureTierce, normaliserContenu, loadCorePlugins } = require('../src/lib/plugin-loader');
 
 test('« Powered by Silva MD » réécrit en identité maison', () => {
   const out = retirerSignatureTierce('_Powered by Silva MD_');

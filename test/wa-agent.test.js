@@ -4,8 +4,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
-const { AgentClient, AgentError, limiteTaille, typeDepuisMime, mimeDepuisBuffer } = require('../lib/wa-agent');
-const { messageAgentVersBaileys, envoyerContenu, demarrerBoucle, jidLocalDepuisAgent, destinataireReel } = require('../lib/wa-agent-bridge');
+const { AgentClient, AgentError, limiteTaille, typeDepuisMime, mimeDepuisBuffer } = require('../src/lib/wa-agent');
+const { messageAgentVersBaileys, envoyerContenu, demarrerBoucle, jidLocalDepuisAgent, destinataireReel } = require('../src/lib/wa-agent-bridge');
 
 /* ── faux serveur API ── */
 function serveur(comportement) {
@@ -392,9 +392,9 @@ test('limites officielles exposées (tailles et types)', () => {
 
 /* ══════════ identité : le créateur de l'agent est OWNER ══════════ */
 test('id agent « user:123 » → JID local Baileys, reconnu owner par le moteur', () => {
-  const auth = require('./../lib/auth');
-  const config = require('./../config');
-  const { jidNum } = require('./../guard/src/utils/perms');
+  const auth = require('../src/lib/auth');
+  const config = require('../src/config/config');
+  const { jidNum } = require('../src/guard/utils/perms');
 
   assert.equal(jidLocalDepuisAgent('user:20749792362661'), '20749792362661@s.whatsapp.net');
   assert.equal(jidLocalDepuisAgent('agent:42'), '42@s.whatsapp.net');

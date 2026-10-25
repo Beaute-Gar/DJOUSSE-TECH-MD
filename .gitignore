@@ -6,30 +6,19 @@ node_modules/
 .env.*
 !.env.example
 
-# Session WhatsApp + état dynamique du bot
-session/
-sessions/
-session-*/
-data/
-!website/data/
+# Fichiers générés : session WhatsApp, état du bot, logs, téléchargements, binaires
+storage/
 creds.json
 lid-mapping-*.json
 state.json
-
-# Logs / temporaires
-logs/
-tmp/
-temp/
-downloads/
-*.log
+session.old-*/
 
 # Divers
+tmp/
+temp/
+*.log
+*.backup
+_archive/
 .DS_Store
 Thumbs.db
-
-# Binaires externes (auto-téléchargés par handler.js)
-vendor/yt-dlp.exe
-vendor/yt-dlp
-
-session.old-*/
 .vercel

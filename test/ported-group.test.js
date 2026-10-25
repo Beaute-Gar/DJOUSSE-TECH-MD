@@ -2,7 +2,7 @@
 /* Vrais tests node:test — lib/ported-group.js (commandes portées TEDDY-XMD). */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const mod = require('../lib/ported-group');
+const mod = require('../src/lib/ported-group');
 
 const NOMS = ['antibot', 'automute', 'autounmute', 'groupcron', 'tagadmin'];
 

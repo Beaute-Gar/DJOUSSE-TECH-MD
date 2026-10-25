@@ -25,7 +25,7 @@ test('les options welcome et goodbye enregistrees survivent au chargement du han
 
   const output = execFileSync(process.execPath, [
     '-e',
-    `const handler = require('./handler'); process.stdout.write(JSON.stringify(handler.state.groups[${JSON.stringify(groupId)}]));`,
+    `const handler = require('./src/handlers/handler'); process.stdout.write(JSON.stringify(handler.state.groups[${JSON.stringify(groupId)}]));`,
   ], {
     cwd: path.resolve(__dirname, '..'),
     env: {

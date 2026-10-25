@@ -27,23 +27,23 @@ const {
   fetchLatestWaWebVersion,
 } = require('@whiskeysockets/baileys');
 
-const config = require('./config');
-const handler = require('./handler');
+const config = require('./src/config/config');
+const handler = require('./src/handlers/handler');
 /* Présence en direct (.seen) : routage presence.update unique */
-const presence = require('./lib/presence');
+const presence = require('./src/lib/presence');
 /* Étiquettes Business (.label list) : définitions + associations */
-const labelsCache = require('./lib/labels');
+const labelsCache = require('./src/lib/labels');
 /* Cadres de la console : source unique du style (style.js) */
-const { box, banner, renderStartupDashboard } = require('./style');
+const { box, banner, renderStartupDashboard } = require('./src/config/style');
 /* Extraction du texte : parseur unique du projet (G4) */
-const { textOf } = require('./guard/src/utils/message');
-const guardPerms = require('./guard/src/utils/perms');
-const guardNight = require('./guard/src/nightmode');
+const { textOf } = require('./src/guard/utils/message');
+const guardPerms = require('./src/guard/utils/perms');
+const guardNight = require('./src/guard/nightmode');
 /* Stats de connexion partagées avec handler.js (commande .diag) */
-const waStats = require('./lib/waStats');
+const waStats = require('./src/lib/waStats');
 /* Journal SQLite local (data/bot.db) — cycles de connexion */
-const localDb = require('./lib/db');
-const { DATA_DIR } = require('./lib/dataDir');
+const localDb = require('./src/lib/db');
+const { DATA_DIR } = require('./src/lib/dataDir');
 
 /* ══════════════════════════════════════════════════════════════
    0. FILTRES — ignore les erreurs bruyantes de libsignal / réseau
@@ -151,7 +151,7 @@ process.on('unhandledRejection', (reason) => {
 
 /* ── DJOUSSE GUARD : flush de la base de protections à l'arrêt
       (écriture atomique, debounce 300 ms → rien ne se perd) ── */
-const guardDb = require('./guard/src/db');
+const guardDb = require('./src/guard/db');
 const flushGuard = () => { try { guardDb.db().flush(); } catch (e) { /* non initialisée */ } };
 process.on('SIGINT', () => { flushGuard(); process.exit(0); });
 process.on('SIGTERM', () => { flushGuard(); process.exit(0); });
@@ -836,7 +836,7 @@ async function main() {
      socket : elle répond /status immédiatement et /pair dès que la socket est
      prête. Refuse tout code si une session est déjà enregistrée (409). */
   if (config.pairingApi) {
-    const { startPairingApi } = require('./lib/pairing-api');
+    const { startPairingApi } = require('./src/lib/pairing-api');
     startPairingApi({
       getSocket: () => activeSock,
       isRegistered: () => !!(apiCredsState && apiCredsState.creds && apiCredsState.creds.registered),
@@ -886,9 +886,9 @@ function enregistrerCreateurAgent(id) {
 }
 
 async function startAgentPlatform() {
-  const { AgentClient, AgentError } = require('./lib/wa-agent');
-  const { demarrerBoucle, envoyerContenu } = require('./lib/wa-agent-bridge');
-  const handler = require('./handler');
+  const { AgentClient, AgentError } = require('./src/lib/wa-agent');
+  const { demarrerBoucle, envoyerContenu } = require('./src/lib/wa-agent-bridge');
+  const handler = require('./src/handlers/handler');
 
   const client = new AgentClient({
     token: config.agentToken,

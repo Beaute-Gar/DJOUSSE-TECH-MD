@@ -6,7 +6,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { askAI, hasAIKey, aiUserMessage, AIError, MSG_NO_KEY, MSG_DOWN } = require('../lib/ai');
+const { askAI, hasAIKey, aiUserMessage, AIError, MSG_NO_KEY, MSG_DOWN } = require('../src/lib/ai');
 
 /* Les échecs prévus loggent en console : on garde une sortie de test lisible. */
 const realError = console.error;

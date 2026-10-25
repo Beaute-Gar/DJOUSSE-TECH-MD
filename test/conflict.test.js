@@ -7,8 +7,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const conflict = require('../lib/conflict');
-const style = require('../style');
+const conflict = require('../src/lib/conflict');
+const style = require('../src/config/style');
 
 test.beforeEach(() => conflict.reset());
 

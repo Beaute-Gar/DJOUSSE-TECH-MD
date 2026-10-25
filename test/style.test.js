@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const style = require('../style');
+const style = require('../src/config/style');
 
 test('les réponses système encadrées utilisent le même alphabet pour leur contenu', () => {
   const sample = 'Status active 123';

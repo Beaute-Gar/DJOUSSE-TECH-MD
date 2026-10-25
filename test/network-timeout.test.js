@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { withNetworkTimeout } = require('../lib/network-timeout');
+const { withNetworkTimeout } = require('../src/lib/network-timeout');
 
 test('returns a completed network operation result', async () => {
   const result = await withNetworkTimeout(async (signal) => {

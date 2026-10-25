@@ -18,7 +18,7 @@
  *
  * USAGE
  *   node scripts/menu-image.js [texte] [fichier-sortie]
- *     défauts : texte « DJOUSE TECH » · sortie assets/menu-hacker.jpg
+ *     défauts : texte « DJOUSE TECH » · sortie src/assets/menu-hacker.jpg
  *
  * Le bot n'exécute JAMAIS ce script au démarrage : l'image est statique,
  * le mode « local » du menu l'affiche, et la chaîne de repli existante
@@ -205,7 +205,7 @@ function imageSize(buf) {
 
 async function main() {
   const text = process.argv[2] || 'DJOUSE TECH';
-  const outRel = process.argv[3] || 'assets/menu-hacker.jpg';
+  const outRel = process.argv[3] || 'src/assets/menu-hacker.jpg';
   const out = path.resolve(__dirname, '..', outRel);
 
   console.log(`[MENU-IMG] Génération « ${text} » → ${outRel}`);

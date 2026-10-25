@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
-const { httpGet } = require('../lib/http-get');
+const { httpGet } = require('../src/lib/http-get');
 
 let server;
 let baseUrl;

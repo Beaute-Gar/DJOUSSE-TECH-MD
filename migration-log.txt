@@ -2,3 +2,439 @@
 [OK] controles
 [OK] bot arrete
 [OK] sauvegarde : C:\Users\Djousse Uriel\Documents\DJOUSSE-TECH-MD\..\sauvegarde_migration_20261025_175836
+[OK] commit de securite
+[OK] simulation
+[OK] migration appliquee
+
+> djousse-tech-md@4.0.0 check
+> node --check index.js && node --check src/handlers/handler.js && node --check src/config/config.js && node --check scripts/audit.js
+
+
+> djousse-tech-md@4.0.0 audit
+> node scripts/audit.js
+
+
+=== G1 ===
+  [OK]   version epinglee exacte : 6.7.24
+  [OK]   installe = declare = 6.7.24
+  [OK]   aucun alias npm:/github:/git+/file:/link: dans les package.json
+  [OK]   aucune autre lib WhatsApp declaree (hors Baileys officiel)
+  [OK]   une seule copie de Baileys dans tout l'arbre
+  [OK]   code actif : uniquement require("@whiskeysockets/baileys")
+
+=== G2 ===
+  [OK]   makeWASocket unique : index.js
+  [OK]   aucun evenement Baileys ecoute 2 fois (10/29 ecoutes)
+  [OK]   toutes les ecoutes ev.on() existent dans BaileysEventMap (29 cles de reference)
+  [OK]   reference conforme a BaileysEventMap (29/29 cles)
+  [OK]   352 noms+alias uniques, aucun doublon de commande
+  [OK]   envois centralises dans src/lib/wa-send.js (tiers route par proxy)
+  [OK]   makeCacheableSignalKeyStore utilise
+  [OK]   getMessage fourni (retries / editions / votes de sondage)
+  [OK]   17/17 clés AnyMessageContent exploitées — src/guard/engine.js x2, src/handlers/handler.js x10, src/lib/extras.js x5
+
+=== G3 ===
+  [OK]   0 occurrence sur 369 fichiers scannes hors node_modules
+  [OK]   aucun chemin WhatsApp alternatif dans le code actif
+
+=== G4 ===
+  [OK]   0 doublon MD5 sur 351 fichiers (>=500 octets)
+  [OK]   aucun arbre mort (legacy / vendor-fork / backup)
+  [OK]   aucun cadre/alphabet Unicode rendu en dur hors style.js
+  [OK]   toutes les dependances require() sont declarees dans package.json
+  [OK]   parseurs uniques au bon proprietaire (5/5 → src/guard/utils/message.js)
+  [OK]   réponses système : cadre et alphabet uniformes via style.js
+
+--------------------------------------------------
+AUDIT : CONFORME  (0 anomalie(s), 23 controles OK, 2205 ms)
+
+> djousse-tech-md@4.0.0 test
+> node --test test/ai.test.js test/archives.test.js test/auth.test.js test/auto-status.test.js test/identite.test.js test/command-access.test.js test/config-env.test.js test/conflict.test.js test/extras-commands.test.js test/guard-protections.test.js test/hacktools.test.js test/hacktools-menu.test.js test/handler-options.test.js test/http-get.test.js test/message-cache.test.js test/network-timeout.test.js test/pairing-api.test.js test/ported-auto.test.js test/ported-audio.test.js test/ported-fun.test.js test/ported-group.test.js test/ported-foot.test.js test/ported-logo.test.js test/ported-shot.test.js test/purge-watchdog.test.js test/plugin-loader.test.js test/loader-style.test.js test/style.test.js test/public-mode.test.js test/wa-agent.test.js test/wa-send.test.js
+
+✔ Gemini répond → texte retourné, OpenRouter jamais appelé (8.0656ms)
+✔ Gemini en échec → repli automatique OpenRouter (2.2346ms)
+✔ sans clé Gemini → OpenRouter seul est sollicité (1.0327ms)
+✔ les deux fournisseurs en échec → AIError au message élégant (aucun détail technique) (3.2129ms)
+✔ aucune clé configurée → message « clé manquante », sans exception muette (0.7863ms)
+✔ hasAIKey reflète la présence des deux clés (0.6562ms)
+✔ aiUserMessage : erreur inattendue → message doux (jamais la pile) (0.9754ms)
+✔ média image → OpenRouter reçoit une data-URI (commande .analyse) (1.6278ms)
+✔ réponse vide du provider → bascule puis AIError élégante (3.1873ms)
+✔ OpenRouter : premier modèle saturé (429) → modèle suivant essayé automatiquement (9.6101ms)
+✔ OpenRouter : tous les modèles saturés → AIError élégante (message « réessaie ») (2.1408ms)
+[STATE] FORCE_PUBLIC=1 → selfMode désactivé
+[EXTRAS] avancés + outils + missing Baileys (messages texte uniquement)
+[CORE] 480 plugins chargés · 1288 commandes/alias enregistrés · 41 ignorés
+[CORE] 41 fichier(s) ignoré(s) :
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - antibadwords.js: export incompatible
+   - antibot.js: commandes déjà présentes ou filtrées
+   - antifake.js: commandes déjà présentes ou filtrées
+   - antilink.js: commandes déjà présentes ou filtrées
+   - antispam.js: commandes déjà présentes ou filtrées
+   - autostatus.js: commandes déjà présentes ou filtrées
+   - broadcast.js: commandes déjà présentes ou filtrées
+   - education.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - grouplink.js: commandes déjà présentes ou filtrées
+   - hangman.js: commandes déjà présentes ou filtrées
+   … et 26 autres
+[REGISTRE] "gi" retiré (doublon)
+[REGISTRE] "memberlist" retiré (doublon)
+[REGISTRE] "gcinfo" retiré (doublon)
+[REGISTRE] "groupdesc" retiré (doublon)
+[REGISTRE] "invitelink" retiré (doublon)
+[REGISTRE] "resetlink" retiré (doublon)
+✔ catégorie 12 ARCHIVES présente dans CATEGORIES (3.5241ms)
+✔ menu principal affiche la ligne 12 ARCHIVES (44.0336ms)
+✔ sous-menu 2B (owner) affiche les 4 sections (1.435ms)
+✔ sous-menu 2A (non-owner) n’affiche QUE l’API (1.1613ms)
+✔ section 01 armes : NEUTRALISÉE, barre de risque 8/10, liste ⛔ (1.7174ms)
+✔ section 02 adulte : NEUTRALISÉE, 9 commandes, mention mineurs (0.8149ms)
+✔ section 03 API : 6 commandes avec clé .env visible (public) (1.6142ms)
+✔ section 04 HACKTOOLS : métadonnées d’accès, AUCUNE commande listée (1.1731ms)
+✔ .archives enregistrée (cat.12) — sections neutralisées NON exécutables (1.0554ms)
+✔ normalizes WhatsApp JIDs and compares owner numbers exactly (3.4263ms)
+✔ recognizes sudo numbers from the environment and persisted state (3.0484ms)
+✔ accepts, expires and revokes access with persistence (9.2489ms)
+[STATUS] vue impossible: boom réseau
+[DB] SQLite indisponible, repli JSON : database is locked
+[STATE] FORCE_PUBLIC=1 → selfMode désactivé
+[EXTRAS] avancés + outils + missing Baileys (messages texte uniquement)
+[CORE] 480 plugins chargés · 1288 commandes/alias enregistrés · 41 ignorés
+[CORE] 41 fichier(s) ignoré(s) :
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - antibadwords.js: export incompatible
+   - antibot.js: commandes déjà présentes ou filtrées
+   - antifake.js: commandes déjà présentes ou filtrées
+   - antilink.js: commandes déjà présentes ou filtrées
+   - antispam.js: commandes déjà présentes ou filtrées
+   - autostatus.js: commandes déjà présentes ou filtrées
+   - broadcast.js: commandes déjà présentes ou filtrées
+   - education.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - grouplink.js: commandes déjà présentes ou filtrées
+   - hangman.js: commandes déjà présentes ou filtrées
+   … et 26 autres
+[REGISTRE] "gi" retiré (doublon)
+[REGISTRE] "memberlist" retiré (doublon)
+[REGISTRE] "gcinfo" retiré (doublon)
+[REGISTRE] "groupdesc" retiré (doublon)
+[REGISTRE] "invitelink" retiré (doublon)
+[REGISTRE] "resetlink" retiré (doublon)
+✔ défauts : AUTO_STATUS_SEEN=true · AUTO_STATUS_REACT=true · AUTO_STATUS_REPLY=false (226.6698ms)
+✔ vue : sendReceipt(status@broadcast, auteur, [id], "read") (3.6409ms)
+✔ vue : readMessages en repli si sendReceipt absent (0.8685ms)
+✔ vue : envoi qui échoue n’écrase pas le reste (résolution douce) (2.627ms)
+✔ réaction : statusJidList présent, JID téléphone uniquement, emoji de la liste (1.2715ms)
+✔ réaction : auteur en @lid → participantPn résolu dans statusJidList, receipt en @lid d’origine (0.9355ms)
+✔ réponse : DM au numéro réel citant le statut (1.3204ms)
+✔ réponse : sans AUTO_STATUS_MSG (vide) → aucun envoi (0.6017ms)
+✔ fromMe : statut du bot lui-même → rien de partout (0.5809ms)
+✔ sans participant (écho) : rien de partout (0.733ms)
+✔ overrides runtime prioritaires sur la config (qui dit true) (0.5106ms)
+✔ effective() : override présent → override ; absent → config (0.4103ms)
+✔ phoneJidOf : participantPn d’abord, @lid ignoré, null sans numéro (0.4256ms)
+✔ botPhoneJid : suffixe appareil retiré (0.3254ms)
+✔ pickEmoji : toujours un emoji de CUSTOM_REACT_EMOJIS (0.5952ms)
+✔ intégration : handleMessage() traite status@broadcast et émet les vrais appels (9171.4083ms)
+✔ allows public commands for an authorized user (4.6211ms)
+✔ blocks private commands for unauthorized users (0.5252ms)
+✔ self mode is silent for non-owner messages but keeps owner and fromMe access (0.6962ms)
+✔ accepted users cannot run owner-only commands (0.781ms)
+✔ mode public : toute personne peut commander, le owner reste protégé (0.9611ms)
+✔ group, admin and bot-admin restrictions only apply in their intended context (4.1053ms)
+✔ charge la configuration depuis ENV_FILE pour isoler chaque processus (233.3959ms)
+✔ MODE=public → publicMode activé (tout le monde peut commander) (253.2822ms)
+✔ MODE=self → publicMode désactivé (bot réservé au propriétaire) (213.741ms)
+✔ PUBLIC_MODE=on force le public même sans MODE (249.901ms)
+✔ aucun mode → publicMode désactivé par défaut (sécurité) (231.755ms)
+✔ HYBRID_MODE=on → Baileys lancé en plus de l’agent officiel (283.2568ms)
+✔ hybridMode désactivé par défaut (l’agent seul ne lance pas Baileys) (256.0421ms)
+✔ signature de cadre RÉELLE (renderError du bot) met le chat en pause (6.025ms)
+✔ message ordinaire (aucune marque de cadre) : pas de pause (0.9376ms)
+✔ RÉGRESSION : carte décorée d’un AUTRE bot → plus de pause (0.8437ms)
+✔ un morceau de cadre (en-tête seul) reste détecté (0.5719ms)
+✔ ping-pong rapide (boucle bot↔bot) déclenche la pause au 6ᵉ message (1.704ms)
+✔ échanges owner↔bot rapides sont exemptés (tests de commandes) (1.3649ms)
+✔ rafale de médias (sans texte) : aucun faux positif (0.883ms)
+✔ participant isBot du serveur : hors nous uniquement (1.1389ms)
+✔ levée de pause : resume idempotent + status cohérent (6.6892ms)
+✔ chat en pause : observe ne fait pas croître la fenêtre (0.9856ms)
+✔ les 35 nouvelles commandes sont enregistrées (11.1117ms)
+✔ jeux — pendu, trivia, réponse, devinette, morpion (4.9854ms)
+✔ outils — morse, hash, password, ascii, timezone, notes, bookmarks (83.5546ms)
+✔ usages manquants → message d'erreur propre, aucun crash (2.4115ms)
+✔ setprefix change le préfixe du config (0.8646ms)
+✔ appels réseau réels — crypto répond un prix OU une erreur propre (382.7275ms)
+✔ antilink détecte liens et domaines, ignore le texte normal (14.7595ms)
+✔ antilink respecte la whitelist du groupe (.linkallow) (0.8546ms)
+✔ antivirtex ignore un message normal (1.1348ms)
+✔ antivirtex flag un texte géant (> maxText = 4000) (0.8773ms)
+✔ antivirtex flag un mur de 260 lignes (0.5953ms)
+✔ antivirtex flag 160 caractères invisibles (virtex classique) (0.6569ms)
+✔ antilink SUPPRIME réellement le lien d’un membre non-admin (69.5062ms)
+✔ antilink EXEMpte un admin : aucun lien supprimé pour un admin (36.5425ms)
+✔ .security on active les 14 protections (13 moteur + antifake) (23.8528ms)
+✔ antifake : indicatif interdit expulsé, indicatif autorisé conservé (29.3721ms)
+✔ antifake désactivé → aucun expulsé même avec indicatif interdit (22.4505ms)
+✔ antifake : un départ (action ≠ add) ne déclenche rien (23.9681ms)
+✔ .allowcodes normalise les arguments en chiffres et les sauvegarde (22.0713ms)
+✔ .allowcodes sans argument → message d’usage, rien n’est écrit (36.9166ms)
+✔ .antifake on active la protection avec indicatif par défaut 237 (32.4591ms)
+[DB] SQLite indisponible, repli JSON : database is locked
+[STATE] FORCE_PUBLIC=1 → selfMode désactivé
+[EXTRAS] avancés + outils + missing Baileys (messages texte uniquement)
+[CORE] 480 plugins chargés · 1288 commandes/alias enregistrés · 41 ignorés
+[CORE] 41 fichier(s) ignoré(s) :
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - antibadwords.js: export incompatible
+   - antibot.js: commandes déjà présentes ou filtrées
+   - antifake.js: commandes déjà présentes ou filtrées
+   - antilink.js: commandes déjà présentes ou filtrées
+   - antispam.js: commandes déjà présentes ou filtrées
+   - autostatus.js: commandes déjà présentes ou filtrées
+   - broadcast.js: commandes déjà présentes ou filtrées
+   - education.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - grouplink.js: commandes déjà présentes ou filtrées
+   - hangman.js: commandes déjà présentes ou filtrées
+   … et 26 autres
+[REGISTRE] "gi" retiré (doublon)
+[REGISTRE] "memberlist" retiré (doublon)
+[REGISTRE] "gcinfo" retiré (doublon)
+[REGISTRE] "groupdesc" retiré (doublon)
+[REGISTRE] "invitelink" retiré (doublon)
+[REGISTRE] "resetlink" retiré (doublon)
+✔ catégorie 99 absente de CATEGORIES → invisible des menus (2.953ms)
+✔ aucun rendu de menu ne contient ces noms (51.2225ms)
+[STORE] flush JSON: ENOENT: no such file or directory, rename 'C:\Users\Djousse Uriel\Documents\DJOUSSE-TECH-MD\storage\data\store\msg-store.json.tmp' -> 'C:\Users\Djousse Uriel\Documents\DJOUSSE-TECH-MD\storage\data\store\msg-store.json'
+✔ toutes les commandes hacktools sont en catégorie fantôme 99 (invisible des menus) (11.3353ms)
+✔ sans mot de passe dans .env → section désactivée (2.1812ms)
+✔ mauvais mot de passe → accès refusé (2.1508ms)
+✔ bon mot de passe → menu affiché par catégorie avec avertissements (3.6757ms)
+✔ sans argument → demande du mot de passe (0.8992ms)
+✔ imdb sans clé → message clair (pas de secret en dur) (3.3483ms)
+✔ vérification : aucune clé API en dur dans le code source (1.3549ms)
+✔ les options welcome et goodbye enregistrees survivent au chargement du handler (8950.5844ms)
+✔ parses JSON responses and follows bounded redirects (88.615ms)
+✔ applies one total timeout to a response that keeps sending data (64.3396ms)
+✔ rejects redirect loops and unsupported protocols (26.4565ms)
+[STATE] FORCE_PUBLIC=1 → selfMode désactivé
+[EXTRAS] avancés + outils + missing Baileys (messages texte uniquement)
+[CORE] 480 plugins chargés · 1288 commandes/alias enregistrés · 41 ignorés
+[CORE] 41 fichier(s) ignoré(s) :
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - antibadwords.js: export incompatible
+   - antibot.js: commandes déjà présentes ou filtrées
+   - antifake.js: commandes déjà présentes ou filtrées
+   - antilink.js: commandes déjà présentes ou filtrées
+   - antispam.js: commandes déjà présentes ou filtrées
+   - autostatus.js: commandes déjà présentes ou filtrées
+   - broadcast.js: commandes déjà présentes ou filtrées
+   - education.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - grouplink.js: commandes déjà présentes ou filtrées
+   - hangman.js: commandes déjà présentes ou filtrées
+   … et 26 autres
+[REGISTRE] "gi" retiré (doublon)
+[REGISTRE] "memberlist" retiré (doublon)
+[REGISTRE] "gcinfo" retiré (doublon)
+[REGISTRE] "groupdesc" retiré (doublon)
+[REGISTRE] "invitelink" retiré (doublon)
+[REGISTRE] "resetlink" retiré (doublon)
+✔ menus et sous-menus : aucune marque tierce affichée (66.0341ms)
+✔ descriptions du registre : aucune marque tierce (3.1475ms)
+✔ README : identité, slogan et chiffres cohérents (1.4023ms)
+✔ commandes tierces dangereuses/identitaires ABSENTES du registre (1.5131ms)
+✔ versions tierces remplacées : .repo/.support/.ia maison (3.7758ms)
+✔ retirerSignatureTierce : URLs tierces → destinations officielles (0.7688ms)
+✔ retirerSignatureTierce : aides de commandes en minuscules intactes (0.6004ms)
+✔ INTERDITS (crash/NSFW) inchangés (1.7882ms)
+✔ logo maison : repli visuel tierce réécrit (11 plugins couverts) (1.1685ms)
+✔ config : identité officielle + slogan + liens (1.4966ms)
+✔ alerte hacktools sans ancienne marque (1.1405ms)
+✔ chiffres du registre : totaux README vérifiables (0.7264ms)
+✔ erreur anglaise d'un plugin silva → cadre DJOUSE (5.7313ms)
+✔ usage demandé → cadre DJOUSE (10.7118ms)
+✔ succès d'un plugin silva → cadre DJOUSE (1.4126ms)
+✔ réponse utile (quiz, liste) → conservée, markdown nettoyé (1.096ms)
+✔ proxy sendMessage : contenu texte normalisé ET envoyé via wa-send (1.5444ms)
+✔ proxy : les NON-messages (médias) ne sont pas dénaturés (3.1085ms)
+✔ proxy : si wa-send échoue, repli sur le sock brut (1.3896ms)
+✔ « Powered by Silva MD » réécrit en identité maison (0.8059ms)
+✔ variantes Silva (Tech Inc, CoinGecko, bare) toutes réécrites (0.9408ms)
+✔ les références de commandes en minuscules ne sont PAS réécrites (0.8628ms)
+✔ légende média : marque nettoyée, mais AUCUN cadre erreur/succès (0.6791ms)
+✔ le ctx silva expose bien safeSend / jid / message / theme / download (11.8126ms)
+✔ cache récupère un message persistant après redémarrage et le remet en RAM (15.6182ms)
+✔ cache RAM prioritaire et fallback persistant retourne null si absent (0.9627ms)
+✔ returns a completed network operation result (3.5699ms)
+✔ aborts and rejects a stalled network operation with a useful message (21.9796ms)
+✔ rejects invalid timeout configuration (1.1256ms)
+✔ GET /status — état du bot au format attendu par le site (226.4542ms)
+✔ GET /status — connecté → sessions actives à 1 (38.9427ms)
+✔ POST /pair — numéro valide → code 8 caractères, chiffres transmis nus (32.7163ms)
+✔ POST /pair — numéro trop court → 400 (25.8112ms)
+✔ POST /pair — corps non-JSON → 400 propre (32.0116ms)
+✔ PROTECTION — session déjà enregistrée → 409, socket JAMAIS appelée (15.1793ms)
+✔ Socket absente → 503 (réessaie plus tard) (19.4616ms)
+✔ Token — sans en-tête → 401, avec x-api-token → 200 (21.9946ms)
+✔ Limitation de débit — plafond atteint → 429 (70.6661ms)
+✔ CORS — prévol OPTIONS → 204 + en-têtes (13.2946ms)
+✔ Route inconnue → 404 JSON avec la liste des routes (11.0765ms)
+✔ SERVE_SITE — site statique servi, traversée de chemins bloquée (29.0341ms)
+[DB] SQLite indisponible, repli JSON : database is locked
+[STATE] FORCE_PUBLIC=1 → selfMode désactivé
+[EXTRAS] avancés + outils + missing Baileys (messages texte uniquement)
+[CORE] 480 plugins chargés · 1288 commandes/alias enregistrés · 41 ignorés
+[CORE] 41 fichier(s) ignoré(s) :
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - advanced-features.js: commandes déjà présentes ou filtrées
+   - antibadwords.js: export incompatible
+   - antibot.js: commandes déjà présentes ou filtrées
+   - antifake.js: commandes déjà présentes ou filtrées
+   - antilink.js: commandes déjà présentes ou filtrées
+   - antispam.js: commandes déjà présentes ou filtrées
+   - autostatus.js: commandes déjà présentes ou filtrées
+   - broadcast.js: commandes déjà présentes ou filtrées
+   - education.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - games.js: commandes déjà présentes ou filtrées
+   - grouplink.js: commandes déjà présentes ou filtrées
+   - hangman.js: commandes déjà présentes ou filtrées
+   … et 26 autres
+[REGISTRE] "gi" retiré (doublon)
+[REGISTRE] "memberlist" retiré (doublon)
+[REGISTRE] "gcinfo" retiré (doublon)
+[REGISTRE] "groupdesc" retiré (doublon)
+[REGISTRE] "invitelink" retiré (doublon)
+[REGISTRE] "resetlink" retiré (doublon)
+   registre total : 1598
+✔ le chargeur a enregistré plus de 1000 commandes silva (3.2729ms)
+✔ REEL - .8ball repond (commande maison conservee, pas ecrasee par silva) (1.6885ms)
+✔ protection anti-ecrasement : notre .8ball reste la notre (usage FR) (0.6285ms)
+✔ RÉEL — .emojiguess lance un devinette (état du plugin conservé) (2.9857ms)
+✔ RÉEL — .mathquiz pose un calcul (plugin silva avec état) (1.4165ms)
+✔ RÉEL — .flagquiz pose un drapeau à deviner (0.9718ms)
+✔ les commandes interdites (crash/NSFW) ne sont PAS enregistrées (0.555ms)
+✔ aucun plugin silva ne pose de listener (pas de double écoute) (91.0137ms)
+✔ les catégories silva recouvrent les 11 menus (1.4049ms)
+[STORE] flush JSON: ENOENT: no such file or directory, rename 'C:\Users\Djousse Uriel\Documents\DJOUSSE-TECH-MD\storage\data\store\msg-store.json.tmp' -> 'C:\Users\Djousse Uriel\Documents\DJOUSSE-TECH-MD\storage\data\store\msg-store.json'
+  deep       16527 -> 18369 octets
+  bass       16527 -> 16527 octets
+  reverse    16527 -> 16527 octets
+  slow       16527 -> 20498 octets
+  tempo      16527 -> 12525 octets
+  nightcore  16527 -> 12909 octets
+✔ ffmpeg-porté : chaque filtre transforme réellement l'audio (2161.0271ms)
+✔ ffmpeg-porté : entrée absente → erreur propre, pas de crash (76.0216ms)
+✔ les 8 commandes audio sont enregistrées (3.6731ms)
+✔ les 8 commandes auto sont enregistrées (6.1555ms)
+✔ alwaysonline on → présence "available" envoyée + état persisté (4.6265ms)
+✔ alwaysonline off → timer arrêté, état persisté (0.6741ms)
+✔ autotyping on et autorecord off (présences exclusives) (0.9551ms)
+✔ autobio <texte> → updateProfileStatus appelé avec le texte (1.4083ms)
+✔ onMessage autotyping actif → présence "composing" sur le bon jid (34.7532ms)
+✔ onMessage autoreply actif (MP, non commande) → message envoyé (0.9035ms)
+✔ onMessage : aucune commande pas d'effet parasite quand tout est off (0.5371ms)
+✔ autosettings affiche le récapitulatif (1.0162ms)
+✔ usages incorrects → message d'erreur, pas de crash (1.6624ms)
+✔ les 37 commandes football sont generees (9 ligues x 4 + football) (5.9977ms)
+✔ sans FOOTBALL_API_KEY → message clair, jamais de crash (3.7505ms)
+✔ avec une clé bidon → erreur propre de l'API (pas de plantage) (758.593ms)
+✔ football (aide) affiche l'etat de la cle et les ligues (1.5691ms)
+✔ appelApi: url correcte et en-tete X-Auth-Token (1.0751ms)
+✔ les 22 commandes fun/réactions sont enregistrées (nikal/hand exclus) (9.0886ms)
+✔ playAnim : éditions protocolMessage type 14 sur le bon message (3031.1456ms)
+✔ appel reseau reel : otakugifs renvoie un GIF anime SFW (674.1092ms)
+✔ les 5 commandes groupe sont enregistrées (5.638ms)
+✔ antibot on/off → état persisté par groupe (1.7893ms)
+✔ antibot action/warn → action mémorisée (3.304ms)
+✔ automute 21:30 → heure normalisée + cron actif ; del → retirée (1.8508ms)
+✔ automute heure invalide → erreur propre (1.0577ms)
+✔ onParticipantAdd : bot détecté + antibot ON → expulsion réelle (48.0831ms)
+✔ onParticipantAdd : antibot OFF → aucune action (0.6355ms)
+✔ onParticipantAdd : humain normal → aucune action (0.9334ms)
+✔ tagadmin → mentionne les admins du groupe (1.7218ms)
+✔ groupcron affiche la programmation (1.1868ms)
+✔ les 23 logos + 3 lookups + logolist sont enregistrés (4.0044ms)
+✔ effets retirés (morts chez TEDDY) bien absents (0.4496ms)
+✔ logo sans texte → usage, pas de crash (0.9053ms)
+✔ lookups sans argument → usage, pas de crash (1.2649ms)
+✔ RÉEL — ephoto360/textpro génèrent une image (2 effets) (5105.0776ms)
+✔ RÉEL — bible-api.com renvoie Jean 3:16 (305.5665ms)
+✔ logolist affiche les 23 effets (1.4232ms)
+✔ RÉEL — popcat renvoie l'hydrogène (340.7906ms)
+✔ RÉEL — urban dictionary définit un mot (177.7021ms)
+✔ buildThum : URL et options correctement assemblées (3.1824ms)
+✔ commande screenshot enregistrée avec ses alias (2.7438ms)
+✔ parsing des options : full, width=, device (2.1903ms)
+✔ sans argument → aide d'usage (1.0032ms)
+✔ RÉEL — thum.io renvoie une vraie image d'un site (511.3442ms)
+✔ MODE=public : un inconnu reçoit la réponse à .ping (plus d’ACCÈS RESTREINT) (6099.8321ms)
+✔ PUBLIC_MODE=on : même effet sans MODE (5600.08ms)
+✔ aucun mode : l’inconnu est refusé (ACCÈS RESTREINT) (5139.1067ms)
+✔ MODE=self : silence total pour un inconnu (5192.2208ms)
+✔ rétention par défaut : 30 jours (DB_KEEP_DAYS) (2.8737ms)
+✔ purge automatique à l’ouverture : messages > 30 jours et événements > 60 jours supprimés (437.1775ms)
+✔ store de messages : purge des entrées plus vieilles que 7 jours (défaut) (3.0895ms)
+✔ watchdog : vérification de vie toutes les 10 secondes, câblée dans watchLoop (2.753ms)
+✔ les réponses système encadrées utilisent le même alphabet pour leur contenu (3.2167ms)
+✔ les réponses système préservent les valeurs non ASCII et les symboles (0.6974ms)
+✔ le tableau de démarrage affiche les états réels dans un cadre de largeur fixe (2.6163ms)
+✔ envoi texte : POST /messages avec Bearer, to, type, body (215.5807ms)
+✔ texte > 4096 caractères → tronqué avant envoi (30.2737ms)
+✔ envoi d'une réaction → refusé AVANT l'appel (réception seule) (5.8015ms)
+✔ média : upload (multipart) puis envoi avec l'id retourné (70.3482ms)
+✔ média trop gros → refus AVANT l'upload, avec le bon type (6.5611ms)
+✔ MIME deviné depuis les octets (jamais de type générique) (0.9446ms)
+✔ image Buffer (JPEG) → MIME CONCRET envoyé à l’upload (pas « image/* ») (2.2449ms)
+✔ image Buffer non reconnue → défaut CONCRET image/jpeg (jamais « image/* ») (1.5242ms)
+✔ envoi vers un NON-créateur → refus AVANT l'appel (limite officielle) (5.6111ms)
+✔ GET /updates → messages + statuses convertis (24.2332ms)
+✔ message texte converti en objet façon Baileys (compatible handler) (5.4895ms)
+✔ message cité → extendedTextMessage avec contextInfo (0.8939ms)
+✔ média entrant → handle conservé pour le téléchargement (0.4192ms)
+✔ sondage vide (204) → { vide: true } sans offset modifié (26.0649ms)
+✔ démarrage sans offset → pas de backlog (head actuel) (19.9846ms)
+✔ sondage AVEC offset → UN SEUL « ? » (régression 400 #131009) (13.0015ms)
+✔ token absent → 401 code 190 avec conseil clair (14.898ms)
+✔ destinataire non créateur par l'API → 403 code 131005 traduit (22.7928ms)
+✔ 429 puis succès → backoff puis 1 seul envoi (18.0922ms)
+✔ 400 (champ manquant) → PAS de retry (corriger d'abord) (12.0198ms)
+✔ quota local 12/min dépassé → refus AVANT l'appel HTTP (51.8216ms)
+✔ média : métadonnées puis téléchargement des octets (24.7795ms)
+✔ boucle : un message reçu est transmis au handler puis marqué lu (31.7863ms)
+✔ limites officielles exposées (tailles et types) (0.5624ms)
+✔ id agent « user:123 » → JID local Baileys, reconnu owner par le moteur (30.6554ms)
+✔ message agent : JID local exposé, id réel conservé pour l'envoi (0.5332ms)
+✔ boucle : le créateur devient owner local et la réponse part vers l'id réel (34.4328ms)
+✔ texte : délai humain borné puis envoi (résultat Baileys transmis) (214.048ms)
+✔ texte : présence composing ouverte UNE fois puis paused après envoi (15.5577ms)
+✔ autoTyping off : aucune présence, délai toujours actif (17.3611ms)
+✔ contenu non-texte (réaction) : envoi immédiat, sans présence (2.0639ms)
+✔ HUMAN_DELAY=0 coupe le délai sur le texte (5.1391ms)
+✔ socket absent ou incomplet → undefined (aucune TypeError) (1.5422ms)
+✔ humanDelayMs : bornes respectées sur 25 tirages + coupure (1.5679ms)
+ℹ tests 236
+ℹ suites 0
+ℹ pass 236
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 32256.7073

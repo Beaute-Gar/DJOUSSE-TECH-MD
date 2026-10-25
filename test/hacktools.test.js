@@ -9,7 +9,7 @@ function boot(pwd) {
   const env = { ...process.env };
   if (pwd === null) delete process.env.HACKTOOLS_PASSWORD;
   else process.env.HACKTOOLS_PASSWORD = pwd;
-  const { registerHackTools } = require('../lib/hacktools');
+  const { registerHackTools } = require('../src/lib/hacktools');
   registerHackTools((...a) => {
     const fn = a[a.length - 1];
     if (typeof fn === 'function') reg.set(a[0], { meta: a[1], fn });
@@ -103,7 +103,7 @@ test('imdb sans clé → message clair (pas de secret en dur)', async () => {
 
 test('vérification : aucune clé API en dur dans le code source', () => {
   const fs = require('fs');
-  const src = fs.readFileSync(require.resolve('../lib/hacktools'), 'utf8');
+  const src = fs.readFileSync(require.resolve('../src/lib/hacktools'), 'utf8');
   /* pas de longue clé hexadécimale codée (style OMDB/Tenor/Telegraph) */
   const suspect = src.match(/['"`][a-f0-9]{24,}['"`]/g);
   assert.equal(suspect, null, `clé en dur trouvée : ${suspect}`);

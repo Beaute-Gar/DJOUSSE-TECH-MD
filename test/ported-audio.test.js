@@ -7,7 +7,7 @@ const { execFile } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { EFFETS, runFfmpeg } = require('../lib/ported-audio');
+const { EFFETS, runFfmpeg } = require('../src/lib/ported-audio');
 
 const FFMPEG = require('ffmpeg-static');
 
@@ -46,7 +46,7 @@ test('les 8 commandes audio sont enregistrées', () => {
     if (typeof fn !== 'function') return;
     reg.set(a[0], { meta: a[1], fn });
   };
-  const { registerPortedAudio } = require('../lib/ported-audio');
+  const { registerPortedAudio } = require('../src/lib/ported-audio');
   registerPortedAudio(cmd, {
     config: { prefix: '.' },
     mediaInfo: () => null,

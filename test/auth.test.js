@@ -2,8 +2,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const auth = require('../lib/auth');
-const config = require('../config');
+const auth = require('../src/lib/auth');
+const config = require('../src/config/config');
 
 const savedOwners = config.ownerNumber;
 const savedSudo = process.env.SUDO_NUMBER;
