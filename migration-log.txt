@@ -1,4 +1,4 @@
-=== Migration DJOUSSE-TECH-MD - 25/10/2026 17:58:05,60 ===
+=== Migration DJOUSSE-TECH-MD - 25/10/2026 17:58:36,01 ===
 [OK] controles
 [OK] bot arrete
-[OK] sauvegarde : C:\Users\Djousse Uriel\Documents\DJOUSSE-TECH-MD\..\sauvegarde_migration_20261025_175806
+[OK] sauvegarde : C:\Users\Djousse Uriel\Documents\DJOUSSE-TECH-MD\..\sauvegarde_migration_20261025_175836
