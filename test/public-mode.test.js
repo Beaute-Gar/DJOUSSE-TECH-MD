@@ -25,7 +25,7 @@ function lancerInconnu(modeLine) {
   const envFile = path.join(dir, '.env.instance');
   fs.writeFileSync(envFile, [
     'PREFIX=.',
-    'OWNER_NUMBER=237693978044',
+    'OWNER_NUMBER=237600111222',
     'HUMAN_DELAY=0',
     `DATA_DIR=${dataDir.replace(/\\/g, '/')}`,
     `SESSION_DIR=${sessionDir.replace(/\\/g, '/')}`,
@@ -51,7 +51,7 @@ function lancerInconnu(modeLine) {
       const handler = require(${JSON.stringify(path.join(ROOT, 'src', 'handlers', 'handler.js'))});
       const envois = [];
       const sock = {
-        user: { id: '237659809751:1@s.whatsapp.net' },
+        user: { id: '237600333444:1@s.whatsapp.net' },
         sendMessage: async (jid, content) => { envois.push({ jid, content }); return { key: { id: 'S' } }; },
         sendPresenceUpdate: async () => {},
         readMessages: async () => {},

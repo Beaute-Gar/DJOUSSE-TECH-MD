@@ -8,7 +8,7 @@
             "value": "pairing"
         },
         "PAIRING_PHONE": {
-            "description": "Numéro WhatsApp international sans + ni espaces (ex : 237659809751)",
+            "description": "Numéro WhatsApp international sans + ni espaces (ex : 237600333444)",
             "required": false
         },
         "OWNER_NUMBER": {

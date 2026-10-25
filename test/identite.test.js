@@ -53,7 +53,7 @@ test('README : identité, slogan et chiffres cohérents', () => {
   assert.ok(!/\bSilva\b|SilvaTech|TEDDY-XMD/i.test(sansCredits), 'README sans marque tierce (hors section Crédits)');
   assert.ok(site.includes('Des solutions fiables pour un avenir sans limites'), 'slogan présent');
   assert.ok(site.includes('Beaute-Gar/DJOUSSE-TECH-MD'), 'dépôt officiel cité');
-  assert.ok(!site.includes('237693978044'), 'numéro owner non exposé');
+  assert.ok(!site.includes('237600111222'), 'numéro owner non exposé');
   assert.ok(!/11 catégories|commandes-855|lines=363/.test(site), 'chiffres mis à jour (12 catégories)');
 });
 

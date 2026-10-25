@@ -2,12 +2,12 @@
 
 ## Étape 0 — Ton setup (d’après le log)
 
-- **Bot WhatsApp** = `+237 659 809 751`
-- **Owner configuré** = `+237 693 978 044`
+- **Bot WhatsApp** = `+237600333444`
+- **Owner configuré** = `+237600111222`
 - Préfixe = `.`
 - Session connectée, 164 commandes OK
 
-Tu dois écrire **à** `+237 659 809 751` (le bot).
+Tu dois écrire **à** `+237600333444` (le bot).
 
 ---
 
@@ -16,7 +16,7 @@ Tu dois écrire **à** `+237 659 809 751` (le bot).
 ### A. Fichier `.env` (racine du projet)
 
 ```env
-OWNER_NUMBER=237693978044
+OWNER_NUMBER=237600111222
 PREFIX=.
 MODE=public
 FORCE_PUBLIC=1
@@ -78,7 +78,7 @@ Attends `CONNECTÉ` + `commandes chargées`.
 
 ## Étape 4 — Test
 
-Chat **privé** avec **+237 659 809 751** :
+Chat **privé** avec **+237600333444** :
 
 ```text
 .ping
@@ -109,7 +109,7 @@ Remove-Item -Recurse -Force session
 npm start
 ```
 
-Scanne le **nouveau QR** avec le téléphone du bot (`+237 659 809 751`).
+Scanne le **nouveau QR** avec le téléphone du bot (`+237600333444`).
 
 Reteste `.ping`.
 
@@ -130,7 +130,7 @@ Reteste `.ping`.
 Si tu préfères :
 
 ```env
-OWNER_NUMBER=237659809751
+OWNER_NUMBER=237600333444
 MODE=public
 FORCE_PUBLIC=1
 ```
@@ -143,4 +143,4 @@ Redémarre, puis `.ping` depuis ce numéro.
 
 1. Les 30 dernières lignes du terminal **après** `.ping`
 2. Ton `.env` (sans les clés API)
-3. Confirmation : tu écris bien à `+237 659 809 751` ?
+3. Confirmation : tu écris bien à `+237600333444` ?

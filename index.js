@@ -578,7 +578,7 @@ async function startSession(options = {}) {
 
       // ── AUTO-OWNER : le numéro qui se connecte devient OWNER + session ──
       // Désactivable : AUTO_OWNER=false dans .env
-      // sock.user.id = "237659809751:xx@s.whatsapp.net" → on extrait les chiffres.
+      // sock.user.id = "237600333444:xx@s.whatsapp.net" → on extrait les chiffres.
       // Ce numéro est TOUJOURS owner (en plus de OWNER_NUMBER du .env s'il diffère).
       try {
         if (config.autoOwner === false) {

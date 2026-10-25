@@ -78,13 +78,13 @@ test('POST /pair — numéro valide → code 8 caractères, chiffres transmis nu
     const r = await fetch(`${b.base}/pair`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: '+237 659 80 97 51' }),
+      body: JSON.stringify({ number: '+237600333444' }),
     });
     assert.strictEqual(r.status, 200);
     const j = await r.json();
     assert.strictEqual(j.code, 'ABCD1234');
     assert.strictEqual(j.code.length, 8);
-    assert.deepStrictEqual(b.calls, ['237659809751']);
+    assert.deepStrictEqual(b.calls, ['237600333444']);
   } finally { await b.close(); }
 });
 
@@ -121,7 +121,7 @@ test('PROTECTION — session déjà enregistrée → 409, socket JAMAIS appelée
     const r = await fetch(`${b.base}/pair`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: '+237659809751' }),
+      body: JSON.stringify({ number: '+237600333444' }),
     });
     assert.strictEqual(r.status, 409);
     const j = await r.json();
@@ -136,7 +136,7 @@ test('Socket absente → 503 (réessaie plus tard)', async () => {
     const r = await fetch(`${b.base}/pair`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: '+237659809751' }),
+      body: JSON.stringify({ number: '+237600333444' }),
     });
     assert.strictEqual(r.status, 503);
   } finally { await b.close(); }
@@ -148,7 +148,7 @@ test('Token — sans en-tête → 401, avec x-api-token → 200', async () => {
     const sans = await fetch(`${b.base}/pair`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: '+237659809751' }),
+      body: JSON.stringify({ number: '+237600333444' }),
     });
     assert.strictEqual(sans.status, 401);
     assert.strictEqual(b.calls.length, 0);
@@ -156,7 +156,7 @@ test('Token — sans en-tête → 401, avec x-api-token → 200', async () => {
     const avec = await fetch(`${b.base}/pair`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Api-Token': 'secret-de-test' },
-      body: JSON.stringify({ number: '+237659809751' }),
+      body: JSON.stringify({ number: '+237600333444' }),
     });
     assert.strictEqual(avec.status, 200);
     assert.strictEqual(b.calls.length, 1);
@@ -170,7 +170,7 @@ test('Limitation de débit — plafond atteint → 429', async () => {
     const one = () => fetch(`${b.base}/pair`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: '+237659809751' }),
+      body: JSON.stringify({ number: '+237600333444' }),
     });
     let last = 0;
     for (let i = 0; i < RATE_MAX + 2; i += 1) last = (await one()).status;

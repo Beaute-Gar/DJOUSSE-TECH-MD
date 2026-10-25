@@ -16,7 +16,7 @@
  * POURQUOI JAMAIS endsWith (faille corrigée) :
  *   L'ancien code faisait `o === n || n.endsWith(o) || o.endsWith(n)`.
  *   Résultat : tout numéro SE TERMINANT par les chiffres du owner
- *   (ex: 9237693978044) — ou tout suffixe court (…978044) — devenait
+ *   (ex: 9237600111222) — ou tout suffixe court (…111222) — devenait
  *   owner : élévation de privilèges. Ici la comparaison se fait
  *   UNIQUEMENT sur les chiffres, à égalité stricte, après strip de
  *   tout ce qui n'est pas un chiffre («+», espaces, suffixe
