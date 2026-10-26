@@ -8,11 +8,7 @@ export class ApiError extends Error {
 }
 
 const BACKEND_URL = 'https://djousse-tech-md.onrender.com';
-
-// Jeton récupéré depuis l'environnement ou injecté par Vercel
-const API_TOKEN = (typeof window !== 'undefined' && window.ENV && window.ENV.PAIRING_API_TOKEN) 
-  ? window.ENV.PAIRING_API_TOKEN 
-  : '';
+const API_TOKEN = 'Djousse@123';
 
 async function request(path, { method = 'GET', body, signal } = {}) {
   let targetUrl = path;
@@ -20,7 +16,6 @@ async function request(path, { method = 'GET', body, signal } = {}) {
     targetUrl = `${BACKEND_URL.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
   }
 
-  // Préparation des en-têtes avec le token de sécurité si présent
   const headers = {
     'Content-Type': 'application/json'
   };
