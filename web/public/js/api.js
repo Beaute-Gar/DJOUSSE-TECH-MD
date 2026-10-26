@@ -7,16 +7,14 @@ export class ApiError extends Error {
   }
 }
 
-// Récupération dynamique de l'URL du backend (injectée par Vercel ou définie par défaut)
+// URL de secours directe vers Render si aucune variable d'environnement n'est détectée
 const BACKEND_URL = (typeof window !== 'undefined' && window.ENV && window.ENV.PAIRING_API_URL) 
   ? window.ENV.PAIRING_API_URL 
-  : '';
+  : 'https://djousse-tech-md.onrender.com';
 
 async function request(path, { method = 'GET', body, signal } = {}) {
-  // Si le chemin ne commence pas par http et qu'un backend distant est défini, on le préfixe
   let targetUrl = path;
-  if (!path.startsWith('http') && BACKEND_URL) {
-    // Évite les doubles slashes
+  if (!path.startsWith('http')) {
     targetUrl = `${BACKEND_URL.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
   }
 
@@ -73,12 +71,11 @@ export function getStatus({ signal } = {}) {
 }
 
 export async function getPairingCode(number, { signal } = {}) {
-  // Nettoyage du numéro pour envoyer uniquement les chiffres requis par le backend Render
   const cleanPhone = String(number || '').replace(/\D/g, '');
   
   const result = await requestWithFallback('pair', './pair', {
     method: 'POST',
-    body: { phone: cleanPhone }, // CORRIGÉ : envoi de 'phone' au lieu de 'number'
+    body: { phone: cleanPhone },
     signal,
   });
   
