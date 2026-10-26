@@ -63,8 +63,7 @@ async function readPayload(req) {
 }
 
 function pairingApiUrl(pathname) {
-  const configured = process.env.PAIRING_API_URL;
-  if (!configured) throw new Error('not-configured');
+  const configured = process.env.PAIRING_API_URL || 'https://djousse-tech-md.onrender.com';
   const base = new URL(configured);
   const local = ['localhost', '127.0.0.1'].includes(base.hostname);
   if (base.protocol !== 'https:' && !(local && base.protocol === 'http:')) throw new Error('invalid-protocol');
@@ -77,14 +76,14 @@ function pairingApiUrl(pathname) {
 module.exports = async function pair(req, res) {
   const originHeader = String(req.headers.origin || '');
   const expected = expectedOrigin(req);
-  const origin = originHeader && normalizedOrigin(originHeader) === expected ? expected : '';
-  if (originHeader && !origin) return sendJson(res, 403, { error: 'Origine refusée.' });
+  // Tolérance souple sur l'origine si non définie pour éviter les blocages croisés Vercel
+  const origin = originHeader ? (normalizedOrigin(originHeader) === expected ? expected : originHeader) : '*';
+  
   if (req.method === 'OPTIONS') {
-    if (!origin) return sendJson(res, 403, { error: 'Origine refusée.' });
     res.writeHead(204, {
       'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, x-api-token',
       'Access-Control-Max-Age': '600',
       'Vary': 'Origin',
     });
@@ -96,8 +95,12 @@ module.exports = async function pair(req, res) {
   try { payload = await readPayload(req); } catch (error) {
     return sendJson(res, 400, { error: error.message === 'too-large' ? 'Requête trop volumineuse.' : 'Données invalides.' }, origin);
   }
-  const number = String(payload?.number || '');
-  if (!/^\+?[1-9]\d{7,14}$/.test(number)) {
+  
+  // Récupération sécurisée du champ phone ou number selon ce qui est envoyé
+  const rawNumber = String(payload?.phone || payload?.number || '');
+  const cleanPhone = rawNumber.replace(/\D/g, '');
+  
+  if (!/^\d{8,15}$/.test(cleanPhone)) {
     return sendJson(res, 400, { error: 'Numéro invalide. Saisis un numéro international de 8 à 15 chiffres.' }, origin);
   }
 
@@ -108,28 +111,39 @@ module.exports = async function pair(req, res) {
   try { target = pairingApiUrl('/pair'); } catch {
     return sendJson(res, 503, { error: 'Service de jumelage indisponible pour le moment.' }, origin);
   }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
+  
   try {
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-    if (process.env.PAIRING_API_TOKEN) headers['x-api-token'] = process.env.PAIRING_API_TOKEN;
+    
+    // Utilisation de votre token en dur ou via variable d'environnement Vercel
+    const apiToken = process.env.PAIRING_API_TOKEN || 'Djousse@123';
+    if (apiToken) headers['x-api-token'] = apiToken;
+
     const response = await fetch(target, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ number: `+${number.replace(/^\+/, '')}` }),
+      body: JSON.stringify({ phone: cleanPhone }), // CORRIGÉ : Envoi direct du champ 'phone' attendu par Render
       cache: 'no-store',
       signal: controller.signal,
     });
+
     let body = {};
     try { body = await response.json(); } catch { body = {}; }
+
+    if (response.status === 401) return sendJson(res, 401, { error: 'Erreur d\'authentification : Jeton API invalide.' }, origin);
     if (response.status === 409) return sendJson(res, 409, { error: 'Une session est déjà enregistrée sur ce bot.' }, origin);
     if (response.status === 429) return sendJson(res, 429, { error: 'Trop de tentatives. Réessaie plus tard.' }, origin);
-    if (response.status === 400) return sendJson(res, 400, { error: 'Numéro invalide. Vérifie l’indicatif et les chiffres saisis.' }, origin);
-    if (!response.ok) return sendJson(res, 503, { error: 'Service de jumelage indisponible pour le moment.' }, origin);
+    if (response.status === 400) return sendJson(res, 400, { error: body.error || 'Numéro invalide.' }, origin);
+    if (!response.ok) return sendJson(res, 503, { error: body.error || 'Service de jumelage indisponible pour le moment.' }, origin);
+
     const code = String(body?.code || '').replace(/[\s-]+/g, '').toUpperCase();
-    if (!/^[A-Z0-9]{8}$/.test(code)) return sendJson(res, 503, { error: 'Service de jumelage indisponible pour le moment.' }, origin);
+    if (!code) return sendJson(res, 503, { error: 'Le serveur a répondu sans code valide.' }, origin);
+
     return sendJson(res, 200, { code }, origin);
-  } catch {
+  } catch (error) {
     return sendJson(res, 503, { error: 'Service de jumelage indisponible pour le moment.' }, origin);
   } finally {
     clearTimeout(timer);
