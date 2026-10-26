@@ -1,0 +1,9 @@
+{
+  "name": "djousse-tech-md-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site vitrine + fonctions Vercel (jumelage) de DJOUSSE-TECH-MD",
+  "engines": {
+    "node": "22.x"
+  }
+}

@@ -1,72 +1,72 @@
-'use strict';
-
-/**
- * DJOUSSE TECH MD — API Service Front-End (Vercel -> Render)
- * URL Backend : https://djousse-tech-md.onrender.com
- */
-
-const API_BASE_URL = 'https://djousse-tech-md.onrender.com';
-
-const ApiService = {
-  /**
-   * Effectue une requête HTTP générique vers le serveur Render
-   */
-  async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    
-    const defaultHeaders = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
-
-    const config = {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...(options.headers || {}),
-      },
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      const contentType = response.headers.get('content-type');
-      let data;
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        data = await response.text();
-      }
-
-      if (!response.ok) {
-        throw new Error(typeof data === 'string' ? data : (data.message || data.error || 'Erreur serveur'));
-      }
-
-      return data;
-    } catch (error) {
-      console.error(`[API Error] (${endpoint}):`, error.message);
-      throw error;
-    }
-  },
-
-  /**
-   * Récupère le statut actuel du bot et de la connexion WhatsApp
-   */
-  async getStatus() {
-    return this.request('/status');
-  },
-
-  /**
-   * Envoie une demande de code de pairage pour un numéro de téléphone
-   * @param {string} phoneNumber Le numéro WhatsApp avec indicatif
-   */
-  async requestPairing(phoneNumber) {
-    return this.request('/pair', {
-      method: 'POST',
-      body: JSON.stringify({ phone: phoneNumber }),
-    });
+export class ApiError extends Error {
+  constructor(message, status = 0, kind = 'unavailable') {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.kind = kind;
   }
-};
+}
 
-// Rend l'API accessible dans tout le front-end
-window.ApiService = ApiService;
+async function request(path, { method = 'GET', body, signal } = {}) {
+  let response;
+  try {
+    response = await fetch(path, {
+      method,
+      cache: 'no-store',
+      headers: body ? { 'Content-Type': 'application/json' } : {},
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: 'same-origin',
+      signal,
+    });
+  } catch (error) {
+    if (error?.name === 'AbortError') throw error;
+    throw new ApiError('Service de jumelage indisponible pour le moment.', 0, 'unavailable');
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  let payload = {};
+  if (contentType.includes('application/json')) {
+    try { payload = await response.json(); } catch { payload = {}; }
+  }
+  if (!response.ok) {
+    const kind = response.status === 409 ? 'session'
+      : response.status === 429 ? 'rate-limit'
+        : response.status === 400 ? 'invalid'
+          : 'unavailable';
+    const defaultMessage = kind === 'session'
+      ? 'Une session est déjà enregistrée sur ce bot. Le jumelage est refusé.'
+      : kind === 'rate-limit'
+        ? 'Trop de tentatives. Patiente un instant avant de réessayer.'
+        : kind === 'invalid'
+          ? 'Numéro invalide. Vérifie l’indicatif et les chiffres saisis.'
+          : 'Service de jumelage indisponible pour le moment.';
+    throw new ApiError(defaultMessage, response.status, kind);
+  }
+  if (!contentType.includes('application/json')) throw new ApiError('Service de jumelage indisponible pour le moment.');
+  return payload;
+}
+
+async function requestWithFallback(primary, fallback, options) {
+  try {
+    return await request(primary, options);
+  } catch (error) {
+    if (error?.name === 'AbortError') throw error;
+    if (!(error instanceof ApiError) || ![404, 405].includes(error.status)) throw error;
+    return request(fallback, options);
+  }
+}
+
+export function getStatus({ signal } = {}) {
+  return requestWithFallback('./api/status', './status', { method: 'GET', signal });
+}
+
+export async function getPairingCode(number, { signal } = {}) {
+  const result = await requestWithFallback('./api/pair', './pair', {
+    method: 'POST',
+    body: { number },
+    signal,
+  });
+  const code = String(result?.code || '').replace(/[\s-]+/g, '').toUpperCase();
+  if (!/^[A-Z0-9]{8}$/.test(code)) throw new ApiError('Le serveur a répondu sans code de jumelage valide.');
+  return code;
+}
