@@ -7,10 +7,12 @@ export class ApiError extends Error {
   }
 }
 
-// URL de secours directe vers Render si aucune variable d'environnement n'est détectée
-const BACKEND_URL = (typeof window !== 'undefined' && window.ENV && window.ENV.PAIRING_API_URL) 
-  ? window.ENV.PAIRING_API_URL 
-  : 'https://djousse-tech-md.onrender.com';
+const BACKEND_URL = 'https://djousse-tech-md.onrender.com';
+
+// Jeton récupéré depuis l'environnement ou injecté par Vercel
+const API_TOKEN = (typeof window !== 'undefined' && window.ENV && window.ENV.PAIRING_API_TOKEN) 
+  ? window.ENV.PAIRING_API_TOKEN 
+  : '';
 
 async function request(path, { method = 'GET', body, signal } = {}) {
   let targetUrl = path;
@@ -18,12 +20,20 @@ async function request(path, { method = 'GET', body, signal } = {}) {
     targetUrl = `${BACKEND_URL.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
   }
 
+  // Préparation des en-têtes avec le token de sécurité si présent
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (API_TOKEN) {
+    headers['x-api-token'] = API_TOKEN;
+  }
+
   let response;
   try {
     response = await fetch(targetUrl, {
       method,
       cache: 'no-store',
-      headers: body ? { 'Content-Type': 'application/json' } : {},
+      headers,
       body: body ? JSON.stringify(body) : undefined,
       credentials: 'same-origin',
       signal,
@@ -39,17 +49,22 @@ async function request(path, { method = 'GET', body, signal } = {}) {
     try { payload = await response.json(); } catch { payload = {}; }
   }
   if (!response.ok) {
-    const kind = response.status === 409 ? 'session'
-      : response.status === 429 ? 'rate-limit'
-        : response.status === 400 ? 'invalid'
-          : 'unavailable';
-    const defaultMessage = kind === 'session'
-      ? 'Une session est déjà enregistrée sur ce bot. Le jumelage est refusé.'
-      : kind === 'rate-limit'
-        ? 'Trop de tentatives. Patiente un instant avant de réessayer.'
-        : kind === 'invalid'
-          ? (payload.error || 'Numéro invalide. Vérifie l’indicatif et les chiffres saisis.')
-          : 'Service de jumelage indisponible pour le moment.';
+    const kind = response.status === 401 ? 'unauthorized'
+      : response.status === 409 ? 'session'
+        : response.status === 429 ? 'rate-limit'
+          : response.status === 400 ? 'invalid'
+            : 'unavailable';
+            
+    const defaultMessage = kind === 'unauthorized'
+      ? 'Erreur d\'authentification : Jeton API invalide ou manquant.'
+      : kind === 'session'
+        ? 'Une session est déjà enregistrée sur ce bot. Le jumelage est refusé.'
+        : kind === 'rate-limit'
+          ? 'Trop de tentatives. Patiente un instant avant de réessayer.'
+          : kind === 'invalid'
+            ? (payload.error || 'Numéro invalide. Vérifie l’indicatif et les chiffres saisis.')
+            : 'Service de jumelage indisponible pour le moment.';
+            
     throw new ApiError(defaultMessage, response.status, kind);
   }
   if (!contentType.includes('application/json')) throw new ApiError('Service de jumelage indisponible pour le moment.');
