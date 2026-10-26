@@ -76,7 +76,6 @@ function pairingApiUrl(pathname) {
 module.exports = async function pair(req, res) {
   const originHeader = String(req.headers.origin || '');
   const expected = expectedOrigin(req);
-  // Tolérance souple sur l'origine si non définie pour éviter les blocages croisés Vercel
   const origin = originHeader ? (normalizedOrigin(originHeader) === expected ? expected : originHeader) : '*';
   
   if (req.method === 'OPTIONS') {
@@ -96,7 +95,6 @@ module.exports = async function pair(req, res) {
     return sendJson(res, 400, { error: error.message === 'too-large' ? 'Requête trop volumineuse.' : 'Données invalides.' }, origin);
   }
   
-  // Récupération sécurisée du champ phone ou number selon ce qui est envoyé
   const rawNumber = String(payload?.phone || payload?.number || '');
   const cleanPhone = rawNumber.replace(/\D/g, '');
   
@@ -117,15 +115,17 @@ module.exports = async function pair(req, res) {
   
   try {
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-    
-    // Utilisation de votre token en dur ou via variable d'environnement Vercel
     const apiToken = process.env.PAIRING_API_TOKEN || 'Djousse@123';
     if (apiToken) headers['x-api-token'] = apiToken;
 
+    // Envoi du numéro et d'un identifiant de session unique basé sur le numéro
     const response = await fetch(target, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ phone: cleanPhone }), // CORRIGÉ : Envoi direct du champ 'phone' attendu par Render
+      body: JSON.stringify({ 
+        phone: cleanPhone,
+        sessionId: `session_${cleanPhone}` // Crée un espace isolé pour ce numéro précis
+      }),
       cache: 'no-store',
       signal: controller.signal,
     });
@@ -134,7 +134,7 @@ module.exports = async function pair(req, res) {
     try { body = await response.json(); } catch { body = {}; }
 
     if (response.status === 401) return sendJson(res, 401, { error: 'Erreur d\'authentification : Jeton API invalide.' }, origin);
-    if (response.status === 409) return sendJson(res, 409, { error: 'Une session est déjà enregistrée sur ce bot.' }, origin);
+    if (response.status === 409) return sendJson(res, 409, { error: 'Une session est déjà enregistrée pour ce numéro.' }, origin);
     if (response.status === 429) return sendJson(res, 429, { error: 'Trop de tentatives. Réessaie plus tard.' }, origin);
     if (response.status === 400) return sendJson(res, 400, { error: body.error || 'Numéro invalide.' }, origin);
     if (!response.ok) return sendJson(res, 503, { error: body.error || 'Service de jumelage indisponible pour le moment.' }, origin);

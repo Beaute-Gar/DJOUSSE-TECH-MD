@@ -12,6 +12,42 @@ const statusCount = document.querySelector('[data-status-connection]');
 let statusTimer;
 let controller;
 
+/**
+ * Formate dynamiquement le numéro selon le pays (parenthèses, espaces, tirets)
+ */
+function formatPhoneNumber(value, countryCode) {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return '';
+
+  // États-Unis / Canada (+1) -> (XXX) XXX-XXXX
+  if (countryCode === '1') {
+    if (digits.length <= 3) return `(${digits}`;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  }
+
+  // France (+33) ou formats standards -> Groupes espacés
+  if (countryCode === '33' || countryCode === '237' || digits.length >= 8) {
+    return digits.slice(0, 10).replace(/(\d{1,3})(\d{2})?(\d{2})?(\d{2})?(\d{2})?/, (match, p1, p2, p3, p4, p5) => {
+      return [p1, p2, p3, p4, p5].filter(Boolean).join(' ');
+    });
+  }
+
+  return digits.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
+}
+
+numberField?.addEventListener('input', (e) => {
+  const countryDigits = String(countryField?.value || '').replace(/\D/g, '');
+  e.target.value = formatPhoneNumber(e.target.value, countryDigits);
+});
+
+countryField?.addEventListener('change', () => {
+  if (numberField && numberField.value) {
+    const countryDigits = String(countryField.value || '').replace(/\D/g, '');
+    numberField.value = formatPhoneNumber(numberField.value, countryDigits);
+  }
+});
+
 function message(text, state = '') {
   if (!statusLine) return;
   statusLine.textContent = text;
@@ -42,16 +78,17 @@ async function refreshStatus() {
 function explainError(error) {
   if (!(error instanceof ApiError)) return 'Service de jumelage indisponible pour le moment.';
   if (error.kind === 'invalid') return 'Numéro invalide. Vérifie l’indicatif et saisis uniquement des chiffres.';
-  if (error.kind === 'session') return 'Une session est déjà enregistrée sur ce bot (HTTP 409). Le jumelage est refusé.';
+  if (error.kind === 'session') return 'Une session est déjà enregistrée pour ce numéro.';
   if (error.kind === 'rate-limit') return 'Trop de tentatives. Patiente avant de demander un nouveau code.';
   return 'Service de jumelage indisponible pour le moment.';
 }
 
 form?.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const localValue = String(numberField?.value || '').trim();
+  const localValue = String(numberField?.value || '').replace(/\D/g, '');
   const countryDigits = String(countryField?.value || '').replace(/\D/g, '');
   const allDigits = `${countryDigits}${localValue}`;
+
   if (!/^\d+$/.test(localValue) || !/^[1-9]\d{7,14}$/.test(allDigits)) {
     message('Numéro invalide : vérifie l’indicatif et saisis entre 8 et 15 chiffres au total.', 'error');
     numberField?.focus();
@@ -65,6 +102,7 @@ form?.addEventListener('submit', async (event) => {
   controller?.abort();
   controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
+
   try {
     const code = await getPairingCode(`+${allDigits}`, { signal: controller.signal });
     if (codeBox) codeBox.textContent = `${code.slice(0, 4)} ${code.slice(4)}`;
