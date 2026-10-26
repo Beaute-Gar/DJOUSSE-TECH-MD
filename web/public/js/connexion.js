@@ -26,7 +26,7 @@ function formatPhoneNumber(value, countryCode) {
     return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
   }
 
-  // France (+33) ou formats standards -> Groupes espacés
+  // France (+33), Cameroun (+237) ou formats standards -> Groupes espacés
   if (countryCode === '33' || countryCode === '237' || digits.length >= 8) {
     return digits.slice(0, 10).replace(/(\d{1,3})(\d{2})?(\d{2})?(\d{2})?(\d{2})?/, (match, p1, p2, p3, p4, p5) => {
       return [p1, p2, p3, p4, p5].filter(Boolean).join(' ');
@@ -54,24 +54,23 @@ function message(text, state = '') {
   statusLine.dataset.state = state;
 }
 
-function setConnectionStatus(status) {
+/**
+ * Met à jour l'affichage avec l'état réel du serveur
+ */
+function setServerStatus(isOnline) {
   if (!connectionBadge) return;
-  const isConnected = Boolean(status?.connected);
-  connectionBadge.dataset.state = isConnected ? 'online' : 'offline';
-  connectionBadge.textContent = isConnected ? 'Bot connecté' : 'Bot non connecté';
-  if (statusCount) statusCount.textContent = status?.active == null ? '—' : String(status.active);
+  connectionBadge.dataset.state = isOnline ? 'online' : 'offline';
+  connectionBadge.textContent = isOnline ? 'Serveur en ligne (Prêt)' : 'Serveur hors ligne / Injoignable';
+  if (statusCount) statusCount.textContent = isOnline ? 'Actif' : 'Inactif';
 }
 
 async function refreshStatus() {
   try {
-    const status = await getStatus();
-    setConnectionStatus(status);
+    await getStatus();
+    // Si l'appel API réussit, le serveur est pleinement en ligne
+    setServerStatus(true);
   } catch {
-    if (connectionBadge) {
-      connectionBadge.dataset.state = 'offline';
-      connectionBadge.textContent = 'Service de jumelage indisponible pour le moment.';
-    }
-    if (statusCount) statusCount.textContent = '—';
+    setServerStatus(false);
   }
 }
 

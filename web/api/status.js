@@ -30,7 +30,9 @@ module.exports = async function status(req, res) {
   const originHeader = String(req.headers.origin || '');
   const expected = expectedOrigin(req);
   const origin = originHeader && normalizedOrigin(originHeader) === expected ? expected : '';
+  
   if (originHeader && !origin) return sendJson(res, 403, { error: 'Origine refusée.' });
+  
   if (req.method === 'OPTIONS') {
     if (!origin) return sendJson(res, 403, { error: 'Origine refusée.' });
     res.writeHead(204, {
@@ -42,6 +44,7 @@ module.exports = async function status(req, res) {
     });
     return res.end();
   }
+
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'Méthode non autorisée.' }, origin);
   if (!process.env.PAIRING_API_URL) return sendJson(res, 503, { error: 'Service de jumelage indisponible pour le moment.' }, origin);
 
@@ -60,14 +63,18 @@ module.exports = async function status(req, res) {
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 9000);
+  
   try {
     const headers = { 'Accept': 'application/json' };
     if (process.env.PAIRING_API_TOKEN) headers['x-api-token'] = process.env.PAIRING_API_TOKEN;
+    
     const response = await fetch(target, { headers, cache: 'no-store', signal: controller.signal });
     if (!response.ok) return sendJson(res, 503, { error: 'Service de jumelage indisponible pour le moment.' }, origin);
+    
     const body = await response.json();
     return sendJson(res, 200, {
       ok: true,
+      online: true, // Confirme que le serveur distant répond parfaitement
       connected: Boolean(body?.connected),
       connection: typeof body?.connection === 'string' ? body.connection.slice(0, 40) : 'INCONNU',
       sessions: Number.isFinite(Number(body?.sessions)) ? Number(body.sessions) : 0,
