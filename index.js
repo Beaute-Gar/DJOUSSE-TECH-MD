@@ -329,6 +329,21 @@ async function createSession(sessionId) {
   const auth = await createAuthState(sessionId);
   const version = await resolveWaVersion();
 
+  /* Auto-réparation des credentials corrompus.
+     Une tentative de jumelage avortée (bug 428 historique) laissait
+     creds.me défini SANS enregistrement, et cet état était persisté dans
+     MongoDB. Baileys choisit alors le nœud « login » au lieu de
+     « registration » au handshake : WhatsApp génère le code mais le
+     jumelage échoue côté téléphone (« code non reconnu »), et la session
+     principale n'atteint jamais CONNECTÉ. On repart d'un état propre. */
+  const creds = auth.state?.creds;
+  if (creds?.me && !creds.registered) {
+    console.warn(`[AUTH:${sessionId}] creds.me corrompu (${creds.me.id}) sans enregistrement — réinitialisation pour forcer le nœud « registration ».`);
+    creds.me = undefined;
+    creds.pairingCode = undefined;
+  }
+  console.log(`[AUTH:${sessionId}] État : me=${creds?.me ? 'présent' : 'absent'}, registered=${Boolean(creds?.registered)} (me absent → nœud « registration »).`);
+
   const sock = makeWASocket({
     ...(version ? { version } : {}),
     auth: auth.state,
