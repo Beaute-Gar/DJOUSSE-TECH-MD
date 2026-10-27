@@ -29,6 +29,11 @@
  *   l'envoi, ce qui sabote le handshake (nœud « login » au lieu de
  *   « registration » → boucle 401/428). Un clic multiple réutilise le
  *   même code au lieu d'invalider celui déjà affiché.
+ * • Pairage auditable : les réponses IQ de WhatsApp au companion_hello
+ *   (acceptation ou 400 bad-request) sont journalisées — elles étaient
+ *   jusqu'ici invisibles (logger silencieux). Version WA Web rafraîchie
+ *   au démarrage (fetchLatestBaileysVersion) et triplet browser conforme
+ *   à la config confirmée pour le pairage (Baileys #1761).
  * • Aucune erreur de socket ne fait planter le process : listeners
  *   encapsulés + garde-fous unhandledRejection / uncaughtException,
  *   et res.headersSent avant toute réponse d'erreur.
@@ -52,6 +57,7 @@ const {
   BufferJSON,
   proto,
   useMultiFileAuthState,
+  fetchLatestBaileysVersion,
 } = require('@whiskeysockets/baileys');
 const path = require('path');
 const fs = require('fs');
@@ -101,6 +107,29 @@ function ensureMongo() {
     });
   }
   return mongoPromise;
+}
+
+/* ───────────── Version de WhatsApp Web ─────────────
+   La version codée en dur dans Baileys 6.7.24 vieillit et fait échouer
+   l'enregistrement/pairage (405, bad-request…). On la rafraîchit une
+   fois au démarrage, avec repli silencieux sur la version interne. */
+
+let waVersionPromise = null;
+
+function resolveWaVersion() {
+  if (!waVersionPromise) {
+    waVersionPromise = (async () => {
+      try {
+        const { version, isLatest } = await fetchLatestBaileysVersion();
+        console.log(`[WA] Version WhatsApp Web : ${version.join('.')} (à jour : ${isLatest})`);
+        return Array.isArray(version) && version.length ? version : null;
+      } catch (err) {
+        console.warn('[WA] Version dynamique indisponible — version interne de Baileys utilisée :', err?.message || err);
+        return null;
+      }
+    })();
+  }
+  return waVersionPromise;
 }
 
 /* Arrêt propre (Render envoie SIGTERM avant de redéployer). */
@@ -298,12 +327,16 @@ function handleConnectionUpdate(sessionId, sock, auth, update) {
 /** Crée réellement la socket d'une session (appel verrouillé). */
 async function createSession(sessionId) {
   const auth = await createAuthState(sessionId);
+  const version = await resolveWaVersion();
 
   const sock = makeWASocket({
+    ...(version ? { version } : {}),
     auth: auth.state,
     printQRInTerminal: false,
-    logger: pino({ level: 'silent' }),
-    browser: ['DJOUSSE-TECH-MD', 'Chrome', '1.0.0'],
+    logger: pino({ level: process.env.WA_LOG_LEVEL || 'silent' }),
+    // Triplet confirmé pour le pairage (issue Baileys #1761) :
+    // un OS/plateforme exotique fait rejeter le companion_hello (400).
+    browser: ['Ubuntu', 'Chrome', '20.0.04'],
   });
 
   sock.ev.on('creds.update', auth.saveCreds);
@@ -325,6 +358,23 @@ async function createSession(sessionId) {
       if (body) console.log(`[CMD:${sessionId}] Message reçu : ${body}`);
     } catch (err) {
       console.error(`[ERROR:${sessionId}] Erreur lors du traitement :`, err);
+    }
+  });
+
+  // Diagnostics pairage : la réponse de WhatsApp au companion_hello
+  // (acceptation, ou 400 bad-request comme dans Baileys #1761) était
+  // jusqu'ici noyée dans le logger silencieux.
+  sock.ws?.on?.('CB:iq', (node) => {
+    try {
+      const type = node?.attrs?.type;
+      const body = JSON.stringify(node?.content ?? '').slice(0, 400);
+      if (type === 'error') {
+        console.error(`[SOCKET:${sessionId}] IQ WhatsApp REFUSÉ (id ${node?.attrs?.id}) : ${body}`);
+      } else if (type === 'result' && /link_code|companion/i.test(body)) {
+        console.log(`[SOCKET:${sessionId}] Réponse pairage WhatsApp : ${body}`);
+      }
+    } catch (err) {
+      console.error(`[SOCKET:${sessionId}] Diag IQ :`, err?.message || err);
     }
   });
 
