@@ -2981,8 +2981,22 @@ try {
         · gi         → doublon silva de groupinfo/ginfo (décision créateur)
         · memberlist → 3ᵉ nom silva de listmembers.members (budget 1+1) */
 /* Doublons silva restants découverts à l'Étape 2 — même traitement. */
-for (const nomSupprime of ['gi', 'memberlist', 'gcinfo', 'groupdesc', 'invitelink', 'resetlink']) {
+for (const nomSupprime of ['gi', 'memberlist', 'gcinfo', 'groupdesc']) {
   if (commands.delete(nomSupprime)) console.log(`[REGISTRE] "${nomSupprime}" retiré (doublon)`);
+}
+/* invitelink / resetlink — RÉINTÉGRÉS (décision créateur 28/10) :
+   ce sont les noms CANONIQUES de leur entrée (entry.name = invitelink /
+   resetlink) ; les retirer laissait l'entrée injoignable sous son propre
+   nom (« COMMANDE INVALIDE » pour un ancien raccourci qui fonctionnait).
+   Chaque clé est simplement reliée à sa propre entrée existante :
+   2 clés/entrée = budget « 1 nom + 1 alias » respecté, aucun handler ni
+   fichier plugin touché. Les survivants groupinvite/newlink sont conservés. */
+for (const [ancienNom, survivant] of [['invitelink', 'groupinvite'], ['resetlink', 'newlink']]) {
+  const entree = commands.get(survivant);
+  if (entree && !commands.has(ancienNom)) {
+    commands.set(ancienNom, entree);
+    console.log(`[REGISTRE] "${ancienNom}" réintégré (même entrée que "${survivant}")`);
+  }
 }
 
 /* ── PHASE B2 — dédoublonnage SILVA : 116 commandes → 1 primaire + 1 alias.
@@ -3406,6 +3420,12 @@ async function executeCommand(sock, msg, name, args, base) {
     content: base.content,
     args,
     q: args.join(' '),
+    /* Nom de commande INVOQUÉ (sans préfixe, en minuscules).
+       Les plugins tiers dispatchent dessus (`ctx.command`) : sans cette
+       clé, tous leurs `if (command === 'x')` restaient faux et ils
+       se terminaient sans envoyer MOINDRE message (constaté sur
+       .newsletter, .setgreet, .setbgm, .rules — silencieux). */
+    command: String(name).toLowerCase(),
     /* Réponses : tout ce qui commence par ❌ est automatiquement
        encadré dans le style ERREUR officiel (rendu centralisé) ;
        les cadres (╭…) sont transmis tels quels. */

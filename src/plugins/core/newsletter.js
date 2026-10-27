@@ -12,7 +12,12 @@ module.exports = {
         const { reply, prefix } = ctx;
         const cmd = (message.key?.id && ctx.text === undefined)
             ? '' : (args[0] || '').toLowerCase();
-        const command = ctx.text?.trim().split(/\s+/)[0]?.toLowerCase().replace(prefix, '') || '';
+        /* `ctx.command` = nom réellement invoqué (fourni par executeCommand).
+           Dérivé de `ctx.text` avant → `ctx.text` ne contient QUE les
+           arguments (« » pour `.newsletter`) → toutes les branches
+           restaient fausses et la famille entière était muette. */
+        const command = (ctx.command || '')
+            || ctx.text?.trim().split(/\s+/)[0]?.toLowerCase().replace(prefix, '') || '';
 
         const jid = args[0]?.trim();
 

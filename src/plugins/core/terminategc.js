@@ -21,7 +21,14 @@ module.exports = {
         // Bot must be admin to kick members
         if (!isBotAdmin) return send(theme.botAdmin || '⛔ I need to be an admin to do this.');
 
-        const participants = groupMetadata?.participants || [];
+        /* L'adaptateur fournit `groupMetadata: null` (voir plugin-loader) :
+           sans repli, participants=[] → le bot QUITTAIT le groupe en
+           silence, sans expulser personne ni annoncer quoi que ce soit. */
+        const meta = groupMetadata
+            || await sock.groupMetadata(jid).catch(() => null);
+        if (!meta) return send('⛔ Impossible de récupérer les informations de ce groupe.');
+
+        const participants = meta.participants || [];
 
         // Determine bot's own JID to avoid kicking itself
         const botJid = sock.user?.id?.replace(/:.*@/, '@') || '';

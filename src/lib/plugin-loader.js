@@ -257,6 +257,9 @@ function adapterRun(plugin, send, config, style, deps = {}) {
       },
       body: ctx.q || args.join(' '),
       args,
+      /* Commande invoquée (transmise par executeCommand) — les plugins
+         tiers qui dispatchent sur `command` en dépendent. */
+      command: ctx.command,
     };
     await plugin.run(wrapped, ctx.msg, args, { ...extra, ...extraExtra(ctx) });
   };

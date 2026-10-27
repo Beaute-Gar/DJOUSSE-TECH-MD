@@ -17,8 +17,12 @@ module.exports = {
     permission:  'admin',
     group:       true,
     private:     false,
-    run: async (sock, message, args, { sender, groupId, prefix, isAdmin, contextInfo }) => {
-        const cmd   = message.body?.split(' ')[0]?.replace(prefix, '').toLowerCase();
+    run: async (sock, message, args, { sender, groupId, prefix, isAdmin, contextInfo, command }) => {
+        /* `command` = nom réellement invoqué (fourni par executeCommand).
+           Avant : `message.body` — propriété qui n'existe JAMAIS sur un
+           WAMessage Baileys → cmd=undefined → aucune branche ne
+           s'activait (.rules était muet même en groupe). */
+        const cmd   = command || message.body?.split(' ')[0]?.replace(prefix, '').toLowerCase();
         const rules = loadRules();
 
         if (cmd === 'rules') {

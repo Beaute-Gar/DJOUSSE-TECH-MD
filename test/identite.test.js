@@ -154,5 +154,5 @@ test('alerte hacktools sans ancienne marque', () => {
 test('chiffres du registre : totaux README vérifiables', () => {
   const vus = new Set(h.commands.values());
   assert.equal(vus.size, 851, '851 commandes distinctes (README)');
-  assert.equal(h.commands.size, 1598, '1598 noms au registre (README)');
+  assert.equal(h.commands.size, 1600, '1600 noms au registre (README)');
 });

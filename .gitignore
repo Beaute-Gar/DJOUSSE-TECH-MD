@@ -16,9 +16,12 @@ session.old-*/
 # Divers
 tmp/
 temp/
+logs/
 *.log
 *.backup
 _archive/
+# Artefact de rendu du menu (régénéré à chaque affichage)
+src/assets/menu.jpg
 .DS_Store
 Thumbs.db
 .vercel

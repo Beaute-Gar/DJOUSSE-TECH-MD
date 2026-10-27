@@ -177,7 +177,7 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 | | | | **Total (visibles)** | **844** |
 
 > **+ 8 commandes hors menus** (accès direct, ex. `.hacktools`) — total **851**.
-> **+ 747 alias** (1598 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
+> **+ 749 alias** (1600 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
 
 ---
 
