@@ -39,6 +39,14 @@
  *   et res.headersSent avant toute réponse d'erreur.
  * • Jeton x-api-token et formats de réponse conservés : compatibles
  *   avec le site (web/public/js/api.js) et le proxy Vercel (web/api/*).
+ * • Cerveau du bot RESTAURÉ : messages.upsert → handler.handleMessage,
+ *   messages.update → handleMessagesUpdate, group-participants.update →
+ *   handleGroupUpdate, groups.update → handleGroupInfo, presence.update →
+ *   lib/presence (.seen), labels.* → lib/labels, rejet d'appels
+ *   (REJECT_CALL), stats .diag (waStats), auto-owner, auto-bio, mode
+ *   nuit, scheduler. Câblage repris de l'entrée historique du bot —
+ *   la passerelle « gateway » ne faisait que journaliser les messages,
+ *   aucune commande n'était donc traitée sur Render.
  *
  * Variables d'environnement : MONGO_URI, MONGO_DB (défaut whatsapp_bot),
  * PAIRING_API_TOKEN, PORT.
@@ -58,9 +66,21 @@ const {
   proto,
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
+  makeCacheableSignalKeyStore,
 } = require('@whiskeysockets/baileys');
 const path = require('path');
 const fs = require('fs');
+
+/* ── Cerveau du bot : chargé UNE fois, partagé par toutes les sessions
+      (chemins confirmés de l'entrée hybride historique, bd31531). */
+const config = require('./src/config/config');
+const handler = require('./src/handlers/handler');
+const presence = require('./src/lib/presence');
+const labelsCache = require('./src/lib/labels');
+const waStats = require('./src/lib/waStats');
+const guardPerms = require('./src/guard/utils/perms');
+const guardNight = require('./src/guard/nightmode');
+const { textOf } = require('./src/guard/utils/message');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -122,9 +142,18 @@ function resolveWaVersion() {
       try {
         const { version, isLatest } = await fetchLatestBaileysVersion();
         console.log(`[WA] Version WhatsApp Web : ${version.join('.')} (à jour : ${isLatest})`);
-        return Array.isArray(version) && version.length ? version : null;
+        if (Array.isArray(version) && version.length) {
+          waStats.waVersion = version.join('.');
+          waStats.waVersionSource = isLatest ? 'dernière publiée' : 'dernière connue';
+          return version;
+        }
+        waStats.waVersion = 'embarquée';
+        waStats.waVersionSource = 'Baileys interne';
+        return null;
       } catch (err) {
         console.warn('[WA] Version dynamique indisponible — version interne de Baileys utilisée :', err?.message || err);
+        waStats.waVersion = 'embarquée';
+        waStats.waVersionSource = 'Baileys interne';
         return null;
       }
     })();
@@ -292,6 +321,7 @@ function handleConnectionUpdate(sessionId, sock, auth, update) {
       if (state.timer) clearTimeout(state.timer);
       reconnectState.delete(sessionId);
     }
+    onSocketOpen(sessionId, sock); // stats + auto-owner/bio + nuit + scheduler
     return;
   }
 
@@ -302,6 +332,13 @@ function handleConnectionUpdate(sessionId, sock, auth, update) {
 
   const code = lastDisconnect?.error?.output?.statusCode;
   console.log(`[SOCKET:${sessionId}] Connexion fermée (code ${code ?? 'inconnu'}).`);
+
+  // Stats lues par la commande .diag
+  waStats.lastDisconnectCode = code ?? null;
+  waStats.lastDisconnectAt = Date.now();
+  waStats.lastDisconnectMsg = lastDisconnect?.error?.message || '';
+  if (code === DisconnectReason.connectionReplaced) waStats.conflicts += 1;
+  if (code === 405) waStats.handshakeFails += 1;
 
   if (PURGE_CODES.includes(code)) {
     activeSessions.delete(sessionId);
@@ -324,6 +361,184 @@ function handleConnectionUpdate(sessionId, sock, auth, update) {
   scheduleReconnect(sessionId, sock);
 }
 
+/* ─────────── Cerveau du bot : câblage des événements ───────────
+   Conforme à l'entrée historique du bot (avant la régression
+   « gateway ») : TOUTES les sessions connectées alimentent le handler.
+   Le dédoublon est global au process : deux sessions compagnons du
+   même compte recevraient chaque message en double. */
+
+const IGNORED_ERRORS = [
+  'Bad MAC', 'Failed to decrypt', 'Session error', 'libsignal',
+  'session_cipher', 'decryptWithSessions', 'doDecryptWhisperMessage',
+  'MessageCounterError', 'Closing open session', 'Closing session',
+  'Key used already', 'Invalid PreKey', 'Duplicate Message',
+  'rate-overlimit',
+];
+
+const isIgnored = (value) => {
+  if (!value) return false;
+  const str = typeof value === 'string' ? value : (value.message || String(value));
+  return IGNORED_ERRORS.some((kw) => str.includes(kw));
+};
+
+const processedMessages = new Set();
+const DEDUP_MAX = 50000;
+const STATUS_JID = 'status@broadcast';
+
+function attachBotEvents(sessionId, sock) {
+  /* Messages entrants → handler (notify + append, sans filtre fromMe :
+     le handler décide lui-même — owner/self/public). */
+  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    if (type !== 'notify' && type !== 'append') return;
+
+    for (const msg of messages || []) {
+      try {
+        if (!msg?.key?.id) continue;
+
+        // Anti-doublon souple (clé globale : contact × id message)
+        const dedupKey = `${msg.key.remoteJid || ''}|${msg.key.id}`;
+        if (processedMessages.has(dedupKey)) continue;
+        if (processedMessages.size >= DEDUP_MAX) processedMessages.clear();
+        processedMessages.add(dedupKey);
+
+        if (!msg.message) continue;
+
+        const text = textOf(msg.message);
+        const from = msg.key.remoteJid || '?';
+        console.log(`[MSG:${sessionId}] fromMe=${!!msg.key.fromMe} ${from}${text ? ` : ${String(text).slice(0, 80)}` : ' [média/autre]'}`);
+
+        if (config.autoRead && !msg.key.fromMe && from !== STATUS_JID) {
+          await sock.readMessages([msg.key]).catch(() => {});
+        }
+
+        await handler.handleMessage(sock, msg);
+      } catch (err) {
+        if (!isIgnored(err?.message)) console.error(`[MSG:${sessionId}] messages.upsert:`, err?.message || err);
+      }
+    }
+  });
+
+  /* Éditions, votes de sondages, statut de livraison */
+  sock.ev.on('messages.update', async (updates) => {
+    try {
+      await handler.handleMessagesUpdate(sock, updates);
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error(`[SOCKET:${sessionId}] messages.update:`, err?.message || err);
+    }
+  });
+
+  /* Arrivées/départs de membres → welcome & goodbye + invalidation
+     du cache permissions guard (reprise auto des protections) */
+  sock.ev.on('group-participants.update', async (update) => {
+    try {
+      guardPerms.invalidate(update.id);
+      await handler.handleGroupUpdate(sock, update);
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error(`[SOCKET:${sessionId}] group-participants:`, err?.message || err);
+    }
+  });
+
+  /* Métadonnées de groupe (nom, description, ouverture) → journal .glog */
+  sock.ev.on('groups.update', async (updates) => {
+    try {
+      for (const u of updates || []) {
+        if (u?.id) guardPerms.invalidate(u.id);
+        await handler.handleGroupInfo(sock, u);
+      }
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error(`[SOCKET:${sessionId}] groups.update:`, err?.message || err);
+    }
+  });
+
+  /* Présence des contacts (.seen) → routage unique lib/presence.js */
+  sock.ev.on('presence.update', (update) => {
+    try {
+      presence.handle(update);
+    } catch (err) {
+      if (!isIgnored(err?.message)) console.error(`[SOCKET:${sessionId}] presence.update:`, err?.message || err);
+    }
+  });
+
+  /* Étiquettes Business → cache lib/labels.js */
+  sock.ev.on('labels.edit', (label) => {
+    try { labelsCache.onEdit(label); } catch { /* ignoré */ }
+  });
+  sock.ev.on('labels.association', (evt) => {
+    try { labelsCache.onAssociation(evt); } catch { /* ignoré */ }
+  });
+
+  /* Rejet d'appels entrants (REJECT_CALL, défaut activé) */
+  if (config.rejectCall) {
+    sock.ev.on('call', async (calls) => {
+      for (const call of calls || []) {
+        if (call.status !== 'offer') continue;
+        try {
+          await sock.rejectCall(call.id, call.from);
+          console.log(`[CALL:${sessionId}] 📞 Appel rejeté (${call.from})`);
+        } catch (e) {
+          console.error(`[CALL:${sessionId}] Erreur rejet:`, e.message);
+        }
+      }
+    });
+  }
+}
+
+/** Post-connexion : stats, auto-owner, auto-bio, mode nuit, scheduler. */
+async function onSocketOpen(sessionId, sock) {
+  try {
+    waStats.connects += 1;
+    waStats.connectedSince = Date.now();
+
+    // ── AUTO-OWNER : le numéro qui se connecte devient owner ──
+    // (désactivable via AUTO_OWNER=false) — sock.user.id = "2376…:xx@s.whatsapp.net"
+    if (config.autoOwner === false) {
+      console.log('[OWNER] AUTO_OWNER désactivé — owners = .env uniquement');
+    } else {
+      const connectedNum = String(sock.user?.id || '').replace(/:\d+/, '').replace(/\D/g, '');
+      if (connectedNum && connectedNum.length >= 8) {
+        const owners = new Set(
+          (config.ownerNumber || []).map((n) => String(n).replace(/\D/g, '')).filter(Boolean)
+        );
+        owners.add(connectedNum);
+        config.ownerNumber = [...owners];
+        if (handler.state) {
+          handler.state.settings = handler.state.settings || {};
+          handler.state.settings.sessionOwner = connectedNum;
+          handler.state.settings.owners = config.ownerNumber;
+          if (handler.state.settings.selfMode === undefined) {
+            handler.state.settings.selfMode = false;
+          }
+          if (typeof handler.saveState === 'function') handler.saveState(true);
+        }
+        console.log(`[OWNER:${sessionId}] Session = +${connectedNum} → owner(s): ${config.ownerNumber.map((n) => '+' + n).join(', ')}`);
+      }
+    }
+
+    if (config.autoBio && sock.user?.id) {
+      await sock.updateProfileStatus(`${config.botName} | En ligne`).catch(() => {});
+    }
+
+    try { guardNight.start(sock); } catch (e) { console.error('[NUIT]', e.message); }
+    try {
+      const sch = handler.getScheduler && handler.getScheduler();
+      if (sch) sch.start(sock);
+    } catch (e) { console.error('[SCHED]', e.message); }
+
+    // Porté TEDDY-XMD : toujours-en-ligne (si activé)
+    try {
+      if (handler.autoSettings && handler.startOnlineTimer) {
+        const auto = handler.autoSettings(handler.state?.settings?.portedAuto);
+        if (auto.alwaysonline) {
+          handler.startOnlineTimer(sock);
+          console.log('[AUTO] toujours-en-ligne réactivé (réglage conservé)');
+        }
+      }
+    } catch (e) { console.error('[AUTO]', e.message); }
+  } catch (err) {
+    console.error(`[OPEN:${sessionId}]`, err?.message || err);
+  }
+}
+
 /** Crée réellement la socket d'une session (appel verrouillé). */
 async function createSession(sessionId) {
   const auth = await createAuthState(sessionId);
@@ -344,14 +559,29 @@ async function createSession(sessionId) {
   }
   console.log(`[AUTH:${sessionId}] État : me=${creds?.me ? 'présent' : 'absent'}, registered=${Boolean(creds?.registered)} (me absent → nœud « registration »).`);
 
+  const waLogger = pino({ level: process.env.WA_LOG_LEVEL || 'silent' });
   const sock = makeWASocket({
     ...(version ? { version } : {}),
-    auth: auth.state,
+    // KeyStore caché (recommandation Baileys + entrée historique) :
+    // évite les allers-retours Mongo pour chaque pré-clé.
+    auth: {
+      creds: auth.state.creds,
+      keys: makeCacheableSignalKeyStore(auth.state.keys, waLogger),
+    },
     printQRInTerminal: false,
-    logger: pino({ level: process.env.WA_LOG_LEVEL || 'silent' }),
+    logger: waLogger,
     // Triplet confirmé pour le pairage (issue Baileys #1761) :
     // un OS/plateforme exotique fait rejeter le companion_hello (400).
     browser: ['Ubuntu', 'Chrome', '20.0.04'],
+    syncFullHistory: false,
+    markOnlineOnConnect: !!config.alwaysOnline,
+    getMessage: async (key) => {
+      try {
+        return await handler.getMessageForBaileys(key);
+      } catch {
+        return undefined;
+      }
+    },
   });
 
   sock.ev.on('creds.update', auth.saveCreds);
@@ -364,17 +594,8 @@ async function createSession(sessionId) {
     }
   });
 
-  // Journal des messages reçus (la logique de commandes vit ailleurs).
-  sock.ev.on('messages.upsert', (upsert) => {
-    try {
-      const msg = upsert?.messages?.[0];
-      if (!msg || msg.key.fromMe) return;
-      const body = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
-      if (body) console.log(`[CMD:${sessionId}] Message reçu : ${body}`);
-    } catch (err) {
-      console.error(`[ERROR:${sessionId}] Erreur lors du traitement :`, err);
-    }
-  });
+  // Cerveau du bot : messages → handler, groupes, présence, labels, calls
+  attachBotEvents(sessionId, sock);
 
   // Diagnostics pairage : la réponse de WhatsApp au companion_hello
   // (acceptation, ou 400 bad-request comme dans Baileys #1761) était
@@ -500,6 +721,9 @@ function obtainPairingCode(sessionId, sock, cleanPhone) {
 
     const code = rawCode?.match(/.{1,4}/g)?.join('-') || rawCode;
     pairingCodeCache.set(sessionId, { code, at: Date.now(), sock });
+    // Compteurs lus par la commande .diag
+    waStats.pairingAttempts += 1;
+    waStats.lastPairingCodeAt = Date.now();
     return code;
   })().finally(() => pairingFlights.delete(sessionId));
 
@@ -526,8 +750,13 @@ app.get('/status', (req, res) => {
     return res.status(401).json({ error: 'Jeton d\'API invalide.' });
   }
 
-  const defaultSock = activeSessions.get(DEFAULT_SESSION);
-  const isConnected = Boolean(defaultSock?.user);
+  // « connecté » = AU MOINS UNE session possède un utilisateur WhatsApp
+  // (la session principale peut être en attente pendant qu'une session
+  //  pairée via le site est déjà connectée).
+  let isConnected = false;
+  for (const sock of activeSessions.values()) {
+    if (sock?.user) { isConnected = true; break; }
+  }
 
   return res.status(200).json({
     ok: true,
