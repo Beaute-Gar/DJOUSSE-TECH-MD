@@ -1,173 +1,463 @@
+'use strict';
+/**
+ * DJOUSSE VIRTUAL GATEWAY — index.js
+ *
+ * Passerelle HTTP de jumelage WhatsApp (Express + Baileys + MongoDB Atlas).
+ *
+ *   GET  /         → healthcheck simple
+ *   GET  /status   → {ok, connected, connection, sessions, active}  (jeton x-api-token)
+ *   POST /pair     → {success, code} — code de jumelage 8 caractères
+ *
+ * ── Robustesse ────────────────────────────────────────────────────────
+ * • Une SEULE connexion MongoDB, établie puis mise en cache : toutes les
+ *   lectures/écritures attendent la même promesse. Fini le
+ *   « Topology is closed » dû à deux appels concurrents pendant la
+ *   négociation (boot de djsession + requête /pair).
+ * • Sessions strictement isolées : chaque numéro possède sa collection
+ *   et son dossier propres (session_<num>), la session principale
+ *   « djsession » n'est jamais mélangée aux tentatives de jumelage.
+ * • Une seule socket vivante par session (verrou d'initialisation +
+ *   contrôle d'identité à la fermeture) : plus de duel
+ *   « connection replaced » entre deux instances de la même session.
+ * • Reconnexion automatique avec back-off plafonné ; en 401/500/411/403
+ *   (session révoquée ou invalide) les données sont purgées pour
+ *   repartir sur une base propre ; en 440 (connexion remplacée) on
+ *   n'entre surtout pas en boucle.
+ * • Jumelage synchronisé sur l'événement qr (signal post-handshake
+ *   officiellement utilisé par l'exemple Baileys) : un appel prématuré
+ *   de requestPairingCode échoue en 428 ET altère creds.me avant
+ *   l'envoi, ce qui sabote le handshake (nœud « login » au lieu de
+ *   « registration » → boucle 401/428). Un clic multiple réutilise le
+ *   même code au lieu d'invalider celui déjà affiché.
+ * • Aucune erreur de socket ne fait planter le process : listeners
+ *   encapsulés + garde-fous unhandledRejection / uncaughtException,
+ *   et res.headersSent avant toute réponse d'erreur.
+ * • Jeton x-api-token et formats de réponse conservés : compatibles
+ *   avec le site (web/public/js/api.js) et le proxy Vercel (web/api/*).
+ *
+ * Variables d'environnement : MONGO_URI, MONGO_DB (défaut whatsapp_bot),
+ * PAIRING_API_TOKEN, PORT.
+ */
+
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
-const { MongoClient } = require('mongodb');
-const { 
-  default: makeWASocket, 
-  DisconnectReason, 
-  initAuthCreds, 
-  BufferJSON, 
-  proto, 
-  useMultiFileAuthState 
-} = require('@whiskeysockets/baileys');
 const pino = require('pino');
+const { MongoClient } = require('mongodb');
+const {
+  default: makeWASocket,
+  DisconnectReason,
+  initAuthCreds,
+  BufferJSON,
+  proto,
+  useMultiFileAuthState,
+} = require('@whiskeysockets/baileys');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+const DEFAULT_SESSION = 'djsession';
+const MONGO_DB = process.env.MONGO_DB || 'whatsapp_bot';
+const MAX_RECONNECT_ATTEMPTS = 10;
+
+/* Codes Baileys définitifs : la session est morte, il faut purger. */
+const PURGE_CODES = [
+  DisconnectReason.loggedOut,            // 401 — déconnecté / révoqué
+  DisconnectReason.badSession,          // 500 — session corrompue
+  DisconnectReason.multideviceMismatch, // 411 — incompatibilité multi-appareils
+  DisconnectReason.forbidden,           // 403 — accès refusé
+];
 
 app.use(cors());
 app.use(express.json());
 
-// Stockage des sockets actifs par identifiant de session (multi-sessions)
-const activeSessions = new Map();
+/* ─────────────────────── MongoDB Atlas ───────────────────────
+   Une connexion unique partagée : la première initialisation lance la
+   promesse, tous les autres appels attendent CETTE promesse (aucune
+   requête ne part pendant la négociation). Si Atlas est injoignable on
+   retombe proprement sur le stockage local sans planter, et la
+   prochaine tentative réessaiera la connexion. */
+
+const mongoUri = process.env.MONGO_URI;
 let mongoClient = null;
+let mongoPromise = null;
+
+function ensureMongo() {
+  if (!mongoUri) return Promise.resolve(null);
+  if (!mongoPromise) {
+    mongoPromise = (async () => {
+      const client = new MongoClient(mongoUri, { serverSelectionTimeoutMS: 10000 });
+      await client.connect();
+      mongoClient = client;
+      console.log('[MONGODB] Connecté à MongoDB Atlas avec succès.');
+      return client;
+    })().catch((err) => {
+      console.error('[MONGODB] Connexion impossible :', err?.message || err);
+      mongoClient = null;
+      mongoPromise = null; // nouvelle tentative au prochain accès
+      return null;
+    });
+  }
+  return mongoPromise;
+}
+
+/* Arrêt propre (Render envoie SIGTERM avant de redéployer). */
+function shutdown(signal) {
+  console.log(`[HTTP] Arrêt demandé (${signal}).`);
+  const done = () => process.exit(0);
+  if (!mongoClient) return done();
+  Promise.resolve(mongoClient.close()).catch(() => {}).then(done);
+  setTimeout(done, 3000).unref();
+}
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+/* Filet de sécurité : une promesse fuyante ne doit jamais tuer le
+   service de jumelage (la cause n°1 de « planlage » soudain). */
+process.on('unhandledRejection', (reason) => {
+  console.error('[PROCESS] Rejet de promesse non géré (ignoré) :', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[PROCESS] Exception non capturée (ignorée) :', err);
+});
+
+/* ─────────────────── Sessions WhatsApp ─────────────────── */
+
+const activeSessions = new Map();  // sessionId → socket Baileys
+const initLocks = new Map();       // sessionId → promesse d'init en cours
+const reconnectState = new Map();  // sessionId → {attempts, timer}
 
 /**
- * Adaptateur de gestion d'état d'authentification WhatsApp sur MongoDB
+ * État d'authentification d'une session : MongoDB si possible,
+ * stockage local éphémère en secours. Fournit aussi `purge()`
+ * pour effacer proprement la session (révocation 401/500...).
  */
-async function getMongoAuthState(mongoUri, sessionId) {
-  if (!mongoClient) {
-    mongoClient = new MongoClient(mongoUri);
-    await mongoClient.connect();
-    console.log('[MONGODB] Connecté à MongoDB Atlas avec succès.');
-  }
+async function createAuthState(sessionId) {
+  const client = await ensureMongo();
 
-  const db = mongoClient.db('whatsapp_bot');
-  const collection = db.collection(`session_${sessionId}`);
+  if (client) {
+    const collection = client.db(MONGO_DB).collection(`session_${sessionId}`);
 
-  const writeData = async (data, id) => {
-    try {
-      const serialized = JSON.parse(JSON.stringify(data, BufferJSON.replacer));
-      await collection.updateOne({ _id: id }, { $set: { data: serialized } }, { upsert: true });
-    } catch (err) {
-      console.error(`[MONGODB] Échec d'écriture pour ${id}:`, err);
-    }
-  };
+    const writeData = async (data, id) => {
+      try {
+        const serialized = JSON.parse(JSON.stringify(data, BufferJSON.replacer));
+        await collection.updateOne({ _id: id }, { $set: { data: serialized } }, { upsert: true });
+      } catch (err) {
+        console.error(`[MONGODB] Échec d'écriture pour ${id} :`, err?.message || err);
+      }
+    };
 
-  const readData = async (id) => {
-    try {
-      const doc = await collection.findOne({ _id: id });
-      if (!doc || !doc.data) return null;
-      return JSON.parse(JSON.stringify(doc.data), BufferJSON.reviver);
-    } catch (err) {
-      return null;
-    }
-  };
+    const readData = async (id) => {
+      try {
+        const doc = await collection.findOne({ _id: id });
+        if (!doc || !doc.data) return null;
+        return JSON.parse(JSON.stringify(doc.data), BufferJSON.reviver);
+      } catch {
+        return null;
+      }
+    };
 
-  const removeData = async (id) => {
-    try {
-      await collection.deleteOne({ _id: id });
-    } catch {}
-  };
+    const removeData = async (id) => {
+      try { await collection.deleteOne({ _id: id }); } catch { /* ignoré */ }
+    };
 
-  const creds = (await readData('creds')) || initAuthCreds();
+    const creds = (await readData('creds')) || initAuthCreds();
 
-  return {
-    state: {
-      creds,
-      keys: {
-        get: async (type, ids) => {
-          const data = {};
-          for (const id of ids) {
-            let value = await readData(`${type}-${id}`);
-            if (type === 'app-state-sync-key' && value) {
-              value = proto.Message.AppStateSyncKeyData.fromObject(value);
+    return {
+      kind: 'mongodb',
+      state: {
+        creds,
+        keys: {
+          get: async (type, ids) => {
+            const data = {};
+            for (const id of ids) {
+              let value = await readData(`${type}-${id}`);
+              if (type === 'app-state-sync-key' && value) {
+                value = proto.Message.AppStateSyncKeyData.fromObject(value);
+              }
+              data[id] = value;
             }
-            data[id] = value;
-          }
-          return data;
-        },
-        set: async (data) => {
-          const tasks = [];
-          for (const category of Object.keys(data)) {
-            for (const id of Object.keys(data[category])) {
-              const value = data[category][id];
-              const key = `${category}-${id}`;
-              if (value) {
-                tasks.push(writeData(value, key));
-              } else {
-                tasks.push(removeData(key));
+            return data;
+          },
+          set: async (data) => {
+            const tasks = [];
+            for (const category of Object.keys(data)) {
+              for (const id of Object.keys(data[category])) {
+                const value = data[category][id];
+                const key = `${category}-${id}`;
+                if (value) tasks.push(writeData(value, key));
+                else tasks.push(removeData(key));
               }
             }
-          }
-          await Promise.all(tasks);
-        }
-      }
-    },
-    saveCreds: () => writeData(creds, 'creds')
+            await Promise.all(tasks);
+          },
+        },
+      },
+      saveCreds: () => writeData(creds, 'creds'),
+      purge: async () => { await collection.deleteMany({}); },
+    };
+  }
+
+  // Secours local : le jumelage reste possible même sans Atlas.
+  console.warn(`[WARN] ${mongoUri ? 'MongoDB injoignable' : 'MONGO_URI absent'} — session ${sessionId} en stockage local éphémère.`);
+  const dir = path.join(__dirname, 'storage', 'sessions', sessionId);
+  const { state, saveCreds } = await useMultiFileAuthState(dir);
+  return {
+    kind: 'local',
+    state,
+    saveCreds,
+    purge: async () => { await fs.promises.rm(dir, { recursive: true, force: true }); },
   };
 }
 
-/**
- * Initialisation d'une instance WhatsApp isolée
- */
-async function initWhatsAppSession(sessionId, cleanPhone) {
-  let authState;
-  const mongoUri = process.env.MONGO_URI;
+/** Reconnexion différée avec back-off (2 s → 30 s) et plafond d'essais. */
+function scheduleReconnect(sessionId, oldSock) {
+  const state = reconnectState.get(sessionId) || { attempts: 0, timer: null };
+  if (state.timer) return;
+  state.attempts += 1;
+  reconnectState.set(sessionId, state);
 
-  if (mongoUri) {
-    authState = await getMongoAuthState(mongoUri, sessionId);
-  } else {
-    console.warn('[WARN] MONGO_URI absent. Utilisation du stockage local éphémère.');
-    const sessionDir = path.join(__dirname, 'storage', 'sessions', sessionId);
-    authState = await useMultiFileAuthState(sessionDir);
+  if (state.attempts > MAX_RECONNECT_ATTEMPTS) {
+    console.warn(`[SOCKET:${sessionId}] Abandon des reconnections (${state.attempts - 1} échecs) — une nouvelle requête /pair relancera la session.`);
+    reconnectState.delete(sessionId);
+    if (oldSock && activeSessions.get(sessionId) === oldSock) activeSessions.delete(sessionId);
+    return;
   }
 
+  const delay = Math.min(30000, 2000 * state.attempts);
+  state.timer = setTimeout(async () => {
+    state.timer = null;
+    const current = activeSessions.get(sessionId);
+    if (current && current !== oldSock) return; // une instance plus récente a pris le relais
+    if (current === oldSock) activeSessions.delete(sessionId);
+    try {
+      console.log(`[SOCKET:${sessionId}] Reconnexion (tentative ${state.attempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+      await initWhatsAppSession(sessionId);
+    } catch (err) {
+      console.error(`[SOCKET:${sessionId}] Échec de reconnexion :`, err?.message || err);
+      scheduleReconnect(sessionId, null);
+    }
+  }, delay);
+}
+
+/** Traite les changements d'état d'une socket — ne doit jamais throw. */
+function handleConnectionUpdate(sessionId, sock, auth, update) {
+  const { connection, lastDisconnect } = update;
+
+  // Signal post-handshake : WhatsApp a confirmé la connexion (et non
+  // un simple ouverture TCP). Utilisé pour débloquer le jumelage.
+  if (update.qr) {
+    if (!qrSeen.has(sock)) {
+      qrSeen.add(sock);
+      console.log(`[SOCKET:${sessionId}] Handshake WhatsApp confirmé — prêt pour le code de jumelage.`);
+    }
+    return;
+  }
+
+  if (connection === 'open') {
+    console.log(`[SOCKET:${sessionId}] WhatsApp CONNECTÉ avec succès !`);
+    const state = reconnectState.get(sessionId);
+    if (state) {
+      if (state.timer) clearTimeout(state.timer);
+      reconnectState.delete(sessionId);
+    }
+    return;
+  }
+
+  if (connection !== 'close') return;
+
+  // Une instance plus récente a déjà remplacé cette socket : on ignore.
+  if (activeSessions.get(sessionId) !== sock) return;
+
+  const code = lastDisconnect?.error?.output?.statusCode;
+  console.log(`[SOCKET:${sessionId}] Connexion fermée (code ${code ?? 'inconnu'}).`);
+
+  if (PURGE_CODES.includes(code)) {
+    activeSessions.delete(sessionId);
+    console.log(`[SOCKET:${sessionId}] Session révoquée (${code}) — purge des données pour un jumelage propre.`);
+    auth.purge()
+      .catch((err) => console.error(`[SOCKET:${sessionId}] Purge impossible :`, err?.message || err))
+      .finally(() => scheduleReconnect(sessionId, sock));
+    return;
+  }
+
+  if (code === DisconnectReason.connectionReplaced) {
+    // 440 : une autre instance utilise déjà ces identifiants.
+    // On retire la socket SANS purger et SANS reconnecter (sinon boucle).
+    activeSessions.delete(sessionId);
+    console.warn(`[SOCKET:${sessionId}] Connexion remplacée par une autre instance (440) — reconnexion forcée évitée.`);
+    return;
+  }
+
+  // 428 (connectionClosed), 408 (timeout), 515 (restart), 503, inconnu…
+  scheduleReconnect(sessionId, sock);
+}
+
+/** Crée réellement la socket d'une session (appel verrouillé). */
+async function createSession(sessionId) {
+  const auth = await createAuthState(sessionId);
+
   const sock = makeWASocket({
-    auth: authState.state,
+    auth: auth.state,
     printQRInTerminal: false,
     logger: pino({ level: 'silent' }),
-    browser: ['DJOUSSE-TECH-MD', 'Chrome', '1.0.0']
+    browser: ['DJOUSSE-TECH-MD', 'Chrome', '1.0.0'],
   });
 
-  sock.ev.on('creds.update', authState.saveCreds);
+  sock.ev.on('creds.update', auth.saveCreds);
 
-  sock.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect } = update;
-    
-    if (connection === 'close') {
-      const statusCode = lastDisconnect?.error?.output?.statusCode;
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-      
-      console.log(`[SOCKET:${sessionId}] Connexion fermée (Code ${statusCode}). Reconnexion : ${shouldReconnect}`);
-      if (shouldReconnect) {
-        initWhatsAppSession(sessionId, cleanPhone);
-      } else {
-        activeSessions.delete(sessionId);
-      }
-    } else if (connection === 'open') {
-      console.log(`[SOCKET:${sessionId}] WhatsApp CONNECTÉ avec succès !`);
+  sock.ev.on('connection.update', (update) => {
+    try {
+      handleConnectionUpdate(sessionId, sock, auth, update);
+    } catch (err) {
+      console.error(`[SOCKET:${sessionId}] Erreur d'événement :`, err?.message || err);
     }
   });
 
-  // Gestion de la réception des messages
-  sock.ev.on('messages.upsert', async (m) => {
+  // Journal des messages reçus (la logique de commandes vit ailleurs).
+  sock.ev.on('messages.upsert', (upsert) => {
     try {
-      const msg = m.messages[0];
+      const msg = upsert?.messages?.[0];
       if (!msg || msg.key.fromMe) return;
-      
       const body = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
-      console.log(`[CMD:${sessionId}] Message reçu : ${body}`);
-      
-      // La logique de traitement de vos commandes s'exécute ici
-    } catch (e) {
-      console.error(`[ERROR:${sessionId}] Erreur lors du traitement :`, e);
+      if (body) console.log(`[CMD:${sessionId}] Message reçu : ${body}`);
+    } catch (err) {
+      console.error(`[ERROR:${sessionId}] Erreur lors du traitement :`, err);
     }
   });
 
   activeSessions.set(sessionId, sock);
+  console.log(`[SOCKET:${sessionId}] Instance initialisée (stockage : ${auth.kind}).`);
   return sock;
 }
 
-// Lancement automatique d'une session par défaut au démarrage
-const DEFAULT_SESSION = 'djsession';
-initWhatsAppSession(DEFAULT_SESSION).catch(console.error);
+/**
+ * Récupère ou crée la socket d'une session.
+ * Verrou par session : deux requêtes /pair simultanées pour le même
+ * numéro ne créent JAMAIS deux sockets concurrentes.
+ */
+function initWhatsAppSession(sessionId) {
+  const existing = activeSessions.get(sessionId);
+  if (existing) return Promise.resolve(existing);
 
-// Route de statut
+  const pending = initLocks.get(sessionId);
+  if (pending) return pending;
+
+  const task = createSession(sessionId).finally(() => initLocks.delete(sessionId));
+  initLocks.set(sessionId, task);
+  return task;
+}
+
+/* ─────────── Jumelage : synchronisation avec WhatsApp ─────────── */
+
+const qrSeen = new WeakSet();       // sockets ayant reçu l'événement qr
+const pairingFlights = new Map();   // sessionId → demande de code en cours
+const pairingCodeCache = new Map(); // sessionId → {code, at, sock}
+const PAIRING_CODE_TTL_MS = 60000;  // réutiliser le même code pendant 60 s
+const QR_WAIT_MS = 9000;
+
+/** Erreur portant le code HTTP à renvoyer. */
+function httpError(status, message) {
+  const err = new Error(message);
+  err.statusCode = status;
+  return err;
+}
+
+/**
+ * Attend la confirmation post-handshake de WhatsApp (événement qr),
+ * déjà reçue si la socket est plus âgée. Faux si la connexion tombe.
+ */
+function waitForQr(sock, timeoutMs) {
+  if (qrSeen.has(sock)) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    let settled = false;
+    let timer = null;
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      sock.ev.off('connection.update', onUpdate);
+      resolve(ok);
+    };
+    const onUpdate = (update) => {
+      if (update.qr) {
+        qrSeen.add(sock);
+        finish(true);
+      } else if (update.connection === 'open' || update.connection === 'close') {
+        finish(update.connection === 'open');
+      }
+    };
+    timer = setTimeout(() => finish(qrSeen.has(sock)), timeoutMs);
+    sock.ev.on('connection.update', onUpdate);
+  });
+}
+
+/**
+ * Obtient un code de jumelage de façon sûre et dédoublonnée :
+ * 1. réutilise le dernier code encore valide (clic multiples, onglets
+ *    multiples → sinon chaque nouvel envoi invaliderait le précédent) ;
+ * 2. partage une demande déjà en cours pour la même session ;
+ * 3. sinon attend le qr puis demande le code une seule fois.
+ */
+function obtainPairingCode(sessionId, sock, cleanPhone) {
+  const cached = pairingCodeCache.get(sessionId);
+  if (cached && cached.sock === sock && Date.now() - cached.at < PAIRING_CODE_TTL_MS) {
+    return Promise.resolve(cached.code);
+  }
+
+  const inFlight = pairingFlights.get(sessionId);
+  if (inFlight) return inFlight;
+
+  const flight = (async () => {
+    const ready = await waitForQr(sock, QR_WAIT_MS);
+    if (!ready) {
+      throw httpError(503, 'La connexion WhatsApp n\'est pas prête. Réessayez dans un instant.');
+    }
+    if (!sock.ws?.isOpen || typeof sock.requestPairingCode !== 'function') {
+      throw httpError(503, 'La connexion WhatsApp n\'est pas prête. Réessayez dans un instant.');
+    }
+    if (sock.authState?.creds?.registered) {
+      throw httpError(409, 'Une session est déjà enregistrée pour ce numéro.');
+    }
+
+    let rawCode;
+    try {
+      rawCode = await sock.requestPairingCode(cleanPhone);
+    } catch (err) {
+      const sc = err?.output?.statusCode;
+      if (sc === 428 || sc === DisconnectReason.connectionClosed) {
+        throw httpError(503, 'La connexion WhatsApp s\'est interrompue. Réessayez dans un instant.');
+      }
+      throw err;
+    }
+
+    const code = rawCode?.match(/.{1,4}/g)?.join('-') || rawCode;
+    pairingCodeCache.set(sessionId, { code, at: Date.now(), sock });
+    return code;
+  })().finally(() => pairingFlights.delete(sessionId));
+
+  pairingFlights.set(sessionId, flight);
+  return flight;
+}
+
+/* ─────────────────────── Routes HTTP ─────────────────────── */
+
+function authorized(req) {
+  const token = process.env.PAIRING_API_TOKEN;
+  if (!token) return true;
+  return req.headers['x-api-token'] === token;
+}
+
+// Healthcheck
+app.get('/', (req, res) => {
+  res.type('text/plain').send('DJOUSSE VIRTUAL GATEWAY est en ligne 🚀');
+});
+
+// État du bot (attendu par le site et le proxy Vercel web/api/status.js)
 app.get('/status', (req, res) => {
-  const tokenHeader = req.headers['x-api-token'];
-  if (process.env.PAIRING_API_TOKEN && tokenHeader !== process.env.PAIRING_API_TOKEN) {
+  if (!authorized(req)) {
     return res.status(401).json({ error: 'Jeton d\'API invalide.' });
   }
 
@@ -175,63 +465,69 @@ app.get('/status', (req, res) => {
   const isConnected = Boolean(defaultSock?.user);
 
   return res.status(200).json({
+    ok: true,
     connected: isConnected,
     connection: isConnected ? 'open' : 'connecting',
     sessions: activeSessions.size,
-    active: activeSessions.size
+    active: activeSessions.size,
   });
 });
 
-// Route de génération de code de pairage
+// Génération du code de jumelage 8 caractères
 app.post('/pair', async (req, res) => {
   try {
-    const tokenHeader = req.headers['x-api-token'];
-    if (process.env.PAIRING_API_TOKEN && tokenHeader !== process.env.PAIRING_API_TOKEN) {
+    if (!authorized(req)) {
       return res.status(401).json({ error: 'Jeton d\'API invalide.' });
     }
 
-    const { phone, sessionId: customSessionId } = req.body;
+    const { phone, sessionId: customSessionId } = req.body || {};
     if (!phone) {
       return res.status(400).json({ error: 'Numéro de téléphone requis.' });
     }
 
     const cleanPhone = String(phone).replace(/\D/g, '');
     if (!/^\d{8,15}$/.test(cleanPhone)) {
-      return res.status(400).json({ error: 'Format de numéro invalide.' });
+      return res.status(400).json({ error: 'Format de numéro invalide (8 à 15 chiffres).' });
     }
 
-    // Utilise un ID personnalisé (numéro) ou la session par défaut
+    // Session isolée par numéro (le proxy Vercel envoie aussi son sessionId)
     const sessionId = customSessionId || `session_${cleanPhone}`;
-    let sock = activeSessions.get(sessionId);
-
-    if (!sock) {
-      console.log(`[PAIRING] Création d'une nouvelle instance pour ${sessionId}...`);
-      sock = await initWhatsAppSession(sessionId, cleanPhone);
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(sessionId)) {
+      return res.status(400).json({ error: 'Identifiant de session invalide.' });
     }
 
-    // Attente active sécurisée si le socket démarre (max 5 secondes)
-    let attempts = 0;
-    while ((!sock || typeof sock.requestPairingCode !== 'function') && attempts < 10) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      attempts++;
+    console.log(`[PAIRING] Requête pour ${sessionId}...`);
+    const sock = await initWhatsAppSession(sessionId);
+
+    // Numéro déjà lié à une session → 409 (comme web/api/pair.js l'attend)
+    if (sock.authState?.creds?.registered) {
+      return res.status(409).json({ error: 'Une session est déjà enregistrée pour ce numéro.' });
     }
 
-    if (!sock || typeof sock.requestPairingCode !== 'function') {
-      return res.status(503).json({ error: 'Le serveur initialise le socket. Réessayez dans un instant.' });
-    }
-
-    const rawCode = await sock.requestPairingCode(cleanPhone);
-    const code = rawCode?.match(/.{1,4}/g)?.join('-') || rawCode;
+    // Code demandé uniquement après confirmation du handshake (qr),
+    // dédoublonné et réutilisé pendant 60 s (voir obtainPairingCode).
+    const code = await obtainPairingCode(sessionId, sock, cleanPhone);
 
     console.log(`[PAIRING API] Code généré pour +${cleanPhone} (Session: ${sessionId}) -> ${code}`);
     return res.status(200).json({ success: true, code });
-
-  } catch (e) {
-    console.error('[PAIRING API Error]:', e);
-    return res.status(500).json({ error: e.message || 'Erreur interne lors de la génération du code.' });
+  } catch (error) {
+    console.error('[PAIRING API Error]:', error);
+    if (res.headersSent) return; // jamais deux réponses → pas de crash
+    const status = error.statusCode || 500;
+    return res.status(status).json({ status: false, error: error.message || 'Erreur interne lors de la génération du code.' });
   }
 });
 
+/* ─────────────────────── Démarrage ─────────────────────── */
+
+// Réchauffe la connexion MongoDB en arrière-plan (sans bloquer l'HTTP)
+ensureMongo();
+
 app.listen(PORT, () => {
   console.log(`[HTTP] Serveur Web prêt et à l'écoute sur le port ${PORT}`);
+});
+
+// Session principale : démarrage automatique, reconnexion gérée par la socket.
+initWhatsAppSession(DEFAULT_SESSION).catch((err) => {
+  console.error(`[SOCKET:${DEFAULT_SESSION}] Échec du démarrage :`, err?.message || err);
 });
