@@ -82,14 +82,11 @@ test('versions tierces remplacées : .repo/.support/.ia maison', () => {
   assert.match(h.commands.get('support').desc, /Support & signalement/);
   assert.equal(h.commands.get('ia').cat, 6, '.ia visible en IA');
   /* l'historique reste joignable en direct mais sort des menus :
-     .djousse est le nom principal, .silva l'alias hérité */
+     .djousse est le nom principal ; l'ancien alias .silva est supprimé. */
   const djousse = h.commands.get('djousse');
   assert.ok(djousse, '.djousse enregistré (assistant maison)');
   assert.equal(djousse.cat, 99, '.djousse retiré des menus (.ia est la porte visible)');
-  const silva = h.commands.get('silva');
-  assert.ok(silva, '.silva toujours joignable (alias hérité, aucun usage cassé)');
-  assert.equal(silva, djousse, '.silva pointe sur le même gestionnaire que .djousse');
-  assert.equal(silva.cat, 99, '.silva retiré des menus');
+  assert.ok(!h.commands.has('silva'), '.silva supprimé selon la règle sans ancienne marque');
 });
 
 /* ── 3. Nettoyage des textes tierces ── */
@@ -153,6 +150,6 @@ test('alerte hacktools sans ancienne marque', () => {
 /* ── 6. Le registre total reste cohérent (pas de commande fantôme) ── */
 test('chiffres du registre : totaux README vérifiables', () => {
   const vus = new Set(h.commands.values());
-  assert.equal(vus.size, 851, '851 commandes distinctes (README)');
-  assert.equal(h.commands.size, 1600, '1600 noms au registre (README)');
+  assert.equal(vus.size, 1154, '1154 commandes distinctes (README)');
+  assert.equal(h.commands.size, 1590, '1590 noms au registre (README)');
 });

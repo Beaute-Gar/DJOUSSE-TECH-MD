@@ -7,14 +7,14 @@
 > **Des solutions fiables pour un avenir sans limites**
 
 <img
-  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=851+commandes+%C2%B7+12+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+14+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
-  alt="851 commandes · 12 catégories · Moteur DJOUSSE GUARD · IA Gemini"
+  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=1154+commandes+%C2%B7+12+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+14+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
+  alt="1154 commandes · 12 catégories · Moteur DJOUSSE GUARD · IA Gemini"
 />
 
 <br/>
 
 <img src="https://img.shields.io/badge/version-4.0.0-2ECC71?style=flat-square" alt="Version 4.0.0" />
-<img src="https://img.shields.io/badge/commandes-851-00b894?style=flat-square" alt="851 commandes" />
+<img src="https://img.shields.io/badge/commandes-1154-00b894?style=flat-square" alt="1154 commandes" />
 <img src="https://img.shields.io/badge/cat%C3%A9gories-12-111b26?style=flat-square" alt="12 catégories" />
 <img src="https://img.shields.io/badge/Baileys-6.7.24-25D366?style=flat-square&logo=whatsapp&logoColor=white" alt="Baileys 6.7.24" />
 <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 18+" />
@@ -163,21 +163,21 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 | # | Catégorie | | Commandes |
 |:-:|---|:-:|--:|
 | 1 | 🌟 **GÉNÉRAL** | | 9 |
-| 2 | 👥 **GROUPE** | | 92 |
-| 3 | 🛡️ **PROTECTION** | | 58 |
-| 4 | 🖼️ **STICKER & MEDIA** | | 446 |
-| 5 | 🧰 **OUTILS** | | 58 |
-| 6 | 🤖 **IA** | | 4 |
-| 7 | 🎲 **FUN** | | 83 |
-| 8 | 🔍 **RECHERCHE** | | 6 |
-| 9 | 👑 **OWNER** | | 71 |
-| 10 | 📦 **DIVERS** | | 13 |
-| 11 | ⬇️ **TÉLÉCHARGEMENT** | | 3 |
+| 2 | 👥 **GROUPE** | | 157 |
+| 3 | 🛡️ **PROTECTION** | | 139 |
+| 4 | 🖼️ **STICKER & MEDIA** | | 113 |
+| 5 | 🧰 **OUTILS** | | 258 |
+| 6 | 🤖 **IA** | | 59 |
+| 7 | 🎲 **FUN** | | 210 |
+| 8 | 🔍 **RECHERCHE** | | 15 |
+| 9 | 👑 **OWNER** | | 76 |
+| 10 | 📦 **DIVERS** | | 85 |
+| 11 | ⬇️ **TÉLÉCHARGEMENT** | | 24 |
 | 12 | 🔐 **ARCHIVES** | | 1 |
-| | | | **Total (visibles)** | **844** |
+| | | | **Total (visibles)** | **1146** |
 
-> **+ 8 commandes hors menus** (accès direct, ex. `.hacktools`) — total **851**.
-> **+ 749 alias** (1600 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
+> **+ 8 commandes hors menus** (accès direct, ex. `.hacktools`) — total **1154**.
+> **+ 436 alias** (1590 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
 
 ---
 
@@ -452,7 +452,7 @@ sur VPS, Docker, Render, Fly.io, Railway, Heroku ou Replit. Fichiers livrés :
 ```
 DJOUSSE-TECH-MD/
 ├── index.js          # Point d'entrée : connexion Baileys, QR/pairing, reconnexion
-├── handler.js        # 🧠 Cerveau unique - 851 commandes, menu, moteur d'événements
+├── handler.js        # 🧠 Cerveau unique - 1154 commandes, menu, moteur d'événements
 ├── config.js         # Toutes les constantes lues depuis .env (aucune logique métier)
 ├── style.js          # 🎨 Source unique du rendu (cadres ╭┄┄『 』┄❍, alphabet officiel)
 │
