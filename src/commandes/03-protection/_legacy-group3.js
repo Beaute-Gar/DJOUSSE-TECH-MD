@@ -414,7 +414,7 @@ module.exports = {
         }
 
         if (cmd === 'menus') {
-            const menuPlugin = require('../01-general/menu');
+            const menuPlugin = require('../01-general/_legacy-menu');
             if (menuPlugin?.run) return menuPlugin.run(sock, message, args, ctx);
             return send('❌ Menu plugin not found.');
         }

@@ -1,0 +1,7 @@
+// @legacy-order {"sourceFile":"02-groupe/groupstatus.js","sourceOrder":109,"definitionIndex":0,"entryOrder":312}
+'use strict';
+module.exports = {
+  __legacyCommand: {"source":"_legacy-groupstatus.js","sourceFile":"02-groupe/groupstatus.js","sourceOrder":109,"definitionIndex":0,"entryOrder":312,"names":["gexport"]},
+  commands: ["gexport"],
+  description: "Detailed group info, admin list, activity stats, join/leave log, age and export",
+};

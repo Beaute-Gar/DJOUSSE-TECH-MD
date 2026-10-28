@@ -1,6 +1,6 @@
 # Rapport du smoke test
 
-Généré automatiquement le 2026-10-28T16:58:41.338Z par `node scripts/smoke.js`.
+Généré automatiquement le 2026-10-28T18:22:49.228Z par `node scripts/smoke.js`.
 
 - Commandes distinctes : 1153
 - Testées : 1139

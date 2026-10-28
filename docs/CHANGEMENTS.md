@@ -10,7 +10,8 @@
 | 3 — catégories | `3a6a1d8` | Plugins déplacés sous `src/commandes/`, découverte récursive, chemins vérifiés. |
 | 4 — commandes maison | `1aa906b` | 101 modules maison par commande et chargeur `src/commandes/_maison.js`; les enregistrements restent à leur position historique. |
 | 5 — classement validé | `55d2df5`, `f2c5ee4`, `a9429b5` | Corrections de catégories validées, collisions de fichiers résolues, calculatrice consolidée. |
-| 6 — smoke et documentation | commit de cette phase | Harnais isolé, corrections de bugs déterministes, inventaire et rapports générés. |
+| 6 — smoke et documentation | `5f8dd10` | Harnais isolé, corrections de bugs déterministes, inventaire et rapports générés. |
+| 7 — modules plugins par commande | commit de cette phase | 779 modules d’enregistrement par commande; ordre, alias et logique existante conservés. |
 
 ## Chiffres vérifiés
 
@@ -20,7 +21,7 @@
 | Clés du registre (noms + alias joignables) | 1 600 | 1 589 |
 | Alias par commande | non limité | 0 ou 1 |
 | Alias joignables | 749 | 436 |
-| Lignes physiques de `src/handlers/handler.js` | 4 341 | 2 709 |
+| Lignes physiques de `src/handlers/handler.js` | 3 985 | 2 469 |
 
 La baisse de 313 alias joignables comprend **11 clés supprimées explicitement** et **302 noms conservés devenus des commandes principales** lorsque les anciennes familles ont été séparées. Elle ne représente donc pas 313 fonctionnalités supprimées.
 
@@ -103,7 +104,9 @@ Les 101 modules extraits sont répartis ainsi :
 
 `handler.js` conserve le moteur : état et cache, contexte et permissions, fonctions partagées, dispatch et menus. `setmenuimg` reste enregistré dans le handler car son cache est réaffecté localement. Les commandes issues de boucles et de registres — notamment les tables de bascules et les commandes `guard` — restent générées à leur emplacement d’origine afin de préserver l’ordre « dernier enregistrement gagnant ».
 
-Les plugins hérités qui déclarent plusieurs commandes dans un même fichier ont conservé leur fichier source, conformément à l’étape de déplacement qui imposait de garder les noms indexés par le chargeur. Les 101 extractions ci-dessus concernent les commandes maison du handler; la séparation physique de tous les modules plugins multi-commandes n’a pas été faite.
+Les 779 entrées plugins actives disposent maintenant chacune de leur propre fichier d’enregistrement dans la catégorie correspondante; un alias éventuel reste dans le même module. Les implémentations d’origine sont conservées intactes dans 185 modules `_legacy-*.js` ignorés par le scanner. Les wrappers sélectionnent la définition et les noms exacts, de sorte que l’état partagé et la logique métier existants ne sont pas dupliqués ni réécrits. Le chargeur et le scan récursif résolvent ces wrappers, préservent l’ordre historique des sources et gardent les filtres de sécurité. Le plugin `agent` conserve sa catégorie spéciale 99; la référence directe de `group3.js` au menu pointe maintenant vers son module partagé renommé.
+
+Les 101 commandes maison extraites de `handler.js` restent chacune dans leur propre module. Les commandes générées par les boucles et registres restent dans `handler.js`, comme demandé, afin de préserver leur ordre d’enregistrement.
 
 ## Corrections de bugs effectuées
 
@@ -121,3 +124,5 @@ Les plugins hérités qui déclarent plusieurs commandes dans un même fichier o
 `scripts/smoke.js` teste **1 139** commandes non exclues : **1 138 OK**, **1 PLANTE** (la commande `yt`, dont le réseau est volontairement bloqué), **0 SILENCIEUSE**, **0 UNDEFINED**, **0 TIMEOUT**. Les 14 commandes exclues (internes, redémarrage, shell, exécution de code, reset, logout et diffusion de masse) sont listées dans `docs/SMOKE.md`.
 
 Le script bloque le réseau, redirige les écritures vers un dossier temporaire et fournit un faux `sock`. **Aucune commande n’a été essayée sur un vrai compte, un vrai groupe ou un vrai réseau WhatsApp.** Les commandes qui nécessitent les API WhatsApp, le réseau ou des médias réels restent signalées comme non vérifiables dans `reports/smoke.json` et `docs/SMOKE.md`.
+
+Validation finale : **239/239 tests** réussis, `npm run check` réussi et aucun `require` relatif introuvable sous `src/`.

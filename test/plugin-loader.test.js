@@ -2,6 +2,9 @@
 /* Vrai test : adapter un plugin silva et EXÉCUTER sa commande pour de vrai. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 process.env.HACKTOOLS_PASSWORD = 'test';
 const h = require('../src/handlers/handler');
 
@@ -104,6 +107,87 @@ test('aucun plugin silva ne pose de listener (pas de double écoute)', () => {
     if (/\.ev\s*\.\s*on\s*\(/.test(src)) coupables.push(filePath);
   }
   assert.deepEqual(coupables, [], `plugins avec listener : ${coupables.join(', ')}`);
+});
+
+test('les modules séparés résolvent une commande depuis le plugin partagé', () => {
+  const { loadCommandPlugins, scanCommandFiles } = require('../src/commandes/_partage/scan');
+  const { loadCorePlugins } = require('../src/lib/plugin-loader');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legacy-plugin-test-'));
+  const secondSourceDirectory = path.join(root, '01-general');
+  const sourceDirectory = path.join(root, '02-groupe');
+  const wrapperDirectory = path.join(root, '05-outils');
+  fs.mkdirSync(secondSourceDirectory);
+  fs.mkdirSync(sourceDirectory);
+  fs.mkdirSync(wrapperDirectory);
+  const sourceFile = path.join(sourceDirectory, '_legacy-math.js');
+  const wrapperFile = path.join(wrapperDirectory, 'add.js');
+  const secondSourceFile = path.join(secondSourceDirectory, '_legacy-fun.js');
+  const secondWrapperFile = path.join(wrapperDirectory, 'a-first.js');
+  fs.writeFileSync(sourceFile, [
+    'module.exports = [',
+    '  { commands: ["add", "sum"], description: "Add", run: async () => "ok" },',
+    '  { commands: ["multiply"], description: "Multiply", run: async () => "mul" },',
+    '];',
+  ].join('\n'));
+  fs.writeFileSync(secondSourceFile, [
+    'module.exports = { commands: ["zeta"], description: "Zeta", run: async () => "z" };',
+  ].join('\n'));
+
+  const metadata = {
+    source: path.relative(path.dirname(wrapperFile), sourceFile),
+    sourceFile: path.join('02-groupe', 'math-tools.js'),
+    definitionIndex: 0,
+    entryOrder: 0,
+    names: ['add', 'sum'],
+    category: 5,
+  };
+  const secondMetadata = {
+    source: path.relative(path.dirname(secondWrapperFile), secondSourceFile),
+    sourceFile: path.join('01-general', 'z-original.js'),
+    definitionIndex: 0,
+    entryOrder: 1,
+    names: ['zeta'],
+    category: 5,
+  };
+  fs.writeFileSync(wrapperFile, [
+    `// @legacy-order ${JSON.stringify(metadata)}`,
+    'module.exports = { __legacyCommand: ' + JSON.stringify(metadata)
+      + ', commands: ["add", "sum"] };',
+  ].join('\n'));
+  fs.writeFileSync(secondWrapperFile, [
+    `// @legacy-order ${JSON.stringify(secondMetadata)}`,
+    'module.exports = { __legacyCommand: ' + JSON.stringify(secondMetadata)
+      + ', commands: ["zeta"] };',
+  ].join('\n'));
+
+  try {
+    const files = scanCommandFiles(root);
+    assert.deepEqual(files, [wrapperFile, secondWrapperFile]);
+    const plugins = loadCommandPlugins(root);
+    assert.equal(plugins.length, 2);
+    assert.deepEqual(plugins[0].commands, ['add', 'sum']);
+    assert.equal(typeof plugins[0].run, 'function');
+    assert.equal(plugins[0].description, 'Add');
+    assert.deepEqual(plugins[1].commands, ['zeta']);
+
+    const registrations = [];
+    const report = loadCorePlugins(
+      (names, options, handler) => registrations.push({ names, options, handler }),
+      {
+        config: { botName: 'Test Bot', prefix: '.' },
+        send: async () => {},
+        dir: root,
+        exists: () => false,
+      },
+    );
+    assert.equal(report.commandes, 3);
+    assert.deepEqual(registrations[0].names, ['add', 'sum']);
+    assert.equal(registrations[0].options.cat, 5);
+    assert.equal(typeof registrations[0].handler, 'function');
+    assert.deepEqual(registrations[1].names, ['zeta']);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test('les catégories silva recouvrent les 11 menus', () => {

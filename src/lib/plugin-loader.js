@@ -4,8 +4,9 @@
  * CHARGEUR DES PLUGINS TIERS — dossier commandes/ (ex-code Silva MD,
  * conservé tel quel : l'attribution complète est dans NOTICE)
  * ──────────────────────────────────────────────────────────────────
- * Les plugins tiers sont chargés tels quels depuis commandes/ puis
- * ADAPTÉS au registre DJOUSE (cmd()) :
+ * Les modules de commandes sont chargés depuis commandes/ puis
+ * ADAPTÉS au registre DJOUSE (cmd()). Les wrappers mono-commande
+ * résolvent leurs définitions partagées sous _legacy-*.js :
  *   · leur export ({ commands:[…], run }) devient une commande DJOUSE ;
  *   · leur contexte (sock, message, args, {sender, groupId}) est adapté ;
  *   · leurs envois sont ROUTÉS via lib/wa-send.js par un proxy — la règle
@@ -22,6 +23,7 @@
 const fs = require('fs');
 const path = require('path');
 const { scanCommandFiles } = require('../commandes/_partage/scan');
+const { resolveLegacyDefinition } = require('../commandes/_partage/legacy-plugin');
 
 /* Commandes refusées (règle de sécurité, non négociable) */
 const INTERDITS = /^(loccrash|crashbug|amountbug|pmbug|delaybug|docubug|unlimitedbug|bombug|lagbug|trollybug|terminate|hentai|hwaifu|trap|hneko|hentaivid|blowjobs|waifues|bug|crash|hack|xcrash)$/i;
@@ -333,8 +335,11 @@ function loadCorePlugins(cmd, deps) {
       continue;
     }
     let plugin;
+    let legacyMetadata = null;
     try {
       plugin = require(fp);
+      legacyMetadata = plugin && plugin.__legacyCommand || null;
+      plugin = resolveLegacyDefinition(plugin, fp);
     } catch (e) {
       rapport.ignores += 1;
       rapport.echecs.push(`${cheminRelatif}: chargement (${String(e.message).slice(0, 60)})`);
@@ -364,7 +369,8 @@ function loadCorePlugins(cmd, deps) {
         config && config.botName,
       );
       const directoryCategory = catDepuisDossier(cible, fp);
-      const cat = HORS_MENUS[f] ? 99
+      const cat = legacyMetadata?.category === 99 || HORS_MENUS[f] ? 99
+        : legacyMetadata ? directoryCategory
         : FICHIERS_MIXTES.has(f) || directoryCategory === null
           ? deduireCat(names.join(' '), desc, f)
           : directoryCategory;
