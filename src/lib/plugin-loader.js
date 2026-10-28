@@ -1,10 +1,10 @@
 'use strict';
 /**
  * ══════════════════════════════════════════════════════════════════
- * CHARGEUR DES PLUGINS TIERS — dossier plugins/core/ (ex-code Silva MD,
+ * CHARGEUR DES PLUGINS TIERS — dossier commandes/ (ex-code Silva MD,
  * conservé tel quel : l'attribution complète est dans NOTICE)
  * ──────────────────────────────────────────────────────────────────
- * Les plugins tiers sont chargés tels quels depuis plugins/core/ puis
+ * Les plugins tiers sont chargés tels quels depuis commandes/ puis
  * ADAPTÉS au registre DJOUSE (cmd()) :
  *   · leur export ({ commands:[…], run }) devient une commande DJOUSE ;
  *   · leur contexte (sock, message, args, {sender, groupId}) est adapté ;
@@ -21,6 +21,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { scanCommandFiles } = require('../commandes/_partage/scan');
 
 /* Commandes refusées (règle de sécurité, non négociable) */
 const INTERDITS = /^(loccrash|crashbug|amountbug|pmbug|delaybug|docubug|unlimitedbug|bombug|lagbug|trollybug|terminate|hentai|hwaifu|trap|hneko|hentaivid|blowjobs|waifues|bug|crash|hack|xcrash)$/i;
@@ -43,6 +44,26 @@ const BLOQUES_IDENTITE = /^(getcode|paircode|getpair|sessioncode|connectbot|lend
    casser chez les utilisateurs) — la porte d'entrée visible est .ia
    (maison), le nom principal est .djousse. */
 const HORS_MENUS = { 'agent.js': true };
+const FICHIERS_MIXTES = new Set([
+  'advanced-features.js',
+  'crypto-finance.js',
+  'dev-tools.js',
+  'education.js',
+  'entertainment.js',
+  'fun-facts.js',
+  'health-fitness.js',
+  'info-lookup.js',
+  'instagram.js',
+  'language-tools.js',
+  'math-tools.js',
+  'misc-extras.js',
+  'productivity.js',
+  'random-generators.js',
+  'security-tools.js',
+  'social-tools.js',
+  'text-tools.js',
+  'utility-tools.js',
+]);
 
 /* Plugins qui écoutent les ÉVÉNEMENTS du socket : refusés.
    Raison : index.js écoute déjà (messages.upsert, presence.update, call…).
@@ -69,6 +90,14 @@ function deduireCat(nom, desc, fichier) {
   const s = `${nom} ${desc} ${fichier}`;
   for (const m of MAP_CAT) if (m.rx.test(s)) return m.cat;
   return 5; // OUTILS par défaut
+}
+
+function catDepuisDossier(root, filePath) {
+  const firstDirectory = path.relative(root, filePath).split(path.sep)[0];
+  const match = /^(\d{2})-/.exec(firstDirectory || '');
+  if (!match) return null;
+  const category = Number(match[1]);
+  return category >= 1 && category <= 12 ? category : null;
 }
 
 /* Proxy d'envoi : tout sendMessage d'un plugin tiers passe par wa-send,
@@ -280,18 +309,19 @@ function extraExtra(ctx) {
 /* ══════════ chargement ══════════ */
 function loadCorePlugins(cmd, deps) {
   const { config, send, dir, exists, style, download } = deps;
-  const cible = dir || path.join(process.cwd(), 'src', 'plugins', 'core');
-  const rapport = { charges: 0, ignores: 0, commandes: 0, echecs: [], fichiers: [] };
+  const cible = dir || path.join(__dirname, '..', 'commandes');
+  const rapport = { charges: 0, ignores: 0, commandes: 0, echecs: [], fichiers: [], dir: cible };
   if (!fs.existsSync(cible)) return rapport;
-  const fichiers = fs.readdirSync(cible).filter((f) => f.endsWith('.js')).sort();
-  for (const f of fichiers) {
-    const fp = path.join(cible, f);
+  const fichiers = scanCommandFiles(cible);
+  for (const fp of fichiers) {
+    const cheminRelatif = path.relative(cible, fp);
+    const f = path.basename(fp);
     let src;
     try {
       src = fs.readFileSync(fp, 'utf8');
     } catch {
       rapport.ignores += 1;
-      rapport.echecs.push(`${f}: illisible`);
+      rapport.echecs.push(`${cheminRelatif}: illisible`);
       continue;
     }
     /* ── REFUS : un plugin qui écoute les événements du socket créerait
@@ -299,7 +329,7 @@ function loadCorePlugins(cmd, deps) {
        donc des réponses en double. Ce n'est pas négociable. ── */
     if (LISTENER_RE.test(src)) {
       rapport.ignores += 1;
-      rapport.echecs.push(`${f}: pose des listeners d'événements (refusé — index.js écoute déjà)`);
+      rapport.echecs.push(`${cheminRelatif}: pose des listeners d'événements (refusé — index.js écoute déjà)`);
       continue;
     }
     let plugin;
@@ -307,9 +337,10 @@ function loadCorePlugins(cmd, deps) {
       plugin = require(fp);
     } catch (e) {
       rapport.ignores += 1;
-      rapport.echecs.push(`${f}: chargement (${String(e.message).slice(0, 60)})`);
+      rapport.echecs.push(`${cheminRelatif}: chargement (${String(e.message).slice(0, 60)})`);
       continue;
     }
+    if (plugin && plugin.maison) continue;
     /* formes d'export acceptées */
     let defs = null;
     if (typeof plugin === 'function') defs = [{ run: plugin, commands: [] }];
@@ -324,7 +355,7 @@ function loadCorePlugins(cmd, deps) {
       const aliasesRaw = def.aliases || def.alias || [];
       if (!run || (typeof run !== 'function') || !Array.isArray(names) || !names.length) {
         rapport.ignores += 1;
-        rapport.echecs.push(`${f}: export incompatible`);
+        rapport.echecs.push(`${cheminRelatif}: export incompatible`);
         continue;
       }
       /* desc nettoyée ICI : c'est elle qui s'affiche dans les menus */
@@ -332,7 +363,11 @@ function loadCorePlugins(cmd, deps) {
         String(def.description || def.desc || '').slice(0, 120),
         config && config.botName,
       );
-      const cat = HORS_MENUS[f] ? 99 : deduireCat(names.join(' '), desc, f);
+      const directoryCategory = catDepuisDossier(cible, fp);
+      const cat = HORS_MENUS[f] ? 99
+        : FICHIERS_MIXTES.has(f) || directoryCategory === null
+          ? deduireCat(names.join(' '), desc, f)
+          : directoryCategory;
       const owner = /owner|sudo/i.test(String(def.permission || ''));
       const admin = /admin/i.test(String(def.permission || ''));
       const groupOnly = !!def.group;
@@ -350,7 +385,7 @@ function loadCorePlugins(cmd, deps) {
            commande protégée hacktools en cat 99), la version existante
            gagne. Le chargeur ne remplace jamais notre code. */
         .filter((n) => !(exists && exists(n)));
-      if (!noms.length) { rapport.ignores += 1; rapport.echecs.push(`${f}: commandes déjà présentes ou filtrées`); continue; }
+      if (!noms.length) { rapport.ignores += 1; rapport.echecs.push(`${cheminRelatif}: commandes déjà présentes ou filtrées`); continue; }
       try {
         cmd(noms, {
           cat, desc: desc || 'Commande silva', usage: noms[0],
@@ -359,10 +394,10 @@ function loadCorePlugins(cmd, deps) {
         }, runAdapte);
         rapport.charges += 1;
         rapport.commandes += noms.length;
-        if (!rapport.fichiers.includes(f)) rapport.fichiers.push(f);
+        if (!rapport.fichiers.includes(cheminRelatif)) rapport.fichiers.push(cheminRelatif);
       } catch (e) {
         rapport.ignores += 1;
-        rapport.echecs.push(`${f}: enregistrement (${String(e.message).slice(0, 60)})`);
+        rapport.echecs.push(`${cheminRelatif}: enregistrement (${String(e.message).slice(0, 60)})`);
       }
     }
   }
@@ -374,7 +409,7 @@ function compterSilva(rapport) {
   let n = 0;
   for (const f of rapport.fichiers) {
     try {
-      const p = require(path.join(rapport.dir || path.join(process.cwd(), 'src', 'plugins', 'silva'), f));
+      const p = require(path.join(rapport.dir || path.join(__dirname, '..', 'commandes'), f));
       const names = p.commands || p.command || [];
       const al = p.aliases || p.alias || [];
       n += (Array.isArray(names) ? names.length : 1) + (Array.isArray(al) ? al.length : 0);
@@ -385,6 +420,7 @@ function compterSilva(rapport) {
 
 module.exports = {
   loadCorePlugins, INTERDITS, BLOQUES_IDENTITE, HORS_MENUS, deduireCat,
+  catDepuisDossier, FICHIERS_MIXTES,
   wrapSock, normaliserStyle, normaliserContenu, retirerSignatureTierce,
   remplacerLogoTierce, URL_LOGO_TIERCE, URL_LOGO_OFFICIEL,
 };

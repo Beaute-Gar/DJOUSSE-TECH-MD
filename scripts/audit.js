@@ -393,13 +393,17 @@ function checkG2() {
   else OK('G2', `${registry.size} noms+alias uniques, aucun doublon de commande`);
 
   // 4. service d'envoi unique
-  /* TIERS : plugins/core/ est du code tiers (fichiers adaptés par
+  /* TIERS : les commandes classees sont du code tiers (adapte par
      lib/plugin-loader.js). Le loader route leurs envois via lib/wa-send.js
      À L'EXÉCUTION (proxy) : la centralisation est réelle en production.
      lib/plugin-loader.js est exclu aussi : il contient le repli brut
      (t.sendMessage) utilisé seulement si wa-send ne sait pas envoyer
      un contenu. Le contrôle statique s'applique à NOTRE code. */
-  const TIERS = ['src/plugins/core/', 'src/lib/plugin-loader.js'];
+  const TIERS = ['src/commandes/01-', 'src/commandes/02-', 'src/commandes/03-',
+    'src/commandes/04-', 'src/commandes/05-', 'src/commandes/06-',
+    'src/commandes/07-', 'src/commandes/08-', 'src/commandes/09-',
+    'src/commandes/10-', 'src/commandes/11-', 'src/commandes/12-',
+    'src/lib/plugin-loader.js'];
   const senders = new Map();
   for (const f of productFiles()) {
     if (TIERS.some((t) => rel(f).startsWith(t))) continue;
@@ -525,10 +529,10 @@ function checkG4() {
   const offenders = [];
   for (const f of productFiles()) {
     if (rel(f) === 'src/config/style.js') continue;
-    /* tiers : les plugins de plugins/core/ ont leurs propres cadres ; leur
+    /* tiers : les plugins classes sous commandes/ ont leurs propres cadres ; leur
        rendu reste isolé (catégories déduites), la charte DJOUSSE s'applique
        à notre code. */
-    if (rel(f).startsWith('src/plugins/core/')) continue;
+    if (/^src\/commandes\/\d{2}-/.test(rel(f))) continue;
     const src = strip(read(f));
     const lines = src.split(/\r?\n/);
     const bad = [];

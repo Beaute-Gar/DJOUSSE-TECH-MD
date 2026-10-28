@@ -96,13 +96,12 @@ test('les commandes interdites (crash/NSFW) ne sont PAS enregistrées', () => {
 
 test('aucun plugin silva ne pose de listener (pas de double écoute)', () => {
   const fs = require('fs');
-  const path = require('path');
-  const dir = path.join(process.cwd(), 'src', 'plugins', 'core');
-  const fichiers = fs.readdirSync(dir).filter((f) => f.endsWith('.js'));
+  const { scanCommandFiles } = require('../src/commandes/_partage/scan');
+  const fichiers = scanCommandFiles();
   const coupables = [];
-  for (const f of fichiers) {
-    const src = fs.readFileSync(path.join(dir, f), 'utf8');
-    if (/\.ev\s*\.\s*on\s*\(/.test(src)) coupables.push(f);
+  for (const filePath of fichiers) {
+    const src = fs.readFileSync(filePath, 'utf8');
+    if (/\.ev\s*\.\s*on\s*\(/.test(src)) coupables.push(filePath);
   }
   assert.deepEqual(coupables, [], `plugins avec listener : ${coupables.join(', ')}`);
 });

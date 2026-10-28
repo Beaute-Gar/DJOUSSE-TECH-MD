@@ -2946,7 +2946,7 @@ try {
   console.error('[EXTRAS] enregistrement:', e.message);
 }
 
-/* ── PLUGINS TIERS — plugins/core/, adaptés au registre DJOUSE ── */
+/* ── PLUGINS TIERS — commandes/, adaptés au registre DJOUSE ── */
 try {
   const rap = loadCorePlugins(cmd, {
     config, send,
