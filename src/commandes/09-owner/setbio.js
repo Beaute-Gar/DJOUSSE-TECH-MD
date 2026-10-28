@@ -1,17 +1,27 @@
 'use strict';
 
-module.exports = function enregistrer(env) {
-  const { cmd, config } = env;
-cmd('setbio', ['botbio'], {
-  cat: 9, desc: 'Changer la bio (status) du bot', usage: 'setbio <texte>', owner: true, icon: '💬',
-}, async (ctx) => {
-  if (!ctx.q) return ctx.reply(`❌ Usage : ${config.prefix}setbio En ligne`);
-  try {
-    await ctx.sock.updateProfileStatus(ctx.q.slice(0, 139));
-    await ctx.success(['BIO MISE À JOUR']);
-  } catch (e) {
-    await ctx.reply(`❌ setbio impossible : ${e.message}`);
-  }
-});
+module.exports = {
+    commands:    ['setbio', 'setabout', 'about'],
+    description: 'Set the bot WhatsApp About/Bio',
+    permission:  'owner',
+    group:       false,
+    private:     true,
+    run: async (sock, message, args, { sender, contextInfo }) => {
+        const bio = args.join(' ');
+        if (!bio) {
+            return sock.sendMessage(sender, {
+                text: '📝 Usage: .setbio <text>\nExample: .setbio Silva MD Bot 🤖 | Always Online',
+                contextInfo
+            }, { quoted: message });
+        }
+        try {
+            await sock.updateProfileStatus(bio);
+            await sock.sendMessage(sender, {
+                text: `✅ *Bot bio updated!*\n\n📝 ${bio}`,
+                contextInfo
+            }, { quoted: message });
+        } catch (e) {
+            await sock.sendMessage(sender, { text: `❌ Failed to update bio: ${e.message}`, contextInfo }, { quoted: message });
+        }
+    }
 };
-module.exports.maison = true;

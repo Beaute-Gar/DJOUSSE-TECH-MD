@@ -1179,7 +1179,7 @@ const ENV_COMMANDES = {
   get ytResolve() { return ytResolve; },
   get yts() { return yts; },
 };
-chargerCommandes(ENV_COMMANDES, ["01-general/menu.js","12-archives/archives.js","10-divers/repo.js","10-divers/support.js","06-ia/ia.js"]);
+chargerCommandes(ENV_COMMANDES, ["01-general/menu-maison.js","12-archives/archives.js","10-divers/repo.js","10-divers/support.js","06-ia/ia.js"]);
 
 cmd('setmenuimg', ['menupic'], {
   cat: 9, desc: 'Définir l’image du .menu (répondre à une photo)', usage: 'setmenuimg', owner: true, icon: '🖼️',
@@ -1217,7 +1217,7 @@ const fmtTs = (ts) => {
 const shortChat = (j) => (!j ? '—' : (j.endsWith('@g.us') ? j : `+${num(j)}`));
 const noSqlite = () => ['BASE SQLite INDISPONIBLE', 'NODE ≥ 22.5 REQUIS', 'LES FONCTIONS CLASSIQUES MARCHENT'];
 
-chargerCommandes(ENV_COMMANDES, ["09-owner/journal.js","09-owner/chatlog.js","01-general/uptime.js","01-general/owner.js","01-general/source.js","01-general/list.js"]);
+chargerCommandes(ENV_COMMANDES, ["09-owner/journal.js","09-owner/chatlog.js","01-general/uptime-maison.js","01-general/owner-maison.js","01-general/source.js","01-general/list.js"]);
 
 /* ── 2. GROUPE ────────────────────────────────────────────── */
 
@@ -1427,7 +1427,7 @@ function quotedKey(msg, content) {
   };
 }
 
-chargerCommandes(ENV_COMMANDES, ["05-outils/edit.js","02-groupe/pin.js","02-groupe/unpin.js","02-groupe/disappear.js","09-owner/mutechat.js","09-owner/unmutechat.js","09-owner/archive.js","09-owner/setpp.js","09-owner/setbotname.js","09-owner/setbio.js","05-outils/react.js","05-outils/del.js","09-owner/read.js"]);
+chargerCommandes(ENV_COMMANDES, ["05-outils/edit.js","02-groupe/pin.js","02-groupe/unpin.js","02-groupe/disappear.js","09-owner/mutechat.js","09-owner/unmutechat.js","09-owner/archive.js","09-owner/setpp.js","09-owner/setbotname.js","09-owner/setbio-maison.js","05-outils/react.js","05-outils/del.js","09-owner/read.js"]);
 
 
 

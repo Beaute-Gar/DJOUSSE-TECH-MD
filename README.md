@@ -162,15 +162,15 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 
 | # | Catégorie | | Commandes |
 |:-:|---|:-:|--:|
-| 1 | 🌟 **GÉNÉRAL** | | 9 |
-| 2 | 👥 **GROUPE** | | 157 |
+| 1 | 🌟 **GÉNÉRAL** | | 13 |
+| 2 | 👥 **GROUPE** | | 152 |
 | 3 | 🛡️ **PROTECTION** | | 89 |
-| 4 | 🖼️ **STICKER & MEDIA** | | 113 |
+| 4 | 🖼️ **STICKER & MEDIA** | | 112 |
 | 5 | 🧰 **OUTILS** | | 258 |
-| 6 | 🤖 **IA** | | 43 |
+| 6 | 🤖 **IA** | | 28 |
 | 7 | 🎲 **FUN** | | 225 |
 | 8 | 🔍 **RECHERCHE** | | 15 |
-| 9 | 👑 **OWNER** | | 127 |
+| 9 | 👑 **OWNER** | | 144 |
 | 10 | 📦 **DIVERS** | | 85 |
 | 11 | ⬇️ **TÉLÉCHARGEMENT** | | 24 |
 | 12 | 🔐 **ARCHIVES** | | 1 |

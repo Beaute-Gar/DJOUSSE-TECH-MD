@@ -1,15 +1,43 @@
 'use strict';
 
-module.exports = function enregistrer(env) {
-  const { cmd, config, send } = env;
-cmd('owner', { cat: 1, desc: 'Contacter le propriétaire' }, async (ctx) => {
-  const n = config.ownerNumber[0];
-  const vcard =
-    `BEGIN:VCARD\nVERSION:3.0\nFN:${config.botOwnerName}\n` +
-    `TEL;type=CELL;type=VOICE;waid=${n}:+${n}\nEND:VCARD`;
-  await send(ctx.sock, ctx.from, {
-    contacts: { displayName: config.botOwnerName, contacts: [{ vcard }] },
-  }, { quoted: ctx.msg });
-});
+const config = require('../_partage/config');
+
+module.exports = {
+    commands:    ['owner', 'creator'],
+    description: 'Show bot owner contact information',
+    permission:  'public',
+    group:       true,
+    private:     true,
+    run: async (sock, message, args, { sender, jid, contextInfo }) => {
+        const ownerNumber = (config.OWNER_NUMBER || '').replace(/\D/g, '');
+        const ownerName   = config.OWNER_NAME || '✦ Silva ✦ MD ✦';
+
+        const vcard = [
+            'BEGIN:VCARD',
+            'VERSION:3.0',
+            `FN:${ownerName}`,
+            'ORG:Silva Tech Inc',
+            `TEL;type=CELL;type=VOICE;waid=${ownerNumber}:+${ownerNumber}`,
+            'END:VCARD'
+        ].join('\n');
+
+        await sock.sendMessage(sender, {
+            contacts: {
+                displayName: ownerName,
+                contacts: [{ vcard }]
+            },
+            contextInfo: {
+                ...contextInfo,
+                externalAdReply: {
+                    title: '👑 Bot Owner',
+                    body: 'Tap to view contact details',
+                    thumbnailUrl: config.ALIVE_IMG || 'https://files.catbox.moe/h6zdty.png',
+                    sourceUrl: 'https://github.com/SilvaTechB/silva-md-bot',
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: message });
+
+    }
 };
-module.exports.maison = true;
