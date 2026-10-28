@@ -150,6 +150,15 @@ test('alerte hacktools sans ancienne marque', () => {
 /* ── 6. Le registre total reste cohérent (pas de commande fantôme) ── */
 test('chiffres du registre : totaux README vérifiables', () => {
   const vus = new Set(h.commands.values());
-  assert.equal(vus.size, 1154, '1154 commandes distinctes (README)');
-  assert.equal(h.commands.size, 1590, '1590 noms au registre (README)');
+  assert.equal(vus.size, 1153, '1153 commandes distinctes (README)');
+  assert.equal(h.commands.size, 1589, '1589 noms au registre (README)');
+});
+
+test('calculatrice fusionnée : un nom principal et un seul alias', () => {
+  const calc = h.commands.get('calc');
+  assert.ok(calc);
+  assert.equal(h.commands.get('calculate'), calc);
+  assert.equal(h.commands.has('math'), false);
+  assert.deepEqual(calc.aliases, ['calculate']);
+  assert.equal(calc.cat, 5);
 });
