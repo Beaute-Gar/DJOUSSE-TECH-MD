@@ -76,3 +76,16 @@ test('cache RAM prioritaire et fallback persistant retourne null si absent', (t)
   assert.equal(cache.get(jid, 'missing'), null);
   assert.equal(cache.get('', id), null);
 });
+
+test('liste les conversations présentes dans le cache mémoire', () => {
+  const cache = createMessageCache({
+    getStore: () => null,
+    getMaxSize: () => 800,
+  });
+
+  cache.put('12345@g.us', 'message-1', { message: { conversation: 'groupe' } });
+  cache.put('12345@g.us', 'message-2', { message: { conversation: 'groupe' } });
+  cache.put('67890@s.whatsapp.net', 'message-3', { message: { conversation: 'privé' } });
+
+  assert.deepEqual(cache.listChats(), ['12345@g.us', '67890@s.whatsapp.net']);
+});

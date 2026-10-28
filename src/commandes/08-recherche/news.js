@@ -1,5 +1,6 @@
 'use strict';
 const axios = require('axios');
+const config = require('../../config/config');
 
 const FEEDS = {
     world:    'https://feeds.bbci.co.uk/news/world/rss.xml',
@@ -27,13 +28,13 @@ module.exports = {
                 const lines = items.map((item, i) => `${i + 1}. *${item.title}*\n   🔗 ${item.link}`).join('\n\n');
                 const cats  = Object.keys(FEEDS).join(' | ');
                 await sock.sendMessage(chatId, {
-                    text: `📰 *Latest News — ${category.toUpperCase()}*\n\n${lines}\n\n_Categories: ${cats}_\n_Powered by BBC • Silva MD_`,
+                    text: `📰 *Latest News — ${category.toUpperCase()}*\n\n${lines}\n\n_Categories: ${cats}_\n_Powered by BBC • ${config.botName}_`,
                     contextInfo
                 }, { quoted: message });
                 return;
             }
-        } catch (e) {
-            // Fallback : GNews si clé configurée
+        } catch (error) {
+            console.warn('[NEWS] BBC feed failed; trying configured fallback.', error?.code || error?.name || 'unknown error');
         }
         if (config.gnewsKey) {
             try {
@@ -59,7 +60,13 @@ module.exports = {
                     }, { quoted: message });
                     return;
                 }
-            } catch {}
+            } catch (error) {
+                console.warn('[NEWS] GNews fallback failed.', error?.code || error?.name || 'unknown error');
+            }
         }
-    }
+        return sock.sendMessage(chatId, {
+            text: `❌ Impossible de récupérer les actualités ${category.toUpperCase()} pour le moment. Réessayez plus tard.`,
+            contextInfo,
+        }, { quoted: message });
+        }
 };

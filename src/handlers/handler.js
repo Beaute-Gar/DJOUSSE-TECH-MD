@@ -287,7 +287,7 @@ function unwrapOnce(raw) {
 
 /* Cache des messages (antidelete / getMessage / edit / pin) : `${chat}|${id}` → message complet
    Branché sur makeWASocket({ getMessage }) pour retry, polls, édition. */
-const { put: putCache, get: getCache } = createMessageCache({
+const { put: putCache, get: getCache, listChats: getCachedChats } = createMessageCache({
   getStore,
   getMaxSize: () => config.msgCacheMax || 800,
 });
@@ -1122,6 +1122,7 @@ const ENV_COMMANDES = {
   get frameFooter() { return frameFooter; },
   get fs() { return fs; },
   get getCache() { return getCache; },
+  get getCachedChats() { return getCachedChats; },
   get getGroup() { return getGroup; },
   get getUser() { return getUser; },
   get groupMeta() { return groupMeta; },

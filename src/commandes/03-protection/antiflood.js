@@ -11,7 +11,13 @@ const DEFAULT_LIMIT  = 7;   // messages
 const DEFAULT_WINDOW = 10;  // seconds
 
 function getSettings(jid) {
-    return settings.get(jid) || { enabled: false, limit: DEFAULT_LIMIT, window: DEFAULT_WINDOW };
+    const stored = settings.get(jid);
+    if (!stored) return { enabled: false, limit: DEFAULT_LIMIT, window: DEFAULT_WINDOW };
+    return {
+        enabled: !!stored.enabled,
+        limit: Number(stored.limit) || Number(stored.maxMsg) || DEFAULT_LIMIT,
+        window: Number(stored.window) || Number(stored.timeWindow) / 1000 || DEFAULT_WINDOW,
+    };
 }
 
 function trackMessage(jid, participant) {

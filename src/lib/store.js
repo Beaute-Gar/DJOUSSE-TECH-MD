@@ -92,21 +92,26 @@ class MessageStore {
 }
 
 let singleton = null;
+let flushTimer = null;
+let exitFlush = null;
 
 function initStore(sessionDir) {
   const dir = path.join(sessionDir, 'store');
   singleton = new MessageStore(dir);
-  setInterval(() => {
+  if (flushTimer) clearInterval(flushTimer);
+  if (exitFlush) process.removeListener('exit', exitFlush);
+  flushTimer = setInterval(() => {
     try {
       singleton.flushJson();
       singleton.purgeOlderThan();
     } catch (_) {}
   }, 30000).unref?.();
-  process.on('exit', () => {
+  exitFlush = () => {
     try {
       singleton.flushJson();
     } catch (_) {}
-  });
+  };
+  process.on('exit', exitFlush);
   return singleton;
 }
 
@@ -114,4 +119,13 @@ function getStore() {
   return singleton;
 }
 
-module.exports = { initStore, getStore, MessageStore };
+function closeStore() {
+  if (flushTimer) clearInterval(flushTimer);
+  flushTimer = null;
+  if (exitFlush) process.removeListener('exit', exitFlush);
+  exitFlush = null;
+  if (singleton) singleton.flushJson();
+  singleton = null;
+}
+
+module.exports = { initStore, getStore, closeStore, MessageStore };

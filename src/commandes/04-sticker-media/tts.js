@@ -1,5 +1,6 @@
 'use strict';
 const axios = require('axios');
+const config = require('../../config/config');
 
 const VOICES = { en:'en',fr:'fr',sw:'sw',ar:'ar',es:'es',de:'de',ja:'ja',zh:'zh-CN',hi:'hi',pt:'pt' };
 

@@ -116,7 +116,7 @@ module.exports = {
         }
 
         // ── Country ────────────────────────────────────────────────────────
-        const country = getCountry(number);
+        const country = getCountry(number)?.nom || 'Inconnu';
 
         // ── Business details ───────────────────────────────────────────────
         let bizBlock = '';

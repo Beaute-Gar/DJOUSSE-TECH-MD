@@ -1,0 +1,403 @@
+# Rapport du smoke test
+
+Généré automatiquement le 2026-10-28T16:58:41.338Z par `node scripts/smoke.js`.
+
+- Commandes distinctes : 1153
+- Testées : 1139
+- Exclues (dangereuses, destructrices ou internes) : 14
+- Clés du registre : 1589
+- Écritures redirigées vers le temporaire : 6
+
+| Statut | Nombre |
+|---|---:|
+| OK | 1138 |
+| SILENCIEUSE | 0 |
+| PLANTE | 1 |
+| UNDEFINED | 0 |
+| TIMEOUT | 0 |
+
+## Limites et commandes non vérifiables
+
+Chaque commande a été appelée avec un faux `sock` Proxy et un contexte fictif. Aucun appel n’a été envoyé à WhatsApp et aucun réseau réel n’a été utilisé. Un statut `OK` valide seulement le comportement local observé avec ces stubs.
+
+### Réseau requis (179)
+
+- `ablush`
+- `acry`
+- `acuddle`
+- `adance`
+- `adfoc`
+- `advice`
+- `afacepalm`
+- `ahappy`
+- `ahug`
+- `airing`
+- `akiss`
+- `alaugh`
+- `anime`
+- `animeinfo`
+- `animequote`
+- `apat`
+- `apk`
+- `arena`
+- `ashrug`
+- `asmile`
+- `astare`
+- `athumbsup`
+- `awave`
+- `awink`
+- `baka`
+- `bard`
+- `bible`
+- `biblie`
+- `bite`
+- `blush`
+- `bonk`
+- `boomlg`
+- `carbon`
+- `cat`
+- `character`
+- `chatai`
+- `chatat`
+- `cleanuri`
+- `climate`
+- `contactsave`
+- `country`
+- `createqr`
+- `cry`
+- `crypto`
+- `cuddle`
+- `dance`
+- `define`
+- `describe`
+- `devil`
+- `dict`
+- `didong`
+- `dns`
+- `domaincheck`
+- `dragonball`
+- `elements`
+- `fact`
+- `facts`
+- `gamehistory`
+- `giftedai`
+- `github`
+- `githubstalk`
+- `glitch`
+- `gold`
+- `gpt`
+- `gpt4`
+- `gpt4o`
+- `gpt4o-mini`
+- `greenneon`
+- `happy`
+- `harrypotter`
+- `hug`
+- `husbando`
+- `igstalk`
+- `imagine`
+- `incandescent`
+- `inspire`
+- `ip`
+- `ipinfo`
+- `joke`
+- `jokeen`
+- `jokes`
+- `kamisato`
+- `kiss`
+- `laugh`
+- `letmegpt`
+- `lightglow`
+- `linkpreview`
+- `livescore`
+- `lyric`
+- `lyrics`
+- `maid`
+- `manga`
+- `mangainfo`
+- `megumin`
+- `memes`
+- `menu`
+- `naruto`
+- `neko`
+- `neon`
+- `neonlight`
+- `netspeed`
+- `news`
+- `nod`
+- `npm`
+- `numberfact`
+- `openai`
+- `paste`
+- `pastebin`
+- `pat`
+- `play`
+- `poke`
+- `price`
+- `purple`
+- `qrcode`
+- `quote`
+- `quotly`
+- `raiden`
+- `rebrandly`
+- `repo`
+- `rias`
+- `saying`
+- `scanurl`
+- `seasonal`
+- `selfies`
+- `setigsession`
+- `shinobu`
+- `shoot`
+- `shorten`
+- `shortener`
+- `shorturl`
+- `slap`
+- `smile`
+- `snow`
+- `song`
+- `speak`
+- `sportnews`
+- `spotify`
+- `sspc`
+- `ssphone`
+- `sstab`
+- `ssur`
+- `ssweb`
+- `standings`
+- `stock`
+- `studio`
+- `summer`
+- `technews`
+- `thunder`
+- `tiktokstalk`
+- `tinyurl`
+- `topanime`
+- `topmanga`
+- `topscorers`
+- `transformer`
+- `translate`
+- `ttp`
+- `tts`
+- `uniform`
+- `upcoming`
+- `upcomingmatches`
+- `vcfgroup`
+- `venice`
+- `vgd`
+- `video`
+- `videodoc`
+- `vurl`
+- `waifu`
+- `wall`
+- `water`
+- `wattpad`
+- `wave`
+- `weather`
+- `webshot`
+- `whitegold`
+- `wiki`
+- `wikipedia`
+- `wink`
+- `yt`
+- `yts`
+
+### Méthodes WhatsApp/groupe simulées (178)
+
+- `acceptall` — groupRequestParticipantsList
+- `addbad` — groupMetadata
+- `admin` — groupParticipantsUpdate
+- `adminlist` — groupMetadata
+- `admins` — groupMetadata
+- `airing` — sendPresenceUpdate
+- `angry` — relayMessage
+- `anime` — sendPresenceUpdate
+- `animegenre` — sendPresenceUpdate
+- `animeinfo` — sendPresenceUpdate
+- `animequote` — sendPresenceUpdate
+- `apkmirror` — sendPresenceUpdate
+- `autobio` — updateProfileStatus
+- `backupgroup` — groupMetadata
+- `baka` — groupMetadata, sendPresenceUpdate
+- `bard` — sendPresenceUpdate
+- `bio` — updateProfileStatus
+- `bite` — groupMetadata, sendPresenceUpdate
+- `blocklist` — fetchBlocklist
+- `blocknum` — updateBlockStatus
+- `blush` — groupMetadata, sendPresenceUpdate
+- `bonk` — groupMetadata, sendPresenceUpdate
+- `busy` — sendPresenceUpdate
+- `channelinfo` — newsletterMetadata
+- `character` — sendPresenceUpdate
+- `chatai` — sendPresenceUpdate
+- `chatat` — sendPresenceUpdate
+- `chcreate` — newsletterCreate
+- `close` — groupSettingUpdate
+- `commapprove` — groupRequestParticipantsUpdate
+- `comminfo` — groupMetadata
+- `comminvite` — groupInviteCode
+- `commreject` — groupRequestParticipantsUpdate
+- `commrequests` — groupRequestParticipantsList
+- `commrevoke` — groupRevokeInvite
+- `createqr` — sendPresenceUpdate
+- `cry` — groupMetadata, sendPresenceUpdate
+- `cuddle` — groupMetadata, sendPresenceUpdate
+- `dance` — groupMetadata, sendPresenceUpdate
+- `demote` — groupParticipantsUpdate
+- `device` — profilePictureUrl
+- `disapp` — groupToggleEphemeral
+- `dmall` — groupMetadata
+- `dmmembers` — groupMetadata
+- `exportgroup` — groupMetadata, groupInviteCode
+- `fullpp` — profilePictureUrl
+- `gadmins` — groupMetadata
+- `gage` — groupMetadata
+- `gamehistory` — sendPresenceUpdate
+- `gcdesc` — groupUpdateDescription
+- `getgcpp` — profilePictureUrl
+- `getjid` — sendPresenceUpdate, profilePictureUrl, onWhatsApp
+- `gexport` — groupMetadata, groupInviteCode
+- `ggleimage` — sendPresenceUpdate
+- `giftedai` — sendPresenceUpdate
+- `ginvite` — groupInviteCode, groupMetadata
+- `githubstalk` — sendPresenceUpdate
+- `gjoinlog` — groupMetadata
+- `google` — sendPresenceUpdate
+- `gpt4` — sendPresenceUpdate
+- `gpt4o` — sendPresenceUpdate
+- `gpt4o-mini` — sendPresenceUpdate
+- `groupage` — groupMetadata
+- `groupbackup` — groupMetadata
+- `groupname` — groupUpdateSubject
+- `groupstatus` — groupMetadata, groupInviteCode, profilePictureUrl
+- `grpinfo` — groupMetadata, groupInviteCode, profilePictureUrl
+- `gstats` — groupMetadata
+- `gstatus` — groupMetadata, groupInviteCode, profilePictureUrl
+- `happi` — relayMessage
+- `happy` — groupMetadata, sendPresenceUpdate
+- `happymod` — sendPresenceUpdate
+- `heart` — relayMessage
+- `hug` — groupMetadata, sendPresenceUpdate
+- `husbando` — sendPresenceUpdate
+- `igstalk` — sendPresenceUpdate
+- `invitelink` — groupInviteCode
+- `joingroup` — groupAcceptInvite
+- `joinlog` — groupMetadata
+- `kamisato` — sendPresenceUpdate
+- `kick` — groupParticipantsUpdate
+- `killgc` — groupLeave
+- `kiss` — groupMetadata, sendPresenceUpdate
+- `laugh` — groupMetadata, sendPresenceUpdate
+- `leave` — groupLeave
+- `leavegroup` — groupLeave
+- `letmegpt` — sendPresenceUpdate
+- `link` — groupInviteCode
+- `listadmins` — groupMetadata
+- `listblock` — fetchBlocklist
+- `listmembers` — groupMetadata
+- `listrequests` — groupRequestParticipantsList
+- `livescore` — sendPresenceUpdate
+- `lock` — groupSettingUpdate
+- `lyric` — sendPresenceUpdate
+- `maid` — sendPresenceUpdate
+- `manga` — sendPresenceUpdate
+- `mangainfo` — sendPresenceUpdate
+- `megumin` — sendPresenceUpdate
+- `memes` — sendPresenceUpdate
+- `moon` — relayMessage
+- `mygroups` — groupFetchAllParticipating
+- `neko` — sendPresenceUpdate
+- `newgroup` — groupCreate
+- `nod` — groupMetadata, sendPresenceUpdate
+- `npm` — sendPresenceUpdate
+- `numberfact` — sendPresenceUpdate
+- `offline` — sendPresenceUpdate
+- `open` — groupSettingUpdate
+- `openai` — sendPresenceUpdate
+- `pat` — groupMetadata, sendPresenceUpdate
+- `poke` — groupMetadata, sendPresenceUpdate
+- `presence` — sendPresenceUpdate
+- `promote` — groupParticipantsUpdate
+- `raiden` — sendPresenceUpdate
+- `read` — readMessages
+- `recording` — sendPresenceUpdate
+- `reject` — groupRequestParticipantsList
+- `rejectall` — groupRequestParticipantsList
+- `resetgroup` — groupSettingUpdate, groupToggleEphemeral
+- `resetlink` — groupRevokeInvite
+- `restoregroup` — groupSettingUpdate
+- `revoke` — groupRevokeInvite
+- `revokev4` — groupRevokeInviteV4
+- `rias` — sendPresenceUpdate
+- `sad` — relayMessage
+- `seasonal` — sendPresenceUpdate
+- `seen` — presenceSubscribe
+- `selfies` — sendPresenceUpdate
+- `sendaudio` — sendPresenceUpdate
+- `sendvideo` — sendPresenceUpdate
+- `setabout` — updateProfileStatus
+- `setbio` — updateProfileStatus
+- `setbotname` — updateProfileName
+- `setdesc` — groupUpdateDescription
+- `setname` — groupUpdateSubject
+- `shinobu` — sendPresenceUpdate
+- `shoot` — groupMetadata, sendPresenceUpdate
+- `shy` — relayMessage
+- `slap` — groupMetadata, sendPresenceUpdate
+- `smile` — groupMetadata, sendPresenceUpdate
+- `snack` — sendPresenceUpdate
+- `sportnews` — sendPresenceUpdate
+- `spotifysearch` — sendPresenceUpdate
+- `spp` — profilePictureUrl
+- `sspc` — sendPresenceUpdate
+- `ssphone` — sendPresenceUpdate
+- `sstab` — sendPresenceUpdate
+- `ssur` — sendPresenceUpdate
+- `ssweb` — sendPresenceUpdate
+- `standings` — sendPresenceUpdate
+- `studio` — sendPresenceUpdate
+- `surebet` — sendPresenceUpdate
+- `swgc` — relayMessage
+- `tagadmin` — groupMetadata
+- `terminategc` — groupMetadata, groupParticipantsUpdate, groupLeave
+- `tiktokstalk` — sendPresenceUpdate
+- `togglestatus` — relayMessage
+- `topanime` — sendPresenceUpdate
+- `topmanga` — sendPresenceUpdate
+- `topscorers` — sendPresenceUpdate
+- `toptt` — sendPresenceUpdate
+- `tovideo` — sendPresenceUpdate
+- `ttp` — sendPresenceUpdate
+- `uniform` — sendPresenceUpdate
+- `unlock` — groupSettingUpdate
+- `unsplash` — sendPresenceUpdate
+- `upcoming` — sendPresenceUpdate
+- `upcomingmatches` — sendPresenceUpdate
+- `vcfgroup` — groupMetadata
+- `venice` — sendPresenceUpdate
+- `waifu` — sendPresenceUpdate
+- `wallpapers` — sendPresenceUpdate
+- `wattpad` — sendPresenceUpdate
+- `wave` — groupMetadata, sendPresenceUpdate
+- `whatsapp` — profilePictureUrl
+- `wink` — groupMetadata, sendPresenceUpdate
+- `yts` — sendPresenceUpdate
+
+### Exclusions (14)
+
+- `__advanced_onmessage__` (`__advanced_onmessage__`) — commande interne, non destinée à être appelée par un utilisateur
+- `broadcast` (`bc`, `broadcast`) — diffusion de masse
+- `broadcast2` (`bcastmembers`, `broadcast2`) — diffusion de masse
+- `cmd` (`cmd`) — exécution de commandes système
+- `eval` (`eval`, `js`) — exécution de code arbitraire
+- `gitclone` (`gitclone`) — exécution d’un clonage externe
+- `logout` (`logout`) — déconnexion WhatsApp
+- `massbc` (`massbc`) — diffusion de masse
+- `resetallsettings` (`resetallsettings`) — réinitialisation de la configuration
+- `resetdb` (`resetdb`) — suppression/réinitialisation de la base
+- `restart2` (`reboot`, `restart2`) — redémarrage du processus
+- `self` (`self`) — changement du mode de fonctionnement
+- `setprefix` (`setprefix`) — écriture dans la configuration du projet
+- `sh` (`bash`, `sh`) — exécution de commandes système
+
+Les résultats détaillés, une ligne par commande testée, sont dans [`reports/smoke.json`](../reports/smoke.json).

@@ -42,7 +42,11 @@ function createMessageCache({ getStore, getMaxSize }) {
     }
   }
 
-  return { put, get };
+  function listChats() {
+    return [...new Set([...cache.keys()].map((key) => key.slice(0, key.indexOf('|'))))];
+  }
+
+  return { put, get, listChats };
 }
 
 module.exports = { createMessageCache };

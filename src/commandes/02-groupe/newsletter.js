@@ -22,10 +22,15 @@ module.exports = {
         const jid = args[0]?.trim();
 
         if (command === 'newsletter') {
-            const status = config.AUTO_FOLLOW_NEWSLETTER ? '✅ ON' : '❌ OFF';
-            const configured = Array.isArray(config.NEWSLETTER_JID)
-                ? config.NEWSLETTER_JID.map(j => `• ${j}`).join('\n')
-                : `• ${config.NEWSLETTER_JID}`;
+            const status = /^(1|true|yes|on)$/i.test(process.env.AUTO_FOLLOW_NEWSLETTER || '')
+                ? '✅ ON' : '❌ OFF';
+            const configuredJids = String(process.env.NEWSLETTER_JID || '')
+                .split(',')
+                .map((value) => value.trim())
+                .filter(Boolean);
+            const configured = configuredJids.length
+                ? configuredJids.map(j => `• ${j}`).join('\n')
+                : '• Aucun identifiant configuré.';
             const globalFollowed = global._followedNewsletters
                 ? [...global._followedNewsletters].map(j => `• ${j}`).join('\n')
                 : 'None yet.';

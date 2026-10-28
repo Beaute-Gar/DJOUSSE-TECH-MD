@@ -16,7 +16,7 @@
  */
 
 const { fmt }        = require('../_partage/theme');
-const { setTrigger, delTrigger, listTriggers, matchTrigger } = require('../_partage/bgmTrigger');
+const { isEnabled, setTrigger, delTrigger, listTriggers, matchTrigger } = require('../_partage/bgmTrigger');
 const baileys        = require('@whiskeysockets/baileys');
 
 // ─── Per-chat cooldown tracker ────────────────────────────────────────────────
@@ -74,6 +74,7 @@ module.exports = {
     run: async (sock, message, args, { jid, reply, command }) => {
         const cmd  = command || '';
         const word = args[0]?.toLowerCase().trim();
+        if (!isEnabled()) return reply(fmt('⚠️ Les déclencheurs audio automatiques sont désactivés pour protéger le compte WhatsApp.'));
 
         // ── .listbgm / .bgmlist ────────────────────────────────────────────
         if (cmd === 'listbgm' || cmd === 'bgmlist') {
@@ -153,6 +154,7 @@ module.exports = {
 
     // ── onMessage — fires on every incoming message, checks for trigger words ──
     onMessage: async (sock, message, text, { jid, isGroup, contextInfo }) => {
+        if (!isEnabled()) return;
         // Skip empty text
         if (!text || !text.trim()) return;
 
