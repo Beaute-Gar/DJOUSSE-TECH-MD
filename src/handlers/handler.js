@@ -39,6 +39,7 @@ const { withNetworkTimeout } = require('../lib/network-timeout');
 const { registerExtras } = require('../lib/extras');
 const { registerHackTools, GROUPES: HACK_SECTIONS } = require('../lib/hacktools');
 const { loadCorePlugins } = require('../lib/plugin-loader');
+const { appliquerTables, appliquerFamilles } = require('../commandes/_regles');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('../lib/ported-auto');
 const portedGroup = require('../lib/ported-group');
 const portedAudio = require('../lib/ported-audio');
@@ -2975,172 +2976,7 @@ try {
   console.error('[CORE] chargement interrompu:', e.message);
 }
 
-/* ── PHASE B — suppressions de NOMS (règle absolue : 1 nom + 1 alias max).
-      Seules des clés sont retirées du registre, APRÈS le chargement
-      silva — aucun fichier ni handler silva n'est modifié/supprimé.
-        · gi         → doublon silva de groupinfo/ginfo (décision créateur)
-        · memberlist → 3ᵉ nom silva de listmembers.members (budget 1+1) */
-/* Doublons silva restants découverts à l'Étape 2 — même traitement. */
-for (const nomSupprime of ['gi', 'memberlist', 'gcinfo', 'groupdesc']) {
-  if (commands.delete(nomSupprime)) console.log(`[REGISTRE] "${nomSupprime}" retiré (doublon)`);
-}
-/* invitelink / resetlink — RÉINTÉGRÉS (décision créateur 28/10) :
-   ce sont les noms CANONIQUES de leur entrée (entry.name = invitelink /
-   resetlink) ; les retirer laissait l'entrée injoignable sous son propre
-   nom (« COMMANDE INVALIDE » pour un ancien raccourci qui fonctionnait).
-   Chaque clé est simplement reliée à sa propre entrée existante :
-   2 clés/entrée = budget « 1 nom + 1 alias » respecté, aucun handler ni
-   fichier plugin touché. Les survivants groupinvite/newlink sont conservés. */
-for (const [ancienNom, survivant] of [['invitelink', 'groupinvite'], ['resetlink', 'newlink']]) {
-  const entree = commands.get(survivant);
-  if (entree && !commands.has(ancienNom)) {
-    commands.set(ancienNom, entree);
-    console.log(`[REGISTRE] "${ancienNom}" réintégré (même entrée que "${survivant}")`);
-  }
-}
-
-/* ── PHASE B2 — dédoublonnage SILVA : 116 commandes → 1 primaire + 1 alias.
-      Table { primaire: alias conservé }. Pour chaque entrée on retire du
-      registre TOUS les noms sauf le primaire + l'alias choisi.
-      Aucun fichier silva n'est édité — seulement des clés supprimées APRÈS
-      chargement. Les 46 commandes FAMILLE (chaque nom = feature distincte)
-      ne figurent pas ici et gardent tous leurs noms. */
-const SILVA_ALIAS = {
-  "addfilter": "blockword",
-  "addword": "addban",
-  "admins": "@admins",
-  "alive": "bot",
-  "anon": "anonmsg",
-  "antibadwords": "noswear",
-  "antiban": "safemode",
-  "antonym": "ant",
-  "apk": "apkdl",
-  "ascii3": "arttext",
-  "auditlog": "audit",
-  "autoread": "readall",
-  "average": "avg",
-  "badwordslist": "badwords",
-  "bgm": "addbgm",
-  "bible": "verse",
-  "bodyfact": "bodyf",
-  "border": "box",
-  "brain": "brainsize",
-  "calories": "food",
-  "capitalquiz": "cq",
-  "caption": "what",
-  "car": "carinfo",
-  "carbon": "codeimg",
-  "celsius": "ftoc",
-  "chatstats": "whotalks",
-  "clearcache": "cleanup",
-  "compliment": "comp",
-  "device": "wainfo",
-  "dict": "meaning",
-  "discount": "sale",
-  "dogbreed": "dog",
-  "element": "chem",
-  "emojiguess": "eg",
-  "eval": "js",
-  "facebook": "fb",
-  "fahrenheit": "ctof",
-  "fakename": "name",
-  "flagquiz": "fq",
-  "flashcard": "fc",
-  "gdrive": "gdl",
-  "getcode": "getpair",
-  "getjid": "whois",
-  "githubstalk": "gh",
-  "goal": "goals",
-  "greet": "hi",
-  "guess": "guessnum",
-  "hashtag": "tags",
-  "heartrate": "hr",
-  "htag": "stag",
-  "httpcode": "http",
-  "igstalk": "iginfo",
-  "iloveyou": "ily",
-  "imagine": "img",
-  "instagram": "ig",
-  "invest": "investtip",
-  "json": "jsonformat",
-  "leetspeak": "1337",
-  "linkpreview": "tldr",
-  "listfilters": "filterlist",
-  "loan": "loancalc",
-  "mathquiz": "mq",
-  "mediafire": "mf",
-  "meditation": "breathe",
-  "moviefact": "movief",
-  "multiply": "mul",
-  "nickname": "nick",
-  "numberfact": "number",
-  "openphoto": "vvphoto",
-  "password2": "genpass",
-  "percentage": "pct",
-  "phrasebook": "swahili",
-  "pickup": "rizz",
-  "ping2": "ms",
-  "play": "song",
-  "poststatus": "textstatus",
-  "power": "pow",
-  "programming": "lang",
-  "proverb": "wisdom2",
-  "purge": "clear",
-  "quote2": "dq",
-  "quotly": "q2s",
-  "random": "rng",
-  "readreceipt": "receipt",
-  "reminders": "myreminders",
-  "removefilter": "unfilter",
-  "removeword": "delword",
-  "scanurl": "urlscan",
-  "sh": "bash",
-  "silvatech": "svrepo",
-  "slang": "genz",
-  "slot": "slots",
-  "soundcloud": "sc",
-  "split": "billsplit",
-  "spotify": "spdl",
-  "spp": "getpp",
-  "steal": "takesticker",
-  "step": "steps",
-  "stock": "shares",
-  "subtract": "sub",
-  "tax": "taxcalc",
-  "tempmail": "tmpmail",
-  "tiktok": "tt",
-  "tiktokstalk": "ttuser",
-  "timestamp": "epoch",
-  "todo": "task",
-  "tongue": "twister",
-  "tourl": "geturl",
-  "transcribe": "vtt",
-  "twitter": "tw",
-  "typing": "wpm",
-  "upper": "caps",
-  "vocab": "wotd",
-  "wordscramble": "unscramble",
-  "workout": "wod",
-  "zodiac": "starsign",
-};
-for (const [silvaPrimaire, silvaAlias] of Object.entries(SILVA_ALIAS)) {
-  const silvaEntree = commands.get(silvaPrimaire);
-  if (!silvaEntree) continue;
-  for (const nomSilva of [...commands.keys()]) {
-    if (commands.get(nomSilva) === silvaEntree && nomSilva !== silvaPrimaire && nomSilva !== silvaAlias) {
-      commands.delete(nomSilva);
-    }
-  }
-}
-
-/* togglestatus : le nom long devient le PRIMAIRE affiché, togstatus
-   l'alias (règle 1 + 1) — même commande, aucun handler touché. */
-const stCmd = commands.get('togstatus');
-if (stCmd && !commands.has('togglestatus')) {
-  const renomme = { ...stCmd, name: 'togglestatus' };
-  commands.set('togstatus', renomme);
-  commands.set('togglestatus', renomme);
-}
+appliquerTables(commands);
 
 /* ── 11. TÉLÉCHARGEMENT ───────────────────────────────────── */
 
@@ -4308,6 +4144,8 @@ async function handleGroupInfo(sock, update) {
     console.error('[HANDLER] group-info:', e.message);
   }
 }
+
+appliquerFamilles(commands);
 
 module.exports = {
   isSystemJid,
