@@ -164,13 +164,13 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 |:-:|---|:-:|--:|
 | 1 | 🌟 **GÉNÉRAL** | | 9 |
 | 2 | 👥 **GROUPE** | | 157 |
-| 3 | 🛡️ **PROTECTION** | | 139 |
+| 3 | 🛡️ **PROTECTION** | | 89 |
 | 4 | 🖼️ **STICKER & MEDIA** | | 113 |
 | 5 | 🧰 **OUTILS** | | 258 |
-| 6 | 🤖 **IA** | | 59 |
-| 7 | 🎲 **FUN** | | 210 |
+| 6 | 🤖 **IA** | | 43 |
+| 7 | 🎲 **FUN** | | 225 |
 | 8 | 🔍 **RECHERCHE** | | 15 |
-| 9 | 👑 **OWNER** | | 76 |
+| 9 | 👑 **OWNER** | | 127 |
 | 10 | 📦 **DIVERS** | | 85 |
 | 11 | ⬇️ **TÉLÉCHARGEMENT** | | 24 |
 | 12 | 🔐 **ARCHIVES** | | 1 |
