@@ -32,6 +32,42 @@ async function tryCobalt(url) {
 }
 
 // ─── Strategy 2: snapsave.app (supports Facebook + Instagram) ─────────────────
+/* snapsave renvoie du JS obfusqué (packer) dont l'exécution écrit le HTML des
+   liens dans #download-section. On déballe le packer, on lit la chaîne
+   innerHTML, puis on décode le JWT du proxy pour retrouver l'URL fbcdn
+   directe. Vérifié le 2026-10-29 : HTTP 200, video/mp4, 5,1 Mo. */
+function unpackSnapsave(raw) {
+    if (!raw.includes('eval(')) return raw;
+    // `eval(...)` → `return (...)` : la parenthèse fermante d'origine suffit.
+    return new Function(`${raw.slice(raw.indexOf('var _0x')).replace(/eval\(/, 'return (')}`)();
+}
+
+function readInnerHtml(js) {
+    const at = js.indexOf('.innerHTML');
+    if (at < 0) return '';
+    const q = js.indexOf('"', js.indexOf('=', at));
+    if (q < 0) return '';
+    let out = '';
+    for (let k = q + 1; k < js.length; k += 1) {
+        const ch = js[k];
+        if (ch === '\\') { out += js[k + 1]; k += 1; continue; }
+        if (ch === '"') break;
+        out += ch;
+    }
+    return out;
+}
+
+function decodeToken(url) {
+    const token = /token=([^&]+)/.exec(url)?.[1];
+    if (!token) return null;
+    try {
+        const part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(Buffer.from(part, 'base64').toString('utf8'))?.url || null;
+    } catch {
+        return null;
+    }
+}
+
 async function trySnapsave(url) {
     const r1 = await axios.get('https://snapsave.app/', {
         headers: { 'User-Agent': UA },
@@ -53,25 +89,30 @@ async function trySnapsave(url) {
             timeout: 18000,
         }
     );
+
     const raw = typeof r2.data === 'string' ? r2.data : JSON.stringify(r2.data);
     if (raw.includes('Unable to connect') || raw.includes('error_api')) throw new Error('snapsave: blocked');
 
-    // snapsave may encode the result with eval()
-    let decoded = raw;
+    let html = '';
     try {
-        const holder = { val: '' };
-        const patched = raw.replace(/\beval\s*\(/, 'holder.val=(');
-        new Function('holder', patched)(holder);
-        if (holder.val) decoded = holder.val;
-    } catch (_) {}
+        const js = unpackSnapsave(raw);
+        html = readInnerHtml(js) || js;
+    } catch (e) {
+        throw new Error(`snapsave: unpack (${String(e.message).slice(0, 40)})`);
+    }
 
-    // Extract video URL from HTML
-    const hd  = decoded.match(/href=["'](https?:\/\/[^"']*video[^"']*)["'][^>]*>\s*(?:HD|High)/i);
-    const sd  = decoded.match(/href=["'](https?:\/\/[^"']*video[^"']*)["'][^>]*>\s*(?:SD|Normal)/i);
-    const any = decoded.match(/href=["'](https?:\/\/[^"']*(?:fbcdn|facebook)[^"']*\.mp4[^"']*)["']/i);
-    const videoUrl = hd?.[1] || sd?.[1] || any?.[1];
-    if (!videoUrl) throw new Error('snapsave: no video url found');
-    return { videoUrl: videoUrl.replace(/&amp;/g, '&'), title: 'Facebook Video' };
+    if (/video is private/i.test(html)) throw new Error('snapsave: vidéo privée');
+
+    const links = [...html.matchAll(/href="([^"]+)"/g)]
+        .map((m) => m[1])
+        .filter((l) => /^https?:/.test(l));
+
+    for (const link of links) {
+        const direct = decodeToken(link);
+        if (direct) return { videoUrl: direct, fallbackUrl: link, title: 'Facebook Video' };
+    }
+    if (links.length) return { videoUrl: links[0], title: 'Facebook Video' };
+    throw new Error('snapsave: no video url found');
 }
 
 // ─── Strategy 3: fdown.net ────────────────────────────────────────────────────
@@ -168,23 +209,28 @@ module.exports = {
         await sock.sendMessage(sender, { text: '📥 Fetching Facebook video...', contextInfo }, { quoted: message });
 
         const STRATEGIES = [
-            { name: 'cobalt.tools',    fn: () => tryCobalt(url)       },
+            /* snapsave en tête : cobalt.tools exige désormais une clé
+               (HTTP 400 vérifié le 2026-10-29) et les sites Cloudflare
+               (fdown/fdownloader) refusent les IP de datacenter. */
             { name: 'snapsave',        fn: () => trySnapsave(url)      },
-            { name: 'fdown.net',       fn: () => tryFdown(url)         },
             { name: 'getvideourl',     fn: () => tryGetVideoUrl(url)   },
+            { name: 'cobalt.tools',    fn: () => tryCobalt(url)       },
+            { name: 'fdown.net',       fn: () => tryFdown(url)         },
             { name: 'fdownloader.net', fn: () => tryFdownloader(url)   },
         ];
 
         let videoUrl = null;
         let title    = 'Facebook Video';
+        let fallbackUrl = null;
         const errors = [];
 
         for (const { name, fn } of STRATEGIES) {
             try {
                 const r = await fn();
                 if (r?.videoUrl) {
-                    videoUrl = r.videoUrl;
-                    title    = r.title || title;
+                    videoUrl    = r.videoUrl;
+                    title       = r.title || title;
+                    fallbackUrl = r.fallbackUrl || null;
                     console.log(`[FB] ✓ ${name}`);
                     break;
                 }
@@ -206,25 +252,34 @@ module.exports = {
             }, { quoted: message });
         }
 
+        const advert = {
+            ...contextInfo,
+            externalAdReply: {
+                title:                 'Facebook Downloader',
+                body:                  'Powered by ' + (getStr('botName') || 'Silva MD'),
+                thumbnailUrl:          'https://files.catbox.moe/h6zdty.png',
+                sourceUrl:             url,
+                mediaType:             1,
+                renderLargerThumbnail: true,
+            },
+        };
+        const asVideo = (link) => sock.sendMessage(sender, {
+            video:   { url: link },
+            caption: `🦋 *Facebook*  •  📌 ${title}`,
+            contextInfo: advert,
+        }, { quoted: message });
+
         try {
-            await sock.sendMessage(sender, {
-                video:   { url: videoUrl },
-                caption: `🦋 *Facebook*  •  📌 ${title}`,
-                contextInfo: {
-                    ...contextInfo,
-                    externalAdReply: {
-                        title:                 'Facebook Downloader',
-                        body:                  'Powered by ' + (getStr('botName') || 'Silva MD'),
-                        thumbnailUrl:          'https://files.catbox.moe/h6zdty.png',
-                        sourceUrl:             url,
-                        mediaType:             1,
-                        renderLargerThumbnail: true,
-                    },
-                },
-            }, { quoted: message });
+            try {
+                await asVideo(videoUrl);
+            } catch {
+                /* fbcdn direct peut refuser selon la région : proxy rapidcdn */
+                if (!fallbackUrl) throw new Error('direct');
+                await asVideo(fallbackUrl);
+            }
         } catch {
             await sock.sendMessage(sender, {
-                document: { url: videoUrl },
+                document: { url: fallbackUrl || videoUrl },
                 mimetype: 'video/mp4',
                 fileName: `facebook_${Date.now()}.mp4`,
                 caption:  `🦋 *Facebook*  •  📌 ${title}`,

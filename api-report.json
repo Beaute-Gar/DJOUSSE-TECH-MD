@@ -1,0 +1,1300 @@
+[
+  {
+    "service": "adviceslip",
+    "type": "api",
+    "commandes": "advice",
+    "statut": "OK",
+    "http": 200,
+    "ms": 449,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "animechan",
+    "type": "api",
+    "commandes": "animequote",
+    "statut": "MORT",
+    "http": 404,
+    "ms": 481,
+    "note": "HTTP 404"
+  },
+  {
+    "service": "coingecko",
+    "type": "api",
+    "commandes": "crypto",
+    "statut": "OK",
+    "http": 200,
+    "ms": 255,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "datamuse",
+    "type": "api",
+    "commandes": "rhyme, synonym",
+    "statut": "OK",
+    "http": 200,
+    "ms": 255,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "dictionaryapi.dev",
+    "type": "api",
+    "commandes": "define, dict",
+    "statut": "OK",
+    "http": 200,
+    "ms": 307,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "duckduckgo (instant)",
+    "type": "api",
+    "commandes": "agent (recherche)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 379,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "frankfurter",
+    "type": "api",
+    "commandes": "currency",
+    "statut": "OK",
+    "http": 200,
+    "ms": 452,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "open.er-api",
+    "type": "api",
+    "commandes": "convert",
+    "statut": "OK",
+    "http": 200,
+    "ms": 342,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "fxtwitter",
+    "type": "api",
+    "commandes": "twitter",
+    "statut": "OK",
+    "http": 200,
+    "ms": 275,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "vxtwitter",
+    "type": "api",
+    "commandes": "twitter",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 152,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "api.github.com",
+    "type": "api",
+    "commandes": "github, githubstalk",
+    "statut": "OK",
+    "http": 200,
+    "ms": 257,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "imgflip",
+    "type": "api",
+    "commandes": "meme",
+    "statut": "OK",
+    "http": 200,
+    "ms": 232,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "instagram oembed",
+    "type": "api",
+    "commandes": "instagram",
+    "statut": "CHANGE",
+    "http": 200,
+    "ms": 449,
+    "note": "réponse non JSON (format changé ?)"
+  },
+  {
+    "service": "jikan (MyAnimeList)",
+    "type": "api",
+    "commandes": "anime, topanime",
+    "statut": "MORT",
+    "ms": 10470,
+    "note": "pas de réponse en 15s"
+  },
+  {
+    "service": "mail.gw",
+    "type": "api",
+    "commandes": "tempmail",
+    "statut": "MORT",
+    "ms": 10460,
+    "note": "pas de réponse en 15s"
+  },
+  {
+    "service": "otakugifs",
+    "type": "api",
+    "commandes": "réactions anime",
+    "statut": "OK",
+    "http": 200,
+    "ms": 482,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "popcat",
+    "type": "api",
+    "commandes": "chatbot",
+    "statut": "OK",
+    "http": 200,
+    "ms": 336,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "quotable",
+    "type": "api",
+    "commandes": "quote",
+    "statut": "MORT",
+    "ms": 400,
+    "note": "certificat invalide (CERT_HAS_EXPIRED)"
+  },
+  {
+    "service": "rss2json",
+    "type": "api",
+    "commandes": "news",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 130,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "sampleapis proverbs",
+    "type": "api",
+    "commandes": "proverb",
+    "statut": "BLOQUE",
+    "http": 404,
+    "ms": 258,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "urbandictionary",
+    "type": "api",
+    "commandes": "urban",
+    "statut": "OK",
+    "http": 200,
+    "ms": 189,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "waifu.pics",
+    "type": "api",
+    "commandes": "waifu, hug, kiss…",
+    "statut": "MORT",
+    "ms": 108,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "waifu.im",
+    "type": "api",
+    "commandes": "waifu",
+    "statut": "MORT",
+    "ms": 277,
+    "note": "certificat invalide (ERR_TLS_CERT_ALTNAME_INVALID)"
+  },
+  {
+    "service": "worldbank",
+    "type": "api",
+    "commandes": "country",
+    "statut": "OK",
+    "http": 200,
+    "ms": 198,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "bible-api",
+    "type": "api",
+    "commandes": "bible",
+    "statut": "OK",
+    "http": 200,
+    "ms": 145,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "countriesnow",
+    "type": "api",
+    "commandes": "country",
+    "statut": "OK",
+    "http": 200,
+    "ms": 226,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "dns.google",
+    "type": "api",
+    "commandes": "dns, extras",
+    "statut": "OK",
+    "http": 200,
+    "ms": 32,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "horoscope-app-api",
+    "type": "api",
+    "commandes": "horoscope",
+    "statut": "OK",
+    "http": 200,
+    "ms": 302,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "ip-api",
+    "type": "api",
+    "commandes": "ip, iplookup",
+    "statut": "OK",
+    "http": 200,
+    "ms": 119,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "ipapi.co",
+    "type": "api",
+    "commandes": "agent (ip)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 227,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "is.gd",
+    "type": "api",
+    "commandes": "shorten",
+    "statut": "OK",
+    "http": 200,
+    "ms": 204,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "v.gd",
+    "type": "api",
+    "commandes": "shorten",
+    "statut": "OK",
+    "http": 200,
+    "ms": 213,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "tinyurl",
+    "type": "api",
+    "commandes": "tinyurl, shorten",
+    "statut": "OK",
+    "http": 200,
+    "ms": 154,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "jokeapi",
+    "type": "api",
+    "commandes": "joke",
+    "statut": "OK",
+    "http": 200,
+    "ms": 301,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "official-joke-api",
+    "type": "api",
+    "commandes": "joke, agent",
+    "statut": "OK",
+    "http": 200,
+    "ms": 437,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "lrclib",
+    "type": "api",
+    "commandes": "lyrics",
+    "statut": "OK",
+    "http": 200,
+    "ms": 267,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "rdap",
+    "type": "api",
+    "commandes": "whois",
+    "statut": "OK",
+    "http": 200,
+    "ms": 249,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "npm registry",
+    "type": "api",
+    "commandes": "npm (search3)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 562,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "saurav.tech news",
+    "type": "api",
+    "commandes": "news, sports",
+    "statut": "MORT",
+    "ms": 125,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "ESPN",
+    "type": "api",
+    "commandes": "sports, livescore",
+    "statut": "OK",
+    "http": 200,
+    "ms": 188,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "thecolorapi",
+    "type": "api",
+    "commandes": "color",
+    "statut": "OK",
+    "http": 200,
+    "ms": 166,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "uselessfacts",
+    "type": "api",
+    "commandes": "fact",
+    "statut": "OK",
+    "http": 200,
+    "ms": 425,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "wttr.in",
+    "type": "api",
+    "commandes": "weather (secours)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 414,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "yahoo finance",
+    "type": "api",
+    "commandes": "stock",
+    "statut": "BLOQUE",
+    "http": 429,
+    "ms": 140,
+    "note": "HTTP 429"
+  },
+  {
+    "service": "zenquotes",
+    "type": "api",
+    "commandes": "advice, quote",
+    "statut": "OK",
+    "http": 200,
+    "ms": 237,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "wikipedia EN",
+    "type": "api",
+    "commandes": "wiki, country",
+    "statut": "OK",
+    "http": 200,
+    "ms": 567,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "wikipedia FR",
+    "type": "api",
+    "commandes": "wiki",
+    "statut": "OK",
+    "http": 200,
+    "ms": 237,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "text.pollinations (IA texte)",
+    "type": "api",
+    "commandes": "ai2, agent",
+    "statut": "OK",
+    "http": 200,
+    "ms": 400,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "ch.at (IA texte)",
+    "type": "api",
+    "commandes": "ai2, agent",
+    "statut": "OK",
+    "http": 200,
+    "ms": 235,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "some-random-api lyrics",
+    "type": "api",
+    "commandes": "lyrics",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 224,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "tikwm (TikTok)",
+    "type": "api",
+    "commandes": "tiktok, tiktokstalk",
+    "statut": "OK",
+    "http": 200,
+    "ms": 578,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "tiklydown (TikTok)",
+    "type": "api",
+    "commandes": "tiktok",
+    "statut": "MORT",
+    "ms": 148,
+    "note": "certificat invalide (ERR_SSL_TLSV1_ALERT_INTERNAL_ERROR)"
+  },
+  {
+    "service": "cobalt",
+    "type": "api",
+    "commandes": "facebook, instagram",
+    "statut": "OK",
+    "http": 200,
+    "ms": 539,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "api.telegra.ph",
+    "type": "api",
+    "commandes": "hacktools",
+    "statut": "OK",
+    "http": 200,
+    "ms": 405,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "fabdl (SoundCloud)",
+    "type": "api",
+    "commandes": "soundcloud",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 253,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "emoji-mix (otakikode)",
+    "type": "api",
+    "commandes": "emojimix",
+    "statut": "MORT",
+    "ms": 45,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "davidcyriltech",
+    "type": "api",
+    "commandes": "music, converter3, hacktools",
+    "statut": "OK",
+    "http": 200,
+    "ms": 489,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "api-rin-tohsaka",
+    "type": "api",
+    "commandes": "hacktools (ytmp4)",
+    "statut": "MORT",
+    "http": 404,
+    "ms": 130,
+    "note": "HTTP 404"
+  },
+  {
+    "service": "fantox001-scrappy-api",
+    "type": "api",
+    "commandes": "hacktools (technews)",
+    "statut": "MORT",
+    "http": 500,
+    "ms": 1095,
+    "note": "HTTP 500"
+  },
+  {
+    "service": "levanter (emix)",
+    "type": "api",
+    "commandes": "hacktools",
+    "statut": "OK",
+    "http": 200,
+    "ms": 247,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "lance-frank-asta (GPT)",
+    "type": "api",
+    "commandes": "ai",
+    "statut": "BLOQUE",
+    "http": 404,
+    "ms": 258,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "vapis.my.id (openai)",
+    "type": "api",
+    "commandes": "ai",
+    "statut": "MORT",
+    "ms": 56,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "quotly",
+    "type": "api",
+    "commandes": "quotly",
+    "statut": "MORT",
+    "ms": 10272,
+    "note": "pas de réponse en 15s"
+  },
+  {
+    "service": "qrserver",
+    "type": "image",
+    "commandes": "qr",
+    "statut": "OK",
+    "http": 200,
+    "ms": 589,
+    "note": "299 octets"
+  },
+  {
+    "service": "pollinations (image IA)",
+    "type": "image",
+    "commandes": "imagine, captionimage",
+    "statut": "OK",
+    "http": 200,
+    "ms": 372,
+    "note": "16295 octets"
+  },
+  {
+    "service": "thum.io (capture écran)",
+    "type": "image",
+    "commandes": "screenshot, carbon",
+    "statut": "OK",
+    "http": 200,
+    "ms": 295,
+    "note": "29025 octets"
+  },
+  {
+    "service": "ui-avatars",
+    "type": "image",
+    "commandes": "quotly",
+    "statut": "OK",
+    "http": 200,
+    "ms": 160,
+    "note": "848 octets"
+  },
+  {
+    "service": "singlecolorimage",
+    "type": "image",
+    "commandes": "color",
+    "statut": "OK",
+    "http": 200,
+    "ms": 331,
+    "note": "104 octets"
+  },
+  {
+    "service": "picsum",
+    "type": "image",
+    "commandes": "menu (fond)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 707,
+    "note": "5589 octets"
+  },
+  {
+    "service": "catbox (images du menu)",
+    "type": "image",
+    "commandes": "menu, getpp",
+    "statut": "OK",
+    "http": 200,
+    "ms": 491,
+    "note": "69671 octets"
+  },
+  {
+    "service": "img.youtube",
+    "type": "image",
+    "commandes": "music",
+    "statut": "OK",
+    "http": 200,
+    "ms": 117,
+    "note": "21011 octets"
+  },
+  {
+    "service": "cloudflare speed",
+    "type": "image",
+    "commandes": "speedtest",
+    "statut": "OK",
+    "http": 200,
+    "ms": 183,
+    "note": "100000 octets"
+  },
+  {
+    "service": "Gemini (IA)",
+    "type": "cle",
+    "commandes": "ai, agent",
+    "statut": "OK",
+    "http": 200,
+    "ms": 221,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "OpenRouter (IA)",
+    "type": "cle",
+    "commandes": "ai",
+    "statut": "OK",
+    "http": 200,
+    "ms": 184,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "Groq (IA)",
+    "type": "cle",
+    "commandes": "ai",
+    "statut": "OK",
+    "http": 200,
+    "ms": 188,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "Serper (recherche Google)",
+    "type": "cle",
+    "commandes": "google, search3",
+    "statut": "OK",
+    "http": 200,
+    "ms": 1340,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "GNews",
+    "type": "cle",
+    "commandes": "news",
+    "statut": "OK",
+    "http": 200,
+    "ms": 215,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "ElevenLabs (TTS)",
+    "type": "cle",
+    "commandes": "speak",
+    "statut": "OK",
+    "http": 200,
+    "ms": 365,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "OMDb (films)",
+    "type": "cle",
+    "commandes": "movie (hacktools)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 282,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "football-data.org",
+    "type": "cle",
+    "commandes": "foot, ported-foot",
+    "statut": "CLE",
+    "note": "clé absente de .env (FOOTBALL_API_KEY)"
+  },
+  {
+    "service": "Tenor (GIF/stickers)",
+    "type": "cle",
+    "commandes": "stickersearch",
+    "statut": "CLE",
+    "note": "clé absente de .env (TENOR_API_KEY)"
+  },
+  {
+    "service": "remove.bg",
+    "type": "cle",
+    "commandes": "removebg",
+    "statut": "OK",
+    "http": 200,
+    "ms": 412,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "GitHub (token)",
+    "type": "cle",
+    "commandes": "uploader (github cdn)",
+    "statut": "CLE",
+    "note": "clé absente de .env (GITHUB_TOKEN)"
+  },
+  {
+    "service": "imgbb",
+    "type": "cle",
+    "commandes": "imgbb",
+    "statut": "CLE",
+    "note": "clé absente de .env (IMGBB_KEY)"
+  },
+  {
+    "service": "audd (Shazam)",
+    "type": "cle",
+    "commandes": "shazam",
+    "statut": "OK",
+    "http": 200,
+    "ms": 406,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "OpenWeatherMap (clé du code)",
+    "type": "cle",
+    "commandes": "weather",
+    "statut": "OK",
+    "http": 200,
+    "ms": 274,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "VirusTotal (clé du code)",
+    "type": "cle",
+    "commandes": "virus",
+    "statut": "OK",
+    "http": 200,
+    "ms": 517,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "djousse-tech-md.vercel.app",
+    "type": "perso",
+    "commandes": "agent, config",
+    "statut": "MORT",
+    "http": 404,
+    "ms": 135,
+    "note": "HTTP 404"
+  },
+  {
+    "service": "snapsave.app",
+    "type": "site",
+    "commandes": "facebook, instagram",
+    "statut": "OK",
+    "http": 200,
+    "ms": 207,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "fdown.net",
+    "type": "site",
+    "commandes": "facebook",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 170,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "fdownloader.net",
+    "type": "site",
+    "commandes": "facebook",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 207,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "getvideourl.com",
+    "type": "site",
+    "commandes": "facebook",
+    "statut": "OK",
+    "http": 200,
+    "ms": 189,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "silvatech.co.ke",
+    "type": "site",
+    "commandes": "menu (lien affiché) — site d'un TIERS, pas le tien",
+    "statut": "OK",
+    "http": 200,
+    "ms": 558,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "igram.world",
+    "type": "site",
+    "commandes": "instagram",
+    "statut": "OK",
+    "http": 200,
+    "ms": 685,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "fastdl.app",
+    "type": "site",
+    "commandes": "instagram",
+    "statut": "OK",
+    "http": 200,
+    "ms": 526,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "instadownload.net",
+    "type": "site",
+    "commandes": "instagram",
+    "statut": "MORT",
+    "ms": 400,
+    "note": "ECONNRESET"
+  },
+  {
+    "service": "v3.saveinsta.app",
+    "type": "site",
+    "commandes": "threads",
+    "statut": "MORT",
+    "ms": 362,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "savethreads.io",
+    "type": "site",
+    "commandes": "threads",
+    "statut": "OK",
+    "http": 200,
+    "ms": 2499,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.snapinsta.app",
+    "type": "site",
+    "commandes": "threads",
+    "statut": "MORT",
+    "ms": 586,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "ssstik.io",
+    "type": "site",
+    "commandes": "tiktok, capcut",
+    "statut": "OK",
+    "http": 200,
+    "ms": 720,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "capcutdownloader.io",
+    "type": "site",
+    "commandes": "capcut",
+    "statut": "MORT",
+    "ms": 542,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "twitsave.com",
+    "type": "site",
+    "commandes": "twitter",
+    "statut": "OK",
+    "http": 200,
+    "ms": 1524,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "twittervideodownloader.com",
+    "type": "site",
+    "commandes": "twitter",
+    "statut": "OK",
+    "http": 200,
+    "ms": 532,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "pinterestdownloader.com",
+    "type": "site",
+    "commandes": "pinterest",
+    "statut": "OK",
+    "http": 200,
+    "ms": 658,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "pinterestvideodownloader.com",
+    "type": "site",
+    "commandes": "pinterest",
+    "statut": "OK",
+    "http": 200,
+    "ms": 2098,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.klickaud.co",
+    "type": "site",
+    "commandes": "soundcloud",
+    "statut": "OK",
+    "http": 200,
+    "ms": 696,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "soundcloudmp3.io",
+    "type": "site",
+    "commandes": "soundcloud",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 302,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "www.mediafire.com",
+    "type": "site",
+    "commandes": "mediafire",
+    "statut": "OK",
+    "http": 200,
+    "ms": 193,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "textpro.me",
+    "type": "site",
+    "commandes": "logos (ported-logo)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 585,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "en.ephoto360.com",
+    "type": "site",
+    "commandes": "logos (ported-logo)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 1148,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.flashscore.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "OK",
+    "http": 200,
+    "ms": 163,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.forebet.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 120,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "www.sofascore.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 81,
+    "note": "HTTP 403"
+  },
+  {
+    "service": "www.goal.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "OK",
+    "http": 200,
+    "ms": 1490,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.livescore.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "OK",
+    "http": 200,
+    "ms": 369,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.espn.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "OK",
+    "http": 202,
+    "ms": 91,
+    "note": "HTTP 202"
+  },
+  {
+    "service": "www.whoscored.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 120,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "www.soccervista.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "OK",
+    "http": 200,
+    "ms": 160,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.betensured.com",
+    "type": "site",
+    "commandes": "sports",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 158,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "genius.com",
+    "type": "site",
+    "commandes": "lyrics",
+    "statut": "OK",
+    "http": 200,
+    "ms": 192,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.azlyrics.com",
+    "type": "site",
+    "commandes": "lyrics",
+    "statut": "OK",
+    "http": 200,
+    "ms": 465,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.musixmatch.com",
+    "type": "site",
+    "commandes": "lyrics",
+    "statut": "OK",
+    "http": 200,
+    "ms": 140,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.wattpad.com",
+    "type": "site",
+    "commandes": "search3",
+    "statut": "OK",
+    "http": 200,
+    "ms": 314,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "wallhaven.cc",
+    "type": "site",
+    "commandes": "search3",
+    "statut": "OK",
+    "http": 200,
+    "ms": 161,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "unsplash.com",
+    "type": "site",
+    "commandes": "search3",
+    "statut": "MORT",
+    "http": 401,
+    "ms": 269,
+    "note": "HTTP 401"
+  },
+  {
+    "service": "www.pexels.com",
+    "type": "site",
+    "commandes": "search3",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 125,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "www.apkmirror.com",
+    "type": "site",
+    "commandes": "search3 (apk)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 239,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.happymod.com",
+    "type": "site",
+    "commandes": "search3 (apk)",
+    "statut": "MORT",
+    "ms": 65,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "www.reddit.com",
+    "type": "site",
+    "commandes": "meme, reddit",
+    "statut": "OK",
+    "http": 200,
+    "ms": 156,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.threads.net",
+    "type": "site",
+    "commandes": "threads",
+    "statut": "OK",
+    "http": 200,
+    "ms": 491,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.instagram.com",
+    "type": "site",
+    "commandes": "igstalk, instagram",
+    "statut": "OK",
+    "http": 200,
+    "ms": 263,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.tiktok.com",
+    "type": "site",
+    "commandes": "tiktokstalk",
+    "statut": "OK",
+    "http": 200,
+    "ms": 415,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "catbox.moe",
+    "type": "site",
+    "commandes": "catbox (upload)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 453,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "paste.rs",
+    "type": "site",
+    "commandes": "pastebin",
+    "statut": "OK",
+    "http": 200,
+    "ms": 2054,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "dpaste.org",
+    "type": "site",
+    "commandes": "pastebin",
+    "statut": "OK",
+    "http": 200,
+    "ms": 716,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "cleanuri.com",
+    "type": "site",
+    "commandes": "shorten",
+    "statut": "MORT",
+    "ms": 15009,
+    "note": "pas de réponse en 15s"
+  },
+  {
+    "service": "api.ocr.space",
+    "type": "site",
+    "commandes": "ocr",
+    "statut": "OK",
+    "http": 200,
+    "ms": 452,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "ws75.aptoide.com",
+    "type": "site",
+    "commandes": "apk",
+    "statut": "BLOQUE",
+    "http": 404,
+    "ms": 385,
+    "note": "protection Cloudflare / anti-bot"
+  },
+  {
+    "service": "api.remini.ai",
+    "type": "site",
+    "commandes": "remini (tools3)",
+    "statut": "OK",
+    "http": 200,
+    "ms": 759,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "api.api-ninjas.com",
+    "type": "site",
+    "commandes": "dns (tools3)",
+    "statut": "BLOQUE",
+    "http": 403,
+    "ms": 313,
+    "note": "HTTP 403"
+  },
+  {
+    "service": "api.truecaller.com",
+    "type": "site",
+    "commandes": "vcf-generator",
+    "statut": "MORT",
+    "ms": 159,
+    "note": "domaine introuvable (DNS) — service supprimé ?"
+  },
+  {
+    "service": "api.pixhost.to",
+    "type": "site",
+    "commandes": "uploader2",
+    "statut": "MORT",
+    "http": 400,
+    "ms": 474,
+    "note": "HTTP 400"
+  },
+  {
+    "service": "carbon.now.sh",
+    "type": "site",
+    "commandes": "carbon",
+    "statut": "OK",
+    "http": 200,
+    "ms": 163,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "duckduckgo.com",
+    "type": "site",
+    "commandes": "search3",
+    "statut": "OK",
+    "http": 200,
+    "ms": 207,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.google.com",
+    "type": "site",
+    "commandes": "search3",
+    "statut": "OK",
+    "http": 200,
+    "ms": 207,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "open.spotify.com",
+    "type": "site",
+    "commandes": "search3",
+    "statut": "OK",
+    "http": 200,
+    "ms": 223,
+    "note": "HTTP 200"
+  },
+  {
+    "service": "www.youtube.com",
+    "type": "site",
+    "commandes": "yt, search3",
+    "statut": "OK",
+    "http": 200,
+    "ms": 342,
+    "note": "HTTP 200"
+  }
+]

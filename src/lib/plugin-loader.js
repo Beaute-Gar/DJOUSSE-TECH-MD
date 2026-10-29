@@ -24,6 +24,7 @@ const fs = require('fs');
 const path = require('path');
 const { scanCommandFiles } = require('../commandes/_partage/scan');
 const { resolveLegacyDefinition } = require('../commandes/_partage/legacy-plugin');
+const { isDisabled } = require('../config/disabled-commands');
 
 /* Commandes refusées (règle de sécurité, non négociable) */
 const INTERDITS = /^(loccrash|crashbug|amountbug|pmbug|delaybug|docubug|unlimitedbug|bombug|lagbug|trollybug|terminate|hentai|hwaifu|trap|hneko|hentaivid|blowjobs|waifues|bug|crash|hack|xcrash)$/i;
@@ -387,6 +388,9 @@ function loadCorePlugins(cmd, deps) {
         /* SÉCURITÉ/IDENTITÉ : serveur de session tiers, dépôts d'un autre
            auteur, support tiers — voir BLOQUES_IDENTITE. */
         .filter((n) => !BLOQUES_IDENTITE.test(n))
+        /* SERVICES MORTS : commandes retirées (voir config/disabled-commands.js).
+           ENABLE_DEAD_COMMANDS=1 pour toutes les réactiver. */
+        .filter((n) => !isDisabled(n))
         /* PAS D'ÉCRASEMENT : si le nom existe déjà (commande maison, ou
            commande protégée hacktools en cat 99), la version existante
            gagne. Le chargeur ne remplace jamais notre code. */

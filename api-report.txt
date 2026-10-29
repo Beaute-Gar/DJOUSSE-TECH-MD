@@ -1,0 +1,159 @@
+RAPPORT SERVICES EXTERNES — 2026-10-29T12:47:09.646Z
+{"OK":102,"MORT":23,"BLOQUE":17,"CHANGE":1,"CLE":4}
+
+=== MORT (23) — Service mort : remplacer l’API ou retirer la commande ===
+  animechan  [animequote] — HTTP 404
+  jikan (MyAnimeList)  [anime, topanime] — pas de réponse en 15s
+  mail.gw  [tempmail] — pas de réponse en 15s
+  quotable  [quote] — certificat invalide (CERT_HAS_EXPIRED)
+  waifu.pics  [waifu, hug, kiss…] — domaine introuvable (DNS) — service supprimé ?
+  waifu.im  [waifu] — certificat invalide (ERR_TLS_CERT_ALTNAME_INVALID)
+  saurav.tech news  [news, sports] — domaine introuvable (DNS) — service supprimé ?
+  tiklydown (TikTok)  [tiktok] — certificat invalide (ERR_SSL_TLSV1_ALERT_INTERNAL_ERROR)
+  emoji-mix (otakikode)  [emojimix] — domaine introuvable (DNS) — service supprimé ?
+  api-rin-tohsaka  [hacktools (ytmp4)] — HTTP 404
+  fantox001-scrappy-api  [hacktools (technews)] — HTTP 500
+  vapis.my.id (openai)  [ai] — domaine introuvable (DNS) — service supprimé ?
+  quotly  [quotly] — pas de réponse en 15s
+  djousse-tech-md.vercel.app  [agent, config] — HTTP 404
+  instadownload.net  [instagram] — ECONNRESET
+  v3.saveinsta.app  [threads] — domaine introuvable (DNS) — service supprimé ?
+  www.snapinsta.app  [threads] — domaine introuvable (DNS) — service supprimé ?
+  capcutdownloader.io  [capcut] — domaine introuvable (DNS) — service supprimé ?
+  unsplash.com  [search3] — HTTP 401
+  www.happymod.com  [search3 (apk)] — domaine introuvable (DNS) — service supprimé ?
+  cleanuri.com  [shorten] — pas de réponse en 15s
+  api.truecaller.com  [vcf-generator] — domaine introuvable (DNS) — service supprimé ?
+  api.pixhost.to  [uploader2] — HTTP 400
+
+=== CHANGE (1) — Format changé : corriger le code qui lit la réponse ===
+  instagram oembed  [instagram] — réponse non JSON (format changé ?)
+
+=== BLOQUE (17) — Anti-bot : fonctionnera mal depuis un serveur ; chercher une alternative ===
+  vxtwitter  [twitter] — protection Cloudflare / anti-bot
+  rss2json  [news] — protection Cloudflare / anti-bot
+  sampleapis proverbs  [proverb] — protection Cloudflare / anti-bot
+  yahoo finance  [stock] — HTTP 429
+  some-random-api lyrics  [lyrics] — protection Cloudflare / anti-bot
+  fabdl (SoundCloud)  [soundcloud] — protection Cloudflare / anti-bot
+  lance-frank-asta (GPT)  [ai] — protection Cloudflare / anti-bot
+  fdown.net  [facebook] — protection Cloudflare / anti-bot
+  fdownloader.net  [facebook] — protection Cloudflare / anti-bot
+  soundcloudmp3.io  [soundcloud] — protection Cloudflare / anti-bot
+  www.forebet.com  [sports] — protection Cloudflare / anti-bot
+  www.sofascore.com  [sports] — HTTP 403
+  www.whoscored.com  [sports] — protection Cloudflare / anti-bot
+  www.betensured.com  [sports] — protection Cloudflare / anti-bot
+  www.pexels.com  [search3] — protection Cloudflare / anti-bot
+  ws75.aptoide.com  [apk] — protection Cloudflare / anti-bot
+  api.api-ninjas.com  [dns (tools3)] — HTTP 403
+
+=== CLE (4) — Ajouter / renouveler la clé dans .env ===
+  football-data.org  [foot, ported-foot] — clé absente de .env (FOOTBALL_API_KEY)
+  Tenor (GIF/stickers)  [stickersearch] — clé absente de .env (TENOR_API_KEY)
+  GitHub (token)  [uploader (github cdn)] — clé absente de .env (GITHUB_TOKEN)
+  imgbb  [imgbb] — clé absente de .env (IMGBB_KEY)
+
+=== OK (102) —  ===
+  adviceslip  [advice]
+  coingecko  [crypto]
+  datamuse  [rhyme, synonym]
+  dictionaryapi.dev  [define, dict]
+  duckduckgo (instant)  [agent (recherche)]
+  frankfurter  [currency]
+  open.er-api  [convert]
+  fxtwitter  [twitter]
+  api.github.com  [github, githubstalk]
+  imgflip  [meme]
+  otakugifs  [réactions anime]
+  popcat  [chatbot]
+  urbandictionary  [urban]
+  worldbank  [country]
+  bible-api  [bible]
+  countriesnow  [country]
+  dns.google  [dns, extras]
+  horoscope-app-api  [horoscope]
+  ip-api  [ip, iplookup]
+  ipapi.co  [agent (ip)]
+  is.gd  [shorten]
+  v.gd  [shorten]
+  tinyurl  [tinyurl, shorten]
+  jokeapi  [joke]
+  official-joke-api  [joke, agent]
+  lrclib  [lyrics]
+  rdap  [whois]
+  npm registry  [npm (search3)]
+  ESPN  [sports, livescore]
+  thecolorapi  [color]
+  uselessfacts  [fact]
+  wttr.in  [weather (secours)]
+  zenquotes  [advice, quote]
+  wikipedia EN  [wiki, country]
+  wikipedia FR  [wiki]
+  text.pollinations (IA texte)  [ai2, agent]
+  ch.at (IA texte)  [ai2, agent]
+  tikwm (TikTok)  [tiktok, tiktokstalk]
+  cobalt  [facebook, instagram]
+  api.telegra.ph  [hacktools]
+  davidcyriltech  [music, converter3, hacktools]
+  levanter (emix)  [hacktools]
+  qrserver  [qr]
+  pollinations (image IA)  [imagine, captionimage]
+  thum.io (capture écran)  [screenshot, carbon]
+  ui-avatars  [quotly]
+  singlecolorimage  [color]
+  picsum  [menu (fond)]
+  catbox (images du menu)  [menu, getpp]
+  img.youtube  [music]
+  cloudflare speed  [speedtest]
+  Gemini (IA)  [ai, agent]
+  OpenRouter (IA)  [ai]
+  Groq (IA)  [ai]
+  Serper (recherche Google)  [google, search3]
+  GNews  [news]
+  ElevenLabs (TTS)  [speak]
+  OMDb (films)  [movie (hacktools)]
+  remove.bg  [removebg]
+  audd (Shazam)  [shazam]
+  OpenWeatherMap (clé du code)  [weather]
+  VirusTotal (clé du code)  [virus]
+  snapsave.app  [facebook, instagram]
+  getvideourl.com  [facebook]
+  silvatech.co.ke  [menu (lien affiché) — site d'un TIERS, pas le tien]
+  igram.world  [instagram]
+  fastdl.app  [instagram]
+  savethreads.io  [threads]
+  ssstik.io  [tiktok, capcut]
+  twitsave.com  [twitter]
+  twittervideodownloader.com  [twitter]
+  pinterestdownloader.com  [pinterest]
+  pinterestvideodownloader.com  [pinterest]
+  www.klickaud.co  [soundcloud]
+  www.mediafire.com  [mediafire]
+  textpro.me  [logos (ported-logo)]
+  en.ephoto360.com  [logos (ported-logo)]
+  www.flashscore.com  [sports]
+  www.goal.com  [sports]
+  www.livescore.com  [sports]
+  www.espn.com  [sports]
+  www.soccervista.com  [sports]
+  genius.com  [lyrics]
+  www.azlyrics.com  [lyrics]
+  www.musixmatch.com  [lyrics]
+  www.wattpad.com  [search3]
+  wallhaven.cc  [search3]
+  www.apkmirror.com  [search3 (apk)]
+  www.reddit.com  [meme, reddit]
+  www.threads.net  [threads]
+  www.instagram.com  [igstalk, instagram]
+  www.tiktok.com  [tiktokstalk]
+  catbox.moe  [catbox (upload)]
+  paste.rs  [pastebin]
+  dpaste.org  [pastebin]
+  api.ocr.space  [ocr]
+  api.remini.ai  [remini (tools3)]
+  carbon.now.sh  [carbon]
+  duckduckgo.com  [search3]
+  www.google.com  [search3]
+  open.spotify.com  [search3]
+  www.youtube.com  [yt, search3]

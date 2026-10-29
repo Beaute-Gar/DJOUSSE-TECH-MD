@@ -179,15 +179,53 @@ module.exports = {
         }
 
         if (cmd === 'surebet') {
-            const league = text || 'today';
-            return send(
-                `💰 *Sure Bets: ${league}*\n\n` +
-                `📊 For today's predictions:\n` +
-                `🔗 https://www.betensured.com\n` +
-                `🔗 https://www.soccervista.com\n` +
-                `🔗 https://www.forebet.com\n\n` +
-                `⚠️ _Bet responsibly. Never wager more than you can afford to lose._`
-            );
+            /* ESPN expose de vraies prédictions (bloc `predictor`) en plus
+               des cotes : API publique, vérifiée HTTP 200 le 2026-10-29.
+               Remplace les liens morts betensured/forebet. */
+            const league = leagueSlug(text) || 'eng.1';
+            try {
+                const sb = await axios.get(
+                    `${ESPN_BASE}/${league}/scoreboard`,
+                    { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }
+                );
+                const events = (sb.data?.events || []).slice(0, 6);
+                if (!events.length) throw new Error('aucun match');
+
+                const lines = [];
+                for (const e of events) {
+                    const comp = e.competitions?.[0];
+                    const home = comp?.competitors?.find(c => c.homeAway === 'home')?.team?.shortDisplayName || '?';
+                    const away = comp?.competitors?.find(c => c.homeAway === 'away')?.team?.shortDisplayName || '?';
+                    let pred = '';
+                    try {
+                        const s = await axios.get(
+                            `https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/summary?event=${e.id}`,
+                            { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }
+                        );
+                        /* ESPN n'expose pas de « predictor » en football :
+                           on affiche les vraies cotes (pickcenter / odds). */
+                        const pick = (s.data?.pickcenter || [])[0] || s.data?.odds?.[0];
+                        if (pick) {
+                            const book = pick.provider?.name || 'bookmaker';
+                            const detail = pick.details || (pick.spread != null ? `${pick.spread > 0 ? '+' : ''}${pick.spread}` : '');
+                            const ou = pick.overUnder != null ? ` · O/U ${pick.overUnder}` : '';
+                            pred = `\n   💵 ${book}${detail ? ` — ${detail}` : ''}${ou}`;
+                        }
+                    } catch { /* pas de cotes pour ce match */ }
+                    lines.push(`• ${home} vs ${away}${pred}`);
+                }
+
+                return send(
+                    `💰 *Prédictions ESPN*\n\n${lines.join('\n')}\n\n` +
+                    `⚠️ _Joue responsable. Ne mise que ce que tu peux perdre._`
+                );
+            } catch {
+                return send(
+                    `💰 *Prédictions indisponibles*\n\n` +
+                    `🔗 https://www.soccervista.com\n\n` +
+                    `⚠️ _Joue responsable._`
+                );
+            }
         }
 
         if (cmd === 'gamehistory') {

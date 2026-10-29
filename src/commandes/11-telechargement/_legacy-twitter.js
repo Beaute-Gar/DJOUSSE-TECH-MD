@@ -35,7 +35,22 @@ module.exports = {
         const [, username, tweetId] = match;
 
         const strategies = [
-            // Strategy 1: vxtwitter public API
+            // Strategy 1: fxtwitter — API publique vérifiée (HTTP 200, JSON stable)
+            async () => {
+                const res = await axios.get(
+                    `https://api.fxtwitter.com/${username}/status/${tweetId}`,
+                    { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }
+                );
+                const tweet = res.data?.tweet;
+                const media = tweet?.media?.all || tweet?.media?.videos || tweet?.media?.images;
+                if (!media?.length) throw new Error('no media');
+                return media.map(m => ({
+                    url:  m.url || m.thumbnail_url,
+                    type: (m.type === 'video' || m.type === 'gif') ? 'video' : 'image',
+                })).filter(m => m.url);
+            },
+
+            // Strategy 2: vxtwitter (même famille) — souvent bloqué par Cloudflare
             async () => {
                 const res = await axios.get(
                     `https://api.vxtwitter.com/${username}/status/${tweetId}`,
@@ -47,21 +62,6 @@ module.exports = {
                 return media.map(m => ({
                     url:  m.url || m.video_url,
                     type: (m.type === 'video' || (m.url || '').includes('.mp4')) ? 'video' : 'image',
-                })).filter(m => m.url);
-            },
-
-            // Strategy 2: fxtwitter (alias of vxtwitter)
-            async () => {
-                const res = await axios.get(
-                    `https://api.fxtwitter.com/${username}/status/${tweetId}`,
-                    { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }
-                );
-                const tweet = res.data?.tweet;
-                const media = tweet?.media?.all || tweet?.media?.videos || tweet?.media?.images;
-                if (!media?.length) throw new Error('no media');
-                return media.map(m => ({
-                    url:  m.url || m.thumbnail_url,
-                    type: (m.type === 'video') ? 'video' : 'image',
                 })).filter(m => m.url);
             },
         ];

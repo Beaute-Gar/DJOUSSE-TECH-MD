@@ -94,7 +94,77 @@ module.exports = {
         }
 
         if (cmd === 'apkmirror') {
-            return send(`📱 *APK Mirror: "${query}"*\n\n🔗 https://www.apkmirror.com/?post_type=app_release&searchtype=apk&s=${encodeURIComponent(query)}\n\n_Click to search on APKMirror_`);
+            /* Aptoide : API publique réelle (vérifiée le 2026-10-29) —
+               recherche JSON + APK direct (HTTP 206, application/vnd.android.package-archive).
+               APKMirror/APKPure n'exposent aucune API (403 / bloqué). */
+            const APTOIDE = 'https://ws75.aptoide.com/api/7';
+            const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+            if (!query) {
+                return send(
+                    `📱 *Téléchargeur APK*\n\n` +
+                    `• \`.apkmirror whatsapp\` — rechercher\n` +
+                    `• \`.apkmirror com.whatsapp\` — télécharger par nom de paquet\n\n` +
+                    `_Source : Aptoide_`
+                );
+            }
+
+            const looksPackage = /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/i.test(query);
+            try {
+                let app = null;
+
+                if (looksPackage) {
+                    const g = await axios.get(
+                        `${APTOIDE}/app/get/package_name=${encodeURIComponent(query)}`,
+                        { headers: { 'User-Agent': UA }, timeout: 15000 }
+                    );
+                    app = g.data?.nodes?.meta?.data || null;
+                } else {
+                    const s = await axios.get(
+                        `${APTOIDE}/apps/search?query=${encodeURIComponent(query)}&limit=6`,
+                        { headers: { 'User-Agent': UA }, timeout: 15000 }
+                    );
+                    const list = s.data?.datalist?.list || [];
+                    if (list.length > 1) {
+                        const lines = list.map((a, i) => {
+                            const size = Number(a.size) > 0 ? `${(Number(a.size) / 1048576).toFixed(1)} Mo` : 'taille ?';
+                            return `${i + 1}. *${a.name}*\n   \`${a.package}\` · v${a.file?.vername || '?'} · ${size}`;
+                        });
+                        return send(
+                            `📱 *APK : "${query}"*  (${list.length} résultats)\n\n` +
+                            `${lines.join('\n')}\n\n` +
+                            `📥 Télécharger : \`.apkmirror <nom.de.paquet>\`\n` +
+                            `_ex. \`.apkmirror ${list[0].package}\`_`
+                        );
+                    }
+                    app = list[0] || null;
+                }
+
+                if (!app) throw new Error('application introuvable');
+
+                const apk = app.file?.path;
+                if (!apk) throw new Error('aucun APK disponible');
+
+                await sock.sendMessage(jid, {
+                    document: { url: apk },
+                    mimetype: 'application/vnd.android.package-archive',
+                    fileName: `${app.package}-${app.file.vername || 'latest'}.apk`,
+                    caption:
+                        `📱 *${app.name}*\n` +
+                        `📦 \`${app.package}\`\n` +
+                        `🏷️ v${app.file.vername || '?'}  ·  ${(Number(app.size) / 1048576).toFixed(1)} Mo\n\n` +
+                        `_Source : Aptoide_`,
+                    contextInfo,
+                }, { quoted: message });
+                return;
+            } catch (e) {
+                return send(
+                    `📱 *APK : "${query}"* — introuvable sur Aptoide.\n\n` +
+                    `🔗 https://www.apkmirror.com/?post_type=app_release&searchtype=apk&s=${encodeURIComponent(query)}\n` +
+                    `🔗 https://search.f-droid.org/?q=${encodeURIComponent(query)}&lang=en\n\n` +
+                    `_${String(e.message).slice(0, 60)}_`
+                );
+            }
         }
 
         if (cmd === 'happymod') {
@@ -121,14 +191,28 @@ module.exports = {
         }
 
         if (cmd === 'wallpapers') {
+            /* Wallhaven : API publique sans clé, vérifiée HTTP 200 le
+               2026-10-29. Remplace les liens morts Pexels/Unsplash. */
             const q = query || 'nature 4k';
-            return send(
-                `🖼️ *Wallpapers: "${q}"*\n\n` +
-                `🔗 https://www.pexels.com/search/${encodeURIComponent(q)}/\n` +
-                `🔗 https://unsplash.com/s/photos/${encodeURIComponent(q)}\n` +
-                `🔗 https://wallhaven.cc/search?q=${encodeURIComponent(q)}\n\n` +
-                `_Click a link to browse wallpapers_`
-            );
+            try {
+                const res = await axios.get(
+                    `https://wallhaven.cc/api/v1/search?q=${encodeURIComponent(q)}&categories=111&purity=100&sorting=relevance`,
+                    { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 15000 }
+                );
+                const items = (res.data?.data || []).slice(0, 8);
+                if (!items.length) throw new Error('aucun résultat');
+                const lines = items.map((w, i) => `${i + 1}. ${w.resolution}\n   ${w.path}`);
+                return send(
+                    `🖼️ *Wallpapers : "${q}"* — Wallhaven\n\n` +
+                    `${lines.join('\n')}\n\n` +
+                    `🔗 https://wallhaven.cc/search?q=${encodeURIComponent(q)}`
+                );
+            } catch {
+                return send(
+                    `🖼️ *Wallpapers : "${q}"*\n\n` +
+                    `🔗 https://wallhaven.cc/search?q=${encodeURIComponent(q)}`
+                );
+            }
         }
 
         if (cmd === 'wattpad') {
