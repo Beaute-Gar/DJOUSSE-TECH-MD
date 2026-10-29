@@ -940,19 +940,18 @@ function registerExtras(cmd, ctx) {
   });
 
   /* ── NOTES ── */
-  const notes = new Map();
-  cmd('note', { cat: 5, desc: 'Note personnelle (ajouter/lister)', usage: 'note <texte> | note list', icon: '📝' }, async (c) => {
-    const key = c.sender;
-    if (!notes.has(key)) notes.set(key, []);
-    const arr = notes.get(key);
-    const q = (c.q || '').trim();
-    if (!q || q === 'list') {
-      if (!arr.length) return c.reply('Aucune note.');
-      return c.reply(buildFrame(`NOTES (${arr.length})`, arr.map((n, i) => `${i + 1}. ${n}`)));
-    }
-    arr.push(q.slice(0, 500));
-    await c.success(['NOTE AJOUTÉE', `Total : ${arr.length}`]);
-  });
+  const notesPlugin = require('../commandes/02-groupe/_legacy-notes');
+  cmd('note', ['notes'], {
+    cat: 2,
+    desc: 'Notes personnelles et de groupe : add, list, get, update, delete, clear',
+    usage: 'note add|list|get|update|delete|clear | note group list|get|update|delete|clear',
+    icon: '📝',
+  }, async (c) => notesPlugin.run(c.sock, c.msg, c.args, {
+    jid: c.from,
+    contextInfo: c.msg?.message?.extendedTextMessage?.contextInfo || {},
+    isOwner: c.isOwner,
+    isAdmin: c.isAdmin,
+  }));
 
   /* ── BOOKMARK ── */
   const bookmarks = new Map();

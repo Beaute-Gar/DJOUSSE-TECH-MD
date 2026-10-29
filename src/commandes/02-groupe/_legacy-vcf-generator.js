@@ -119,17 +119,25 @@ function resolveAndName(participantId, resolveLid) {
 }
 
 module.exports = {
-    commands: ['vcfgen', 'savecontacts', 'exportvcf', 'contactsave', 'vcfgroup', 'vcfnumber', 'vcfread', 'readvcf', 'vcfview'],
+    commands: ['vcfgen'],
     description: 'Generate VCF contact files with names from WhatsApp and Truecaller',
-    usage: '.vcfgen | .vcfgen @user | .vcfnumber 2547XXXXXXXX | .vcfgroup | .vcfread (reply to vcf)',
+    usage: '.vcfgen [group|number <phone>|read] | .vcfgen @user',
     permission: 'public',
     group: true,
     private: true,
 
     run: async (sock, message, args, ctx) => {
         const { jid, contextInfo, isGroup, groupMetadata, resolveLid } = ctx;
-        const rawCmd = (message.message?.extendedTextMessage?.text
+        let rawCmd = (message.message?.extendedTextMessage?.text
             || message.message?.conversation || '').trim().split(/\s+/)[0].replace(/^\./, '').toLowerCase();
+        if (rawCmd === 'vcfgen') {
+            const actions = { group: 'vcfgroup', number: 'vcfnumber', read: 'vcfread' };
+            const action = String(args[0] || '').toLowerCase();
+            if (actions[action]) {
+                rawCmd = actions[action];
+                args = args.slice(1);
+            }
+        }
 
         if (['vcfread', 'readvcf', 'vcfview'].includes(rawCmd)) {
             const msg = message.message || {};
@@ -148,10 +156,10 @@ module.exports = {
                         ``,
                         `*How to use:*`,
                         `1. Send or receive a .vcf file in the chat`,
-                        `2. Reply to that file with \`.vcfread\``,
+                        `2. Reply to that file with \`.vcfgen read\``,
                         `3. The bot will display all contacts inside it`,
                         ``,
-                        `_Aliases: .readvcf, .vcfview_`,
+                        `_Use \`.vcfgen read\` to display a VCF file_`,
                     ].join('\n'),
                     contextInfo
                 }, { quoted: message });
@@ -178,7 +186,7 @@ module.exports = {
                     buffer = Buffer.concat(chunks);
                 } catch {
                     return sock.sendMessage(jid, {
-                        text: '❌ Could not download the VCF file. Try sending it again and replying with `.vcfread`.',
+                        text: '❌ Could not download the VCF file. Try sending it again and replying with `.vcfgen read`.',
                         contextInfo
                     }, { quoted: message });
                 }
@@ -235,7 +243,7 @@ module.exports = {
             const numbers = args.filter(a => /^\+?\d{7,15}$/.test(a.replace(/[\s\-()]/g, '')));
             if (!numbers.length) {
                 return sock.sendMessage(jid, {
-                    text: '📇 *VCF from Phone Number*\n\n*Usage:* `.vcfnumber <phone1> <phone2> ...`\n\n*Example:*\n`.vcfnumber 254712345678`\n`.vcfnumber +254712345678 +254798765432`\n\nThe bot will try to fetch the name from WhatsApp and Truecaller.',
+                    text: '📇 *VCF from Phone Number*\n\n*Usage:* `.vcfgen number <phone1> <phone2> ...`\n\n*Example:*\n`.vcfgen number 254712345678`\n`.vcfgen number +254712345678 +254798765432`\n\nThe bot will try to fetch the name from WhatsApp and Truecaller.',
                     contextInfo
                 }, { quoted: message });
             }
@@ -282,7 +290,7 @@ module.exports = {
         if (rawCmd === 'vcfgroup' || (rawCmd === 'vcfgen' && isGroup && !args.length)) {
             if (!isGroup) {
                 return sock.sendMessage(jid, {
-                    text: '❌ This command only works in groups.\n\nFor specific numbers use: `.vcfnumber <phone>`',
+                    text: '❌ This command only works in groups.\n\nFor specific numbers use: `.vcfgen number <phone>`',
                     contextInfo
                 }, { quoted: message });
             }
@@ -438,9 +446,9 @@ module.exports = {
                     `*Commands:*`,
                     `• \`.vcfgen\` — Export all group members as VCF`,
                     `• \`.vcfgen @user1 @user2\` — VCF for tagged users`,
-                    `• \`.vcfnumber 2547XXXXXXXX\` — VCF from phone number(s)`,
-                    `• \`.vcfgroup\` — Full group export with name lookup`,
-                    `• \`.vcfread\` — Reply to a .vcf file to view its contents`,
+                    `• \`.vcfgen number 2547XXXXXXXX\` — VCF from phone number(s)`,
+                    `• \`.vcfgen group\` — Full group export with name lookup`,
+                    `• \`.vcfgen read\` — Reply to a .vcf file to view its contents`,
                     ``,
                     `*Name Sources (in order):*`,
                     `1. WhatsApp pushName / display name`,

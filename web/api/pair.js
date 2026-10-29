@@ -110,13 +110,19 @@ module.exports = async function pair(req, res) {
     return sendJson(res, 503, { error: 'Service de jumelage indisponible pour le moment.' }, origin);
   }
 
+  /* Aucun jeton par défaut : un secret codé en dur devient public dès que
+     le dépôt l'est. Sans PAIRING_API_TOKEN configuré on refuse la demande
+     au lieu de propager un mot de passe connu de tout le monde. */
+  const apiToken = process.env.PAIRING_API_TOKEN;
+  if (!apiToken) {
+    return sendJson(res, 503, { error: 'Configuration serveur incomplète (PAIRING_API_TOKEN manquant).' }, origin);
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
   
   try {
-    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-    const apiToken = process.env.PAIRING_API_TOKEN || 'Djousse@123';
-    if (apiToken) headers['x-api-token'] = apiToken;
+    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', 'x-api-token': apiToken };
 
     // Envoi du numéro et d'un identifiant de session unique basé sur le numéro
     const response = await fetch(target, {

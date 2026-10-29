@@ -79,6 +79,16 @@ module.exports = async function status(req, res) {
       connection: typeof body?.connection === 'string' ? body.connection.slice(0, 40) : 'INCONNU',
       sessions: Number.isFinite(Number(body?.sessions)) ? Number(body.sessions) : 0,
       active: Number.isFinite(Number(body?.active)) ? Number(body.active) : 0,
+      /* Identifiants et numéros des sessions ouvertes (sanitizés : ce
+         proxy est public, on ne relaie que des champs bornés). */
+      ids: Array.isArray(body?.ids) ? body.ids.slice(0, 10).map((v) => String(v).slice(0, 64)) : [],
+      details: Array.isArray(body?.details)
+        ? body.details.slice(0, 10).map((d) => ({
+            id: String(d?.id || '').slice(0, 64),
+            number: d?.number ? String(d.number).replace(/\D/g, '').slice(0, 15) : null,
+            connected: Boolean(d?.connected),
+          }))
+        : [],
     }, origin);
   } catch {
     return sendJson(res, 503, { error: 'Service de jumelage indisponible pour le moment.' }, origin);

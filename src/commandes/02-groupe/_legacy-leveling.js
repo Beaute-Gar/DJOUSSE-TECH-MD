@@ -73,9 +73,9 @@ global.addXP = function (jid, sender, amount = null) {
 };
 
 module.exports = {
-    commands: ['level', 'rank', 'xp', 'leaderboard', 'lb', 'levels'],
+    commands: ['leaderboard', 'lb'],
     description: 'XP leveling system — earn XP by chatting, unlock titles',
-    usage: '.level | .leaderboard',
+    usage: '.leaderboard [top|me]',
     permission: 'public',
     group: true,
     private: false,
@@ -84,8 +84,11 @@ module.exports = {
         const { jid, sender, contextInfo } = ctx;
         const rawCmd = (message.message?.extendedTextMessage?.text
             || message.message?.conversation || '').trim().split(/\s+/)[0].replace(/^\./, '').toLowerCase();
+        const profileAction = rawCmd === 'leaderboard'
+            && ['me', 'level', 'profile', 'xp'].includes(String(args[0] || '').toLowerCase());
+        if (profileAction) args = args.slice(1);
 
-        if (['leaderboard', 'lb', 'levels'].includes(rawCmd)) {
+        if (['leaderboard', 'lb', 'levels'].includes(rawCmd) && !profileAction) {
             const groupUsers = Object.entries(levelData)
                 .filter(([key]) => key.startsWith(jid + ':'))
                 .map(([key, data]) => ({ sender: key.split(':')[1], ...data }))

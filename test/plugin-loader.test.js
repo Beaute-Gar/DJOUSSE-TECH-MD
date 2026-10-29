@@ -40,10 +40,11 @@ function espionner() {
 }
 function restaurer() { waSend.send = origSend; }
 
-async function runCmd(nom, args, from) {
+async function runCmd(nom, args, from, text) {
   const entry = h.commands.get(nom);
   assert.ok(entry, `commande ${nom} enregistrée`);
   const { c, out } = ctx(args, from);
+  if (text) c.msg.message = { conversation: text };
   espionner();
   try {
     await entry.handler(c);
@@ -60,6 +61,52 @@ async function runCmd(nom, args, from) {
 test('le chargeur a enregistré plus de 1000 commandes silva', () => {
   assert.ok(h.commands.size > 1000, `attendu > 1000, obtenu ${h.commands.size}`);
   console.log('   registre total :', h.commands.size);
+});
+
+test('les familles consolidées gardent un nom principal et au plus un alias', () => {
+  const removed = [
+    'groupstatus', 'adminlist', 'gadmins', 'gage', 'gexport', 'gjoinlog',
+    'groupage', 'grpinfo', 'gstatus', 'joinlog', 'groupinfo2', 'gstats',
+    'levels', 'rank', 'xp', 'contactsave', 'exportvcf', 'readvcf',
+    'savecontacts', 'vcfgroup', 'vcfnumber', 'vcfread', 'vcfview',
+    'addnote', 'adminclearnotes', 'admindelnote', 'adminnotes',
+    'adminupdatenote', 'allnotes', 'delallnotes', 'delnote', 'getnote',
+    'getnotes', 'updatenote', 'addexpense', 'balances', 'clearexpenses',
+    'settle',
+  ];
+  for (const name of removed) assert.equal(h.commands.has(name), false, `${name} doit être retirée`);
+  assert.equal(h.commands.get('groupstats')?.cat, 3, 'la statistique de protection reste distincte');
+  for (const name of ['groupinfo', 'leaderboard', 'vcfgen', 'note', 'expense']) {
+    const entry = h.commands.get(name);
+    assert.ok(entry, `${name} doit rester enregistrée`);
+    assert.ok((entry.aliases || []).length <= 1, `${name} ne doit pas dépasser un alias`);
+  }
+  assert.equal(h.commands.get('notes'), h.commands.get('note'));
+  assert.equal(h.commands.get('expenses'), h.commands.get('expense'));
+  assert.equal(h.commands.get('lb'), h.commands.get('leaderboard'));
+});
+
+test('les nouvelles sous-commandes répondent sans rappeler les anciennes commandes', async () => {
+  const admins = await runCmd('groupinfo', ['admins'], 'g@g.us', '.groupinfo admins');
+  assert.match(JSON.stringify(admins), /Admin/i);
+
+  const stats = await runCmd('groupinfo', ['stats'], 'g@g.us', '.groupinfo stats');
+  assert.match(JSON.stringify(stats), /Group Statistics/);
+
+  const profile = await runCmd('leaderboard', ['me'], 'levels@g.us', '.leaderboard me');
+  assert.match(JSON.stringify(profile), /Your Level/);
+
+  const vcf = await runCmd('vcfgen', ['read'], 'vcf@g.us', '.vcfgen read');
+  assert.match(JSON.stringify(vcf), /VCF Reader/);
+
+  const note = await runCmd('note', ['unknown'], 'notes@g.us', '.note unknown');
+  assert.match(JSON.stringify(note), /Usage.*note/i);
+
+  const expense = await runCmd('expense', ['unknown'], 'expense@g.us', '.expense unknown');
+  assert.match(JSON.stringify(expense), /𝚎𝚡𝚙𝚎𝚗𝚜𝚎/);
+
+  const split = await runCmd('expense', ['split', '1200', '4', 'Dinner'], 'expense@g.us', '.expense split 1200 4 Dinner');
+  assert.match(JSON.stringify(split), /300/);
 });
 
 test('REEL - .8ball repond (commande maison conservee, pas ecrasee par silva)', async () => {

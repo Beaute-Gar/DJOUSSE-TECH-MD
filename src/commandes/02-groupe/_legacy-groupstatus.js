@@ -57,12 +57,9 @@ function box(title, lines) {
 }
 
 module.exports = {
-    commands:    ['groupstatus', 'ginfo', 'groupinfo', 'grpinfo', 'gstatus',
-                  'adminlist', 'gadmins', 'groupstats', 'gstats',
-                  'joinlog', 'gjoinlog', 'groupage', 'gage',
-                  'exportgroup', 'gexport'],
+    commands:    ['groupinfo', 'ginfo'],
     description: 'Detailed group info, admin list, activity stats, join/leave log, age and export',
-    usage:       '.ginfo | .adminlist | .groupstats | .joinlog | .groupage | .exportgroup',
+    usage:       '.groupinfo [admins|activity|joinlog|age|export|status]',
     permission:  'public',
     group:       true,
     private:     false,
@@ -318,7 +315,7 @@ module.exports = {
             `   ├ 🏆 Top: ${topSend || 'No data yet'}\n` +
             `   └ 📋 Last event: ${lastEvent}\n` +
             `${inviteLink}\n\n` +
-            `_Commands: \`.adminlist\` · \`.groupstats\` · \`.joinlog\` · \`.groupage\` · \`.exportgroup\`_`;
+            `_Actions: \`.groupinfo admins\` · \`.groupinfo activity\` · \`.groupinfo joinlog\` · \`.groupinfo age\` · \`.groupinfo export\`_`;
 
         const mentions = [meta.owner, ...superAdmins.map(p => p.id)].filter(Boolean);
 

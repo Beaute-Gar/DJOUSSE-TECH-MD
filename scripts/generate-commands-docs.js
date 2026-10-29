@@ -68,6 +68,13 @@ function main() {
   const expectedRemoved = new Set([
     'ask', 'assistant', 'commands', 'do', 'math', 'pollstats',
     'silva', 'textart', 'tovn', 'votes', 'ytv',
+    'addexpense', 'addnote', 'adminclearnotes', 'admindelnote', 'adminlist',
+    'adminnotes', 'adminupdatenote', 'allnotes', 'balances', 'clearexpenses',
+    'contactsave', 'delallnotes', 'delnote', 'exportgroup', 'exportvcf',
+    'gadmins', 'gage', 'getnote', 'getnotes', 'gexport', 'gjoinlog',
+    'groupage', 'groupinfo2', 'groupstatus', 'grpinfo', 'gstats', 'gstatus',
+    'joinlog', 'levels', 'rank', 'readvcf', 'savecontacts', 'settle',
+    'updatenote', 'vcfgroup', 'vcfnumber', 'vcfread', 'vcfview', 'xp',
   ]);
   const addedKeys = [...currentKeys].filter((key) => !baselineKeys.has(key));
   const unexpectedRemoved = [...baselineKeys].filter((key) => !currentKeys.has(key) && !expectedRemoved.has(key));

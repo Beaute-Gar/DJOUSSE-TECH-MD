@@ -1,6 +1,6 @@
 # Catalogue des commandes
 
-Inventaire généré automatiquement : **1153 commandes**, **436 alias**, **1589 clés de registre**.
+Inventaire généré automatiquement : **1112 commandes**, **438 alias**, **1550 clés de registre**.
 
 Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 
@@ -23,30 +23,21 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `source` | — | Code source du bot |
 | `uptime` | — | Temps de fonctionnement |
 
-## 02 — GROUPE (155)
+## 02 — GROUPE (115)
 
 | Commande | Alias | Description |
 |---|---|---|
 | `activity` | — | View group chat analytics — top members, peak hours, activity stats |
-| `addexpense` | — | Group expense tracker and bill splitter (like Splitwise) |
 | `addfilter` | `blockword` | Auto-delete messages containing a word. Usage: .addfilter <word> |
 | `addmode` | — | Qui peut ajouter des membres |
-| `addnote` | — | Personal notes — save, view, update and delete your notes |
 | `admin` | `unadmin` | Promote or demote a group member (reply or mention) |
-| `adminclearnotes` | — | Personal notes — save, view, update and delete your notes |
-| `admindelnote` | — | Personal notes — save, view, update and delete your notes |
-| `adminlist` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
-| `adminnotes` | — | Personal notes — save, view, update and delete your notes |
 | `admins` | `@admins` | Mention all group admins |
-| `adminupdatenote` | — | Personal notes — save, view, update and delete your notes |
-| `allnotes` | — | Personal notes — save, view, update and delete your notes |
 | `analytics` | — | View group chat analytics — top members, peak hours, activity stats |
 | `anon` | `anonmsg` | Send an anonymous message to this group. Only bot knows who sent it. |
 | `auditlog` | `audit` | View admin action audit log — tracks kicks, promotes, demotes, settings changes |
 | `automute` | — | Ferme le groupe automatiquement à une heure |
 | `autounmute` | — | Ouvre le groupe automatiquement à une heure |
 | `backupgroup` | — | Backup and restore group settings and configurations |
-| `balances` | — | Group expense tracker and bill splitter (like Splitwise) |
 | `ban` | — | Permanently ban / unban users from using bot commands (persisted across restarts) |
 | `banlist` | — | Permanently ban / unban users from using bot commands (persisted across restarts) |
 | `blocknum` | `unblocknum` | Block or unblock a WhatsApp number at the account level |
@@ -58,7 +49,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `challengeoff` | — | Auto-post daily trivia, puzzles, or word games in groups |
 | `channelinfo` | — | Newsletter/channel follow management |
 | `chatstats` | `whotalks` | Show who talks most in this group |
-| `clearexpenses` | — | Group expense tracker and bill splitter (like Splitwise) |
 | `clearfilters` | `resetfilters` | Remove all word filters from this group |
 | `close` | — | Fermer le groupe (admins) |
 | `commapprove` | — | Approuver une demande d’adhésion |
@@ -68,52 +58,32 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `commrequests` | — | Demandes d’adhésion en attente |
 | `commrevoke` | — | Révoquer le lien d’invitation |
 | `community` | `communaute` | Communautés WhatsApp (API native) |
-| `contactsave` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
 | `dailychallenge` | — | Auto-post daily trivia, puzzles, or word games in groups |
-| `delallnotes` | — | Personal notes — save, view, update and delete your notes |
-| `delnote` | — | Personal notes — save, view, update and delete your notes |
 | `delrules` | — | Set/show/delete group rules |
 | `demote` | `removeadmin` | Retirer le statut admin |
 | `disappear` | `ephemeral` | Messages éphémères du chat |
 | `divorce` | — | Pair/marry two users in a group |
 | `dmmembers` | `msgall` | Send a DM to every member of the current group (owner only) |
-| `expense` | — | Group expense tracker and bill splitter (like Splitwise) |
-| `expenses` | — | Group expense tracker and bill splitter (like Splitwise) |
-| `exportgroup` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
-| `exportvcf` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
+| `expense` | `expenses` | Group expense tracker and bill splitter (like Splitwise) |
 | `followchannel` | — | Newsletter/channel follow management |
-| `gadmins` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
-| `gage` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
 | `getjid` | `whois` | Advanced JID & account intelligence — user, group, business, LID, country, bio and more |
-| `getnote` | — | Personal notes — save, view, update and delete your notes |
-| `getnotes` | — | Personal notes — save, view, update and delete your notes |
-| `gexport` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
 | `ginvite` | `invite` | Envoyer l'invitation du groupe en message natif |
-| `gjoinlog` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
 | `glog` | — | Annoncer les changements du groupe |
 | `goodbyeoff` | — | Auto-welcome new members and farewell members who leave |
-| `groupage` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
 | `groupbackup` | — | Sauvegarde des infos du groupe |
 | `groupcron` | — | Voir les fermetures/ouvertures auto du groupe |
-| `groupinfo` | `ginfo` | Infos du groupe |
+| `groupinfo` | `ginfo` | Infos groupe; admins, stats, activité, historique, âge et export via sous-commandes |
 | `grouprules` | — | Règles du groupe |
-| `groupstatus` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
-| `grpinfo` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
-| `gstats` | `groupinfo2` | Detailed group statistics |
-| `gstatus` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
 | `hidetag` | — | Mention invisible |
 | `htag` | `stag` | Silently mention all group members — they get notified but are not visibly tagged |
 | `inviteinfo` | — | Infos d'un lien d'invitation |
 | `invitelink` | `groupinvite` | Get the group invite link (bot must be admin) |
 | `joingroup` | — | Join a group by link |
-| `joinlog` | — | Detailed group info, admin list, activity stats, join/leave log, age and export |
 | `joinmode` | — | Entrée des membres sur approbation |
 | `joinv4` | — | Accepter une invitation V4 (répondre à la carte) |
 | `kick` | `remove` | Expulser un membre |
-| `lb` | — | XP leveling system — earn XP by chatting, unlock titles |
-| `leaderboard` | — | XP leveling system — earn XP by chatting, unlock titles |
+| `leaderboard` | `lb` | XP leveling system — earn XP by chatting, unlock titles |
 | `leavegroup` | `quit` | Leave a group |
-| `levels` | — | XP leveling system — earn XP by chatting, unlock titles |
 | `link` | `grouplink` | Lien d’invitation |
 | `listadmins` | — | Liste des admins du groupe |
 | `listbackups` | — | Backup and restore group settings and configurations |
@@ -129,7 +99,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `muteuser` | — | Mute a user in group |
 | `mygroups` | — | Tous les groupes où est le bot |
 | `newsletter` | — | Newsletter/channel follow management |
-| `notes` | — | Personal notes — save, view, update and delete your notes |
+| `note` | `notes` | Notes personnelles et de groupe : add, list, get, update, delete, clear |
 | `open` | — | Ouvrir le groupe |
 | `pair` | — | Pair/marry two users in a group |
 | `peakhours` | — | View group chat analytics — top members, peak hours, activity stats |
@@ -139,8 +109,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `promote` | `makeadmin` | Promouvoir admin |
 | `quizoff` | — | Welcome quiz — new members must answer a question to stay |
 | `quizsettings` | — | Welcome quiz — new members must answer a question to stay |
-| `rank` | — | XP leveling system — earn XP by chatting, unlock titles |
-| `readvcf` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
 | `removefilter` | `unfilter` | Remove a word filter |
 | `reportuser` | — | Report a user to admins |
 | `resetlink` | `newlink` | Revoke and reset the group invite link |
@@ -148,14 +116,12 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `revoke` | `revokelink` | Révoquer le lien |
 | `revokev4` | — | Retirer l'invitation V4 d'un membre |
 | `rules` | — | Set/show/delete group rules |
-| `savecontacts` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
 | `setchallenge` | — | Auto-post daily trivia, puzzles, or word games in groups |
 | `setdesc` | `setdescription` | Changer la description |
 | `setgoodbye` | — | Auto-welcome new members and farewell members who leave |
 | `setname` | — | Changer le nom du groupe |
 | `setquiz` | — | Welcome quiz — new members must answer a question to stay |
 | `setrules` | — | Set/show/delete group rules |
-| `settle` | — | Group expense tracker and bill splitter (like Splitwise) |
 | `setwelcome` | — | Auto-welcome new members and farewell members who leave |
 | `swgc` | — | Send text / image / video / audio as group status |
 | `tagadmin` | — | Mentionner tous les admins du groupe |
@@ -172,16 +138,10 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `unmutechannel` | — | Newsletter/channel follow management |
 | `unmuteuser` | — | Unmute a user in group |
 | `unpin` | — | Désépingler un message |
-| `updatenote` | — | Personal notes — save, view, update and delete your notes |
 | `vcfgen` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
-| `vcfgroup` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
-| `vcfnumber` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
-| `vcfread` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
-| `vcfview` | — | Generate VCF contact files with names from WhatsApp and Truecaller |
 | `warnreset` | `warnlist` | Warn group members. Auto-kick after 3 warnings. |
 | `welcomeoff` | — | Auto-welcome new members and farewell members who leave |
 | `welcomequiz` | — | Welcome quiz — new members must answer a question to stay |
-| `xp` | — | XP leveling system — earn XP by chatting, unlock titles |
 
 ## 03 — PROTECTION (90)
 
@@ -395,7 +355,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `webshot` | — | Take a screenshot of any website |
 | `yts` | — | Extended search commands |
 
-## 05 — OUTILS (255)
+## 05 — OUTILS (254)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -551,7 +511,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `nickname` | `nick` | Generate nickname |
 | `nigerianflag` | — | Logo maker and text effect generator |
 | `nitumie` | `statussave` | Save a WhatsApp status (reply to a status with this command) |
-| `note` | — | Note personnelle (ajouter/lister) |
 | `onwa` | — | Vérifier si un numéro a WhatsApp |
 | `os` | `osinfo` | Operating system info |
 | `palindrome` | `ispalindrome` | Check if palindrome |

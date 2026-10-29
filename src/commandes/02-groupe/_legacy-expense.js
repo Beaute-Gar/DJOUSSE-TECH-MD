@@ -13,9 +13,9 @@ function saveExpenses(data) {
 }
 
 module.exports = {
-    commands: ['expense', 'addexpense', 'expenses', 'splitbill', 'settle', 'clearexpenses', 'balances'],
+    commands: ['expense', 'expenses'],
     description: 'Group expense tracker and bill splitter (like Splitwise)',
-    usage: '.addexpense 500 Dinner | .splitbill 1200 3 Uber | .balances | .expenses',
+    usage: '.expense add 500 Dinner | .expense split 1200 3 Uber | .expense balances | .expense list',
     permission: 'public',
     group: true,
     private: false,
@@ -23,8 +23,31 @@ module.exports = {
     run: async (sock, message, args, ctx) => {
         const { jid, sender, contextInfo } = ctx;
 
-        const rawCmd = (message.message?.extendedTextMessage?.text
+        let rawCmd = (message.message?.extendedTextMessage?.text
             || message.message?.conversation || '').trim().split(/\s+/)[0].replace(/^\./, '').toLowerCase();
+        if (rawCmd === 'expense' || rawCmd === 'expenses') {
+            const actions = {
+                add: 'addexpense',
+                split: 'splitbill',
+                settle: 'settle',
+                clear: 'clearexpenses',
+                balances: 'balances',
+                list: 'expense',
+            };
+            const action = String(args[0] || '').toLowerCase();
+            if (actions[action]) {
+                rawCmd = actions[action];
+                args = args.slice(1);
+            } else {
+                if (action) {
+                    return sock.sendMessage(jid, {
+                        text: 'Usage : `.expense add|list|balances|split|settle|clear`.',
+                        contextInfo
+                    }, { quoted: message });
+                }
+                rawCmd = 'expense';
+            }
+        }
 
         const expenses = loadExpenses();
         if (!expenses[jid]) expenses[jid] = { entries: [], currency: 'KES' };
@@ -40,7 +63,7 @@ module.exports = {
             const amount = parseFloat(args[0]);
             if (isNaN(amount) || amount <= 0) {
                 return sock.sendMessage(jid, {
-                    text: '❌ *Usage:* `.addexpense <amount> <description>`\n\n*Example:* `.addexpense 500 Lunch at Java`',
+                    text: '❌ *Usage:* `.expense add <amount> <description>`\n\n*Example:* `.expense add 500 Lunch at Java`',
                     contextInfo
                 }, { quoted: message });
             }
@@ -73,7 +96,7 @@ module.exports = {
 
             if (isNaN(amount) || amount <= 0 || isNaN(people) || people < 2) {
                 return sock.sendMessage(jid, {
-                    text: '❌ *Usage:* `.splitbill <total> <people> [description]`\n\n*Example:* `.splitbill 1200 4 Dinner`',
+                    text: '❌ *Usage:* `.expense split <total> <people> [description]`\n\n*Example:* `.expense split 1200 4 Dinner`',
                     contextInfo
                 }, { quoted: message });
             }
@@ -82,7 +105,7 @@ module.exports = {
             const perPerson = (amount / people).toFixed(2);
 
             return sock.sendMessage(jid, {
-                text: `💳 *Bill Split*\n\n📝 *${desc}*\n💵 *Total:* ${group.currency} ${amount.toLocaleString()}\n👥 *People:* ${people}\n\n💰 *Each pays:* ${group.currency} ${parseFloat(perPerson).toLocaleString()}\n\n_Use \`.addexpense ${perPerson} ${desc}\` to log your share._`,
+                text: `💳 *Bill Split*\n\n📝 *${desc}*\n💵 *Total:* ${group.currency} ${amount.toLocaleString()}\n👥 *People:* ${people}\n\n💰 *Each pays:* ${group.currency} ${parseFloat(perPerson).toLocaleString()}\n\n_Use \`.expense add ${perPerson} ${desc}\` to log your share._`,
                 contextInfo
             }, { quoted: message });
         }
@@ -93,7 +116,7 @@ module.exports = {
 
             if (isNaN(amount) || amount <= 0 || !mentioned.length) {
                 return sock.sendMessage(jid, {
-                    text: '❌ *Usage:* `.settle <amount> @person`\n\n*Example:* `.settle 250 @user` (means you paid them back)',
+                    text: '❌ *Usage:* `.expense settle <amount> @person`\n\n*Example:* `.expense settle 250 @user` (means you paid them back)',
                     contextInfo
                 }, { quoted: message });
             }
@@ -129,7 +152,7 @@ module.exports = {
 
             const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
             if (!sorted.length) {
-                return sock.sendMessage(jid, { text: '📊 No expenses recorded yet.\n\nAdd one with `.addexpense 500 Lunch`', contextInfo }, { quoted: message });
+                return sock.sendMessage(jid, { text: '📊 No expenses recorded yet.\n\nAdd one with `.expense add 500 Lunch`', contextInfo }, { quoted: message });
             }
 
             const totalSpent = sorted.reduce((s, [, v]) => s + v, 0);
@@ -145,7 +168,7 @@ module.exports = {
             const mentions = sorted.map(([user]) => user);
 
             return sock.sendMessage(jid, {
-                text: `📊 *Group Balances*\n\n💵 *Total spent:* ${group.currency} ${totalSpent.toLocaleString()}\n👤 *Average:* ${group.currency} ${avg.toFixed(0)}\n\n${balances}\n\n_Settle up: \`.settle 250 @person\`_`,
+                text: `📊 *Group Balances*\n\n💵 *Total spent:* ${group.currency} ${totalSpent.toLocaleString()}\n👤 *Average:* ${group.currency} ${avg.toFixed(0)}\n\n${balances}\n\n_Settle up: \`.expense settle 250 @person\`_`,
                 mentions,
                 contextInfo
             }, { quoted: message });
@@ -154,7 +177,7 @@ module.exports = {
         if (['expenses', 'expense'].includes(rawCmd)) {
             if (!group.entries.length) {
                 return sock.sendMessage(jid, {
-                    text: '💰 *Expense Tracker*\n\nNo expenses yet!\n\n*Commands:*\n• `.addexpense 500 Lunch`\n• `.splitbill 1200 4 Dinner`\n• `.balances`\n• `.settle 250 @user`\n• `.clearexpenses`',
+                    text: '💰 *Expense Tracker*\n\nNo expenses yet!\n\n*Actions:*\n• `.expense add 500 Lunch`\n• `.expense split 1200 4 Dinner`\n• `.expense balances`\n• `.expense settle 250 @user`\n• `.expense clear`',
                     contextInfo
                 }, { quoted: message });
             }
@@ -169,7 +192,7 @@ module.exports = {
             const total = group.entries.reduce((s, e) => s + e.amount, 0);
 
             return sock.sendMessage(jid, {
-                text: `💰 *Recent Expenses*\n\n${list}\n\n📊 *Total:* ${group.currency} ${total.toLocaleString()}\n\n_See all balances: \`.balances\`_`,
+                text: `💰 *Recent Expenses*\n\n${list}\n\n📊 *Total:* ${group.currency} ${total.toLocaleString()}\n\n_See all balances: \`.expense balances\`_`,
                 contextInfo
             }, { quoted: message });
         }

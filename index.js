@@ -86,7 +86,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 const DEFAULT_SESSION = 'djsession';
 const MONGO_DB = process.env.MONGO_DB || 'whatsapp_bot';
-const MAX_RECONNECT_ATTEMPTS = 10;
+const MAX_RECONNECT_ATTEMPTS = 6;
 
 /* Codes Baileys définitifs : la session est morte, il faut purger. */
 const PURGE_CODES = [
@@ -270,8 +270,60 @@ async function createAuthState(sessionId) {
   };
 }
 
-/** Reconnexion différée avec back-off (2 s → 30 s) et plafond d'essais. */
+/* ─────────── Énumération des sessions enregistrées ───────────
+   Sert à BOOT_SESSION=all : on reprend TOUTES les sessions qui possèdent
+   un creds.registered=true (un compte WhatsApp par client), au lieu de
+   n'ouvrir qu'une seule socket au démarrage. */
+
+async function listRegisteredSessions() {
+  const found = new Set();
+
+  const client = await ensureMongo();
+  if (client) {
+    try {
+      const db = client.db(MONGO_DB);
+      const cols = await db.listCollections({}, { nameOnly: true }).toArray();
+      for (const col of cols) {
+        if (!col.name.startsWith('session_')) continue;
+        const id = col.name.slice('session_'.length);
+        if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) continue;
+        const doc = await db.collection(col.name).findOne({ _id: 'creds' });
+        if (doc?.data?.registered === true) found.add(id);
+      }
+    } catch (err) {
+      console.error('[SESSIONS] Énumération MongoDB impossible :', err?.message || err);
+    }
+  }
+
+  /* Repli local : sessions enregistrées hors Atlas (ou sans Mongo). */
+  try {
+    const base = path.join(__dirname, 'storage', 'sessions');
+    for (const ent of await fs.promises.readdir(base, { withFileTypes: true })) {
+      if (!ent.isDirectory() || found.has(ent.name)) continue;
+      try {
+        const raw = await fs.promises.readFile(path.join(base, ent.name, 'creds.json'), 'utf8');
+        if (JSON.parse(raw)?.registered === true) found.add(ent.name);
+      } catch { /* dossier sans creds.json valide */ }
+    }
+  } catch { /* dossier storage/sessions absent */ }
+
+  return [...found];
+}
+
+/** Reconnexion différée avec back-off exponentiel (3 s → 60 s) et plafond d'essais. */
 function scheduleReconnect(sessionId, oldSock) {
+  /* Un socket JAMAIS enregistré (me absent / registered=false) ne pourra
+     jamais se reconnecter : WhatsApp refuse indéfiniment (408). Chaque
+     tentative ne produit donc qu'un handshake inutile — sur une instance
+     Render à 0,1 vCPU c'est du CPU et de la RAM gaspillés, et cela masque
+     les vraies erreurs dans les logs. Le jumelage se refait via /pair. */
+  if (oldSock && !oldSock.authState?.creds?.registered) {
+    console.log(`[SOCKET:${sessionId}] Session non enregistrée — reconnexion abandonnée (jumelage via /pair requis).`);
+    if (activeSessions.get(sessionId) === oldSock) activeSessions.delete(sessionId);
+    reconnectState.delete(sessionId);
+    return;
+  }
+
   const state = reconnectState.get(sessionId) || { attempts: 0, timer: null };
   if (state.timer) return;
   state.attempts += 1;
@@ -284,7 +336,7 @@ function scheduleReconnect(sessionId, oldSock) {
     return;
   }
 
-  const delay = Math.min(30000, 2000 * state.attempts);
+  const delay = Math.min(60000, 3000 * Math.pow(2, state.attempts - 1));
   state.timer = setTimeout(async () => {
     state.timer = null;
     const current = activeSessions.get(sessionId);
@@ -316,6 +368,18 @@ function handleConnectionUpdate(sessionId, sock, auth, update) {
 
   if (connection === 'open') {
     console.log(`[SOCKET:${sessionId}] WhatsApp CONNECTÉ avec succès !`);
+
+    /* Numéro réellement lié (identité WhatsApp, pas la valeur de .env) :
+       PAIRING_PHONE est mis à jour en mémoire pour que .diag / .pair
+       affichent le compte qui vient de se connecter. */
+    const connectedNumber = sock?.user?.id
+      ? String(sock.user.id).split(/[:@]/)[0].replace(/\D/g, '')
+      : '';
+    if (connectedNumber) {
+      config.pairingPhone = connectedNumber;
+      console.log(`[PAIRING_PHONE] +${connectedNumber} (session ${sessionId})`);
+    }
+
     const state = reconnectState.get(sessionId);
     if (state) {
       if (state.timer) clearTimeout(state.timer);
@@ -754,8 +818,12 @@ app.get('/status', (req, res) => {
   // (la session principale peut être en attente pendant qu'une session
   //  pairée via le site est déjà connectée).
   let isConnected = false;
-  for (const sock of activeSessions.values()) {
-    if (sock?.user) { isConnected = true; break; }
+  const details = [];
+  for (const [id, sock] of activeSessions) {
+    const number = sock?.user?.id ? String(sock.user.id).split(/[:@]/)[0].replace(/\D/g, '') : null;
+    const connected = Boolean(sock?.user);
+    if (connected) isConnected = true;
+    details.push({ id, number, connected });
   }
 
   return res.status(200).json({
@@ -764,6 +832,11 @@ app.get('/status', (req, res) => {
     connection: isConnected ? 'open' : 'connecting',
     sessions: activeSessions.size,
     active: activeSessions.size,
+    /* Identifiants + numéro réel de chaque socket ouverte : permet de
+       savoir QUI est connecté sans deviner (PAIRING_PHONE reflète le
+       dernier compte effectivement lié). */
+    ids: details.map((d) => d.id),
+    details,
   });
 });
 
@@ -821,7 +894,52 @@ app.listen(PORT, () => {
   console.log(`[HTTP] Serveur Web prêt et à l'écoute sur le port ${PORT}`);
 });
 
-// Session principale : démarrage automatique, reconnexion gérée par la socket.
-initWhatsAppSession(DEFAULT_SESSION).catch((err) => {
-  console.error(`[SOCKET:${DEFAULT_SESSION}] Échec du démarrage :`, err?.message || err);
-});
+/* Session(s) de démarrage, pilotées par BOOT_SESSION :
+   - absent / « on »   → djsession (comportement historique) ;
+   - « off/false/0/no »→ aucun socket au boot (jumelage via /pair) ;
+   - « all/auto/* »    → reprend TOUTES les sessions enregistrées en base
+     (multi-clients), plafonnées par MAX_BOOT_SESSIONS (défaut 5) ;
+   - « session_XXXX »  → reprend cette session précise (un seul socket,
+     reprise automatique après redémarrage Render). */
+const bootRaw = String(process.env.BOOT_SESSION || '').trim();
+const bootKey = bootRaw.toLowerCase();
+const bootOff = ['off', 'false', '0', 'no'].includes(bootKey);
+const bootAll = ['all', 'auto', '*'].includes(bootKey);
+const bootSessionId = bootRaw && !bootOff && !bootAll && /^[A-Za-z0-9_-]{1,64}$/.test(bootRaw)
+  ? bootRaw
+  : DEFAULT_SESSION;
+const MAX_BOOT_SESSIONS = Math.max(1, Number(process.env.MAX_BOOT_SESSIONS) || 5);
+
+async function bootSessions() {
+  if (bootOff) {
+    console.log('[SOCKET] BOOT_SESSION=off — aucune session de démarrage (jumelage via /pair uniquement).');
+    return;
+  }
+
+  if (!bootAll) {
+    await initWhatsAppSession(bootSessionId).catch((err) => {
+      console.error(`[SOCKET:${bootSessionId}] Échec du démarrage :`, err?.message || err);
+    });
+    return;
+  }
+
+  const ids = (await listRegisteredSessions()).slice(0, MAX_BOOT_SESSIONS);
+  if (!ids.length) {
+    console.log('[SOCKET] BOOT_SESSION=all — aucune session enregistrée en base.');
+    return;
+  }
+
+  console.log(`[SOCKET] BOOT_SESSION=all — reprise de ${ids.length} session(s) : ${ids.join(', ')}`);
+  for (const id of ids) {
+    try {
+      await initWhatsAppSession(id);
+    } catch (err) {
+      console.error(`[SOCKET:${id}] Échec du démarrage :`, err?.message || err);
+    }
+    /* Délai entre deux ouvertures : évite une rafale de handshakes que
+       WhatsApp assimile à un comportement automatisé. */
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+}
+
+bootSessions().catch((err) => console.error('[SOCKET] Échec du démarrage des sessions :', err?.message || err));

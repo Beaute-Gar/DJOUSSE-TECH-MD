@@ -1,26 +1,26 @@
 {
-  "generatedAt": "2026-10-28T18:22:49.228Z",
+  "generatedAt": "2026-10-28T19:15:41.528Z",
   "environment": "sock Proxy ; aucun appel réseau ; stockage temporaire isolé",
   "timeoutMs": 2000,
   "totals": {
-    "commands": 1153,
-    "tested": 1139,
+    "commands": 1112,
+    "tested": 1098,
     "excluded": 14,
-    "registryKeys": 1589,
+    "registryKeys": 1550,
     "blockedWrites": 0,
-    "redirectedWrites": 6
+    "redirectedWrites": 2
   },
   "counts": {
-    "OK": 1138,
+    "OK": 1097,
     "SILENCIEUSE": 0,
     "PLANTE": 1,
     "UNDEFINED": 0,
     "TIMEOUT": 0
   },
   "verificationCounts": {
-    "network": 179,
-    "whatsapp": 178,
-    "isolated": 857
+    "network": 178,
+    "whatsapp": 165,
+    "isolated": 829
   },
   "excluded": [
     {
@@ -348,21 +348,6 @@
       "error": null
     },
     {
-      "command": "addexpense",
-      "keys": [
-        "addexpense"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
       "command": "addfilter",
       "keys": [
         "addfilter",
@@ -382,21 +367,6 @@
       "command": "addmode",
       "keys": [
         "addmode"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "addnote",
-      "keys": [
-        "addnote"
       ],
       "category": 2,
       "status": "OK",
@@ -458,68 +428,6 @@
       "error": null
     },
     {
-      "command": "adminclearnotes",
-      "keys": [
-        "adminclearnotes"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "admindelnote",
-      "keys": [
-        "admindelnote"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "adminlist",
-      "keys": [
-        "adminlist"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
-      "command": "adminnotes",
-      "keys": [
-        "adminnotes"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
       "command": "admins",
       "keys": [
         "@admins",
@@ -535,21 +443,6 @@
         "groupMetadata"
       ],
       "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
-      "command": "adminupdatenote",
-      "keys": [
-        "adminupdatenote"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
       "error": null
     },
     {
@@ -837,21 +730,6 @@
         "bot"
       ],
       "category": 1,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "allnotes",
-      "keys": [
-        "allnotes"
-      ],
-      "category": 2,
       "status": "OK",
       "responses": 1,
       "networkAttempts": 0,
@@ -2209,21 +2087,6 @@
         "sendPresenceUpdate"
       ],
       "verification": "non vérifiable sans réseau",
-      "error": null
-    },
-    {
-      "command": "balances",
-      "keys": [
-        "balances"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
       "error": null
     },
     {
@@ -3810,21 +3673,6 @@
       "error": null
     },
     {
-      "command": "clearexpenses",
-      "keys": [
-        "clearexpenses"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
       "command": "clearfilters",
       "keys": [
         "clearfilters",
@@ -4160,21 +4008,6 @@
       "blockedExitAttempts": 0,
       "whatsappMethods": [],
       "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "contactsave",
-      "keys": [
-        "contactsave"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 2,
-      "networkAttempts": 2,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "non vérifiable sans réseau",
       "error": null
     },
     {
@@ -4670,21 +4503,6 @@
       "error": null
     },
     {
-      "command": "delallnotes",
-      "keys": [
-        "delallnotes"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
       "command": "delbad",
       "keys": [
         "delbad"
@@ -4765,21 +4583,6 @@
         "delmail"
       ],
       "category": 10,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "delnote",
-      "keys": [
-        "delnote"
-      ],
-      "category": 2,
       "status": "OK",
       "responses": 1,
       "networkAttempts": 0,
@@ -5697,59 +5500,12 @@
     {
       "command": "expense",
       "keys": [
-        "expense"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "expenses",
-      "keys": [
+        "expense",
         "expenses"
       ],
       "category": 2,
       "status": "OK",
       "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "exportgroup",
-      "keys": [
-        "exportgroup"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata",
-        "groupInviteCode"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
-      "command": "exportvcf",
-      "keys": [
-        "exportvcf"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 2,
       "networkAttempts": 0,
       "blockedProcessAttempts": 0,
       "blockedExitAttempts": 0,
@@ -6321,40 +6077,6 @@
       "error": null
     },
     {
-      "command": "gadmins",
-      "keys": [
-        "gadmins"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
-      "command": "gage",
-      "keys": [
-        "gage"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
       "command": "galaxy",
       "keys": [
         "galaxy"
@@ -6564,36 +6286,6 @@
       "error": null
     },
     {
-      "command": "getnote",
-      "keys": [
-        "getnote"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "getnotes",
-      "keys": [
-        "getnotes"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
       "command": "getsetting",
       "keys": [
         "getsetting"
@@ -6621,24 +6313,6 @@
       "blockedExitAttempts": 0,
       "whatsappMethods": [],
       "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "gexport",
-      "keys": [
-        "gexport"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata",
-        "groupInviteCode"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
       "error": null
     },
     {
@@ -6756,23 +6430,6 @@
         "sendPresenceUpdate"
       ],
       "verification": "non vérifiable sans réseau",
-      "error": null
-    },
-    {
-      "command": "gjoinlog",
-      "keys": [
-        "gjoinlog"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
       "error": null
     },
     {
@@ -7120,23 +6777,6 @@
       "error": null
     },
     {
-      "command": "groupage",
-      "keys": [
-        "groupage"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
       "command": "groupbackup",
       "keys": [
         "groupbackup"
@@ -7244,81 +6884,6 @@
       "blockedExitAttempts": 0,
       "whatsappMethods": [],
       "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "groupstatus",
-      "keys": [
-        "groupstatus"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata",
-        "groupInviteCode",
-        "profilePictureUrl"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
-      "command": "grpinfo",
-      "keys": [
-        "grpinfo"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata",
-        "groupInviteCode",
-        "profilePictureUrl"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
-      "command": "gstats",
-      "keys": [
-        "groupinfo2",
-        "gstats"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
-      "command": "gstatus",
-      "keys": [
-        "gstatus"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata",
-        "groupInviteCode",
-        "profilePictureUrl"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
       "error": null
     },
     {
@@ -8147,23 +7712,6 @@
       "error": null
     },
     {
-      "command": "joinlog",
-      "keys": [
-        "joinlog"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata"
-      ],
-      "verification": "non vérifiable sans WhatsApp/groupe réel",
-      "error": null
-    },
-    {
       "command": "joinmode",
       "keys": [
         "joinmode"
@@ -8465,21 +8013,6 @@
       "error": null
     },
     {
-      "command": "lb",
-      "keys": [
-        "lb"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
       "command": "lcm",
       "keys": [
         "lcm"
@@ -8497,6 +8030,7 @@
     {
       "command": "leaderboard",
       "keys": [
+        "lb",
         "leaderboard"
       ],
       "category": 2,
@@ -8598,21 +8132,6 @@
         "level"
       ],
       "category": 10,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "levels",
-      "keys": [
-        "levels"
-      ],
-      "category": 2,
       "status": "OK",
       "responses": 1,
       "networkAttempts": 0,
@@ -10258,21 +9777,7 @@
     {
       "command": "note",
       "keys": [
-        "note"
-      ],
-      "category": 5,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "notes",
-      "keys": [
+        "note",
         "notes"
       ],
       "category": 2,
@@ -11550,21 +11055,6 @@
       "error": null
     },
     {
-      "command": "rank",
-      "keys": [
-        "rank"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
       "command": "rate",
       "keys": [
         "rate"
@@ -11695,21 +11185,6 @@
         "textfromimage"
       ],
       "category": 4,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "readvcf",
-      "keys": [
-        "readvcf"
-      ],
-      "category": 2,
       "status": "OK",
       "responses": 1,
       "networkAttempts": 0,
@@ -12579,21 +12054,6 @@
       "category": 5,
       "status": "OK",
       "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "savecontacts",
-      "keys": [
-        "savecontacts"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 2,
       "networkAttempts": 0,
       "blockedProcessAttempts": 0,
       "blockedExitAttempts": 0,
@@ -13814,21 +13274,6 @@
         "settings"
       ],
       "category": 3,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "settle",
-      "keys": [
-        "settle"
-      ],
-      "category": 2,
       "status": "OK",
       "responses": 1,
       "networkAttempts": 0,
@@ -16771,21 +16216,6 @@
       "error": null
     },
     {
-      "command": "updatenote",
-      "keys": [
-        "updatenote"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
       "command": "upper",
       "keys": [
         "caps",
@@ -16950,73 +16380,11 @@
       "category": 2,
       "status": "OK",
       "responses": 2,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "vcfgroup",
-      "keys": [
-        "vcfgroup"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 2,
       "networkAttempts": 2,
       "blockedProcessAttempts": 0,
       "blockedExitAttempts": 0,
-      "whatsappMethods": [
-        "groupMetadata"
-      ],
+      "whatsappMethods": [],
       "verification": "non vérifiable sans réseau",
-      "error": null
-    },
-    {
-      "command": "vcfnumber",
-      "keys": [
-        "vcfnumber"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "vcfread",
-      "keys": [
-        "vcfread"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "vcfview",
-      "keys": [
-        "vcfview"
-      ],
-      "category": 2,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
       "error": null
     },
     {
@@ -17866,21 +17234,6 @@
         "ws"
       ],
       "category": 7,
-      "status": "OK",
-      "responses": 1,
-      "networkAttempts": 0,
-      "blockedProcessAttempts": 0,
-      "blockedExitAttempts": 0,
-      "whatsappMethods": [],
-      "verification": "test local isolé",
-      "error": null
-    },
-    {
-      "command": "xp",
-      "keys": [
-        "xp"
-      ],
-      "category": 2,
       "status": "OK",
       "responses": 1,
       "networkAttempts": 0,

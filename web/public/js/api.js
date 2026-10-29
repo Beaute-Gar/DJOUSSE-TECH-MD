@@ -7,21 +7,16 @@ export class ApiError extends Error {
   }
 }
 
-const BACKEND_URL = 'https://djousse-tech-md.onrender.com';
-const API_TOKEN = 'Djousse@123';
+/* Aucun secret dans le navigateur : le site appelle ses PROPRES routes
+   (/api/pair, /api/status), qui gardent le jeton côté serveur Vercel.
+   Un token écrit dans un fichier statique est lisible par n'importe qui. */
 
 async function request(path, { method = 'GET', body, signal } = {}) {
-  let targetUrl = path;
-  if (!path.startsWith('http')) {
-    targetUrl = `${BACKEND_URL.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
-  }
+  const targetUrl = path.startsWith('http') ? path : `/${path.replace(/^\/+/, '')}`;
 
   const headers = {
     'Content-Type': 'application/json'
   };
-  if (API_TOKEN) {
-    headers['x-api-token'] = API_TOKEN;
-  }
 
   let response;
   try {
@@ -66,24 +61,14 @@ async function request(path, { method = 'GET', body, signal } = {}) {
   return payload;
 }
 
-async function requestWithFallback(primary, fallback, options) {
-  try {
-    return await request(primary, options);
-  } catch (error) {
-    if (error?.name === 'AbortError') throw error;
-    if (!(error instanceof ApiError) || ![404, 405, 503].includes(error.status)) throw error;
-    return request(fallback, options);
-  }
-}
-
 export function getStatus({ signal } = {}) {
-  return requestWithFallback('status', './status', { method: 'GET', signal });
+  return request('/api/status', { method: 'GET', signal });
 }
 
 export async function getPairingCode(number, { signal } = {}) {
   const cleanPhone = String(number || '').replace(/\D/g, '');
-  
-  const result = await requestWithFallback('pair', './pair', {
+
+  const result = await request('/api/pair', {
     method: 'POST',
     body: { phone: cleanPhone },
     signal,

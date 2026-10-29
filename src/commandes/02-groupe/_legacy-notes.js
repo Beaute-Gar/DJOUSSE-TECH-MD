@@ -22,10 +22,9 @@ function saveNotes(file, notes) {
 function slugify(s) { return s.toLowerCase().trim().replace(/\s+/g, '_').slice(0, 40); }
 
 module.exports = {
-    commands:    ['addnote', 'delnote', 'delallnotes', 'getnote', 'getnotes', 'notes', 'updatenote',
-                  'adminnotes', 'admindelnote', 'adminclearnotes', 'adminupdatenote', 'allnotes'],
+    commands:    ['note', 'notes'],
     description: 'Personal notes — save, view, update and delete your notes',
-    usage:       '.addnote <title> | <content>\n.getnote <title>\n.notes (list all)',
+    usage:       '.note add <title> | <content>\n.note get <title>\n.note list',
     permission:  'public',
     group:       true,
     private:     true,
@@ -33,26 +32,61 @@ module.exports = {
     run: async (sock, message, args, ctx) => {
         const { jid, contextInfo, isOwner } = ctx;
         const from   = message.key.participant || message.key.remoteJid;
-        const cmd    = (message.message?.extendedTextMessage?.text
+        let cmd      = (message.message?.extendedTextMessage?.text
             || message.message?.conversation || '').trim().split(/\s+/)[0].replace(/^\./, '').toLowerCase();
+        if (cmd === 'note' || cmd === 'notes') {
+            const action = String(args[0] || 'list').toLowerCase();
+            const userActions = {
+                add: 'addnote',
+                list: 'getnotes',
+                get: 'getnote',
+                update: 'updatenote',
+                delete: 'delnote',
+                del: 'delnote',
+                clear: 'delallnotes',
+            };
+            if (action === 'group') {
+                const groupAction = String(args[1] || 'list').toLowerCase();
+                const groupActions = {
+                    list: 'adminnotes',
+                    get: 'getgroupnote',
+                    update: 'adminupdatenote',
+                    delete: 'admindelnote',
+                    del: 'admindelnote',
+                    clear: 'adminclearnotes',
+                };
+                cmd = groupActions[groupAction] || '';
+                args = args.slice(2);
+            } else if (action === 'all') {
+                cmd = 'allnotes';
+                args = args.slice(1);
+            } else {
+                cmd = userActions[action] || '';
+                args = args.slice(1);
+            }
+        }
 
         const uFile = userFile(from);
         const aFile = adminFile(jid);
 
         const send = (text) => sock.sendMessage(jid, { text: fmt(text), contextInfo }, { quoted: message });
 
+        if (!cmd) {
+            return send('Usage : `.note add|get|list|update|delete|clear` ou `.note group list|get|update|delete|clear`.');
+        }
+
         if (cmd === 'notes' || cmd === 'getnotes') {
             const notes = loadNotes(uFile);
             const keys  = Object.keys(notes);
-            if (!keys.length) return send('📒 *Your Notes*\n\nYou have no saved notes.\n\nCreate one with `.addnote <title> | <content>`');
+            if (!keys.length) return send('📒 *Your Notes*\n\nYou have no saved notes.\n\nCreate one with `.note add <title> | <content>`\nGroup notes: `.note group list`');
             const list = keys.map((k, i) => `*${i + 1}.* ${k}`).join('\n');
-            return send(`📒 *Your Notes (${keys.length})*\n\n${list}\n\n_Use \`.getnote <title>\` to read a note_`);
+            return send(`📒 *Your Notes (${keys.length})*\n\n${list}\n\n_Use \`.note get <title>\` to read a note_`);
         }
 
         if (cmd === 'addnote') {
             const raw  = args.join(' ');
             const sep  = raw.indexOf('|');
-            if (sep < 0) return send('❌ *Usage:* `.addnote <title> | <content>`\n\nExample: `.addnote shopping | milk, bread, eggs`');
+            if (sep < 0) return send('❌ *Usage:* `.note add <title> | <content>`\n\nExample: `.note add shopping | milk, bread, eggs`');
             const title   = slugify(raw.slice(0, sep).trim());
             const content = raw.slice(sep + 1).trim();
             if (!title || !content) return send('❌ Both title and content are required.');
@@ -64,18 +98,25 @@ module.exports = {
 
         if (cmd === 'getnote') {
             const title = slugify(args.join(' '));
-            if (!title) return send('❌ *Usage:* `.getnote <title>`');
+            if (!title) return send('❌ *Usage:* `.note get <title>`');
             const notes = loadNotes(uFile);
             const note  = notes[title];
-            if (!note) return send(`❌ Note \`${title}\` not found.\n\nUse \`.notes\` to see your list.`);
+            if (!note) return send(`❌ Note \`${title}\` not found.\n\nUse \`.note list\` to see your list.`);
             const d = new Date(note.updated || note.created).toLocaleDateString();
             return send(`📌 *${title}*\n\n${note.content}\n\n_Last updated: ${d}_`);
+        }
+
+        if (cmd === 'getgroupnote') {
+            const title = slugify(args.join(' '));
+            const note = loadNotes(aFile)[title];
+            if (!note) return send(`❌ Group note \`${title}\` not found.`);
+            return send(`📌 *${title}*\n\n${note.content}`);
         }
 
         if (cmd === 'updatenote') {
             const raw  = args.join(' ');
             const sep  = raw.indexOf('|');
-            if (sep < 0) return send('❌ *Usage:* `.updatenote <title> | <new content>`');
+            if (sep < 0) return send('❌ *Usage:* `.note update <title> | <new content>`');
             const title   = slugify(raw.slice(0, sep).trim());
             const content = raw.slice(sep + 1).trim();
             const notes   = loadNotes(uFile);
@@ -87,7 +128,7 @@ module.exports = {
 
         if (cmd === 'delnote') {
             const title = slugify(args.join(' '));
-            if (!title) return send('❌ *Usage:* `.delnote <title>`');
+            if (!title) return send('❌ *Usage:* `.note delete <title>`');
             const notes = loadNotes(uFile);
             if (!notes[title]) return send(`❌ Note \`${title}\` not found.`);
             delete notes[title];
@@ -114,7 +155,7 @@ module.exports = {
             const keys  = Object.keys(notes);
             if (!keys.length) return send('📒 *Group Notes*\n\nNo notes set for this group.');
             const list  = keys.map((k, i) => `*${i + 1}.* ${k}`).join('\n');
-            return send(`📒 *Group Notes (${keys.length})*\n\n${list}\n\n_Use \`.getnote <title>\` to read_`);
+            return send(`📒 *Group Notes (${keys.length})*\n\n${list}\n\n_Use \`.note group get <title>\` to read_`);
         }
 
         if (cmd === 'admindelnote') {
@@ -137,7 +178,7 @@ module.exports = {
             if (!isOwner && !ctx.isAdmin) return send('⛔ Admins only.');
             const raw  = args.join(' ');
             const sep  = raw.indexOf('|');
-            if (sep < 0) return send('❌ *Usage:* `.adminupdatenote <title> | <content>`');
+            if (sep < 0) return send('❌ *Usage:* `.note group update <title> | <content>`');
             const title   = slugify(raw.slice(0, sep).trim());
             const content = raw.slice(sep + 1).trim();
             const notes   = loadNotes(aFile);

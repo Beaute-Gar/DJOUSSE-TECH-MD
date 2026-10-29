@@ -1,16 +1,16 @@
 # Rapport du smoke test
 
-Généré automatiquement le 2026-10-28T18:22:49.228Z par `node scripts/smoke.js`.
+Généré automatiquement le 2026-10-28T19:15:41.528Z par `node scripts/smoke.js`.
 
-- Commandes distinctes : 1153
-- Testées : 1139
+- Commandes distinctes : 1112
+- Testées : 1098
 - Exclues (dangereuses, destructrices ou internes) : 14
-- Clés du registre : 1589
-- Écritures redirigées vers le temporaire : 6
+- Clés du registre : 1550
+- Écritures redirigées vers le temporaire : 2
 
 | Statut | Nombre |
 |---|---:|
-| OK | 1138 |
+| OK | 1097 |
 | SILENCIEUSE | 0 |
 | PLANTE | 1 |
 | UNDEFINED | 0 |
@@ -20,7 +20,7 @@ Généré automatiquement le 2026-10-28T18:22:49.228Z par `node scripts/smoke.js
 
 Chaque commande a été appelée avec un faux `sock` Proxy et un contexte fictif. Aucun appel n’a été envoyé à WhatsApp et aucun réseau réel n’a été utilisé. Un statut `OK` valide seulement le comportement local observé avec ces stubs.
 
-### Réseau requis (179)
+### Réseau requis (178)
 
 - `ablush`
 - `acry`
@@ -61,7 +61,6 @@ Chaque commande a été appelée avec un faux `sock` Proxy et un contexte fictif
 - `chatat`
 - `cleanuri`
 - `climate`
-- `contactsave`
 - `country`
 - `createqr`
 - `cry`
@@ -182,7 +181,7 @@ Chaque commande a été appelée avec un faux `sock` Proxy et un contexte fictif
 - `uniform`
 - `upcoming`
 - `upcomingmatches`
-- `vcfgroup`
+- `vcfgen`
 - `venice`
 - `vgd`
 - `video`
@@ -202,12 +201,11 @@ Chaque commande a été appelée avec un faux `sock` Proxy et un contexte fictif
 - `yt`
 - `yts`
 
-### Méthodes WhatsApp/groupe simulées (178)
+### Méthodes WhatsApp/groupe simulées (165)
 
 - `acceptall` — groupRequestParticipantsList
 - `addbad` — groupMetadata
 - `admin` — groupParticipantsUpdate
-- `adminlist` — groupMetadata
 - `admins` — groupMetadata
 - `airing` — sendPresenceUpdate
 - `angry` — relayMessage
@@ -248,31 +246,21 @@ Chaque commande a été appelée avec un faux `sock` Proxy et un contexte fictif
 - `disapp` — groupToggleEphemeral
 - `dmall` — groupMetadata
 - `dmmembers` — groupMetadata
-- `exportgroup` — groupMetadata, groupInviteCode
 - `fullpp` — profilePictureUrl
-- `gadmins` — groupMetadata
-- `gage` — groupMetadata
 - `gamehistory` — sendPresenceUpdate
 - `gcdesc` — groupUpdateDescription
 - `getgcpp` — profilePictureUrl
 - `getjid` — sendPresenceUpdate, profilePictureUrl, onWhatsApp
-- `gexport` — groupMetadata, groupInviteCode
 - `ggleimage` — sendPresenceUpdate
 - `giftedai` — sendPresenceUpdate
 - `ginvite` — groupInviteCode, groupMetadata
 - `githubstalk` — sendPresenceUpdate
-- `gjoinlog` — groupMetadata
 - `google` — sendPresenceUpdate
 - `gpt4` — sendPresenceUpdate
 - `gpt4o` — sendPresenceUpdate
 - `gpt4o-mini` — sendPresenceUpdate
-- `groupage` — groupMetadata
 - `groupbackup` — groupMetadata
 - `groupname` — groupUpdateSubject
-- `groupstatus` — groupMetadata, groupInviteCode, profilePictureUrl
-- `grpinfo` — groupMetadata, groupInviteCode, profilePictureUrl
-- `gstats` — groupMetadata
-- `gstatus` — groupMetadata, groupInviteCode, profilePictureUrl
 - `happi` — relayMessage
 - `happy` — groupMetadata, sendPresenceUpdate
 - `happymod` — sendPresenceUpdate
@@ -282,7 +270,6 @@ Chaque commande a été appelée avec un faux `sock` Proxy et un contexte fictif
 - `igstalk` — sendPresenceUpdate
 - `invitelink` — groupInviteCode
 - `joingroup` — groupAcceptInvite
-- `joinlog` — groupMetadata
 - `kamisato` — sendPresenceUpdate
 - `kick` — groupParticipantsUpdate
 - `killgc` — groupLeave
@@ -373,7 +360,6 @@ Chaque commande a été appelée avec un faux `sock` Proxy et un contexte fictif
 - `unsplash` — sendPresenceUpdate
 - `upcoming` — sendPresenceUpdate
 - `upcomingmatches` — sendPresenceUpdate
-- `vcfgroup` — groupMetadata
 - `venice` — sendPresenceUpdate
 - `waifu` — sendPresenceUpdate
 - `wallpapers` — sendPresenceUpdate
