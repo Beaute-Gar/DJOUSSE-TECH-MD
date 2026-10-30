@@ -19,7 +19,7 @@ Le site est alors accessible à l’adresse indiquée par `serve`. Les polices I
 3. Pour activer le formulaire, configure les variables d’environnement suivantes dans Vercel :
    - `PAIRING_API_URL` : URL HTTPS publique de l’API du worker, par exemple `https://bot.example.com` (ne pas ajouter `/pair` ou `/status`).
    - `PAIRING_API_TOKEN` : valeur du jeton partagé configuré côté bot, si l’API du bot l’exige. Elle ne se trouve jamais dans le navigateur.
-   - `SITE_ORIGIN` : origine publique du site, par exemple `https://djousse-tech-md.vercel.app`; configure aussi les domaines de preview si tu veux y autoriser le formulaire.
+   - `SITE_ORIGIN` : origine publique du site, par exemple `https://djousse-tech-md-web.vercel.app`; configure aussi les domaines de preview si tu veux y autoriser le formulaire.
 4. Côté worker, active `PAIRING_API=on`, configure `PAIRING_API_PORT` si nécessaire, et protège l’API avec `PAIRING_API_TOKEN`. Le worker WhatsApp doit tourner ailleurs dans un environnement persistant; Vercel ne remplace pas ce processus.
 5. Si le site change de domaine, mets à jour l’origine dans les métadonnées canonical / Open Graph / Twitter, le `siteOrigin` de `data/site-data.json`, `sitemap.xml` et `robots.txt`.
 

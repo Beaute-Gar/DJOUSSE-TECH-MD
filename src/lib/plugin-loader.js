@@ -138,11 +138,11 @@ function retirerSignatureTierce(txt, nom) {
     .replace(/https?:\/\/(?:www\.)?github\.com\/SilvaTechB\/silva-md-bot\/?/gi,
       'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD')
     .replace(/(?:https?:\/\/)?(?:session\.)?(?:www\.)?silvatech\.co\.ke\/?/gi,
-      'https://djousse-tech-md.vercel.app')
+      'https://djousse-tech-md-web.vercel.app')
     .replace(/https?:\/\/(?:www\.)?whatsapp\.com\/channel\/0029VaksrRh6GcGnT0J05n0j\/?/gi,
       'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD')
     .replace(/https?:\/\/chat\.whatsapp\.com\/GzCZZxVnAHMINWdPQkGwJR\/?/gi,
-      'https://djousse-tech-md.vercel.app')
+      'https://djousse-tech-md-web.vercel.app')
     .replace(/https?:\/\/wa\.me\/254700143167(?:\/\S*)?/gi,
       'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD/issues')
     /* ── 2. restes d'ancienne identité (cas stricte : les références de

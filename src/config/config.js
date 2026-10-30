@@ -194,7 +194,7 @@ module.exports = {
   // Réseaux
   social: {
     github: 'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD',
-    website: 'https://djousse-tech-md.vercel.app',
+    website: 'https://djousse-tech-md-web.vercel.app',
   },
 
   version: (() => {

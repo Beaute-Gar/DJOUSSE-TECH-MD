@@ -148,8 +148,8 @@ const S = [
   { n: 'audd (Shazam)', c: 'shazam', t: 'cle', k: 'AUDD_API_KEY', u: (k) => `https://api.audd.io/getApiToken/?api_token=${k}`, v: J((j) => typeof j === 'object') },
   { n: 'OpenWeatherMap (clé du code)', c: 'weather', t: 'cle', fk: () => OWM, u: (k) => `https://api.openweathermap.org/data/2.5/weather?q=Douala&units=metric&appid=${k}`, v: J((j) => j.main) },
   { n: 'VirusTotal (clé du code)', c: 'virus', t: 'cle', fk: () => VT, u: 'https://www.virustotal.com/api/v3/users/current', h: (k) => ({ 'x-apikey': k }), v: J((j) => j.data) },
-  /* — ton site (à confirmer : djousse-tech-md.vercel.app) — */
-  { n: 'djousse-tech-md.vercel.app', c: 'agent, config', t: 'perso', u: 'https://djousse-tech-md.vercel.app', texte: /.*/ },
+  /* — ton site (à confirmer : djousse-tech-md-web.vercel.app) — */
+  { n: 'djousse-tech-md-web.vercel.app', c: 'agent, config', t: 'perso', u: 'https://djousse-tech-md-web.vercel.app', texte: /.*/ },
   /* — sites scrapés (HTML) : joignabilité seulement — */
   ...[['snapsave.app', 'facebook, instagram'], ['fdown.net', 'facebook'], ['fdownloader.net', 'facebook'], ['getvideourl.com', 'facebook'],
     ['silvatech.co.ke', 'menu (lien affiché) — site d\'un TIERS, pas le tien'], ['igram.world', 'instagram'], ['fastdl.app', 'instagram'], ['instadownload.net', 'instagram'], ['v3.saveinsta.app', 'threads'], ['savethreads.io', 'threads'],

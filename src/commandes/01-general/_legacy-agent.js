@@ -44,7 +44,7 @@ const BOT_IDENTITY = {
     language: 'Node.js',
     library: 'Baileys',
     repo: 'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD',
-    website: 'https://djousse-tech-md.vercel.app',
+    website: 'https://djousse-tech-md-web.vercel.app',
     get platform() { return detectPlatform(); },
     developer: 'DJOUSSE TECH',
     ownerName: config.OWNER_NAME || 'Beauté Gar',

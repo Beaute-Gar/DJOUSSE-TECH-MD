@@ -13,7 +13,7 @@ lance `node scripts/api-check.js` sur ta machine pour savoir lesquels répondent
 | Sites sportifs scrapés (flashscore, forebet, sofascore, goal, livescore, whoscored…) | ~9 | **très élevé** (anti-bot, HTML qui change) |
 | Moteurs de logos (textpro.me, ephoto360) | 2 | élevé (scraping de formulaires) |
 | Hébergeurs de fichiers (catbox, pixhost, imgbb, paste.rs, dpaste) | 5 | moyen |
-| Ton site (djousse-tech-md.vercel.app — à confirmer que c'est bien le tien) | 1 | à vérifier |
+| Ton site (djousse-tech-md-web.vercel.app — à confirmer que c'est bien le tien) | 1 | à vérifier |
 | Site d'un tiers (silvatech.co.ke, l'ancien auteur du bot) : seulement un lien affiché dans `menu.js` et un exemple dans `qrcode.js` | 1 | aucun appel d'API ; à remplacer par ton site |
 | Liens WhatsApp / GitHub (chat.whatsapp.com, wa.me, github.com) | — | liens statiques, pas d'API |
 

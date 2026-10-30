@@ -32,7 +32,7 @@
 <a href="https://github.com/Beaute-Gar/DJOUSSE-TECH-MD/commits/main">
   <img src="https://img.shields.io/github/last-commit/Beaute-Gar/DJOUSSE-TECH-MD?style=flat-square" alt="Dernier commit" />
 </a>
-<a href="https://djousse-tech-md.vercel.app">
+<a href="https://djousse-tech-md-web.vercel.app">
   <img src="https://img.shields.io/badge/site-en%20ligne-2ECC71?style=flat-square" alt="Site en ligne" />
 </a>
 
@@ -755,7 +755,7 @@ Le dossier `plugins/core/` reprend du code de **« Silva MD Bot » (Silva Tech N
 
 ## 📚 Ressources
 
-- 🌐 **Site** : [djousse-tech-md.vercel.app](https://djousse-tech-md.vercel.app)
+- 🌐 **Site** : [djousse-tech-md-web.vercel.app](https://djousse-tech-md-web.vercel.app)
 - 🎨 **Portfolio** : [beaute-gar.github.io/Beaute-Gar](https://beaute-gar.github.io/Beaute-Gar/)
 - 📦 **Baileys** : [github.com/WhiskeySockets/Baileys](https://github.com/WhiskeySockets/Baileys)
 - ⬇️ **yt-dlp** : [github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp)

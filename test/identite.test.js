@@ -95,8 +95,8 @@ test('retirerSignatureTierce : URLs tierces → destinations officielles', () =>
     retirerSignatureTierce('Repo: https://github.com/SilvaTechB/silva-md-bot'),
     'Repo: https://github.com/Beaute-Gar/DJOUSSE-TECH-MD',
   );
-  assert.ok(retirerSignatureTierce('https://silvatech.co.ke').includes('djousse-tech-md.vercel.app'));
-  assert.ok(retirerSignatureTierce('https://session.silvatech.co.ke').includes('djousse-tech-md.vercel.app'));
+  assert.ok(retirerSignatureTierce('https://silvatech.co.ke').includes('djousse-tech-md-web.vercel.app'));
+  assert.ok(retirerSignatureTierce('https://session.silvatech.co.ke').includes('djousse-tech-md-web.vercel.app'));
   assert.ok(retirerSignatureTierce('Support: https://wa.me/254700143167').includes('/issues'));
   assert.ok(!/silva/i.test(retirerSignatureTierce('© 2025 Silvatech Inc · SILVA MD · Powered by Silva Tech Inc')));
 });
@@ -136,7 +136,7 @@ test('config : identité officielle + slogan + liens', () => {
   assert.ok(String(config.botOwnerName).length >= 3, 'botOwnerName défini');
   assert.match(config.slogan, /avenir sans limites/, 'slogan officiel');
   assert.equal(config.social.github, 'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD');
-  assert.equal(config.social.website, 'https://djousse-tech-md.vercel.app');
+  assert.equal(config.social.website, 'https://djousse-tech-md-web.vercel.app');
 });
 
 /* ── 5. hacktools : plus de marque tierce dans l'alerte affichée ── */
