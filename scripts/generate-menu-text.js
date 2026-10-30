@@ -136,7 +136,7 @@ function main() {
 
   const output = path.join(root, 'docs', 'COMMANDES_MENU.txt');
   fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, lines.join('\r\n'), 'utf8');
+  fs.writeFileSync(output, lines.join('\n'), 'utf8');
 
   require('../src/lib/db').close();
   require('../src/lib/store').closeStore();

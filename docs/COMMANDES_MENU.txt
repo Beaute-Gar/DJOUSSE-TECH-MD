@@ -1,13 +1,13 @@
 ╭┄┄『 𝙲𝙰𝚃𝙰𝙻𝙾𝙶𝚄𝙴 𝙲𝙾𝙼𝙿𝙻𝙴𝚃 .𝙼𝙴𝙽𝚄 』┄❍
 │✦ 𝙱𝙾𝚃: DJOUSSE TECH
 │✦ 𝙿𝚁𝙴𝙵𝙸𝚇: 〔.〕
-│✦ 𝚃𝙾𝚃𝙰𝙻: 𝟷𝟷𝟶𝟺 𝙲𝙾𝙼𝙼𝙰𝙽𝙳𝙴𝚂
-│✦ 𝙰𝙻𝙸𝙰𝚂: 𝟺𝟹𝟽 𝙸𝙽𝙲𝙻𝚄𝚂
+│✦ 𝚃𝙾𝚃𝙰𝙻: 𝟷𝟶𝟽𝟸 𝙲𝙾𝙼𝙼𝙰𝙽𝙳𝙴𝚂
+│✦ 𝙰𝙻𝙸𝙰𝚂: 𝟺𝟹𝟷 𝙸𝙽𝙲𝙻𝚄𝚂
 │「 𝙿𝚁𝙾𝙵𝙸𝙻 𝙾𝚆𝙽𝙴𝚁 / 𝚂𝚄𝙳𝙾 — 𝙲𝙰𝚃𝙴𝙶𝙾𝚁𝙸𝙴𝚂 𝚅𝙸𝚂𝙸𝙱𝙻𝙴𝚂 𝙳𝚄 𝙼𝙴𝙽𝚄 」
 ╰┄┄┄┄┄┄┄┄┄┄┄┄⪼
 
-INVENTAIRE DU REGISTRE : 1112 commandes distinctes, 1550 clés (noms + alias).
-AFFICHÉES DANS .MENU : 1104 commandes principales, 437 alias (les alias ne sont pas comptés comme commandes supplémentaires).
+INVENTAIRE DU REGISTRE : 1080 commandes distinctes, 1512 clés (noms + alias).
+AFFICHÉES DANS .MENU : 1072 commandes principales, 431 alias (les alias ne sont pas comptés comme commandes supplémentaires).
 HORS MENUS : 8 commandes en catégorie 99, non affichées par .menu.
 Le menu réel est filtré selon le profil : les commandes Owner/Sudo et Admin groupe peuvent être masquées aux autres profils.
 Chaque rôle ci-dessous reprend la description de la commande et ses restrictions d’accès.
@@ -740,7 +740,7 @@ Chaque rôle ci-dessous reprend la description de la commande et ses restriction
 ╰┄┄┄┄┄┄┄┄┄┄┄┄⪼
 
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  🖼️  𝚂𝚃𝙸𝙲𝙺𝙴𝚁 & 𝙼𝙴𝙳𝙸𝙰  ⟨ 112 ⟩
+┃  🖼️  𝚂𝚃𝙸𝙲𝙺𝙴𝚁 & 𝙼𝙴𝙳𝙸𝙰  ⟨ 107 ⟩
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ┊ 𝟶𝟷 ⟩ .adfoc
 ┊    ✦ RÔLE : Extended tools and utilities
@@ -787,332 +787,316 @@ Chaque rôle ci-dessous reprend la description de la commande et ses restriction
 ┊ 𝟷𝟺 ⟩ .circle
 ┊    ✦ RÔLE : Filtre image : circle
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻 ⟩ .cleanuri
-┊    ✦ RÔLE : Extended tools and utilities
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟼 ⟩ .clearbgm
+┊ 𝟷𝟻 ⟩ .clearbgm
 ┊    ✦ RÔLE : Word-triggered audio autoresponder. Set audios that play when trigger words are detected.
 ┊    ✦ ACCÈS : OWNER / SUDO, GROUPE
-┊ 𝟷𝟽 ⟩ .createpdf
+┊ 𝟷𝟼 ⟩ .createpdf
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾 ⟩ .createqr
+┊ 𝟷𝟽 ⟩ .createqr
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟿 ⟩ .dbase
+┊ 𝟷𝟾 ⟩ .dbase
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶 ⟩ .debinary
+┊ 𝟷𝟿 ⟩ .debinary
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷 ⟩ .deep
+┊ 𝟸𝟶 ⟩ .deep
 ┊    ✦ RÔLE : Voix très grave (ralenti + baissé) — audio
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸 ⟩ .delbgm
+┊ 𝟸𝟷 ⟩ .delbgm
 ┊    ✦ RÔLE : Word-triggered audio autoresponder. Set audios that play when trigger words are detected.
 ┊    ✦ ACCÈS : OWNER / SUDO, GROUPE
-┊ 𝟸𝟹 ⟩ .domaincheck
+┊ 𝟸𝟸 ⟩ .domaincheck
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟺 ⟩ .ebase
+┊ 𝟸𝟹 ⟩ .ebase
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟻 ⟩ .ebinary
+┊ 𝟸𝟺 ⟩ .ebinary
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟼 ⟩ .editmsg
+┊ 𝟸𝟻 ⟩ .editmsg
 ┊    ✦ RÔLE : Edit a previously sent bot message (reply to the bot's message)
 ┊    ✦ ALIAS : .correct
 ┊    ✦ ACCÈS : ADMIN GROUPE, GROUPE
-┊ 𝟸𝟽 ⟩ .fancy
+┊ 𝟸𝟼 ⟩ .fancy
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟾 ⟩ .findsticker
+┊ 𝟸𝟽 ⟩ .findsticker
 ┊    ✦ RÔLE : Search and send animated stickers/GIFs
 ┊    ✦ ALIAS : .giphy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟿 ⟩ .fwd
+┊ 𝟸𝟾 ⟩ .fwd
 ┊    ✦ RÔLE : Transférer le message cité vers un destinataire
 ┊    ✦ ALIAS : .transfert
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟶 ⟩ .ggleimage
+┊ 𝟸𝟿 ⟩ .ggleimage
 ┊    ✦ RÔLE : Extended search commands
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟷 ⟩ .gif
+┊ 𝟹𝟶 ⟩ .gif
 ┊    ✦ RÔLE : Convert sticker or video to GIF
 ┊    ✦ ALIAS : .mp4togif
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟸 ⟩ .githubcdn
+┊ 𝟹𝟷 ⟩ .githubcdn
 ┊    ✦ RÔLE : Upload images to various CDN/hosting services
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟹 ⟩ .google
+┊ 𝟹𝟸 ⟩ .google
 ┊    ✦ RÔLE : Extended search commands
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟺 ⟩ .grey
+┊ 𝟹𝟹 ⟩ .grey
 ┊    ✦ RÔLE : Filtre image : grey
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟻 ⟩ .happymod
-┊    ✦ RÔLE : Extended search commands
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟼 ⟩ .imgbb
+┊ 𝟹𝟺 ⟩ .imgbb
 ┊    ✦ RÔLE : Upload images to various CDN/hosting services
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟽 ⟩ .invert
+┊ 𝟹𝟻 ⟩ .invert
 ┊    ✦ RÔLE : Filtre image : invert
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟾 ⟩ .listbgm
+┊ 𝟹𝟼 ⟩ .listbgm
 ┊    ✦ RÔLE : Word-triggered audio autoresponder. Set audios that play when trigger words are detected.
 ┊    ✦ ACCÈS : OWNER / SUDO, GROUPE
-┊ 𝟹𝟿 ⟩ .loc
+┊ 𝟹𝟽 ⟩ .loc
 ┊    ✦ RÔLE : Envoyer une position GPS
 ┊    ✦ ALIAS : .localisation
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟶 ⟩ .mediafire
+┊ 𝟹𝟾 ⟩ .mediafire
 ┊    ✦ RÔLE : Get MediaFire direct download link
 ┊    ✦ ALIAS : .mf
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟺𝟷 ⟩ .median
+┊ 𝟹𝟿 ⟩ .median
 ┊    ✦ RÔLE : Calculate median
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟸 ⟩ .memes
+┊ 𝟺𝟶 ⟩ .memes
 ┊    ✦ RÔLE : Get a random meme image
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟺𝟹 ⟩ .met
+┊ 𝟺𝟷 ⟩ .met
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟺𝟺 ⟩ .mixemoji
+┊ 𝟺𝟸 ⟩ .mixemoji
 ┊    ✦ RÔLE : Mix two emojis together using Google Kitchen
 ┊    ✦ ALIAS : .emojiblend
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟺𝟻 ⟩ .nightcore
+┊ 𝟺𝟹 ⟩ .nightcore
 ┊    ✦ RÔLE : Nightcore (accéléré + aigu) — audio
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟼 ⟩ .npm
+┊ 𝟺𝟺 ⟩ .npm
 ┊    ✦ RÔLE : Extended search commands
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟺𝟽 ⟩ .openphoto
+┊ 𝟺𝟻 ⟩ .openphoto
 ┊    ✦ RÔLE : Manually reveal a view-once message (reply to it)
 ┊    ✦ ALIAS : .vvphoto
 ┊    ✦ ACCÈS : OWNER / SUDO, GROUPE
-┊ 𝟺𝟾 ⟩ .packadd
+┊ 𝟺𝟼 ⟩ .packadd
 ┊    ✦ RÔLE : Ajouter un sticker au pack en construction
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟿 ⟩ .packsend
+┊ 𝟺𝟽 ⟩ .packsend
 ┊    ✦ RÔLE : Envoyer le pack construit
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟻𝟶 ⟩ .photoeditor
+┊ 𝟺𝟾 ⟩ .photoeditor
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟷 ⟩ .pinterest
+┊ 𝟺𝟿 ⟩ .pinterest
 ┊    ✦ RÔLE : Download Pinterest images and videos
 ┊    ✦ ALIAS : .pindl
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟸 ⟩ .pixhost
-┊    ✦ RÔLE : Upload images to various CDN/hosting services
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟹 ⟩ .quotly
-┊    ✦ RÔLE : Convert a quoted text message into a beautiful styled quote image/sticker
-┊    ✦ ALIAS : .q2s
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟺 ⟩ .readqr
+┊ 𝟻𝟶 ⟩ .readqr
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟻 ⟩ .readtext
+┊ 𝟻𝟷 ⟩ .readtext
 ┊    ✦ RÔLE : Extract text from an image (OCR)
 ┊    ✦ ALIAS : .textfromimage
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟼 ⟩ .rebrandly
+┊ 𝟻𝟸 ⟩ .rebrandly
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟽 ⟩ .reddit
+┊ 𝟻𝟹 ⟩ .reddit
 ┊    ✦ RÔLE : Download Reddit images and videos
 ┊    ✦ ALIAS : .rdl
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟾 ⟩ .remini
+┊ 𝟻𝟺 ⟩ .remini
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟿 ⟩ .removebg
+┊ 𝟻𝟻 ⟩ .removebg
 ┊    ✦ RÔLE : Supprimer le fond (remove.bg)
 ┊    ✦ ALIAS : .rmbg
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟶 ⟩ .removebgm
+┊ 𝟻𝟼 ⟩ .removebgm
 ┊    ✦ RÔLE : Word-triggered audio autoresponder. Set audios that play when trigger words are detected.
 ┊    ✦ ACCÈS : OWNER / SUDO, GROUPE
-┊ 𝟼𝟷 ⟩ .rename
+┊ 𝟻𝟽 ⟩ .rename
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟼𝟸 ⟩ .resize
+┊ 𝟻𝟾 ⟩ .resize
 ┊    ✦ RÔLE : Redimensionner image
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟹 ⟩ .reverse
+┊ 𝟻𝟿 ⟩ .reverse
 ┊    ✦ RÔLE : Audio inversé — audio
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟺 ⟩ .sendaudio
+┊ 𝟼𝟶 ⟩ .sendaudio
 ┊    ✦ RÔLE : Additional converters and downloaders
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟼𝟻 ⟩ .senddoc
+┊ 𝟼𝟷 ⟩ .senddoc
 ┊    ✦ RÔLE : Envoyer le média cité en document (qualité préservée)
 ┊    ✦ ALIAS : .doc
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟼 ⟩ .sendvideo
+┊ 𝟼𝟸 ⟩ .sendvideo
 ┊    ✦ RÔLE : Additional converters and downloaders
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟼𝟽 ⟩ .sepia
+┊ 𝟼𝟹 ⟩ .sepia
 ┊    ✦ RÔLE : Filtre image : sepia
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟾 ⟩ .setbgm
+┊ 𝟼𝟺 ⟩ .setbgm
 ┊    ✦ RÔLE : Word-triggered audio autoresponder. Set audios that play when trigger words are detected.
 ┊    ✦ ACCÈS : OWNER / SUDO, GROUPE
-┊ 𝟼𝟿 ⟩ .shortener
+┊ 𝟼𝟻 ⟩ .shortener
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟶 ⟩ .slow
+┊ 𝟼𝟼 ⟩ .slow
 ┊    ✦ RÔLE : Ralenti — audio
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟷 ⟩ .smeme
+┊ 𝟼𝟽 ⟩ .smeme
 ┊    ✦ RÔLE : Meme sticker (texte haut | bas)
 ┊    ✦ ALIAS : .stickermeme
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟸 ⟩ .smooth
+┊ 𝟼𝟾 ⟩ .smooth
 ┊    ✦ RÔLE : Fluidité 120 fps (vidéo) — vidéo
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟹 ⟩ .snack
+┊ 𝟼𝟿 ⟩ .snack
 ┊    ✦ RÔLE : Additional converters and downloaders
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟺 ⟩ .socialinfo
+┊ 𝟽𝟶 ⟩ .socialinfo
 ┊    ✦ RÔLE : Social media platform info
 ┊    ✦ ALIAS : .platform
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟻 ⟩ .speak
+┊ 𝟽𝟷 ⟩ .speak
 ┊    ✦ RÔLE : Convert text to speech audio
 ┊    ✦ ALIAS : .voice
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟼 ⟩ .spotifysearch
+┊ 𝟽𝟸 ⟩ .spotifysearch
 ┊    ✦ RÔLE : Extended search commands
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟽 ⟩ .spp
+┊ 𝟽𝟹 ⟩ .spp
 ┊    ✦ RÔLE : Get a user's profile picture
 ┊    ✦ ALIAS : .getpp
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟾 ⟩ .sspc
+┊ 𝟽𝟺 ⟩ .sspc
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟿 ⟩ .ssphone
+┊ 𝟽𝟻 ⟩ .ssphone
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟶 ⟩ .sstab
+┊ 𝟽𝟼 ⟩ .sstab
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟷 ⟩ .ssur
+┊ 𝟽𝟽 ⟩ .ssur
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟸 ⟩ .ssweb
+┊ 𝟽𝟾 ⟩ .ssweb
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟹 ⟩ .steal
+┊ 𝟽𝟿 ⟩ .steal
 ┊    ✦ RÔLE : Convert any replied image/video/sticker to a bot-branded sticker
 ┊    ✦ ALIAS : .takesticker
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟺 ⟩ .stext
+┊ 𝟾𝟶 ⟩ .stext
 ┊    ✦ RÔLE : Create styled text stickers with various themes
 ┊    ✦ ALIAS : .textstick
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟻 ⟩ .sticker
+┊ 𝟾𝟷 ⟩ .sticker
 ┊    ✦ RÔLE : Image/vidéo → sticker
 ┊    ✦ ALIAS : .s
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟼 ⟩ .stickerpack
+┊ 𝟾𝟸 ⟩ .stickerpack
 ┊    ✦ RÔLE : Pack de stickers (répondre à une image = cover+1 sticker)
 ┊    ✦ ALIAS : .pack
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟽 ⟩ .stickertoimg
+┊ 𝟾𝟹 ⟩ .stickertoimg
 ┊    ✦ RÔLE : Convert sticker to JPEG image
 ┊    ✦ ALIAS : .unwebp
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟾 ⟩ .take
+┊ 𝟾𝟺 ⟩ .take
 ┊    ✦ RÔLE : Re-sticker avec ton pack
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟿 ⟩ .tempo
+┊ 𝟾𝟻 ⟩ .tempo
 ┊    ✦ RÔLE : Tempo ralenti — audio
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟶 ⟩ .textsticker
+┊ 𝟾𝟼 ⟩ .textsticker
 ┊    ✦ RÔLE : Texte → sticker
 ┊    ✦ ALIAS : .tsticker
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟷 ⟩ .threads
+┊ 𝟾𝟽 ⟩ .threads
 ┊    ✦ RÔLE : Download Threads videos and images
 ┊    ✦ ALIAS : .threadsdl
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟿𝟸 ⟩ .tinyurl
+┊ 𝟾𝟾 ⟩ .tinyurl
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟿𝟹 ⟩ .toaudio
+┊ 𝟾𝟿 ⟩ .toaudio
 ┊    ✦ RÔLE : Vidéo → mp3
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟺 ⟩ .togif
+┊ 𝟿𝟶 ⟩ .togif
 ┊    ✦ RÔLE : Vidéo → GIF
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟻 ⟩ .toimg
+┊ 𝟿𝟷 ⟩ .toimg
 ┊    ✦ RÔLE : Sticker → image
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟼 ⟩ .tojpeg
+┊ 𝟿𝟸 ⟩ .tojpeg
 ┊    ✦ RÔLE : Image → JPEG
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟽 ⟩ .tomp3
+┊ 𝟿𝟹 ⟩ .tomp3
 ┊    ✦ RÔLE : Convert a video or voice message to an MP3 audio file
 ┊    ✦ ALIAS : .audio
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟿𝟾 ⟩ .toptt
+┊ 𝟿𝟺 ⟩ .toptt
 ┊    ✦ RÔLE : Additional converters and downloaders
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟿𝟿 ⟩ .tourl
+┊ 𝟿𝟻 ⟩ .tourl
 ┊    ✦ RÔLE : Upload a media file to Catbox and get a shareable URL
 ┊    ✦ ALIAS : .geturl
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟶 ⟩ .tovideo
+┊ 𝟿𝟼 ⟩ .tovideo
 ┊    ✦ RÔLE : Additional converters and downloaders
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟷 ⟩ .ttp
+┊ 𝟿𝟽 ⟩ .ttp
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟸 ⟩ .unsplash
-┊    ✦ RÔLE : Extended search commands
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟹 ⟩ .vgd
+┊ 𝟿𝟾 ⟩ .vgd
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟺 ⟩ .viewonce
+┊ 𝟿𝟿 ⟩ .viewonce
 ┊    ✦ RÔLE : Renvoyer un média en vue unique
 ┊    ✦ ALIAS : .vo
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟻 ⟩ .vurl
+┊ 𝟷𝟶𝟶 ⟩ .vurl
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟼 ⟩ .vv
+┊ 𝟷𝟶𝟷 ⟩ .vv
 ┊    ✦ RÔLE : Récupérer un média en vue unique
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟽 ⟩ .wallpapers
+┊ 𝟷𝟶𝟸 ⟩ .wallpapers
 ┊    ✦ RÔLE : Extended search commands
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟾 ⟩ .wanted
+┊ 𝟷𝟶𝟹 ⟩ .wanted
 ┊    ✦ RÔLE : Poster Wanted (répondre image)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟿 ⟩ .wattpad
+┊ 𝟷𝟶𝟺 ⟩ .wattpad
 ┊    ✦ RÔLE : Extended search commands
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟷𝟶 ⟩ .web2zip
+┊ 𝟷𝟶𝟻 ⟩ .web2zip
 ┊    ✦ RÔLE : Extended tools and utilities
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟷𝟷 ⟩ .webshot
+┊ 𝟷𝟶𝟼 ⟩ .webshot
 ┊    ✦ RÔLE : Take a screenshot of any website
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟷𝟸 ⟩ .yts
+┊ 𝟷𝟶𝟽 ⟩ .yts
 ┊    ✦ RÔLE : Extended search commands
 ┊    ✦ ACCÈS : GROUPE
 ╰┄┄┄┄┄┄┄┄┄┄┄┄⪼
 
 ┏━━━━━━━━━━━━━━━━━━━━━┓
-┃  🧰  𝙾𝚄𝚃𝙸𝙻𝚂  ⟨ 254 ⟩
+┃  🧰  𝙾𝚄𝚃𝙸𝙻𝚂  ⟨ 253 ⟩
 ┗━━━━━━━━━━━━━━━━━━━━━┛
 ┊ 𝟶𝟷 ⟩ .__advanced_onmessage__
 ┊    ✦ RÔLE : Internal onMessage hook for word filter and slowmode
@@ -1535,501 +1519,497 @@ Chaque rôle ci-dessous reprend la description de la commande et ses restriction
 ┊ 𝟷𝟷𝟽 ⟩ .incandescent
 ┊    ✦ RÔLE : Logo « incandescent » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟾 ⟩ .inspire
-┊    ✦ RÔLE : Get a random inspirational quote
-┊    ✦ ALIAS : .motivation
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟷𝟿 ⟩ .ip
+┊ 𝟷𝟷𝟾 ⟩ .ip
 ┊    ✦ RÔLE : Infos IP (ip-api gratuit)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟶 ⟩ .ipinfo
+┊ 𝟷𝟷𝟿 ⟩ .ipinfo
 ┊    ✦ RÔLE : IP address info
 ┊    ✦ ALIAS : .iplookup
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟷 ⟩ .italic
+┊ 𝟷𝟸𝟶 ⟩ .italic
 ┊    ✦ RÔLE : Make text italic
 ┊    ✦ ALIAS : .i
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟸 ⟩ .json
+┊ 𝟷𝟸𝟷 ⟩ .json
 ┊    ✦ RÔLE : Format JSON
 ┊    ✦ ALIAS : .jsonformat
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟹 ⟩ .lcm
+┊ 𝟷𝟸𝟸 ⟩ .lcm
 ┊    ✦ RÔLE : Least common multiple
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟺 ⟩ .lighteffect
+┊ 𝟷𝟸𝟹 ⟩ .lighteffect
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟸𝟻 ⟩ .lightglow
+┊ 𝟷𝟸𝟺 ⟩ .lightglow
 ┊    ✦ RÔLE : Logo « lightglow » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟼 ⟩ .linkpreview
+┊ 𝟷𝟸𝟻 ⟩ .linkpreview
 ┊    ✦ RÔLE : Summarize and preview any shared link/article
 ┊    ✦ ALIAS : .tldr
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟸𝟽 ⟩ .listonline
+┊ 𝟷𝟸𝟼 ⟩ .listonline
 ┊    ✦ RÔLE : Request online presence
 ┊    ✦ ACCÈS : ADMIN GROUPE, GROUPE
-┊ 𝟷𝟸𝟾 ⟩ .location
+┊ 𝟷𝟸𝟽 ⟩ .location
 ┊    ✦ RÔLE : Envoyer un point GPS
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟿 ⟩ .logo1917
+┊ 𝟷𝟸𝟾 ⟩ .logo1917
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹𝟶 ⟩ .logolist
+┊ 𝟷𝟸𝟿 ⟩ .logolist
 ┊    ✦ RÔLE : Voir tous les effets de logo
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟷 ⟩ .logomaker
+┊ 𝟷𝟹𝟶 ⟩ .logomaker
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹𝟸 ⟩ .lorem
+┊ 𝟷𝟹𝟷 ⟩ .lorem
 ┊    ✦ RÔLE : Generate lorem ipsum
 ┊    ✦ ALIAS : .loremipsum
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟹 ⟩ .luxurygold
+┊ 𝟷𝟹𝟸 ⟩ .luxurygold
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹𝟺 ⟩ .lyrics
+┊ 𝟷𝟹𝟹 ⟩ .lyrics
 ┊    ✦ RÔLE : Paroles d'une chanson (lrclib.net)
 ┊    ✦ ALIAS : .paroles
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟻 ⟩ .makingneon
+┊ 𝟷𝟹𝟺 ⟩ .makingneon
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹𝟼 ⟩ .matrix
+┊ 𝟷𝟹𝟻 ⟩ .matrix
 ┊    ✦ RÔLE : Generate a Matrix-style code rain with your text
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹𝟽 ⟩ .matrixtext
+┊ 𝟷𝟹𝟼 ⟩ .matrixtext
 ┊    ✦ RÔLE : Matrix-style text
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟾 ⟩ .meditation
+┊ 𝟷𝟹𝟽 ⟩ .meditation
 ┊    ✦ RÔLE : Breathing exercise
 ┊    ✦ ALIAS : .breathe
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟿 ⟩ .mock
+┊ 𝟷𝟹𝟾 ⟩ .mock
 ┊    ✦ RÔLE : sPoNgEbOb MoCk text
 ┊    ✦ ALIAS : .spongebob
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟶 ⟩ .morse
+┊ 𝟷𝟹𝟿 ⟩ .morse
 ┊    ✦ RÔLE : Texte → code morse
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟷 ⟩ .motivate
+┊ 𝟷𝟺𝟶 ⟩ .motivate
 ┊    ✦ RÔLE : Motivational message
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟸 ⟩ .multiply
+┊ 𝟷𝟺𝟷 ⟩ .multiply
 ┊    ✦ RÔLE : Multiply numbers
 ┊    ✦ ALIAS : .mul
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟹 ⟩ .multipoll
+┊ 𝟷𝟺𝟸 ⟩ .multipoll
 ┊    ✦ RÔLE : Poll where users can pick multiple options. Usage: .multipoll Question | Opt1 | Opt2 ...
 ┊    ✦ ALIAS : .multivote
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟺𝟺 ⟩ .myip
+┊ 𝟷𝟺𝟹 ⟩ .myip
 ┊    ✦ RÔLE : Show server info
 ┊    ✦ ALIAS : .serverip
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟻 ⟩ .naruto
+┊ 𝟷𝟺𝟺 ⟩ .naruto
 ┊    ✦ RÔLE : Logo « naruto » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟼 ⟩ .neon
+┊ 𝟷𝟺𝟻 ⟩ .neon
 ┊    ✦ RÔLE : Logo « neon » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟽 ⟩ .neonglitch
+┊ 𝟷𝟺𝟼 ⟩ .neonglitch
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟺𝟾 ⟩ .neonlight
+┊ 𝟷𝟺𝟽 ⟩ .neonlight
 ┊    ✦ RÔLE : Logo « neonlight » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟿 ⟩ .netspeed
+┊ 𝟷𝟺𝟾 ⟩ .netspeed
 ┊    ✦ RÔLE : Test the bot server internet speed
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟻𝟶 ⟩ .nickname
+┊ 𝟷𝟺𝟿 ⟩ .nickname
 ┊    ✦ RÔLE : Generate nickname
 ┊    ✦ ALIAS : .nick
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟷 ⟩ .nigerianflag
+┊ 𝟷𝟻𝟶 ⟩ .nigerianflag
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟻𝟸 ⟩ .nitumie
+┊ 𝟷𝟻𝟷 ⟩ .nitumie
 ┊    ✦ RÔLE : Save a WhatsApp status (reply to a status with this command)
 ┊    ✦ ALIAS : .statussave
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟹 ⟩ .onwa
+┊ 𝟷𝟻𝟸 ⟩ .onwa
 ┊    ✦ RÔLE : Vérifier si un numéro a WhatsApp
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟺 ⟩ .os
+┊ 𝟷𝟻𝟹 ⟩ .os
 ┊    ✦ RÔLE : Operating system info
 ┊    ✦ ALIAS : .osinfo
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟻 ⟩ .palindrome
+┊ 𝟷𝟻𝟺 ⟩ .palindrome
 ┊    ✦ RÔLE : Check if palindrome
 ┊    ✦ ALIAS : .ispalindrome
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟼 ⟩ .papercut
+┊ 𝟷𝟻𝟻 ⟩ .papercut
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟻𝟽 ⟩ .password
+┊ 𝟷𝟻𝟼 ⟩ .password
 ┊    ✦ RÔLE : Générer un mot de passe sécurisé
 ┊    ✦ ALIAS : .mdp
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟾 ⟩ .personality
+┊ 𝟷𝟻𝟽 ⟩ .personality
 ┊    ✦ RÔLE : Random MBTI type
 ┊    ✦ ALIAS : .mbti
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟿 ⟩ .phone2
+┊ 𝟷𝟻𝟾 ⟩ .phone2
 ┊    ✦ RÔLE : Phone brand info
 ┊    ✦ ALIAS : .phoneinfo
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟶 ⟩ .phonetic
+┊ 𝟷𝟻𝟿 ⟩ .phonetic
 ┊    ✦ RÔLE : NATO phonetic alphabet
 ┊    ✦ ALIAS : .nato
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟷 ⟩ .pi
+┊ 𝟷𝟼𝟶 ⟩ .pi
 ┊    ✦ RÔLE : Show Pi digits
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟸 ⟩ .pick
+┊ 𝟷𝟼𝟷 ⟩ .pick
 ┊    ✦ RÔLE : Pick random option
 ┊    ✦ ALIAS : .decide
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟹 ⟩ .pixelglitch
+┊ 𝟷𝟼𝟸 ⟩ .pixelglitch
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟼𝟺 ⟩ .planet
+┊ 𝟷𝟼𝟹 ⟩ .planet
 ┊    ✦ RÔLE : Planet information
 ┊    ✦ ALIAS : .planetinfo
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟻 ⟩ .poll2
+┊ 𝟷𝟼𝟺 ⟩ .poll2
 ┊    ✦ RÔLE : Quick text poll
 ┊    ✦ ALIAS : .quickpoll
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟼 ⟩ .pollresult
+┊ 𝟷𝟼𝟻 ⟩ .pollresult
 ┊    ✦ RÔLE : Show live results of a poll (reply to the poll message)
 ┊    ✦ ALIAS : .pollresults
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟼𝟽 ⟩ .power
+┊ 𝟷𝟼𝟼 ⟩ .power
 ┊    ✦ RÔLE : Power/exponent
 ┊    ✦ ALIAS : .pow
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟾 ⟩ .prime
+┊ 𝟷𝟼𝟽 ⟩ .prime
 ┊    ✦ RÔLE : Check if prime
 ┊    ✦ ALIAS : .isprime
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟿 ⟩ .programming
+┊ 𝟷𝟼𝟾 ⟩ .programming
 ┊    ✦ RÔLE : Programming language info
 ┊    ✦ ALIAS : .lang
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟶 ⟩ .proverb
+┊ 𝟷𝟼𝟿 ⟩ .proverb
 ┊    ✦ RÔLE : African proverb
 ┊    ✦ ALIAS : .wisdom2
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟷 ⟩ .purge
+┊ 𝟷𝟽𝟶 ⟩ .purge
 ┊    ✦ RÔLE : Delete multiple messages (reply to start message)
 ┊    ✦ ALIAS : .clear
 ┊    ✦ ACCÈS : ADMIN GROUPE, GROUPE
-┊ 𝟷𝟽𝟸 ⟩ .purple
+┊ 𝟷𝟽𝟷 ⟩ .purple
 ┊    ✦ RÔLE : Logo « purple » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟹 ⟩ .qr
+┊ 𝟷𝟽𝟸 ⟩ .qr
 ┊    ✦ RÔLE : Générer un QR code
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟺 ⟩ .quote2
+┊ 𝟷𝟽𝟹 ⟩ .quote2
 ┊    ✦ RÔLE : Daily quote
 ┊    ✦ ALIAS : .dq
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟻 ⟩ .rainbow
+┊ 𝟷𝟽𝟺 ⟩ .rainbow
 ┊    ✦ RÔLE : Rainbow text
 ┊    ✦ ALIAS : .colortext
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟼 ⟩ .random
+┊ 𝟷𝟽𝟻 ⟩ .random
 ┊    ✦ RÔLE : Random number
 ┊    ✦ ALIAS : .rng
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟽 ⟩ .react
+┊ 𝟷𝟽𝟼 ⟩ .react
 ┊    ✦ RÔLE : Réagir à un message
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟾 ⟩ .readreceipt
+┊ 𝟷𝟽𝟽 ⟩ .readreceipt
 ┊    ✦ RÔLE : Toggle read receipts (blue ticks) on or off
 ┊    ✦ ALIAS : .receipt
 ┊    ✦ ACCÈS : OWNER / SUDO
-┊ 𝟷𝟽𝟿 ⟩ .recipe
+┊ 𝟷𝟽𝟾 ⟩ .recipe
 ┊    ✦ RÔLE : Quick recipe
 ┊    ✦ ALIAS : .quickrecipe
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟶 ⟩ .regex
+┊ 𝟷𝟽𝟿 ⟩ .regex
 ┊    ✦ RÔLE : Test regex pattern
 ┊    ✦ ALIAS : .testregex
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟷 ⟩ .remind
+┊ 𝟷𝟾𝟶 ⟩ .remind
 ┊    ✦ RÔLE : Rappel simple
 ┊    ✦ ALIAS : .rappel
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟸 ⟩ .repeat
+┊ 𝟷𝟾𝟷 ⟩ .repeat
 ┊    ✦ RÔLE : Repeat text
 ┊    ✦ ALIAS : .rep
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟹 ⟩ .rev
+┊ 𝟷𝟾𝟸 ⟩ .rev
 ┊    ✦ RÔLE : Reverse text
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟺 ⟩ .round
+┊ 𝟷𝟾𝟹 ⟩ .round
 ┊    ✦ RÔLE : Round number
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟻 ⟩ .sandsummer
+┊ 𝟷𝟾𝟺 ⟩ .sandsummer
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟼 ⟩ .save
+┊ 𝟷𝟾𝟻 ⟩ .save
 ┊    ✦ RÔLE : Save/bookmark messages to retrieve later via DM
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟽 ⟩ .save2
+┊ 𝟷𝟾𝟼 ⟩ .save2
 ┊    ✦ RÔLE : Save bookmarks/links
 ┊    ✦ ALIAS : .bm
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟾 ⟩ .saved
+┊ 𝟷𝟾𝟽 ⟩ .saved
 ┊    ✦ RÔLE : Save/bookmark messages to retrieve later via DM
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟿 ⟩ .saying
+┊ 𝟷𝟾𝟾 ⟩ .saying
 ┊    ✦ RÔLE : Get a random proverb, wise saying, or adage
 ┊    ✦ ALIAS : .adage
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟿𝟶 ⟩ .sched
+┊ 𝟷𝟾𝟿 ⟩ .sched
 ┊    ✦ RÔLE : Simple scheduler
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟷 ⟩ .scramblesentence
+┊ 𝟷𝟿𝟶 ⟩ .scramblesentence
 ┊    ✦ RÔLE : Scramble words in sentence
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟸 ⟩ .screenshot
+┊ 𝟷𝟿𝟷 ⟩ .screenshot
 ┊    ✦ RÔLE : Capture d'écran d'un site web
 ┊    ✦ ALIAS : .ss
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟹 ⟩ .seen
+┊ 𝟷𝟿𝟸 ⟩ .seen
 ┊    ✦ RÔLE : Présence en direct d'un contact
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟺 ⟩ .sharecontact
+┊ 𝟷𝟿𝟹 ⟩ .sharecontact
 ┊    ✦ RÔLE : Share contact card
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟻 ⟩ .short
+┊ 𝟷𝟿𝟺 ⟩ .short
 ┊    ✦ RÔLE : Raccourcir une URL (is.gd gratuit)
 ┊    ✦ ALIAS : .tiny
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟼 ⟩ .shuffle
+┊ 𝟷𝟿𝟻 ⟩ .shuffle
 ┊    ✦ RÔLE : Shuffle text
 ┊    ✦ ALIAS : .scramble
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟽 ⟩ .simp
+┊ 𝟷𝟿𝟼 ⟩ .simp
 ┊    ✦ RÔLE : Simp meter
 ┊    ✦ ALIAS : .simpmeter
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟾 ⟩ .slang
+┊ 𝟷𝟿𝟽 ⟩ .slang
 ┊    ✦ RÔLE : Gen Z slang dictionary
 ┊    ✦ ALIAS : .genz
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟿 ⟩ .slowmode
+┊ 𝟷𝟿𝟾 ⟩ .slowmode
 ┊    ✦ RÔLE : Set a cooldown between messages per user. Usage: .slowmode 30 (seconds) or .slowmode off
 ┊    ✦ ACCÈS : ADMIN GROUPE, GROUPE
-┊ 𝟸𝟶𝟶 ⟩ .snow
+┊ 𝟷𝟿𝟿 ⟩ .snow
 ┊    ✦ RÔLE : Logo « snow » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟷 ⟩ .space
+┊ 𝟸𝟶𝟶 ⟩ .space
 ┊    ✦ RÔLE : Add spaces between letters
 ┊    ✦ ALIAS : .spaced
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟸 ⟩ .speedtest
+┊ 𝟸𝟶𝟷 ⟩ .speedtest
 ┊    ✦ RÔLE : Vitesse de réponse du bot
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟹 ⟩ .spell
+┊ 𝟸𝟶𝟸 ⟩ .spell
 ┊    ✦ RÔLE : Spell a word
 ┊    ✦ ALIAS : .spellcheck
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟺 ⟩ .split
+┊ 𝟸𝟶𝟹 ⟩ .split
 ┊    ✦ RÔLE : Bill splitter
 ┊    ✦ ALIAS : .billsplit
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟻 ⟩ .star
+┊ 𝟸𝟶𝟺 ⟩ .star
 ┊    ✦ RÔLE : Épingler un message en favori (répondre)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟼 ⟩ .status2
+┊ 𝟸𝟶𝟻 ⟩ .status2
 ┊    ✦ RÔLE : Random status ideas
 ┊    ✦ ALIAS : .whatsappstatus
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟽 ⟩ .stock
+┊ 𝟸𝟶𝟼 ⟩ .stock
 ┊    ✦ RÔLE : Get live stock price from Yahoo Finance
 ┊    ✦ ALIAS : .shares
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶𝟾 ⟩ .stopwatch
+┊ 𝟸𝟶𝟽 ⟩ .stopwatch
 ┊    ✦ RÔLE : Stopwatch
 ┊    ✦ ALIAS : .sw
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟿 ⟩ .stretch
+┊ 𝟸𝟶𝟾 ⟩ .stretch
 ┊    ✦ RÔLE : Stretching routine
 ┊    ✦ ALIAS : .stretching
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟶 ⟩ .strike
+┊ 𝟸𝟶𝟿 ⟩ .strike
 ┊    ✦ RÔLE : Strike through text
 ┊    ✦ ALIAS : .strikethrough
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟷 ⟩ .subtract
+┊ 𝟸𝟷𝟶 ⟩ .subtract
 ┊    ✦ RÔLE : Subtract numbers
 ┊    ✦ ALIAS : .sub
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟸 ⟩ .sum
+┊ 𝟸𝟷𝟷 ⟩ .sum
 ┊    ✦ RÔLE : Add numbers
 ┊    ✦ ALIAS : .plus
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟹 ⟩ .summer
+┊ 𝟸𝟷𝟸 ⟩ .summer
 ┊    ✦ RÔLE : Logo « summer » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟺 ⟩ .summerbeach
+┊ 𝟸𝟷𝟹 ⟩ .summerbeach
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟻 ⟩ .superhero
+┊ 𝟸𝟷𝟺 ⟩ .superhero
 ┊    ✦ RÔLE : Superhero info
 ┊    ✦ ALIAS : .hero
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟼 ⟩ .superpower
+┊ 𝟸𝟷𝟻 ⟩ .superpower
 ┊    ✦ RÔLE : Random superpower
 ┊    ✦ ALIAS : .randompower
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟽 ⟩ .sus
+┊ 𝟸𝟷𝟼 ⟩ .sus
 ┊    ✦ RÔLE : Sus meter
 ┊    ✦ ALIAS : .susmeter
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟾 ⟩ .texteffect
+┊ 𝟸𝟷𝟽 ⟩ .texteffect
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟿 ⟩ .thankyou
+┊ 𝟸𝟷𝟾 ⟩ .thankyou
 ┊    ✦ RÔLE : Thank you in many languages
 ┊    ✦ ALIAS : .thanks2
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟶 ⟩ .thunder
+┊ 𝟸𝟷𝟿 ⟩ .thunder
 ┊    ✦ RÔLE : Logo « thunder » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟷 ⟩ .timestamp
+┊ 𝟸𝟸𝟶 ⟩ .timestamp
 ┊    ✦ RÔLE : Unix timestamp
 ┊    ✦ ALIAS : .epoch
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟸 ⟩ .timezone
+┊ 𝟸𝟸𝟷 ⟩ .timezone
 ┊    ✦ RÔLE : Heure dans un fuseau
 ┊    ✦ ALIAS : .heure
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟹 ⟩ .title
+┊ 𝟸𝟸𝟸 ⟩ .title
 ┊    ✦ RÔLE : Title case text
 ┊    ✦ ALIAS : .titlecase
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟺 ⟩ .tongue
+┊ 𝟸𝟸𝟹 ⟩ .tongue
 ┊    ✦ RÔLE : Tongue twister
 ┊    ✦ ALIAS : .twister
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟻 ⟩ .tour
+┊ 𝟸𝟸𝟺 ⟩ .tour
 ┊    ✦ RÔLE : Upload média → lien temporaire (0x0.st)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟼 ⟩ .transcribe
+┊ 𝟸𝟸𝟻 ⟩ .transcribe
 ┊    ✦ RÔLE : Transcribe voice messages to text (reply to a voice note)
 ┊    ✦ ALIAS : .vtt
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟸𝟽 ⟩ .transformer
+┊ 𝟸𝟸𝟼 ⟩ .transformer
 ┊    ✦ RÔLE : Logo « transformer » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟾 ⟩ .translate
+┊ 𝟸𝟸𝟽 ⟩ .translate
 ┊    ✦ RÔLE : Traduire un texte
 ┊    ✦ ALIAS : .tr
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟿 ⟩ .troll
+┊ 𝟸𝟸𝟾 ⟩ .troll
 ┊    ✦ RÔLE : Troll text art
 ┊    ✦ ALIAS : .trollface
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹𝟶 ⟩ .tts
+┊ 𝟸𝟸𝟿 ⟩ .tts
 ┊    ✦ RÔLE : Texte → voix (TTS gratuit)
 ┊    ✦ ALIAS : .parle
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹𝟷 ⟩ .typing
+┊ 𝟸𝟹𝟶 ⟩ .typing
 ┊    ✦ RÔLE : Typing speed test
 ┊    ✦ ALIAS : .wpm
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹𝟸 ⟩ .typographytext
+┊ 𝟸𝟹𝟷 ⟩ .typographytext
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟹𝟹 ⟩ .underwater
+┊ 𝟸𝟹𝟸 ⟩ .underwater
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟹𝟺 ⟩ .unstar
+┊ 𝟸𝟹𝟹 ⟩ .unstar
 ┊    ✦ RÔLE : Retirer un message des favoris (répondre)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹𝟻 ⟩ .upsidedown
+┊ 𝟸𝟹𝟺 ⟩ .upsidedown
 ┊    ✦ RÔLE : Flip text upside down
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹𝟼 ⟩ .useragent
+┊ 𝟸𝟹𝟻 ⟩ .useragent
 ┊    ✦ RÔLE : Random user agent
 ┊    ✦ ALIAS : .ua
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹𝟽 ⟩ .uuid
+┊ 𝟸𝟹𝟼 ⟩ .uuid
 ┊    ✦ RÔLE : Generate UUID
 ┊    ✦ ALIAS : .guid
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹𝟾 ⟩ .uwu
+┊ 𝟸𝟹𝟽 ⟩ .uwu
 ┊    ✦ RÔLE : UwUify text
 ┊    ✦ ALIAS : .uwuify
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹𝟿 ⟩ .vocab
+┊ 𝟸𝟹𝟾 ⟩ .vocab
 ┊    ✦ RÔLE : Word of the day
 ┊    ✦ ALIAS : .wotd
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺𝟶 ⟩ .vowels
+┊ 𝟸𝟹𝟿 ⟩ .vowels
 ┊    ✦ RÔLE : Remove vowels
 ┊    ✦ ALIAS : .novowels
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺𝟷 ⟩ .wall
+┊ 𝟸𝟺𝟶 ⟩ .wall
 ┊    ✦ RÔLE : Logo « wall » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺𝟸 ⟩ .warning
+┊ 𝟸𝟺𝟷 ⟩ .warning
 ┊    ✦ RÔLE : Warn a user
 ┊    ✦ ACCÈS : ADMIN GROUPE, GROUPE
-┊ 𝟸𝟺𝟹 ⟩ .water
+┊ 𝟸𝟺𝟸 ⟩ .water
 ┊    ✦ RÔLE : Logo « water » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺𝟺 ⟩ .waves
+┊ 𝟸𝟺𝟹 ⟩ .waves
 ┊    ✦ RÔLE : Wave text effect
 ┊    ✦ ALIAS : .textwave
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺𝟻 ⟩ .weather
+┊ 𝟸𝟺𝟺 ⟩ .weather
 ┊    ✦ RÔLE : Météo d’une ville
 ┊    ✦ ALIAS : .meteo
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺𝟼 ⟩ .whatsapp
+┊ 𝟸𝟺𝟻 ⟩ .whatsapp
 ┊    ✦ RÔLE : View a user WhatsApp profile info
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟺𝟽 ⟩ .whitegold
+┊ 𝟸𝟺𝟼 ⟩ .whitegold
 ┊    ✦ RÔLE : Logo « whitegold » (effet texte)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺𝟾 ⟩ .wisdom
+┊ 𝟸𝟺𝟽 ⟩ .wisdom
 ┊    ✦ RÔLE : Random wisdom
 ┊    ✦ ALIAS : .wisdomquote
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺𝟿 ⟩ .wordcount
+┊ 𝟸𝟺𝟾 ⟩ .wordcount
 ┊    ✦ RÔLE : Detailed word count
 ┊    ✦ ALIAS : .wc
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟻𝟶 ⟩ .workout
+┊ 𝟸𝟺𝟿 ⟩ .workout
 ┊    ✦ RÔLE : Random workout
 ┊    ✦ ALIAS : .wod
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟻𝟷 ⟩ .writetext
+┊ 𝟸𝟻𝟶 ⟩ .writetext
 ┊    ✦ RÔLE : Logo maker and text effect generator
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟻𝟸 ⟩ .yoga
+┊ 𝟸𝟻𝟷 ⟩ .yoga
 ┊    ✦ RÔLE : Random yoga pose
 ┊    ✦ ALIAS : .yogapose
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟻𝟹 ⟩ .zalgo
+┊ 𝟸𝟻𝟸 ⟩ .zalgo
 ┊    ✦ RÔLE : Zalgo creepy text
 ┊    ✦ ALIAS : .creepy
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟻𝟺 ⟩ .zodiacmatch
+┊ 𝟸𝟻𝟹 ⟩ .zodiacmatch
 ┊    ✦ RÔLE : Zodiac compatibility
 ┊    ✦ ALIAS : .zmatch
 ┊    ✦ ACCÈS : TOUS
 ╰┄┄┄┄┄┄┄┄┄┄┄┄⪼
 
 ┏━━━━━━━━━━━━━━━━┓
-┃  🤖  𝙸𝙰  ⟨ 23 ⟩
+┃  🤖  𝙸𝙰  ⟨ 22 ⟩
 ┗━━━━━━━━━━━━━━━━┛
 ┊ 𝟶𝟷 ⟩ .ai
 ┊    ✦ RÔLE : Pose une question à l’IA
@@ -2060,63 +2040,59 @@ Chaque rôle ci-dessous reprend la description de la commande et ses restriction
 ┊ 𝟶𝟾 ⟩ .giftedai
 ┊    ✦ RÔLE : Ask Gifted AI a question
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟶𝟿 ⟩ .gpt
-┊    ✦ RÔLE : Ask the AI a question
-┊    ✦ ALIAS : .chatgpt
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶 ⟩ .gpt4
+┊ 𝟶𝟿 ⟩ .gpt4
 ┊    ✦ RÔLE : Ask GPT-4 a question
 ┊    ✦ ALIAS : .gpt-4
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟷 ⟩ .gpt4o
+┊ 𝟷𝟶 ⟩ .gpt4o
 ┊    ✦ RÔLE : Ask GPT-4o a question
 ┊    ✦ ALIAS : .gpt-4o
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟸 ⟩ .gpt4o-mini
+┊ 𝟷𝟷 ⟩ .gpt4o-mini
 ┊    ✦ RÔLE : Ask GPT-4o Mini a question
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹 ⟩ .ia
+┊ 𝟷𝟸 ⟩ .ia
 ┊    ✦ RÔLE : Assistant IA — commandes, contenu, recherche web
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺 ⟩ .imagine
+┊ 𝟷𝟹 ⟩ .imagine
 ┊    ✦ RÔLE : Generate an AI image from a text prompt
 ┊    ✦ ALIAS : .img
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟻 ⟩ .letmegpt
+┊ 𝟷𝟺 ⟩ .letmegpt
 ┊    ✦ RÔLE : Ask LetMeGPT a question
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟼 ⟩ .mode2
+┊ 𝟷𝟻 ⟩ .mode2
 ┊    ✦ RÔLE : Change bot mode
 ┊    ✦ ACCÈS : OWNER / SUDO
-┊ 𝟷𝟽 ⟩ .openai
+┊ 𝟷𝟼 ⟩ .openai
 ┊    ✦ RÔLE : Ask OpenAI a question
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾 ⟩ .ping2
+┊ 𝟷𝟽 ⟩ .ping2
 ┊    ✦ RÔLE : Check bot response latency
 ┊    ✦ ALIAS : .ms
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿 ⟩ .restart2
+┊ 𝟷𝟾 ⟩ .restart2
 ┊    ✦ RÔLE : Restart bot
 ┊    ✦ ALIAS : .reboot
 ┊    ✦ ACCÈS : OWNER / SUDO
-┊ 𝟸𝟶 ⟩ .speed
+┊ 𝟷𝟿 ⟩ .speed
 ┊    ✦ RÔLE : Bot speed test
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷 ⟩ .summarize
+┊ 𝟸𝟶 ⟩ .summarize
 ┊    ✦ RÔLE : Résumer un texte cité
 ┊    ✦ ALIAS : .resume
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸 ⟩ .summary
+┊ 𝟸𝟷 ⟩ .summary
 ┊    ✦ RÔLE : AI summarizes any long text, article, or quoted message
 ┊    ✦ ALIAS : .brief
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟹 ⟩ .venice
+┊ 𝟸𝟸 ⟩ .venice
 ┊    ✦ RÔLE : Ask Venice AI a question
 ┊    ✦ ACCÈS : GROUPE
 ╰┄┄┄┄┄┄┄┄┄┄┄┄⪼
 
 ┏━━━━━━━━━━━━━━━━━━┓
-┃  🎲  𝙵𝚄𝙽  ⟨ 223 ⟩
+┃  🎲  𝙵𝚄𝙽  ⟨ 198 ⟩
 ┗━━━━━━━━━━━━━━━━━━┛
 ┊ 𝟶𝟷 ⟩ .8ball
 ┊    ✦ RÔLE : Boule magique
@@ -2150,714 +2126,637 @@ Chaque rôle ci-dessous reprend la description de la commande et ses restriction
 ┊ 𝟷𝟶 ⟩ .ahug
 ┊    ✦ RÔLE : Réaction anime « hug » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷 ⟩ .airing
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟸 ⟩ .akiss
+┊ 𝟷𝟷 ⟩ .akiss
 ┊    ✦ RÔLE : Réaction anime « kiss » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹 ⟩ .alaugh
+┊ 𝟷𝟸 ⟩ .alaugh
 ┊    ✦ RÔLE : Réaction anime « laugh » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺 ⟩ .angry
+┊ 𝟷𝟹 ⟩ .angry
 ┊    ✦ RÔLE : Animation « angry » (message animé)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻 ⟩ .animalfact
+┊ 𝟷𝟺 ⟩ .animalfact
 ┊    ✦ RÔLE : Random animal fact
 ┊    ✦ ALIAS : .animalf
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼 ⟩ .anime
+┊ 𝟷𝟻 ⟩ .animesearch
 ┊    ✦ RÔLE : Search for anime or manga info from MyAnimeList
-┊    ✦ ALIAS : .animesearch
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟽 ⟩ .animegenre
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾 ⟩ .animeinfo
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟿 ⟩ .animequote
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶 ⟩ .ans
+┊ 𝟷𝟼 ⟩ .ans
 ┊    ✦ RÔLE : Answer trivia
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷 ⟩ .answer
+┊ 𝟷𝟽 ⟩ .answer
 ┊    ✦ RÔLE : Répondre à une question
 ┊    ✦ ALIAS : .repondre
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸 ⟩ .apat
+┊ 𝟷𝟾 ⟩ .apat
 ┊    ✦ RÔLE : Réaction anime « pat » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟹 ⟩ .ashrug
+┊ 𝟷𝟿 ⟩ .ashrug
 ┊    ✦ RÔLE : Réaction anime « shrug » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟺 ⟩ .asmile
+┊ 𝟸𝟶 ⟩ .asmile
 ┊    ✦ RÔLE : Réaction anime « smile » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟻 ⟩ .astare
+┊ 𝟸𝟷 ⟩ .astare
 ┊    ✦ RÔLE : Réaction anime « stare » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟼 ⟩ .athumbsup
+┊ 𝟸𝟸 ⟩ .athumbsup
 ┊    ✦ RÔLE : Réaction anime « thumbsup » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟽 ⟩ .awave
+┊ 𝟸𝟹 ⟩ .awave
 ┊    ✦ RÔLE : Réaction anime « wave » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟾 ⟩ .awink
+┊ 𝟸𝟺 ⟩ .awink
 ┊    ✦ RÔLE : Réaction anime « wink » (GIF, otakugifs)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟿 ⟩ .baka
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟸𝟻 ⟩ .baka
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟶 ⟩ .bite
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟸𝟼 ⟩ .bite
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟷 ⟩ .blush
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟸𝟽 ⟩ .blush
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟸 ⟩ .bodyfact
+┊ 𝟸𝟾 ⟩ .bodyfact
 ┊    ✦ RÔLE : Random human body fact
 ┊    ✦ ALIAS : .bodyf
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟹 ⟩ .bonk
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟸𝟿 ⟩ .bonk
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟹𝟺 ⟩ .brain
+┊ 𝟹𝟶 ⟩ .brain
 ┊    ✦ RÔLE : Expanding brain meme
 ┊    ✦ ALIAS : .brainsize
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟻 ⟩ .bundesliga_matchday
+┊ 𝟹𝟷 ⟩ .bundesliga_matchday
 ┊    ✦ RÔLE : Bundesliga — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟼 ⟩ .bundesliga_table
+┊ 𝟹𝟸 ⟩ .bundesliga_table
 ┊    ✦ RÔLE : Bundesliga — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟽 ⟩ .bundesliga_top_assist
+┊ 𝟹𝟹 ⟩ .bundesliga_top_assist
 ┊    ✦ RÔLE : Bundesliga — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟾 ⟩ .bundesliga_top_scorer
+┊ 𝟹𝟺 ⟩ .bundesliga_top_scorer
 ┊    ✦ RÔLE : Bundesliga — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟹𝟿 ⟩ .capitalanswer
+┊ 𝟹𝟻 ⟩ .capitalanswer
 ┊    ✦ RÔLE : Answer capital quiz
 ┊    ✦ ALIAS : .ca
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟶 ⟩ .capitalquiz
+┊ 𝟹𝟼 ⟩ .capitalquiz
 ┊    ✦ RÔLE : Guess the capital city
 ┊    ✦ ALIAS : .cq
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟷 ⟩ .character
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟺𝟸 ⟩ .choose
+┊ 𝟹𝟽 ⟩ .choose
 ┊    ✦ RÔLE : Choisir entre options
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟹 ⟩ .cl_matchday
+┊ 𝟹𝟾 ⟩ .cl_matchday
 ┊    ✦ RÔLE : Champions League — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟺 ⟩ .cl_table
+┊ 𝟹𝟿 ⟩ .cl_table
 ┊    ✦ RÔLE : Champions League — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟻 ⟩ .cl_top_assist
+┊ 𝟺𝟶 ⟩ .cl_top_assist
 ┊    ✦ RÔLE : Champions League — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟼 ⟩ .cl_top_scorer
+┊ 𝟺𝟷 ⟩ .cl_top_scorer
 ┊    ✦ RÔLE : Champions League — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟽 ⟩ .coin
+┊ 𝟺𝟸 ⟩ .coin
 ┊    ✦ RÔLE : Pile ou face
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟺𝟾 ⟩ .compliment
+┊ 𝟺𝟹 ⟩ .compliment
 ┊    ✦ RÔLE : Send a random compliment
 ┊    ✦ ALIAS : .comp
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟺𝟿 ⟩ .countryfact
+┊ 𝟺𝟺 ⟩ .countryfact
 ┊    ✦ RÔLE : Random country fact
 ┊    ✦ ALIAS : .countryf
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟻𝟶 ⟩ .couple
+┊ 𝟺𝟻 ⟩ .couple
 ┊    ✦ RÔLE : Calculate love compatibility between two people
 ┊    ✦ ALIAS : .love
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟷 ⟩ .cry
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟺𝟼 ⟩ .cry
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟸 ⟩ .cuddle
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟺𝟽 ⟩ .cuddle
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟹 ⟩ .dance
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟺𝟾 ⟩ .dance
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟺 ⟩ .dare
+┊ 𝟺𝟿 ⟩ .dare
 ┊    ✦ RÔLE : Dare challenge
 ┊    ✦ ALIAS : .dareq
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟻𝟻 ⟩ .darkjoke
+┊ 𝟻𝟶 ⟩ .darkjoke
 ┊    ✦ RÔLE : Dark humor joke
 ┊    ✦ ALIAS : .dark
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟻𝟼 ⟩ .de
+┊ 𝟻𝟷 ⟩ .de
 ┊    ✦ RÔLE : LUDO : lancer le dé
 ┊    ✦ ALIAS : .dice
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟻𝟽 ⟩ .diceai
+┊ 𝟻𝟸 ⟩ .diceai
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟾 ⟩ .diceend
+┊ 𝟻𝟹 ⟩ .diceend
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟻𝟿 ⟩ .dicejoin
+┊ 𝟻𝟺 ⟩ .dicejoin
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟼𝟶 ⟩ .emoji
+┊ 𝟻𝟻 ⟩ .emoji
 ┊    ✦ RÔLE : Random emoji combination
 ┊    ✦ ALIAS : .emojicombo
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟷 ⟩ .emojianswer
+┊ 𝟻𝟼 ⟩ .emojianswer
 ┊    ✦ RÔLE : Answer emoji guess
 ┊    ✦ ALIAS : .ea
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟸 ⟩ .emojiguess
+┊ 𝟻𝟽 ⟩ .emojiguess
 ┊    ✦ RÔLE : Guess the emoji meaning
 ┊    ✦ ALIAS : .eg
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟹 ⟩ .emojimix
+┊ 𝟻𝟾 ⟩ .emojimix
 ┊    ✦ RÔLE : Mélanger 2 emojis
 ┊    ✦ ALIAS : .emix
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟺 ⟩ .epl_matchday
+┊ 𝟻𝟿 ⟩ .epl_matchday
 ┊    ✦ RÔLE : Premier League — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟻 ⟩ .epl_table
+┊ 𝟼𝟶 ⟩ .epl_table
 ┊    ✦ RÔLE : Premier League — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟼 ⟩ .epl_top_assist
+┊ 𝟼𝟷 ⟩ .epl_top_assist
 ┊    ✦ RÔLE : Premier League — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟽 ⟩ .epl_top_scorer
+┊ 𝟼𝟸 ⟩ .epl_top_scorer
 ┊    ✦ RÔLE : Premier League — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟾 ⟩ .eredivisie_matchday
+┊ 𝟼𝟹 ⟩ .eredivisie_matchday
 ┊    ✦ RÔLE : Eredivisie — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟼𝟿 ⟩ .eredivisie_table
+┊ 𝟼𝟺 ⟩ .eredivisie_table
 ┊    ✦ RÔLE : Eredivisie — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟶 ⟩ .eredivisie_top_assist
+┊ 𝟼𝟻 ⟩ .eredivisie_top_assist
 ┊    ✦ RÔLE : Eredivisie — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟷 ⟩ .eredivisie_top_scorer
+┊ 𝟼𝟼 ⟩ .eredivisie_top_scorer
 ┊    ✦ RÔLE : Eredivisie — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟸 ⟩ .fact
+┊ 𝟼𝟽 ⟩ .fact
 ┊    ✦ RÔLE : Fait aléatoire (API gratuite)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟹 ⟩ .factorial
+┊ 𝟼𝟾 ⟩ .factorial
 ┊    ✦ RÔLE : Factorial
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟺 ⟩ .facts
+┊ 𝟼𝟿 ⟩ .facts
 ┊    ✦ RÔLE : Get a random interesting fact
 ┊    ✦ ALIAS : .funfact
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟻 ⟩ .flaganswer
+┊ 𝟽𝟶 ⟩ .flaganswer
 ┊    ✦ RÔLE : Answer flag quiz
 ┊    ✦ ALIAS : .fa
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟼 ⟩ .flagquiz
+┊ 𝟽𝟷 ⟩ .flagquiz
 ┊    ✦ RÔLE : Guess the country from flag
 ┊    ✦ ALIAS : .fq
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟽 ⟩ .flip
+┊ 𝟽𝟸 ⟩ .flip
 ┊    ✦ RÔLE : Flip a coin or roll dice
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟾 ⟩ .flipcoin
+┊ 𝟽𝟹 ⟩ .flipcoin
 ┊    ✦ RÔLE : Flip a coin
 ┊    ✦ ALIAS : .coinflip
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟿 ⟩ .foodfact
+┊ 𝟽𝟺 ⟩ .foodfact
 ┊    ✦ RÔLE : Random food fact
 ┊    ✦ ALIAS : .foodf
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟶 ⟩ .football
+┊ 𝟽𝟻 ⟩ .football
 ┊    ✦ RÔLE : Voir les 36 commandes football
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟷 ⟩ .fortune
+┊ 𝟽𝟼 ⟩ .fortune
 ┊    ✦ RÔLE : Fortune cookie
 ┊    ✦ ALIAS : .fortunecookie
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟸 ⟩ .fortune2
+┊ 𝟽𝟽 ⟩ .fortune2
 ┊    ✦ RÔLE : Lucky numbers
 ┊    ✦ ALIAS : .luckynumber
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟹 ⟩ .gamehistory
+┊ 𝟽𝟾 ⟩ .gamehistory
 ┊    ✦ RÔLE : Sports scores, news, standings and betting tips
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟺 ⟩ .games
+┊ 𝟽𝟿 ⟩ .games
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟻 ⟩ .gaytest
+┊ 𝟾𝟶 ⟩ .gaytest
 ┊    ✦ RÔLE : Gay meter (for fun)
 ┊    ✦ ALIAS : .gay
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟼 ⟩ .guess
+┊ 𝟾𝟷 ⟩ .guess
 ┊    ✦ RÔLE : Number guessing game
 ┊    ✦ ALIAS : .guessnum
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟽 ⟩ .guessnumber
+┊ 𝟾𝟸 ⟩ .guessnumber
 ┊    ✦ RÔLE : Number guessing game (1–100)
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟾𝟾 ⟩ .hang
+┊ 𝟾𝟹 ⟩ .hang
 ┊    ✦ RÔLE : Lettre du pendu
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟾𝟿 ⟩ .hangman
+┊ 𝟾𝟺 ⟩ .hangman
 ┊    ✦ RÔLE : Jeu du pendu — devine le mot
 ┊    ✦ ALIAS : .pendu
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟶 ⟩ .happi
+┊ 𝟾𝟻 ⟩ .happi
 ┊    ✦ RÔLE : Animation « happi » (message animé)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟷 ⟩ .happy
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟾𝟼 ⟩ .happy
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟿𝟸 ⟩ .heart
+┊ 𝟾𝟽 ⟩ .heart
 ┊    ✦ RÔLE : Animation « heart » (message animé)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟹 ⟩ .heartrate
+┊ 𝟾𝟾 ⟩ .heartrate
 ┊    ✦ RÔLE : Max heart rate calculator
 ┊    ✦ ALIAS : .hr
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟺 ⟩ .historyfact
+┊ 𝟾𝟿 ⟩ .historyfact
 ┊    ✦ RÔLE : Random history fact
 ┊    ✦ ALIAS : .historyf
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟻 ⟩ .hm
+┊ 𝟿𝟶 ⟩ .hm
 ┊    ✦ RÔLE : Hangman game
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟼 ⟩ .horo
+┊ 𝟿𝟷 ⟩ .horo
 ┊    ✦ RÔLE : Get daily horoscope for a zodiac sign
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟿𝟽 ⟩ .horoscope2
+┊ 𝟿𝟸 ⟩ .horoscope2
 ┊    ✦ RÔLE : Daily horoscope
 ┊    ✦ ALIAS : .dailyhoroscope
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟿𝟾 ⟩ .hug
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟿𝟹 ⟩ .hug
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟿𝟿 ⟩ .husbando
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟶 ⟩ .insult
+┊ 𝟿𝟺 ⟩ .insult
 ┊    ✦ RÔLE : Friendly insult
 ┊    ✦ ALIAS : .friendlyinsult
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟷 ⟩ .invest
+┊ 𝟿𝟻 ⟩ .invest
 ┊    ✦ RÔLE : Investment tip
 ┊    ✦ ALIAS : .investtip
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟸 ⟩ .iq
+┊ 𝟿𝟼 ⟩ .iq
 ┊    ✦ RÔLE : IQ test (for fun)
 ┊    ✦ ALIAS : .iqtest
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟹 ⟩ .joke
+┊ 𝟿𝟽 ⟩ .joke
 ┊    ✦ RÔLE : Une blague
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟺 ⟩ .joke2
+┊ 𝟿𝟾 ⟩ .joke2
 ┊    ✦ RÔLE : Dad joke
 ┊    ✦ ALIAS : .dadjoke
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟻 ⟩ .jokeen
+┊ 𝟿𝟿 ⟩ .jokeen
 ┊    ✦ RÔLE : Blague EN (API gratuite)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟶𝟼 ⟩ .jokes
+┊ 𝟷𝟶𝟶 ⟩ .jokes
 ┊    ✦ RÔLE : Get a random joke
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟽 ⟩ .kamisato
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
+┊ 𝟷𝟶𝟷 ⟩ .kiss
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟾 ⟩ .kiss
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟶𝟿 ⟩ .laliga_matchday
+┊ 𝟷𝟶𝟸 ⟩ .laliga_matchday
 ┊    ✦ RÔLE : La Liga — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟶 ⟩ .laliga_table
+┊ 𝟷𝟶𝟹 ⟩ .laliga_table
 ┊    ✦ RÔLE : La Liga — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟷 ⟩ .laliga_top_assist
+┊ 𝟷𝟶𝟺 ⟩ .laliga_top_assist
 ┊    ✦ RÔLE : La Liga — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟸 ⟩ .laliga_top_scorer
+┊ 𝟷𝟶𝟻 ⟩ .laliga_top_scorer
 ┊    ✦ RÔLE : La Liga — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟹 ⟩ .laugh
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟷𝟶𝟼 ⟩ .laugh
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟷𝟺 ⟩ .lifeadvice
+┊ 𝟷𝟶𝟽 ⟩ .lifeadvice
 ┊    ✦ RÔLE : Random life advice
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟻 ⟩ .liga_portugal_matchday
+┊ 𝟷𝟶𝟾 ⟩ .liga_portugal_matchday
 ┊    ✦ RÔLE : Liga Portugal — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟼 ⟩ .liga_portugal_table
+┊ 𝟷𝟶𝟿 ⟩ .liga_portugal_table
 ┊    ✦ RÔLE : Liga Portugal — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟽 ⟩ .liga_portugal_top_assist
+┊ 𝟷𝟷𝟶 ⟩ .liga_portugal_top_assist
 ┊    ✦ RÔLE : Liga Portugal — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟾 ⟩ .liga_portugal_top_scorer
+┊ 𝟷𝟷𝟷 ⟩ .liga_portugal_top_scorer
 ┊    ✦ RÔLE : Liga Portugal — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟷𝟿 ⟩ .ligue1_matchday
+┊ 𝟷𝟷𝟸 ⟩ .ligue1_matchday
 ┊    ✦ RÔLE : Ligue 1 — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟶 ⟩ .ligue1_table
+┊ 𝟷𝟷𝟹 ⟩ .ligue1_table
 ┊    ✦ RÔLE : Ligue 1 — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟷 ⟩ .ligue1_top_assist
+┊ 𝟷𝟷𝟺 ⟩ .ligue1_top_assist
 ┊    ✦ RÔLE : Ligue 1 — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟸 ⟩ .ligue1_top_scorer
+┊ 𝟷𝟷𝟻 ⟩ .ligue1_top_scorer
 ┊    ✦ RÔLE : Ligue 1 — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟹 ⟩ .livescore
+┊ 𝟷𝟷𝟼 ⟩ .livescore
 ┊    ✦ RÔLE : Sports scores, news, standings and betting tips
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟸𝟺 ⟩ .ludo
+┊ 𝟷𝟷𝟽 ⟩ .ludo
 ┊    ✦ RÔLE : LUDO 2-4 joueurs : .ludo creer | solo | rejoindre | start | pos | plateau
 ┊    ✦ ALIAS : .ludogame
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟻 ⟩ .magic8
+┊ 𝟷𝟷𝟾 ⟩ .magic8
 ┊    ✦ RÔLE : Ask the magic 8-ball a yes/no question
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟸𝟼 ⟩ .magicball
+┊ 𝟷𝟷𝟿 ⟩ .magicball
 ┊    ✦ RÔLE : Magic 8-ball
 ┊    ✦ ALIAS : .eightball
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟸𝟽 ⟩ .maid
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟸𝟾 ⟩ .manga
-┊    ✦ RÔLE : Search for anime or manga info from MyAnimeList
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟸𝟿 ⟩ .mangainfo
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹𝟶 ⟩ .mathanswer
+┊ 𝟷𝟸𝟶 ⟩ .mathanswer
 ┊    ✦ RÔLE : Answer math quiz
 ┊    ✦ ALIAS : .ma
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟷 ⟩ .mathfact
+┊ 𝟷𝟸𝟷 ⟩ .mathfact
 ┊    ✦ RÔLE : Random math fact
 ┊    ✦ ALIAS : .mathf
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟸 ⟩ .mathquiz
+┊ 𝟷𝟸𝟸 ⟩ .mathquiz
 ┊    ✦ RÔLE : Quick math quiz
 ┊    ✦ ALIAS : .mq
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟹 ⟩ .megumin
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹𝟺 ⟩ .meme
+┊ 𝟷𝟸𝟹 ⟩ .meme
 ┊    ✦ RÔLE : Meme text
 ┊    ✦ ALIAS : .memequote
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟻 ⟩ .moon
+┊ 𝟷𝟸𝟺 ⟩ .moon
 ┊    ✦ RÔLE : Animation « moon » (message animé)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟼 ⟩ .moviefact
+┊ 𝟷𝟸𝟻 ⟩ .moviefact
 ┊    ✦ RÔLE : Random movie fact
 ┊    ✦ ALIAS : .movief
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟽 ⟩ .neko
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟹𝟾 ⟩ .neverhaveiever
+┊ 𝟷𝟸𝟼 ⟩ .neverhaveiever
 ┊    ✦ RÔLE : Never have I ever
 ┊    ✦ ALIAS : .nhie
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟹𝟿 ⟩ .nguess
+┊ 𝟷𝟸𝟽 ⟩ .nguess
 ┊    ✦ RÔLE : Ta devinette
 ┊    ✦ ALIAS : .ng
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟶 ⟩ .nod
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟷𝟸𝟾 ⟩ .nod
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟺𝟷 ⟩ .numberfact
+┊ 𝟷𝟸𝟿 ⟩ .numberfact
 ┊    ✦ RÔLE : Get an interesting fact about a number
 ┊    ✦ ALIAS : .number
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟺𝟸 ⟩ .numberguess
+┊ 𝟷𝟹𝟶 ⟩ .numberguess
 ┊    ✦ RÔLE : Devine le nombre (1-100)
 ┊    ✦ ALIAS : .devinette
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟹 ⟩ .pat
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟷𝟹𝟷 ⟩ .pat
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟺𝟺 ⟩ .pickup
+┊ 𝟷𝟹𝟸 ⟩ .pickup
 ┊    ✦ RÔLE : Random pickup line
 ┊    ✦ ALIAS : .rizz
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟻 ⟩ .pion
+┊ 𝟷𝟹𝟹 ⟩ .pion
 ┊    ✦ RÔLE : LUDO : déplacer un pion
 ┊    ✦ ALIAS : .pawn
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟼 ⟩ .poem
+┊ 𝟷𝟹𝟺 ⟩ .poem
 ┊    ✦ RÔLE : Random poem
 ┊    ✦ ALIAS : .poetry
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟽 ⟩ .poke
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟷𝟹𝟻 ⟩ .poke
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟺𝟾 ⟩ .quote
-┊    ✦ RÔLE : Citation aléatoire (API gratuite)
-┊    ✦ ALIAS : .citation
-┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟺𝟿 ⟩ .raiden
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟻𝟶 ⟩ .rate
+┊ 𝟷𝟹𝟼 ⟩ .rate
 ┊    ✦ RÔLE : Noter un sujet
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟷 ⟩ .rateme
+┊ 𝟷𝟹𝟽 ⟩ .rateme
 ┊    ✦ RÔLE : Rate something
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟸 ⟩ .reaction
+┊ 𝟷𝟹𝟾 ⟩ .reaction
 ┊    ✦ RÔLE : React to a replied message with an emoji. Usage: .react 😍
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟹 ⟩ .rias
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟻𝟺 ⟩ .riddle
+┊ 𝟷𝟹𝟿 ⟩ .riddle
 ┊    ✦ RÔLE : Une énigme à résoudre
 ┊    ✦ ALIAS : .enigme
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟻 ⟩ .roast
+┊ 𝟷𝟺𝟶 ⟩ .roast
 ┊    ✦ RÔLE : Friendly roast
 ┊    ✦ ALIAS : .roastme
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟼 ⟩ .roll
+┊ 𝟷𝟺𝟷 ⟩ .roll
 ┊    ✦ RÔLE : Lancer de dé
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟽 ⟩ .rolldice
+┊ 𝟷𝟺𝟸 ⟩ .rolldice
 ┊    ✦ RÔLE : Roll dice
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟾 ⟩ .rps
+┊ 𝟷𝟺𝟹 ⟩ .rps
 ┊    ✦ RÔLE : Rock Paper Scissors
 ┊    ✦ ALIAS : .rockpaperscissors
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟻𝟿 ⟩ .sad
+┊ 𝟷𝟺𝟺 ⟩ .sad
 ┊    ✦ RÔLE : Animation « sad » (message animé)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟶 ⟩ .sciencefact
+┊ 𝟷𝟺𝟻 ⟩ .sciencefact
 ┊    ✦ RÔLE : Random science fact
 ┊    ✦ ALIAS : .sciencef
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟷 ⟩ .seasonal
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟼𝟸 ⟩ .selfies
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟼𝟹 ⟩ .seriea_matchday
+┊ 𝟷𝟺𝟼 ⟩ .seriea_matchday
 ┊    ✦ RÔLE : Serie A — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟺 ⟩ .seriea_table
+┊ 𝟷𝟺𝟽 ⟩ .seriea_table
 ┊    ✦ RÔLE : Serie A — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟻 ⟩ .seriea_top_assist
+┊ 𝟷𝟺𝟾 ⟩ .seriea_top_assist
 ┊    ✦ RÔLE : Serie A — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟼 ⟩ .seriea_top_scorer
+┊ 𝟷𝟺𝟿 ⟩ .seriea_top_scorer
 ┊    ✦ RÔLE : Serie A — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟽 ⟩ .shinobu
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟼𝟾 ⟩ .ship
+┊ 𝟷𝟻𝟶 ⟩ .ship
 ┊    ✦ RÔLE : Taux de compatibilité
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟼𝟿 ⟩ .shipping
+┊ 𝟷𝟻𝟷 ⟩ .shipping
 ┊    ✦ RÔLE : Ship two people
 ┊    ✦ ALIAS : .lovematch
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟶 ⟩ .shoot
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟽𝟷 ⟩ .shy
+┊ 𝟷𝟻𝟸 ⟩ .shy
 ┊    ✦ RÔLE : Animation « shy » (message animé)
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟸 ⟩ .slap
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟷𝟻𝟹 ⟩ .slap
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟽𝟹 ⟩ .slot
+┊ 𝟷𝟻𝟺 ⟩ .slot
 ┊    ✦ RÔLE : Slot machine game
 ┊    ✦ ALIAS : .slots
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟺 ⟩ .smile
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟷𝟻𝟻 ⟩ .smile
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟽𝟻 ⟩ .solve
+┊ 𝟷𝟻𝟼 ⟩ .solve
 ┊    ✦ RÔLE : Solve riddle
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟼 ⟩ .spacefact
+┊ 𝟷𝟻𝟽 ⟩ .spacefact
 ┊    ✦ RÔLE : Random space fact
 ┊    ✦ ALIAS : .spacef
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟽 ⟩ .sportfact
+┊ 𝟷𝟻𝟾 ⟩ .sportfact
 ┊    ✦ RÔLE : Random sport fact
 ┊    ✦ ALIAS : .sportf
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟽𝟾 ⟩ .sportnews
+┊ 𝟷𝟻𝟿 ⟩ .sportnews
 ┊    ✦ RÔLE : Sports scores, news, standings and betting tips
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟽𝟿 ⟩ .standings
+┊ 𝟷𝟼𝟶 ⟩ .standings
 ┊    ✦ RÔLE : Sports scores, news, standings and betting tips
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟶 ⟩ .studio
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟷 ⟩ .surebet
+┊ 𝟷𝟼𝟷 ⟩ .surebet
 ┊    ✦ RÔLE : Sports scores, news, standings and betting tips
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟸 ⟩ .techfact
+┊ 𝟷𝟼𝟸 ⟩ .techfact
 ┊    ✦ RÔLE : Random tech fact
 ┊    ✦ ALIAS : .techf
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟹 ⟩ .thisorthat
+┊ 𝟷𝟼𝟹 ⟩ .thisorthat
 ┊    ✦ RÔLE : This or that
 ┊    ✦ ALIAS : .tot
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟺 ⟩ .tictactoe
+┊ 𝟷𝟼𝟺 ⟩ .tictactoe
 ┊    ✦ RÔLE : Morpion à 2 joueurs (1v1)
 ┊    ✦ ALIAS : .morpion
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟾𝟻 ⟩ .tod
+┊ 𝟷𝟼𝟻 ⟩ .tod
 ┊    ✦ RÔLE : Truth or Dare game
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟼 ⟩ .topanime
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟽 ⟩ .topmanga
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟾 ⟩ .topscorers
+┊ 𝟷𝟼𝟼 ⟩ .topscorers
 ┊    ✦ RÔLE : Sports scores, news, standings and betting tips
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟾𝟿 ⟩ .trivia
+┊ 𝟷𝟼𝟽 ⟩ .trivia
 ┊    ✦ RÔLE : Question de culture générale
 ┊    ✦ ALIAS : .quiz
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟶 ⟩ .truth
+┊ 𝟷𝟼𝟾 ⟩ .truth
 ┊    ✦ RÔLE : Truth question
 ┊    ✦ ALIAS : .truthq
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟷 ⟩ .ttt
+┊ 𝟷𝟼𝟿 ⟩ .ttt
 ┊    ✦ RÔLE : Tic Tac Toe
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟸 ⟩ .tttai
+┊ 𝟷𝟽𝟶 ⟩ .tttai
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟿𝟹 ⟩ .tttboard
+┊ 𝟷𝟽𝟷 ⟩ .tttboard
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟿𝟺 ⟩ .tttend
+┊ 𝟷𝟽𝟸 ⟩ .tttend
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟿𝟻 ⟩ .tttjoin
+┊ 𝟷𝟽𝟹 ⟩ .tttjoin
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟷𝟿𝟼 ⟩ .tttmove
+┊ 𝟷𝟽𝟺 ⟩ .tttmove
 ┊    ✦ RÔLE : Coup au morpion
 ┊    ✦ ALIAS : .tttm
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟽 ⟩ .typecheck
+┊ 𝟷𝟽𝟻 ⟩ .typecheck
 ┊    ✦ RÔLE : Check typing race
 ┊    ✦ ALIAS : .tc
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟾 ⟩ .typerace
+┊ 𝟷𝟽𝟼 ⟩ .typerace
 ┊    ✦ RÔLE : Typing race challenge
 ┊    ✦ ALIAS : .typing2
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟷𝟿𝟿 ⟩ .uniform
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶𝟶 ⟩ .unscramble2
+┊ 𝟷𝟽𝟽 ⟩ .unscramble2
 ┊    ✦ RÔLE : Unscramble challenge
 ┊    ✦ ALIAS : .wordchallenge
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟷 ⟩ .unscrambleanswer
+┊ 𝟷𝟽𝟾 ⟩ .unscrambleanswer
 ┊    ✦ RÔLE : Answer unscramble
 ┊    ✦ ALIAS : .usa
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟸 ⟩ .upcoming
-┊    ✦ RÔLE : Extended anime commands — topanime, topmanga, seasonal, airing, upcoming, character, animequote, animegenre, animeinfo,
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶𝟹 ⟩ .upcomingmatches
+┊ 𝟷𝟽𝟿 ⟩ .upcomingmatches
 ┊    ✦ RÔLE : Sports scores, news, standings and betting tips
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶𝟺 ⟩ .w
+┊ 𝟷𝟾𝟶 ⟩ .w
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶𝟻 ⟩ .waifu
-┊    ✦ RÔLE : Anime girl/guy images — waifu, neko, maid, husbando, shinobu, megumin, raiden, rias, and more
+┊ 𝟷𝟾𝟷 ⟩ .wave
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶𝟼 ⟩ .wave
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟶𝟽 ⟩ .wc_matchday
+┊ 𝟷𝟾𝟸 ⟩ .wc_matchday
 ┊    ✦ RÔLE : Coupe du monde — rencontres
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟾 ⟩ .wc_table
+┊ 𝟷𝟾𝟹 ⟩ .wc_table
 ┊    ✦ RÔLE : Coupe du monde — classement
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟶𝟿 ⟩ .wc_top_assist
+┊ 𝟷𝟾𝟺 ⟩ .wc_top_assist
 ┊    ✦ RÔLE : Coupe du monde — meilleurs passeurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟶 ⟩ .wc_top_scorer
+┊ 𝟷𝟾𝟻 ⟩ .wc_top_scorer
 ┊    ✦ RÔLE : Coupe du monde — meilleurs buteurs
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟷 ⟩ .wcg
+┊ 𝟷𝟾𝟼 ⟩ .wcg
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟸 ⟩ .wcgai
+┊ 𝟷𝟾𝟽 ⟩ .wcgai
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟹 ⟩ .wcgbegin
+┊ 𝟷𝟾𝟾 ⟩ .wcgbegin
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟺 ⟩ .wcgend
+┊ 𝟷𝟾𝟿 ⟩ .wcgend
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟻 ⟩ .wcgjoin
+┊ 𝟷𝟿𝟶 ⟩ .wcgjoin
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟼 ⟩ .wcgscores
+┊ 𝟷𝟿𝟷 ⟩ .wcgscores
 ┊    ✦ RÔLE : Extended games — dice, word chain, tic-tac-toe multiplayer
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟽 ⟩ .wink
-┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot
+┊ 𝟷𝟿𝟸 ⟩ .wink
+┊    ✦ RÔLE : Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟷𝟾 ⟩ .wordgame
+┊ 𝟷𝟿𝟹 ⟩ .wordgame
 ┊    ✦ RÔLE : Devine le mot caché (lettres mélangées)
 ┊    ✦ ALIAS : .motcache
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟷𝟿 ⟩ .wordscramble
+┊ 𝟷𝟿𝟺 ⟩ .wordscramble
 ┊    ✦ RÔLE : Word scramble game
 ┊    ✦ ALIAS : .unscramble
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟶 ⟩ .wouldyou
+┊ 𝟷𝟿𝟻 ⟩ .wouldyou
 ┊    ✦ RÔLE : What would you do scenario
 ┊    ✦ ALIAS : .wyd
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟷 ⟩ .wouldyourather
+┊ 𝟷𝟿𝟼 ⟩ .wouldyourather
 ┊    ✦ RÔLE : Would you rather
 ┊    ✦ ALIAS : .wyr
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟸𝟸𝟸 ⟩ .ws
+┊ 𝟷𝟿𝟽 ⟩ .ws
 ┊    ✦ RÔLE : Unscramble the word game
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟸𝟸𝟹 ⟩ .zodiac
+┊ 𝟷𝟿𝟾 ⟩ .zodiac
 ┊    ✦ RÔLE : Zodiac sign info
 ┊    ✦ ALIAS : .starsign
 ┊    ✦ ACCÈS : TOUS
@@ -3663,20 +3562,19 @@ Chaque rôle ci-dessous reprend la description de la commande et ses restriction
 ┊ 𝟽𝟹 ⟩ .tempinbox
 ┊    ✦ RÔLE : Extended temporary mail commands
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟺 ⟩ .tempmail
-┊    ✦ RÔLE : Generate a temporary disposable email address and check its inbox
-┊    ✦ ALIAS : .tmpmail
-┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟻 ⟩ .tempmailhelp
+┊ 𝟽𝟺 ⟩ .tempmailhelp
 ┊    ✦ RÔLE : Extended temporary mail commands
 ┊    ✦ ACCÈS : GROUPE
-┊ 𝟽𝟼 ⟩ .timer
+┊ 𝟽𝟻 ⟩ .timer
 ┊    ✦ RÔLE : Set a timer
 ┊    ✦ ALIAS : .countdown
 ┊    ✦ ACCÈS : TOUS
-┊ 𝟽𝟽 ⟩ .tipcalc
+┊ 𝟽𝟼 ⟩ .tipcalc
 ┊    ✦ RÔLE : Tip calculator
 ┊    ✦ ACCÈS : TOUS
+┊ 𝟽𝟽 ⟩ .tmpmail
+┊    ✦ RÔLE : Generate a temporary disposable email address and check its inbox
+┊    ✦ ACCÈS : GROUPE
 ┊ 𝟽𝟾 ⟩ .todo
 ┊    ✦ RÔLE : Todo list
 ┊    ✦ ALIAS : .task

@@ -40,6 +40,7 @@ const { registerExtras } = require('../lib/extras');
 const { registerHackTools, GROUPES: HACK_SECTIONS } = require('../lib/hacktools');
 const { loadCorePlugins } = require('../lib/plugin-loader');
 const { appliquerTables, appliquerFamilles } = require('../commandes/_regles');
+const { isDisabled: commandeMorte } = require('../config/disabled-commands');
 const chargerCommandes = require('../commandes/_maison');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('../lib/ported-auto');
 const portedGroup = require('../lib/ported-group');
@@ -2676,6 +2677,20 @@ async function handleGroupInfo(sock, update) {
 }
 
 appliquerFamilles(commands);
+
+/* ── FILTRE GLOBAL « SERVICE MORT » ──────────────────────────────
+   Le chargeur de plugins applique déjà isDisabled() aux plugins tiers ;
+   ce balayage couvre les commandes enregistrées ailleurs (lib/tools.js,
+   hacktools…), sans quoi .quote/.citation restent joignables malgré leur
+   entrée dans config/disabled-commands.js.
+   ENABLE_DEAD_COMMANDS=1 neutralise l'ensemble. */
+const _mortesRetirees = [];
+for (const _cle of [...commands.keys()]) {
+  if (commandeMorte(_cle)) { commands.delete(_cle); _mortesRetirees.push(_cle); }
+}
+if (_mortesRetirees.length) {
+  console.log(`[REGISTRE] ${_mortesRetirees.length} commande(s) désactivée(s) (service mort): ${_mortesRetirees.join(', ')}`);
+}
 
 module.exports = {
   isSystemJid,

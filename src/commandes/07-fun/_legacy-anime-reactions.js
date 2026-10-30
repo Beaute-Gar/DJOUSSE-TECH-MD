@@ -2,7 +2,13 @@
 
 const axios = require('axios');
 
-// waifu.pics SFW reaction endpoints
+// otakugifs.xyz — réactions anime SFW.
+// waifu.pics (ENOTFOUND) et waifu.im (ENOTFOUND) sont morts : ne pas y revenir.
+const API = 'https://api.otakugifs.xyz/gif';
+
+// Commande locale → réaction otakugifs.
+// Vérifié sur /gif/allreactions : « bonk », « nod » et « baka » n'existent pas
+// côté otakugifs, d'où les équivalents ci-dessous.
 const REACTIONS = {
     hug:    'hug',
     kiss:   'kiss',
@@ -10,7 +16,7 @@ const REACTIONS = {
     slap:   'slap',
     poke:   'poke',
     bite:   'bite',
-    bonk:   'bonk',
+    bonk:   'smack',
     cuddle: 'cuddle',
     wave:   'wave',
     blush:  'blush',
@@ -19,11 +25,9 @@ const REACTIONS = {
     laugh:  'laugh',
     dance:  'dance',
     wink:   'wink',
-    shoot:  'shoot',
-    kick:   'kick',
     happy:  'happy',
-    baka:   'baka',
-    nod:    'nod',
+    baka:   'mad',
+    nod:    'yes',
 };
 
 const REACTION_MESSAGES = {
@@ -42,21 +46,22 @@ const REACTION_MESSAGES = {
     laugh:  (sender, _)      => `😂 *${sender}* is laughing!`,
     dance:  (sender, _)      => `💃 *${sender}* is dancing!`,
     wink:   (sender, target) => target ? `😉 *${sender}* winks at *${target}*!` : `😉 *${sender}* winks!`,
-    shoot:  (sender, target) => target ? `🔫 *${sender}* shoots *${target}*!` : `🔫 *${sender}* shoots!`,
-    kick:   (sender, target) => target ? `🦵 *${sender}* kicks *${target}*!` : `🦵 *${sender}* kicks!`,
     happy:  (sender, _)      => `🎉 *${sender}* is happy!`,
     baka:   (sender, target) => target ? `😤 *${sender}* calls *${target}* a baka!` : `😤 Baka!`,
     nod:    (sender, _)      => `🙂 *${sender}* nods!`,
 };
 
-async function fetchReactionGif(type) {
-    const resp = await axios.get(`https://api.waifu.pics/sfw/${type}`, { timeout: 10000 });
+async function fetchReactionGif(reaction) {
+    const resp = await axios.get(API, {
+        params: { reaction, format: 'gif' },
+        timeout: 10000,
+    });
     return resp.data?.url;
 }
 
 module.exports = {
     commands:   Object.keys(REACTIONS),
-    description: 'Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, shoot, kick, happy, baka, nod',
+    description: 'Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy, baka, nod',
     usage:      '.hug @user | .kiss @user | .pat | .cry',
     permission: 'public',
     group:      true,
@@ -68,8 +73,8 @@ module.exports = {
         const rawCmd = (message.message?.extendedTextMessage?.text
             || message.message?.conversation || '').trim().split(/\s+/)[0].replace(/^\./, '').toLowerCase();
 
-        const type = REACTIONS[rawCmd];
-        if (!type) return;
+        const reaction = REACTIONS[rawCmd];
+        if (!reaction) return;
 
         // Resolve sender display name
         const senderName = ctx.pushName || sender?.split('@')[0] || 'Someone';
@@ -93,7 +98,7 @@ module.exports = {
 
         try {
             await sock.sendPresenceUpdate('composing', jid);
-            const gifUrl = await fetchReactionGif(type);
+            const gifUrl = await fetchReactionGif(reaction);
 
             if (gifUrl) {
                 const imgResp = await axios.get(gifUrl, { responseType: 'arraybuffer', timeout: 15000 });

@@ -32,37 +32,30 @@ const DEAD = {
   /* animechan.io — HTTP 404 */
   animequote:   'animechan.io 404',
 
-  /* waifu.pics DNS mort · waifu.im certificat invalide */
+  /* waifu.im — ENOTFOUND (images et personnages).
+     Les RÉACTIONS (hug, kiss, pat, slap…) ne sont plus ici : elles sont
+     reprises par otakugifs.xyz dans 07-fun/_legacy-anime-reactions.js. */
   waifu:        'waifu.pics + waifu.im morts',
   neko:         'waifu.pics + waifu.im morts',
-  hug:          'waifu.pics DNS mort',
-  pat:          'waifu.pics DNS mort',
-  kiss:         'waifu.pics DNS mort',
-  cuddle:       'waifu.pics DNS mort',
-  slap:         'waifu.pics DNS mort',
-  bonk:         'waifu.pics DNS mort',
-  bite:         'waifu.pics DNS mort',
-  blush:        'waifu.pics DNS mort',
-  cry:          'waifu.pics DNS mort',
-  dance:        'waifu.pics DNS mort',
-  happy:        'waifu.pics DNS mort',
-  laugh:        'waifu.pics DNS mort',
-  nod:          'waifu.pics DNS mort',
-  poke:         'waifu.pics DNS mort',
-  shoot:        'waifu.pics DNS mort',
-  smile:        'waifu.pics DNS mort',
-  wave:         'waifu.pics DNS mort',
-  wink:         'waifu.pics DNS mort',
-  baka:         'waifu.pics DNS mort',
-  maid:         'waifu.im certificat invalide',
-  husbando:     'waifu.im certificat invalide',
-  kamisato:     'waifu.im certificat invalide',
-  megumin:      'waifu.im certificat invalide',
-  rias:         'waifu.im certificat invalide',
-  shinobu:      'waifu.im certificat invalide',
+  maid:         'waifu.im ENOTFOUND',
+  husbando:     'waifu.im ENOTFOUND',
+  kamisato:     'waifu.im ENOTFOUND',
+  megumin:      'waifu.im ENOTFOUND',
+  rias:         'waifu.im ENOTFOUND',
+  shinobu:      'waifu.im ENOTFOUND',
+  raiden:       'waifu.im ENOTFOUND',
+  selfies:      'waifu.im ENOTFOUND',
+  uniform:      'waifu.im ENOTFOUND',
 
-  /* api.quotable.io — certificat expiré */
+  /* api.quotable.io — CERT_HAS_EXPIRED (quote/citation/inspire/motivation) */
   quote:        'quotable.io CERT_HAS_EXPIRED',
+  citation:     'quotable.io CERT_HAS_EXPIRED',
+  inspire:      'quotable.io CERT_HAS_EXPIRED',
+  motivation:   'quotable.io CERT_HAS_EXPIRED',
+
+  /* gpt legacy — les deux endpoints sont morts (404 / ENOTFOUND) ; .ai le remplace */
+  gpt:          'endpoints IA legacy morts',
+  chatgpt:      'endpoints IA legacy morts',
 
   /* quotly.ryzl.xyz — timeout */
   quotly:       'quotly.ryzl.xyz timeout',
