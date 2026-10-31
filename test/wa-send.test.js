@@ -8,6 +8,12 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+
+/* Le contrôle d'envoi (lib/envoi) est testé dans test/envoi.test.js.
+   Ici on isole le transport : sans cette coupure, les jids factices
+   seraient refusés par l'allowlist et les délais ne seraient pas mesurés. */
+process.env.ENVOI_ACTIF = '0';
+
 const waSend = require('../src/lib/wa-send');
 const config = require('../src/config/config');
 

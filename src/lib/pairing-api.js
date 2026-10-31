@@ -269,6 +269,14 @@ function startPairingApi(ctx) {
       return;
     }
 
+    /* Salle de contrôle d'envoi (/envoi/metriques, /envoi/audit,
+       /envoi/sante, /envoi/retablir) — voir lib/envoi/tableau-bord.js.
+       Protégée par ENVOI_DASH_TOKEN (ou PAIRING_API_TOKEN) : 403 sinon. */
+    if (route.startsWith('/envoi/')) {
+      const servi = await require('./envoi/tableau-bord').servir(req, res);
+      if (servi) return;
+    }
+
     if (serveSite && req.method === 'GET') {
       serveStatic(res, route);
       return;

@@ -35,6 +35,7 @@
  */
 
 const config = require('../config/config');
+const envoi = require('./envoi');
 
 /* jid → true : présence « écrit… » actuellement ouverte par ce module */
 const composing = new Map();
@@ -68,18 +69,43 @@ function closeComposing(sock, jid) {
 async function send(sock, jid, content, opts) {
   if (!sock || typeof sock.sendMessage !== 'function') return undefined;
 
-  const isText = typeof content?.text === 'string';
-  if (isText && jid) {
-    /* MODULE 2 : rythme humain — « écrit… » + délai aléatoire */
-    if (config.autoTyping) openComposing(sock, jid);
-    await sleep(humanDelayMs());
-    try {
-      return await sock.sendMessage(jid, content, opts);
-    } finally {
-      if (config.autoTyping) closeComposing(sock, jid);
-    }
+  /* ── CONTRÔLE D'ENVOI (lib/envoi) ─────────────────────────────────
+     Allowlist → qualité → montée en charge → fenêtres glissantes →
+     pause d'erreur. Un refus est journalisé et l'envoi n'a pas lieu :
+     aucun appel à sock.sendMessage n'est fait dans ce cas. */
+  const verdict = envoi.avantEnvoi({ jid, contenu: content, opts });
+  if (!verdict.ok) {
+    console.error(`[ENVOI] refusé (${verdict.code}) — ${verdict.raison}`);
+    return undefined;
   }
-  return sock.sendMessage(jid, content, opts);
+
+  const isText = typeof content?.text === 'string';
+  const humain = isText && jid ? humanDelayMs() : 0;
+  /* HUMAN_DELAY=0 coupe le rythme humain, PAS le limiteur : le délai de
+     fenêtre (verdict.delaiMs) reste appliqué dans tous les cas. */
+  const attente = Math.max(humain, verdict.delaiMs);
+
+  if (isText && jid && config.autoTyping) openComposing(sock, jid);
+
+  try {
+    if (attente > 0) await sleep(attente);
+    const resultat = await sock.sendMessage(jid, content, opts);
+    if (verdict.compter) {
+      envoi.apresEnvoi({
+        jid, correlation: verdict.correlation, type: verdict.type, succes: true,
+      });
+    }
+    return resultat;
+  } catch (e) {
+    if (verdict.compter) {
+      envoi.apresEnvoi({
+        jid, correlation: verdict.correlation, type: verdict.type, succes: false, erreur: e,
+      });
+    }
+    throw e;
+  } finally {
+    if (isText && jid && config.autoTyping) closeComposing(sock, jid);
+  }
 }
 
 /* ── Présence « écrit… » — implémentation unique (importée par handler) ── */

@@ -22,6 +22,12 @@ const path = require('node:path');
 
 /* Pas de délai humain dans les tests (lu à chaque envoi par wa-send). */
 process.env.HUMAN_DELAY = '0';
+/* Ces tests vérifient la COMPOSITION des messages (citation du statut,
+   statusJidList, réaction) : on isole le transport. Le contrôle d'envoi
+   lui-même (allowlist, budgets, audit) est prouvé par test/envoi.test.js.
+   Sans cela, la réponse DM à un auteur de statut serait refusée — ce qui
+   est justement le comportement attendu en production pour un inconnu. */
+process.env.ENVOI_ACTIF = '0';
 
 /* ═══ 1. DÉFAUTS DU CAHIER DES CHARGES (procès-verbal 100 % frais) ═══ */
 

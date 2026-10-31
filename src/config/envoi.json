@@ -1,0 +1,48 @@
+{
+  "actif": true,
+
+  "rythme": {
+    "delaiMinMs": 250,
+    "jitterMinMs": 0,
+    "jitterMaxMs": 1500,
+    "pauseApresPanneMs": 30000
+  },
+
+  "limites": {
+    "parSeconde": 1,
+    "parMinute": 20,
+    "parHeure": 200,
+    "parJour": 500
+  },
+
+  "warmup": {
+    "actif": true,
+    "dateDebut": null,
+    "paliers": [50, 80, 120, 160, 200, 250, 300, 350, 400, 450, 500, 500, 500, 500]
+  },
+
+  "qualite": {
+    "fenetreJours": 7,
+    "seuilAlerte": 60,
+    "seuilDegrade": 40,
+    "echecsConsecutifsMax": 5
+  },
+
+  "allowlist": {
+    "mode": "reponse",
+    "consentementAutomatique": true
+  },
+
+  "approbation": {
+    "seuilCampagne": 50
+  },
+
+  "alertes": {
+    "refusParMinute": 5,
+    "fichier": "logs/envoi-alertes.log"
+  },
+
+  "audit": {
+    "retentionJours": 180
+  }
+}

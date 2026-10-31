@@ -6,6 +6,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 process.env.HACKTOOLS_PASSWORD = 'test';
+/* On teste le ROUTAGE des plugins, pas le contrôle d'envoi : les jids de
+   test ne sont pas consentis et wa-send refuserait les réponses.
+   Le limiteur est couvert par test/envoi.test.js. */
+process.env.ENVOI_ACTIF = '0';
 const h = require('../src/handlers/handler');
 
 /* contexte d'exécution façon executeCommand() de handler.js */

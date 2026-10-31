@@ -69,7 +69,31 @@ const DEAD = {
   tempmail:     'api.mail.gw timeout',
   unsplash:     'unsplash API 401 (clé requise)',
   happymod:     'happymod.com DNS mort',
+
+  /* api.mail.gw — timeout vérifié le 2026-10-31 (toute la famille tempmail) */
+  delmail:      'api.mail.gw timeout',
+  readmail:     'api.mail.gw timeout',
+  tempinbox:    'api.mail.gw timeout',
+  tempmailhelp: 'api.mail.gw timeout',
+
+  /* saurav.tech — fetch failed ; ESPN ne couvre pas les « news » */
+  sportnews:    'saurav.tech NewsAPI injoignable (2026-10-31)',
+
+  /* api.sampleapis.com — HTTP 404 vérifié le 2026-10-31 */
+  saying:       'sampleapis.com/proverbs 404',
+  adage:        'sampleapis.com/proverbs 404',
+
+  /* Threads : doc_id GraphQL périmé + saveinsta.app DNS mort */
+  threads:      'threads.net doc_id périmé ; v3.saveinsta.app DNS mort',
+  threadsdl:    'threads.net doc_id périmé ; v3.saveinsta.app DNS mort',
 };
+
+/* Clé Tenor/Giphy absente → la recherche de stickers GIF ne peut rien
+   renvoyer. Elle se réactive d'elle-même dès que la clé est dans .env. */
+if (!process.env.TENOR_API_KEY && !process.env.GIPHY_API_KEY) {
+  DEAD.findsticker = 'clé TENOR_API_KEY absente';
+  DEAD.giphy = 'clé TENOR_API_KEY absente';
+}
 
 const isOn = (value) => ['1', 'on', 'true', 'yes'].includes(String(value || '').trim().toLowerCase());
 

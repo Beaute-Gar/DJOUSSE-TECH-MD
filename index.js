@@ -76,6 +76,8 @@ const fs = require('fs');
 const config = require('./src/config/config');
 const handler = require('./src/handlers/handler');
 const presence = require('./src/lib/presence');
+/* Contrôle d'envoi : consentement explicite du propriétaire au démarrage. */
+const envoi = require('./src/lib/envoi');
 const labelsCache = require('./src/lib/labels');
 const waStats = require('./src/lib/waStats');
 const guardPerms = require('./src/guard/utils/perms');
@@ -577,6 +579,11 @@ async function onSocketOpen(sessionId, sock) {
         console.log(`[OWNER:${sessionId}] Session = +${connectedNum} → owner(s): ${config.ownerNumber.map((n) => '+' + n).join(', ')}`);
       }
     }
+
+    /* Allowlist : le(s) propriétaire(s) sont consentants par construction
+       (ils ont installé et appairé le bot). Sans cette amorce, leurs
+       notifications personnelles seraient refusées par le contrôle d'envoi. */
+    envoi.amorcerProprietaires(config.ownerNumber);
 
     if (config.autoBio && sock.user?.id) {
       await sock.updateProfileStatus(`${config.botName} | En ligne`).catch(() => {});

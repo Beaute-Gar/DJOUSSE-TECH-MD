@@ -59,6 +59,9 @@ const { registerMissing } = require('../lib/missing');
 const { send, typingOn, typingOff } = require('../lib/wa-send');
 /* Durées éphémères partagées (.disappear ↔ .community ephemeral) */
 const { parseEphemeral } = require('../lib/ephemeral');
+/* Contrôle d'envoi (allowlist, warm-up, rate limit, audit) — voir lib/envoi/.
+   Ici on n'enregistre que le CONSENTEMENT implicite des correspondants. */
+const envoi = require('../lib/envoi');
 
 /* ── DJOUSSE GUARD — moteur de protections de groupe (dossier guard/) ── */
 const guardDb = require('../guard/db');
@@ -2234,6 +2237,13 @@ async function handleMessage(sock, msg) {
       len: (text || '').length,
       text,
     });
+
+    /* ── Consentement d'envoi (allowlist lib/envoi) ──
+       Un correspondant qui écrit au bot ouvre un canal de réponse : on
+       l'enregistre (numéro stocké en HMAC uniquement) pour autoriser la
+       réponse. Les envois PROACTIFS vers un inconnu restent refusés.
+       Ignoré pour nos propres messages (fromMe) et en mode strict. */
+    if (!fromMe) envoi.consentirSiBesoin(from, isGroup ? 'inbound-groupe' : 'inbound-dm');
 
     /* ── Auto-réaction aux messages entrants (flag AUTO_REACT) ── */
     if (
