@@ -1,6 +1,6 @@
 # Catalogue des commandes
 
-Inventaire généré automatiquement : **1033 commandes**, **389 alias**, **1422 clés de registre**.
+Inventaire généré automatiquement : **983 commandes**, **382 alias**, **1365 clés de registre**.
 
 Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 
@@ -227,7 +227,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `welcome` | — | Message de bienvenue |
 | `welcomemessage` | — | Extended group management commands |
 
-## 04 — STICKER & MEDIA (105)
+## 04 — STICKER & MEDIA (92)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -236,7 +236,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `albumadd` | — | Ajouter une image au buffer album |
 | `albumclear` | — | Vider le buffer album |
 | `albumsend` | — | Envoyer le buffer comme album |
-| `apkmirror` | — | Extended search commands |
 | `audiofx` | — | Voir tous les effets audio disponibles |
 | `autonce` | `autoonce` | Sauvegarde auto des vue uniques |
 | `bass` | — | Basses amplifiées — audio |
@@ -245,9 +244,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `caption` | `what` | AI describes/analyzes an image — reply to any photo and ask what it is |
 | `carbon` | `codeimg` | Convert code to a beautiful image via Carbon |
 | `circle` | — | Filtre image : circle |
-| `clearbgm` | — | Word-triggered audio autoresponder. Set audios that play when trigger words are detected. |
 | `createpdf` | — | Extended tools and utilities |
-| `createqr` | — | Extended tools and utilities |
 | `dbase` | — | Extended tools and utilities |
 | `debinary` | — | Extended tools and utilities |
 | `deep` | — | Voix très grave (ralenti + baissé) — audio |
@@ -265,7 +262,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `grey` | — | Filtre image : grey |
 | `imgbb` | — | Upload images to various CDN/hosting services |
 | `invert` | — | Filtre image : invert |
-| `listbgm` | — | Word-triggered audio autoresponder. Set audios that play when trigger words are detected. |
 | `loc` | `localisation` | Envoyer une position GPS |
 | `mediafire` | `mf` | Get MediaFire direct download link |
 | `median` | — | Calculate median |
@@ -281,11 +277,9 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `pinterest` | `pindl` | Download Pinterest images and videos |
 | `readqr` | — | Extended tools and utilities |
 | `readtext` | `textfromimage` | Extract text from an image (OCR) |
-| `rebrandly` | — | Extended tools and utilities |
 | `reddit` | `rdl` | Download Reddit images and videos |
 | `remini` | — | Extended tools and utilities |
 | `removebg` | `rmbg` | Supprimer le fond (remove.bg) |
-| `removebgm` | — | Word-triggered audio autoresponder. Set audios that play when trigger words are detected. |
 | `rename` | — | Extended tools and utilities |
 | `resize` | — | Redimensionner image |
 | `reverse` | — | Audio inversé — audio |
@@ -300,7 +294,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `smooth` | — | Fluidité 120 fps (vidéo) — vidéo |
 | `snack` | — | Additional converters and downloaders |
 | `socialinfo` | `platform` | Social media platform info |
-| `speak` | `voice` | Convert text to speech audio |
 | `spotifysearch` | — | Extended search commands |
 | `spp` | `getpp` | Get a user's profile picture |
 | `sspc` | — | Extended tools and utilities |
@@ -312,23 +305,17 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `stext` | `textstick` | Create styled text stickers with various themes |
 | `sticker` | `s` | Image/vidéo → sticker |
 | `stickerpack` | `pack` | Pack de stickers (répondre à une image = cover+1 sticker) |
-| `stickertoimg` | `unwebp` | Convert sticker to JPEG image |
 | `take` | — | Re-sticker avec ton pack |
 | `tempo` | — | Tempo ralenti — audio |
 | `textsticker` | `tsticker` | Texte → sticker |
-| `tinyurl` | — | Extended tools and utilities |
 | `toaudio` | — | Vidéo → mp3 |
 | `togif` | — | Vidéo → GIF |
 | `toimg` | — | Sticker → image |
 | `tojpeg` | — | Image → JPEG |
-| `tomp3` | `audio` | Convert a video or voice message to an MP3 audio file |
 | `toptt` | — | Additional converters and downloaders |
 | `tourl` | `geturl` | Upload a media file to Catbox and get a shareable URL |
 | `tovideo` | — | Additional converters and downloaders |
-| `ttp` | — | Extended tools and utilities |
-| `vgd` | — | Extended tools and utilities |
 | `viewonce` | `vo` | Renvoyer un média en vue unique |
-| `vurl` | — | Extended tools and utilities |
 | `vv` | — | Récupérer un média en vue unique |
 | `wallpapers` | — | Extended search commands |
 | `wanted` | — | Poster Wanted (répondre image) |
@@ -337,7 +324,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `webshot` | — | Take a screenshot of any website |
 | `yts` | — | Extended search commands |
 
-## 05 — OUTILS (244)
+## 05 — OUTILS (241)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -394,7 +381,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `copypasta` | `pasta` | Random copypasta |
 | `count` | `charcount` | Count characters/words |
 | `country` | `countryinfo` | Get detailed information about any country |
-| `createpoll` | `vote` | Create a native WhatsApp poll. Usage: .poll Question \| Option1 \| Option2 \| ... |
 | `cron` | `cronhelp` | Cron expression helper |
 | `crypto` | — | Prix d'une crypto (CoinGecko) |
 | `date` | `today` | Current date and time |
@@ -506,7 +492,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `purge` | `clear` | Delete multiple messages (reply to start message) |
 | `purple` | — | Logo « purple » (effet texte) |
 | `qr` | — | Générer un QR code |
-| `quickpoll` | — | Quick text poll |
 | `rainbow` | `colortext` | Rainbow text |
 | `random` | `rng` | Random number |
 | `react` | — | Réagir à un message |
@@ -562,7 +547,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `troll` | `trollface` | Troll text art |
 | `tts` | `parle` | Texte → voix (TTS gratuit) |
 | `typing` | `wpm` | Typing speed test |
-| `typographytext` | — | Logo maker and text effect generator |
 | `underwater` | — | Logo maker and text effect generator |
 | `unstar` | — | Retirer un message des favoris (répondre) |
 | `upsidedown` | — | Flip text upside down |
@@ -586,7 +570,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `zalgo` | `creepy` | Zalgo creepy text |
 | `zodiacmatch` | `zmatch` | Zodiac compatibility |
 
-## 06 — IA (20)
+## 06 — IA (13)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -596,22 +580,15 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `bio` | `updatebio` | Update bot bio/status |
 | `botsettings` | `config2` | View bot settings |
 | `brief` | — | AI summarizes any long text, article, or quoted message |
-| `chatai` | — | Ask DJOUSSE TECH Chat AI a question |
-| `chatat` | `chat` | Ask ch.at AI a question |
-| `giftedai` | — | Ask Gifted AI a question |
 | `gpt-4` | — | Ask GPT-4 a question |
 | `gpt-4o` | — | Ask GPT-4o a question |
-| `ia` | — | Assistant IA — commandes, contenu, recherche web |
 | `imagine` | `img` | Generate an AI image from a text prompt |
-| `letmegpt` | — | Ask LetMeGPT a question |
 | `ms` | — | Check bot response latency |
-| `openai` | — | Ask OpenAI a question |
-| `reboot` | — | Restart bot |
 | `speed` | — | Bot speed test |
 | `summarize` | `resume` | Résumer un texte cité |
 | `venice` | — | Ask Venice AI a question |
 
-## 07 — FUN (190)
+## 07 — FUN (184)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -629,7 +606,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `alaugh` | — | Réaction anime « laugh » (GIF, otakugifs) |
 | `angry` | — | Animation « angry » (message animé) |
 | `animalfact` | `animalf` | Random animal fact |
-| `animesearch` | — | Search for anime or manga info from MyAnimeList |
 | `ans` | — | Answer trivia |
 | `answer` | `repondre` | Répondre à une question |
 | `apat` | — | Réaction anime « pat » (GIF, otakugifs) |
@@ -657,14 +633,12 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `cl_top_assist` | — | Champions League — meilleurs passeurs |
 | `cl_top_scorer` | — | Champions League — meilleurs buteurs |
 | `coin` | — | Pile ou face |
-| `coinflip` | — | Flip a coin |
 | `compliment` | `comp` | Send a random compliment |
 | `countryfact` | `countryf` | Random country fact |
 | `couple` | `love` | Calculate love compatibility between two people |
 | `cry` | — | Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy |
 | `cuddle` | — | Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy |
 | `dadjoke` | — | Dad joke |
-| `dailyhoroscope` | — | Daily horoscope |
 | `dance` | — | Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy |
 | `dare` | `dareq` | Dare challenge |
 | `darkjoke` | `dark` | Dark humor joke |
@@ -672,7 +646,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `diceai` | — | Extended games — dice, word chain, tic-tac-toe multiplayer |
 | `diceend` | — | Extended games — dice, word chain, tic-tac-toe multiplayer |
 | `dicejoin` | — | Extended games — dice, word chain, tic-tac-toe multiplayer |
-| `eightball` | — | Magic 8-ball |
 | `emoji` | `emojicombo` | Random emoji combination |
 | `emojianswer` | `ea` | Answer emoji guess |
 | `emojiguess` | `eg` | Guess the emoji meaning |
@@ -700,7 +673,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `guess` | `guessnum` | Number guessing game |
 | `guessnumber` | — | Number guessing game (1–100) |
 | `hang` | — | Lettre du pendu |
-| `happi` | — | Animation « happi » (message animé) |
 | `happy` | — | Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy |
 | `heart` | — | Animation « heart » (message animé) |
 | `heartrate` | `hr` | Max heart rate calculator |
@@ -803,7 +775,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `wordscramble` | `unscramble` | Word scramble game |
 | `wouldyou` | `wyd` | What would you do scenario |
 | `ws` | — | Unscramble the word game |
-| `wyr` | — | Would you rather |
 | `zodiac` | `starsign` | Zodiac sign info |
 
 ## 08 — RECHERCHE (15)
@@ -826,12 +797,11 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `synonym` | `syn` | Find synonyms |
 | `wiki` | — | Résumé Wikipédia |
 
-## 09 — OWNER (139)
+## 09 — OWNER (129)
 
 | Commande | Alias | Description |
 |---|---|---|
 | `accept` | `autoriser` | Autoriser des utilisateurs à utiliser le bot |
-| `accepted` | `acceptes` | Liste des utilisateurs acceptés |
 | `archive` | — | Archiver / désarchiver le chat |
 | `authcode` | `codeauth` | Générer un code pour activer un sudo |
 | `autobio` | — | Changer la bio du bot |
@@ -843,7 +813,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `autotyping` | — | Afficher « en train d'écrire » sur les messages reçus |
 | `autoview` | — | Vue automatique des statuts |
 | `back` | — | Owner AFK mode — bot auto-replies to everyone while you are away |
-| `bash` | — | Run a shell/terminal command on the server (owner only) |
 | `block` | — | Bloquer un numéro |
 | `blocklist` | — | Numéros bloqués par le bot |
 | `bots` | — | Bots liés au compte (appareils liés) |
@@ -868,7 +837,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `chunfollow` | `newsletterunfollow` | Ne plus suivre un channel |
 | `chunmute` | — | Unmute un channel |
 | `clearigsession` | `rmigsession` | Remove saved Instagram session cookie (owner only) |
-| `cmd` | — | Extended owner/admin control commands |
 | `delgreet` | — | Auto-greeting sent once per day to anyone who DMs the bot |
 | `delsudo` | — | Extended owner/admin control commands |
 | `derniers` | `historique` | Mémoire : derniers messages du chat |
@@ -883,8 +851,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `greeton` | — | Auto-greeting sent once per day to anyone who DMs the bot |
 | `join` | — | Rejoindre un groupe via lien |
 | `journal` | `events` | Journal d’événements (base locale) |
-| `js` | — | Execute JavaScript with full bot access (owner only) |
-| `kicksubbot` | — | Manage active sub-bot instances (lent bot sessions) |
 | `label` | — | Étiquettes Business (chat / message) |
 | `leave` | — | Quitter le groupe |
 | `logout` | — | Déconnecter le bot du WhatsApp |
@@ -907,7 +873,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `resetdb` | — | Extended owner/admin control commands |
 | `resetsetting` | — | Extended owner/admin control commands |
 | `resetsudo` | — | Extended owner/admin control commands |
-| `restartsubbot` | — | Manage active sub-bot instances (lent bot sessions) |
 | `return` | — | Extended owner/admin control commands |
 | `schedule` | `planifier` | Planifier un message |
 | `schedules` | `jobs` | Liste des messages planifiés |
@@ -927,7 +892,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `setautoreplystatus` | — | Extended owner/admin control commands |
 | `setbio` | `botbio` | Changer la bio (status) du bot |
 | `setbotname` | `botname` | Changer le nom affiché du bot |
-| `setbotpic` | — | Extended owner/admin control commands |
 | `setbotrepo` | — | Extended owner/admin control commands |
 | `setcaption` | — | Extended owner/admin control commands |
 | `setchatbot` | — | Extended owner/admin control commands |
@@ -953,7 +917,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `setstatusemojis` | — | Extended owner/admin control commands |
 | `setstatusreplytext` | — | Extended owner/admin control commands |
 | `setsudo` | — | Extended owner/admin control commands |
-| `settheme` | — | List available themes or switch the bot theme at runtime |
 | `settimezone` | — | Extended owner/admin control commands |
 | `setytlink` | — | Extended owner/admin control commands |
 | `statut` | `status` | Publier un texte en statut WhatsApp |
@@ -967,10 +930,8 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `unmutechat` | `unmutec` | Retirer la sourdine du chat |
 | `unpause` | `reprendre` | Reprendre un chat mis en pause (conflit bot↔bot) |
 | `unschedule` | `unsched` | Annuler un job |
-| `update` | — | Extended owner/admin control commands |
-| `vv2` | — | Extended owner/admin control commands |
 
-## 10 — DIVERS (80)
+## 10 — DIVERS (72)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -990,12 +951,9 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `discount` | `sale` | Discount calculator |
 | `emojify` | `textemoji` | Convert letters to emoji |
 | `encode` | — | Encode/decode text: base64, hex, binary, rot13 |
-| `encode64` | — | Encode to base64 |
 | `event` | `rdv` | Créer un événement WhatsApp |
 | `figlet` | `art` | Convert text to ASCII art |
-| `genpass` | — | Advanced password generator |
 | `hashtag` | `tags` | Generate hashtags |
-| `hex2text` | — | Encode/decode text: base64, hex, binary, rot13 |
 | `hydration` | `waterintake` | Water intake calculator |
 | `inflation` | `inflationcalc` | Inflation calculator |
 | `leetspeak` | `1337` | Convert to leet speak |
@@ -1003,13 +961,10 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `loan` | `loancalc` | Loan calculator |
 | `log` | `logarithm` | Calculate logarithm |
 | `lower` | `lowercase` | Convert to lowercase |
-| `makeqr` | — | Generate QR code text |
 | `md5` | `sha256` | Hash text |
 | `memo` | — | Save/view notes |
-| `morseencode` | `morsedecode` | Encode or decode Morse code |
 | `networth` | `nwcalc` | Net worth calculator |
 | `oct` | `octal` | Convert to/from octal |
-| `passwd` | — | Generate a strong random password |
 | `pastebin` | `hastebin` | Paste text online and get a shareable link |
 | `percentage` | `pct` | Calculate percentage |
 | `permissions` | — | Unix permissions calculator |
@@ -1019,13 +974,11 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `product` | `produit` | Envoyer une carte produit (business) |
 | `recurringremind` | — | Set recurring reminders (daily, weekly, hourly, etc.) |
 | `reminders` | `myreminders` | List your active reminders |
-| `remindme` | — | Set a timed reminder. Usage: .remind 10m Buy groceries |
 | `repeatremind` | — | Set recurring reminders (daily, weekly, hourly, etc.) |
 | `repo` | `repository` | Dépôt officiel — étoiles, forks, dernière MAJ |
 | `report` | — | Signaler un problème au owner |
 | `roman` | `toroman` | Convert to Roman numerals |
 | `rot13` | — | Encode/decode text: base64, hex, binary, rot13 |
-| `rremind` | — | Set recurring reminders (daily, weekly, hourly, etc.) |
 | `salary` | `salarycalc` | Salary breakdown |
 | `savings` | `savingscalc` | Savings calculator |
 | `setmsg` | — | Schedule a message to be sent after a delay |
@@ -1055,7 +1008,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `urlencode` | `encodeurl` | URL encode |
 | `vcard` | `contact` | Envoyer une carte de contact |
 
-## 11 — TÉLÉCHARGEMENT (24)
+## 11 — TÉLÉCHARGEMENT (23)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -1079,7 +1032,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `tiktokstalk` | `ttuser` | Stalk a TikTok profile — followers, videos, likes, bio and more |
 | `twitter` | `tw` | Download Twitter/X videos |
 | `video` | `ytmp4` | Télécharger une vidéo YouTube |
-| `youtube` | — | Download a YouTube video |
 | `yt` | `ytsearch` | Rechercher une vidéo YouTube |
 | `ytvid-audio` | `ytaudio2` | Download YouTube audio as MP3 by URL |
 | `ytvideo` | — | Download YouTube video (up to 10 min) |
@@ -1089,17 +1041,15 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | Commande | Alias | Description |
 |---|---|---|
 
-## 99 — HORS MENUS (8)
+## 99 — HORS MENUS (6)
 
 | Commande | Alias | Description |
 |---|---|---|
 | `djousse` | `agent` | Djousse - AI assistant that runs commands, creates content, searches the web, and knows everything about the bot |
-| `emomix` | — | Mélange de 2 emojis (API tierce) |
 | `hacktools` | — | Section à risque (mot de passe requis) |
 | `imdb` | — | Film via OMDB (clé .env) |
 | `paste` | — | Texte → page Telegraph |
 | `stickersearch` | — | GIF Tenor (clé .env) |
 | `technews` | — | Actu tech (API tierce) |
-| `videodoc` | — | Vidéo → document (APIs tierces) |
 
 _Pour régénérer ce fichier : `node scripts/generate-commands-docs.js`._

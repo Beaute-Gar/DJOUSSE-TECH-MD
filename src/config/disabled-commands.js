@@ -173,6 +173,87 @@ const DEAD = {
   alwaysonline:  'géré par la plateforme (keep-alive externe)',
   autodlstatus:  'état local éphémère',
   didong:        'aucun service associé',
+
+  /* ══ ANALYSE RENDER 2026-10-31 — 51 retraits demandés ══
+     7 bloqués nativement + 1 API morte + 43 doublons stricts. */
+  bash:          'shell bloqué sur Render',
+  js:            'exécution JS arbitraire (risque)',
+  cmd:           'shell bloqué sur Render',
+  update:        'déploiement géré par Render',
+  restartsubbot: 'redémarrage process impossible sur Render',
+  kicksubbot:    'dépend du redémarrage process',
+  reboot:        'redémarrage géré par Render',
+  animesearch:   'service anime mort',
+
+  /* Doublons Sticker & Media */
+  listbgm:       'doublon de .bgmlist',
+  clearbgm:      'doublon de .delbgm',
+  removebgm:     'doublon de .delbgm',
+  createqr:      'doublon de .qr',
+  makeqr:        'doublon de .qr',
+  tinyurl:       'doublon de .shorten',
+  rebrandly:     'doublon de .shorten',
+  vgd:           'doublon de .shorten',
+  vurl:          'doublon de .shorten',
+  speak:         'doublon de .tts',
+  stickertoimg:  'doublon de .toimg',
+  tomp3:         'doublon de .toaudio',
+  toppt:         'doublon de .toaudio',
+  ttp:           'doublon de .toaudio',
+  apkmirror:     'doublon de .apk',
+
+  /* Doublons Outils */
+  createpoll:    'doublon de .poll',
+  quickpoll:     'doublon de .poll',
+  typographytext:'doublon de .texteffect',
+  morseencode:   'doublon de .morse',
+
+  /* Doublons IA */
+  ia:            'doublon de .ai',
+  chatai:        'doublon de .ai',
+  chatat:        'doublon de .ai',
+  giftedai:      'doublon de .ai',
+  letmegpt:      'doublon de .ai',
+  openai:        'doublon de .ai / .gpt-4',
+
+  /* Doublons Fun */
+  eightball:     'doublon de .8ball',
+  coinflip:      'doublon de .coin',
+  happi:         'doublon de .happy',
+  dailyhoroscope:'doublon de .horo',
+  wyr:           'doublon de .wouldyou',
+
+  /* Doublons Owner */
+  vv2:           'doublon de .vv',
+  accepted:      'doublon de .accept',
+  setbotpic:     'doublon de .setpp',
+  settheme:      'doublon de .theme',
+
+  /* Doublons Divers */
+  encode64:      'doublon de .base64',
+  genpass:       'doublon de .password',
+  passwd:        'doublon de .password',
+  remindme:      'doublon de .remind',
+  rremind:       'doublon de .remind',
+  hex2text:      'doublon de .unhex',
+
+  /* Doublon Téléchargement */
+  youtube:       'doublon de .yt',
+
+  /* Doublons hors menus */
+  emomix:        'doublon de .emojimix',
+  videodoc:      'doublon de .video',
+
+  /* Alias résiduels des plugins retirés ci-dessus : sans eux, le chargeur
+     ré-enregistrerait la même commande sous son nom suivant
+     (createpoll→vote, chatat→chat, morseencode→morsedecode,
+      speak→voice, tomp3→audio, stickertoimg→unwebp). */
+  vote:          'alias résiduel de .createpoll retiré',
+  chat:          'alias résiduel de .chatat retiré',
+  morsedecode:   'alias résiduel de .morseencode retiré',
+  voice:         'alias résiduel de .speak retiré',
+  audio:         'alias résiduel de .tomp3 retiré',
+  unwebp:        'alias résiduel de .stickertoimg retiré',
 };
 
 /* Clé Tenor/Giphy absente → la recherche de stickers GIF ne peut rien

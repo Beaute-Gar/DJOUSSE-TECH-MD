@@ -72,7 +72,7 @@ test('commandes tierces dangereuses/identitaires ABSENTES du registre', () => {
   assert.ok(!BLOQUES_IDENTITE.test('play') && !BLOQUES_IDENTITE.test('menu'));
 });
 
-test('versions tierces remplacées : .repo/.support/.ia maison', () => {
+test('versions tierces remplacées : .repo/.support/.ai maison', () => {
   for (const n of ['repo', 'repository']) {
     const e = h.commands.get(n);
     assert.ok(e, `.${n} enregistrée`);
@@ -80,12 +80,13 @@ test('versions tierces remplacées : .repo/.support/.ia maison', () => {
     assert.notEqual(e.cat, 99, '.repo visible au menu');
   }
   assert.match(h.commands.get('support').desc, /Support & signalement/);
-  assert.equal(h.commands.get('ia').cat, 6, '.ia visible en IA');
+  assert.equal(h.commands.get('ai').cat, 6, '.ai visible en IA');
+  assert.ok(!h.commands.has('ia'), '.ia (doublon) retiré');
   /* l'historique reste joignable en direct mais sort des menus :
      .djousse est le nom principal ; l'ancien alias .silva est supprimé. */
   const djousse = h.commands.get('djousse');
   assert.ok(djousse, '.djousse enregistré (assistant maison)');
-  assert.equal(djousse.cat, 99, '.djousse retiré des menus (.ia est la porte visible)');
+  assert.equal(djousse.cat, 99, '.djousse retiré des menus (.ai est la porte visible)');
   assert.ok(!h.commands.has('silva'), '.silva supprimé selon la règle sans ancienne marque');
 });
 
@@ -150,8 +151,8 @@ test('alerte hacktools sans ancienne marque', () => {
 /* ── 6. Le registre total reste cohérent (pas de commande fantôme) ── */
 test('chiffres du registre : totaux README vérifiables', () => {
   const vus = new Set(h.commands.values());
-  assert.equal(vus.size, 1033, '1033 commandes distinctes (README, après nettoyage)');
-  assert.equal(h.commands.size, 1422, '1422 noms au registre (README)');
+  assert.equal(vus.size, 983, '983 commandes distinctes (README, après nettoyage)');
+  assert.equal(h.commands.size, 1365, '1365 noms au registre (README)');
 });
 
 test('calculatrice : un nom principal, alias .calculate retiré', () => {

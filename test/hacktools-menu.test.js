@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 process.env.HACKTOOLS_PASSWORD = 'test-menu';
 const h = require('../src/handlers/handler');
 
-const NOMS = ['hacktools', 'imdb', 'stickersearch', 'paste', 'technews', 'emomix', 'videodoc'];
+const NOMS = ['hacktools', 'imdb', 'stickersearch', 'paste', 'technews'];
 
 test('catégorie 99 absente de CATEGORIES → invisible des menus', () => {
   const cats = h.CATEGORIES.map((c) => c.n);

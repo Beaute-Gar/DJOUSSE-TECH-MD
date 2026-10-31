@@ -37,7 +37,7 @@ function mkC(args) {
 
 test('toutes les commandes hacktools sont en catégorie fantôme 99 (invisible des menus)', () => {
   const b = boot('test-pwd');
-  const noms = ['hacktools', 'imdb', 'stickersearch', 'paste', 'technews', 'emomix', 'videodoc'];
+  const noms = ['hacktools', 'imdb', 'stickersearch', 'paste', 'technews'];
   for (const n of noms) {
     assert.ok(b.reg.has(n), `${n} enregistrée`);
     const cat = b.reg.get(n).meta.cat;
