@@ -75,10 +75,22 @@ function main() {
     'groupage', 'groupinfo2', 'groupstatus', 'grpinfo', 'gstats', 'gstatus',
     'joinlog', 'levels', 'rank', 'readvcf', 'savecontacts', 'settle',
     'updatenote', 'vcfgroup', 'vcfnumber', 'vcfread', 'vcfview', 'xp',
+    /* réactions otakugifs : alias « shoot » retiré lors de la refonte */
+    'shoot',
   ]);
+  /* Toute commande de config/disabled-commands.js (service mort, doublon
+     ou hébergement) est un retrait ATTENDU, ainsi que ses alias : le
+     filtre du handler supprime l'entrée via entry.name. */
+  const { DEAD } = require('../src/config/disabled-commands');
+  const deadNames = new Set(Object.keys(DEAD));
+  for (const entry of baseline.registryKeys) {
+    if (deadNames.has(entry.name) || deadNames.has(entry.key)) expectedRemoved.add(entry.key);
+  }
   const addedKeys = [...currentKeys].filter((key) => !baselineKeys.has(key));
   const unexpectedRemoved = [...baselineKeys].filter((key) => !currentKeys.has(key) && !expectedRemoved.has(key));
-  const missingExpected = [...expectedRemoved].filter((key) => baselineKeys.has(key) && currentKeys.has(key));
+  /* Une commande déclarée morte ne doit plus être joignable sous son nom
+     principal (les alias homonymes d'autres commandes restent légitimes). */
+  const missingExpected = [...deadNames].filter((key) => baselineKeys.has(key) && currentKeys.has(key));
   if (addedKeys.length || unexpectedRemoved.length || missingExpected.length) {
     throw new Error(
       `Snapshot final différent de la référence : ajoutés=${addedKeys.join(', ') || 'aucun'}; ` +

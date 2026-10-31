@@ -18,11 +18,12 @@ test('catégorie 12 ARCHIVES présente dans CATEGORIES', () => {
   assert.equal(c.emoji, '🔐');
 });
 
-test('menu principal affiche la ligne 12 ARCHIVES', () => {
+test('menu principal : catégorie 12 ARCHIVES retirée (catégorie vide)', () => {
+  /* .archives a été retirée : la catégorie 12 n'a plus aucune commande
+     et disparaît du cadran, pour owner comme pour non-owner. */
   const m = h.renderMainMenu(owner);
-  assert.ok(m.includes(toUnicode('ARCHIVES')), 'ARCHIVES au menu principal');
-  // même un non-owner voit la catégorie 12 (elle est toujours visible)
-  assert.ok(h.renderMainMenu(user).includes(toUnicode('ARCHIVES')));
+  assert.ok(!m.includes(toUnicode('ARCHIVES')), 'ARCHIVES absente du menu principal');
+  assert.ok(!h.renderMainMenu(user).includes(toUnicode('ARCHIVES')));
 });
 
 test('sous-menu 2B (owner) affiche les 4 sections', () => {
@@ -76,11 +77,12 @@ test('section 04 HACKTOOLS : métadonnées d’accès, AUCUNE commande listée',
   assert.ok(!s.includes(toUnicode('.IMDB')), 'aucune commande listée');
 });
 
-test('.archives enregistrée (cat.12) — sections neutralisées NON exécutables', () => {
-  const a = h.commands.get('archives');
-  assert.ok(a, '.archives enregistrée');
-  assert.equal(a.cat, 12);
-  assert.equal(a.owner, false, '.archives consultable par tous');
+test('.archives retirée du registre — sections neutralisées NON exécutables', () => {
+  assert.equal(h.commands.has('archives'), false, '.archives retirée (liste de nettoyage Render)');
+  /* .archive reste une commande distincte (archivage d'un chat, cat.9) */
+  const archive = h.commands.get('archive');
+  assert.ok(archive, '.archive (archivage de chat) conservée');
+  assert.equal(archive.cat, 9);
   /* SÉCURITÉ : les commandes crash / NSFW ne sont PAS des commandes exécutables */
   for (const n of ['loccrash', 'crashbug', 'amountbug', 'terminate', 'hentai', 'hwaifu', 'blowjobs', 'nikal']) {
     assert.ok(!h.commands.get(n), `${n} ne doit PAS être exécutable`);

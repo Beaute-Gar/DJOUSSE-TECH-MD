@@ -746,7 +746,9 @@ function renderMainMenu(base) {
 
   const cats = CATEGORIES
     .map((c) => ({ ...c, list: visibleCommands(c.n, base) }))
-    .filter((c) => c.list.length > 0 || c.n === 12); // ARCHIVES (cat.12) toujours visible
+    /* Une catégorie vide disparaît du cadran : plus d'entrée 12 « ARCHIVES »
+       quand la commande .archives a été retirée. */ 
+    .filter((c) => c.list.length > 0);
 
   const catLines = cats.map((c) => listItem(c.n, `${c.emoji} ${toUnicode(`${c.label} MENU`)}`));
   const list = [listHeader('CATEGORIES'), ...catLines, frameFooter()].join('\n');
@@ -1901,12 +1903,7 @@ async function handleNumeric(sock, msg, text, base) {
   }
 
   if (st.cat === 0) {
-    /* Cat.12 ARCHIVES : catalogue déclaratif, pas de commands */
-    if (n === 12) {
-      setMenu(chat, 12);
-      await sendMenu(sock, chat, renderArchives(base), msg);
-      return true;
-    }
+    /* Cat.12 ARCHIVES retirée : plus de détour par le chiffre 12. */
     const cats = CATEGORIES
       .map((c) => ({ ...c, list: visibleCommands(c.n, base) }))
       .filter((c) => c.list.length > 0);
@@ -1924,24 +1921,7 @@ async function handleNumeric(sock, msg, text, base) {
     return true;
   }
 
-  /* Cat.12 ARCHIVES : sous-navigation par section */
-  if (st.cat === 12) {
-    const isOwner = !!base.isOwner;
-    const map = isOwner ? { 1: 'anti', 2: 'nsfw', 3: 'api', 4: 'hack' } : { 1: 'api' };
-    const which = map[n];
-    if (!which) {
-      const restricted = !isOwner && n >= 2 && n <= 4;
-      await send(sock, chat, {
-        text: restricted
-          ? renderError(['SECTION RÉSERVÉE AU PROPRIÉTAIRE'])
-          : renderError([`CHIFFRE INVALIDE (1-${Object.keys(map).length})`, 'REPONDEZ 0 POUR LE MENU PRINCIPAL']),
-      }, { quoted: msg });
-      return true;
-    }
-    setMenu(chat, 12);
-    await sendMenu(sock, chat, renderArchiveSection(base, which), msg);
-    return true;
-  }
+  /* Cat.12 ARCHIVES supprimée : plus de sous-navigation par section. */
 
   const list = visibleCommands(st.cat, base);
   if (n >= 1 && n <= list.length) {
@@ -2691,15 +2671,19 @@ appliquerFamilles(commands);
 /* ── FILTRE GLOBAL « SERVICE MORT » ──────────────────────────────
    Le chargeur de plugins applique déjà isDisabled() aux plugins tiers ;
    ce balayage couvre les commandes enregistrées ailleurs (lib/tools.js,
-   hacktools…), sans quoi .quote/.citation restent joignables malgré leur
-   entrée dans config/disabled-commands.js.
+   hacktools…) et supprime AUSSI les alias de la commande retirée (une
+   entrée `archives` peut rester joignable via `.archive`). Sans ce test
+   sur entry.name, un alias survivrait au retrait du nom principal.
    ENABLE_DEAD_COMMANDS=1 neutralise l'ensemble. */
 const _mortesRetirees = [];
-for (const _cle of [...commands.keys()]) {
-  if (commandeMorte(_cle)) { commands.delete(_cle); _mortesRetirees.push(_cle); }
+for (const [_cle, _entree] of [...commands]) {
+  if (commandeMorte(_cle) || commandeMorte(_entree.name)) {
+    commands.delete(_cle);
+    _mortesRetirees.push(_cle);
+  }
 }
 if (_mortesRetirees.length) {
-  console.log(`[REGISTRE] ${_mortesRetirees.length} commande(s) désactivée(s) (service mort): ${_mortesRetirees.join(', ')}`);
+  console.log(`[REGISTRE] ${_mortesRetirees.length} commande(s) retirée(s) (service mort, doublon ou hébergement): ${_mortesRetirees.join(', ')}`);
 }
 
 module.exports = {
