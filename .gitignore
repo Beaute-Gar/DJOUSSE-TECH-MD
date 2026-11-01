@@ -20,6 +20,18 @@ logs/
 *.log
 *.backup
 _archive/
+# Nettoyage / artefacts locaux (2026-10-31)
+reports/
+scripts/archive/
+src.zip
+structure.js
+total_commande.txt
+.replit
+app.json
+Procfile
+api-check.js
+api-report.json
+api-report.txt
 # Artefact de rendu du menu (régénéré à chaque affichage)
 src/assets/menu.jpg
 .DS_Store

@@ -1186,7 +1186,7 @@ const ENV_COMMANDES = {
   get ytResolve() { return ytResolve; },
   get yts() { return yts; },
 };
-chargerCommandes(ENV_COMMANDES, ["01-general/menu-maison.js","12-archives/archives.js","10-divers/repo.js","10-divers/support.js","06-ia/ia.js"]);
+chargerCommandes(ENV_COMMANDES, ["01-general/menu.js","12-extras/archives.js","10-divers/repo.js","10-divers/support.js","06-ia/ia.js"]);
 
 cmd('setmenuimg', ['menupic'], {
   cat: 9, desc: 'Définir l’image du .menu (répondre à une photo)', usage: 'setmenuimg', owner: true, icon: '🖼️',
@@ -1224,7 +1224,7 @@ const fmtTs = (ts) => {
 const shortChat = (j) => (!j ? '—' : (j.endsWith('@g.us') ? j : `+${num(j)}`));
 const noSqlite = () => ['BASE SQLite INDISPONIBLE', 'NODE ≥ 22.5 REQUIS', 'LES FONCTIONS CLASSIQUES MARCHENT'];
 
-chargerCommandes(ENV_COMMANDES, ["09-owner/journal.js","09-owner/chatlog.js","01-general/uptime-maison.js","01-general/owner-maison.js","01-general/source.js","01-general/list.js"]);
+chargerCommandes(ENV_COMMANDES, ["09-owner/journal.js","09-owner/chatlog.js","01-general/uptime.js","01-general/owner.js","01-general/source.js","01-general/list.js"]);
 
 /* ── 2. GROUPE ────────────────────────────────────────────── */
 
@@ -1290,7 +1290,7 @@ async function participantsUpdate(ctx, action, label) {
   }
 }
 
-chargerCommandes(ENV_COMMANDES, ["02-groupe/kick.js","02-groupe/promote-maison.js","02-groupe/demote.js","02-groupe/tagall-maison.js","02-groupe/hidetag-maison.js","02-groupe/groupinfo-maison.js","02-groupe/setname.js","02-groupe/setdesc.js","02-groupe/open.js","02-groupe/close.js","02-groupe/link.js","02-groupe/revoke.js","02-groupe/poll.js"]);
+chargerCommandes(ENV_COMMANDES, ["02-groupe/kick.js","02-groupe/promote.js","02-groupe/demote.js","02-groupe/tagall.js","02-groupe/hidetag.js","02-groupe/groupinfo.js","02-groupe/setname.js","02-groupe/setdesc.js","02-groupe/open.js","02-groupe/close.js","02-groupe/link.js","02-groupe/revoke.js","02-groupe/poll.js","02-groupe/flash.js"]);
 
 /* ── 3. PROTECTION ────────────────────────────────────────── */
 
@@ -1418,7 +1418,7 @@ guardCmd('groupstats', { cat: 3, desc: 'Statistiques de protection', usage: 'gro
 
 /* ── 4. STICKER & MEDIA ───────────────────────────────────── */
 
-chargerCommandes(ENV_COMMANDES, ["04-sticker-media/sticker.js","04-sticker-media/take.js","04-sticker-media/toimg.js","04-sticker-media/toaudio-maison.js","04-sticker-media/viewonce-maison.js","04-sticker-media/vv.js","04-sticker-media/autonce.js","05-outils/translate.js","05-outils/calc.js","05-outils/qr.js","05-outils/base64.js","05-outils/binary.js","05-outils/weather.js","06-ia/ai-maison.js","06-ia/summarize-maison.js","06-ia/analyse.js","07-fun/8ball-maison.js","07-fun/choose.js","07-fun/roll.js","07-fun/coin.js","07-fun/ship-maison.js","07-fun/rate.js","07-fun/joke-maison.js","08-recherche/wiki.js","08-recherche/github.js","08-recherche/convert.js","09-owner/self.js","09-owner/public.js","09-owner/autoview.js","09-owner/autolike.js","09-owner/autostatus.js","09-owner/broadcast.js","09-owner/join.js","09-owner/leave.js","09-owner/block.js","09-owner/unblock.js","09-owner/statut.js","05-outils/location.js","10-divers/vcard.js","10-divers/event.js","09-owner/derniers.js","10-divers/afk.js","10-divers/level.js","10-divers/report.js","10-divers/stats.js"]);
+chargerCommandes(ENV_COMMANDES, ["04-sticker-media/sticker.js","04-sticker-media/take.js","04-sticker-media/toimg.js","04-sticker-media/toaudio.js","04-sticker-media/viewonce.js","04-sticker-media/vv.js","04-sticker-media/autonce.js","05-outils/translate.js","05-outils/calc.js","05-outils/qr.js","05-outils/base64.js","05-outils/binary.js","05-outils/weather.js","06-ia/ai.js","06-ia/summarize.js","06-ia/analyse.js","07-fun/8ball.js","07-fun/choose.js","07-fun/roll.js","07-fun/coin.js","07-fun/ship.js","07-fun/rate.js","07-fun/joke-maison.js","08-recherche/wiki.js","08-recherche/github.js","08-recherche/convert.js","09-owner/self.js","09-owner/public.js","09-owner/autoview.js","09-owner/autolike.js","09-owner/autostatus.js","09-owner/broadcast.js","09-owner/join.js","09-owner/leave.js","09-owner/block.js","09-owner/unblock.js","09-owner/statut.js","05-outils/location.js","10-divers/vcard.js","10-divers/event.js","09-owner/derniers.js","10-divers/afk.js","10-divers/level.js","10-divers/report.js","10-divers/stats.js"]);
 
 /* ── 9bis / 10bis. AMÉLIORATIONS BAILEYS (sans boutons) ────── */
 
@@ -1434,7 +1434,7 @@ function quotedKey(msg, content) {
   };
 }
 
-chargerCommandes(ENV_COMMANDES, ["05-outils/edit.js","02-groupe/pin.js","02-groupe/unpin.js","02-groupe/disappear.js","09-owner/mutechat.js","09-owner/unmutechat.js","09-owner/archive.js","09-owner/setpp.js","09-owner/setbotname.js","09-owner/setbio-maison.js","05-outils/react.js","05-outils/del.js","09-owner/read.js"]);
+chargerCommandes(ENV_COMMANDES, ["05-outils/edit.js","02-groupe/pin.js","02-groupe/unpin.js","02-groupe/disappear.js","09-owner/mutechat.js","09-owner/unmutechat.js","09-owner/archive.js","09-owner/setpp.js","09-owner/setbotname.js","09-owner/setbio.js","05-outils/react.js","05-outils/del.js","09-owner/read.js"]);
 
 
 

@@ -86,7 +86,9 @@ function main() {
   for (const entry of baseline.registryKeys) {
     if (deadNames.has(entry.name) || deadNames.has(entry.key)) expectedRemoved.add(entry.key);
   }
-  const addedKeys = [...currentKeys].filter((key) => !baselineKeys.has(key));
+  /* Nouvelles commandes volontairement ajoutées après le snapshot. */
+  const expectedAdded = new Set(['flash']);
+  const addedKeys = [...currentKeys].filter((key) => !baselineKeys.has(key) && !expectedAdded.has(key));
   const unexpectedRemoved = [...baselineKeys].filter((key) => !currentKeys.has(key) && !expectedRemoved.has(key));
   /* Une commande déclarée morte ne doit plus être joignable sous son nom
      principal (les alias homonymes d'autres commandes restent légitimes). */

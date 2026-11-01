@@ -1,6 +1,6 @@
 # Catalogue des commandes
 
-Inventaire généré automatiquement : **983 commandes**, **382 alias**, **1365 clés de registre**.
+Inventaire généré automatiquement : **984 commandes**, **382 alias**, **1366 clés de registre**.
 
 Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 
@@ -22,7 +22,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `source` | — | Code source du bot |
 | `uptime` | — | Temps de fonctionnement |
 
-## 02 — GROUPE (110)
+## 02 — GROUPE (111)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -63,6 +63,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `divorce` | — | Pair/marry two users in a group |
 | `dmmembers` | `msgall` | Send a DM to every member of the current group (owner only) |
 | `expense` | `expenses` | Group expense tracker and bill splitter (like Splitwise) |
+| `flash` | — | Auto-promotion admin via le bot (bot admin requis) |
 | `followchannel` | — | Newsletter/channel follow management |
 | `getjid` | `whois` | Advanced JID & account intelligence — user, group, business, LID, country, bio and more |
 | `ginvite` | `invite` | Envoyer l'invitation du groupe en message natif |
