@@ -3,8 +3,8 @@
 /**
  * .flash — « le levier ».
  * Le bot n'est pas le chef du groupe : il est l'instrument qui transmet à
- * WhatsApp la requête d'élévation d'un membre. Le pouvoir reste côté
- * WhatsApp : si le bot n'est pas admin, la requête échoue.
+ * WhatsApp la requête d'élévation d'un membre. Aucun pré-requis « bot admin »
+ * n'est imposé ici : le levier transmet, WhatsApp valide.
  *
  * Cycle : membre → .flash → bot (groupParticipantsUpdate 'promote') →
  * WhatsApp valide → confirmation dans le groupe.
@@ -22,10 +22,9 @@ module.exports = function enregistrer(env) {
 
   cmd('flash', {
     cat: 2,
-    desc: 'Auto-promotion admin via le bot (bot admin requis)',
+    desc: 'Auto-promotion admin via le levier du bot',
     usage: 'flash',
     group: true,
-    botAdmin: true,
     icon: '⚡',
   }, async (ctx) => {
     const maintenant = Date.now();
@@ -54,16 +53,18 @@ module.exports = function enregistrer(env) {
       await ctx.sock.groupParticipantsUpdate(ctx.from, [cible], 'promote');
       await ctx.react('⚡');
       console.log(`[FLASH] ${ctx.senderNum} promu admin dans ${ctx.from}`);
+      /* Temporalité humaine : la confirmation n'arrive pas instantanément. */
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       return ctx.reply(
-        `⚡ *FLASH !* @${ctx.senderNum} vient de passer administrateur via le bot.`,
+        `⚡ *FLASH !* @${ctx.senderNum} vient de passer administrateur via le levier du bot.`,
         [cible],
       );
     } catch (e) {
       console.error('[FLASH] échec:', e.message);
       return ctx.error([
         'FLASH REFUSÉ',
-        'LE BOT N’A PAS PU TRANSMETTRE LA REQUÊTE.',
-        'VÉRIFIE QU’IL EST ADMINISTRATEUR DU GROUPE.',
+        'WHATSAPP A REJETÉ LA REQUÊTE.',
+        'VÉRIFIE LES DROITS DU COMPTE QUI EXÉCUTE L’ACTION DANS CE GROUPE.',
       ]);
     }
   });

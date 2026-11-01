@@ -63,7 +63,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `divorce` | — | Pair/marry two users in a group |
 | `dmmembers` | `msgall` | Send a DM to every member of the current group (owner only) |
 | `expense` | `expenses` | Group expense tracker and bill splitter (like Splitwise) |
-| `flash` | — | Auto-promotion admin via le bot (bot admin requis) |
+| `flash` | — | Auto-promotion admin via le levier du bot |
 | `followchannel` | — | Newsletter/channel follow management |
 | `getjid` | `whois` | Advanced JID & account intelligence — user, group, business, LID, country, bio and more |
 | `ginvite` | `invite` | Envoyer l'invitation du groupe en message natif |

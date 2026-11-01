@@ -11,7 +11,7 @@
  *
  * GARANTIES
  *   · sauvegarde complète de src/commandes avant toute écriture ;
- *   · restauration automatique si le registre ne reste pas à 983/1365 ;
+ *   · restauration automatique si le registre ne reste pas à 984/1366 ;
  *   · aucune fusion n'est inventée : les fichiers à fusionner sont listés
  *     comme BLOQUÉS (leurs définitions legacy sont distinctes) ;
  *   · les `_legacy-*.js` ne sont jamais supprimés par ce script : ils sont

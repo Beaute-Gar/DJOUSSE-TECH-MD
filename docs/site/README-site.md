@@ -1,13 +1,13 @@
 # Site DJOUSSE TECH MD
 
-Site statique en HTML/CSS/JavaScript vanilla. Aucun bundler, framework, base de données ou dépendance JavaScript côté navigateur n’est nécessaire. Les pages HTML sont complètes et lisibles sans rendu serveur; le dossier `website/` peut être servi tel quel.
+Site statique en HTML/CSS/JavaScript vanilla. Aucun bundler, framework, base de données ou dépendance JavaScript côté navigateur n’est nécessaire. Les pages HTML sont complètes et lisibles sans rendu serveur; le dossier `web/public/` peut être servi tel quel.
 
 ## Lancer en local
 
 Depuis la racine du dépôt :
 
 ```bash
-npx serve website
+npx serve web/public
 ```
 
 Le site est alors accessible à l’adresse indiquée par `serve`. Les polices Inter et Fira Code sont chargées depuis Google Fonts; toutes les images, icônes, données et feuilles de style du site sont locales.
@@ -15,7 +15,7 @@ Le site est alors accessible à l’adresse indiquée par `serve`. Les polices I
 ## Déployer sur Vercel
 
 1. Crée un projet Vercel à partir du dépôt DJOUSSE TECH MD.
-2. Définis `website/` comme **Root Directory**. Ne configure pas de commande de build : c’est un site statique sans build obligatoire. Vercel détecte les fonctions Node.js situées dans `api/`.
+2. Définis `web/` comme **Root Directory**. Ne configure pas de commande de build : c’est un site statique sans build obligatoire. `vercel.json` fixe déjà `outputDirectory` sur `public` et Vercel détecte les fonctions Node.js situées dans `api/`.
 3. Pour activer le formulaire, configure les variables d’environnement suivantes dans Vercel :
    - `PAIRING_API_URL` : URL HTTPS publique de l’API du worker, par exemple `https://bot.example.com` (ne pas ajouter `/pair` ou `/status`).
    - `PAIRING_API_TOKEN` : valeur du jeton partagé configuré côté bot, si l’API du bot l’exige. Elle ne se trouve jamais dans le navigateur.
@@ -27,21 +27,22 @@ La fonction de jumelage applique une limite mémoire par adresse IP de cinq dema
 
 ## Autres hébergeurs
 
-- Pour un hébergeur statique (Pages, Netlify, stockage web, serveur Nginx), publie le contenu de `website/` sans étape de compilation. Les pages restent consultables même sans API; le formulaire indique alors que le jumelage est indisponible.
-- Pour servir le site depuis l’instance du bot, copie le contenu dans le dossier `website/` du dépôt et active `SERVE_SITE=on`. L’interface utilise la même origine pour `/status` et `/pair`; configure **aucun** `PAIRING_API_TOKEN` côté bot pour cette connexion directe. Si l’API du bot exige un jeton, utilise plutôt les fonctions Vercel (elles ajoutent `x-api-token` côté serveur) ou ajoute un relais serveur équivalent à l’hébergeur choisi. Le navigateur n’envoie jamais ce jeton.
+- Pour un hébergeur statique (Pages, Netlify, stockage web, serveur Nginx), publie le contenu de `web/public/` sans étape de compilation. Les pages restent consultables même sans API; le formulaire indique alors que le jumelage est indisponible.
+- Pour servir le site depuis l’instance du bot, copie le contenu dans le dossier `web/public/` du dépôt et active `SERVE_SITE=on`. L’interface utilise la même origine pour `/status` et `/pair`; configure **aucun** `PAIRING_API_TOKEN` côté bot pour cette connexion directe. Si l’API du bot exige un jeton, utilise plutôt les fonctions Vercel (elles ajoutent `x-api-token` côté serveur) ou ajoute un relais serveur équivalent à l’hébergeur choisi. Le navigateur n’envoie jamais ce jeton.
 - Un site hébergé statiquement sur un domaine distinct ne peut pas appeler automatiquement un autre domaine de bot : utilise un relais serveur qui restreint le CORS et conserve le jeton côté serveur, ou déploie le site et l’API sous la même origine.
 
 ## Régénérer le catalogue
 
-Le fichier livré `data/commands.json` est un **jeu d’exemples partiel**. Après `npm install`, le script doit être lancé depuis la racine du bot, soit après avoir copié `scripts/export-commands.js` dans le dépôt DJOUSSE TECH MD, soit en indiquant les deux dossiers explicitement :
+Le catalogue livré (`web/public/data/commands.json`) est **complet** : il est produit depuis le registre réellement chargé par le bot. Après `npm install`, lance depuis la racine du dépôt :
 
 ```bash
-node /chemin/du/site/scripts/export-commands.js \
-  --bot-root /chemin/DJOUSSE-TECH-MD \
-  --website-root /chemin/du/site/website
+npm run site
+# ou : node scripts/export-site-data.js
 ```
 
-Le script charge la Map de commandes et les catégories exportées par `handler.js`, déduplique les alias et écrit le résultat dans `website/data/commands.json`. Les chiffres du total de registre et des alias restent `TODO` dans `data/site-data.json` jusqu’à vérification et mise à jour du README par le mainteneur. Le site ne présente pas les permissions des exemples comme confirmées.
+Le script charge la Map `commands` et les catégories exportées par `src/handlers/handler.js`, déduplique les alias, écrit `web/public/data/commands.json` puis recalcule les chiffres de `web/public/data/site-data.json` (registre, menu, alias, catégories affichées, protections). Aucun chiffre n’est saisi à la main.
+
+`docs/site/scripts/export-commands.js` reste un point d’entrée compatible qui délègue au script principal ; ses options `--bot-root` et `--website-root` ne sont plus utilisées.
 
 ## Notes
 

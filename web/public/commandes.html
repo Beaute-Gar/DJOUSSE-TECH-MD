@@ -41,7 +41,7 @@
 <main id="contenu">
   <section class="page-hero"><div class="container"><span class="eyebrow">Catalogue</span><h1>Les commandes, sans fouiller le code.</h1><p class="lead">Recherche par nom, alias ou description; filtre par catégorie et accès; copie le nom de la commande en un geste.</p></div></section>
   <section class="container section--compact">
-    <div class="callout" data-partial-banner role="status" hidden>Catalogue partiel</div>
+    <div class="callout" data-partial-banner role="status" hidden>Catalogue indisponible</div>
     <div class="catalogue-tools" role="search">
       <div class="field"><label for="command-search">Rechercher une commande</label><input class="input" id="command-search" type="search" placeholder="Ex. sticker, translate, alias…" autocomplete="off" data-command-search></div>
       <div class="select-field"><label for="category-filter">Catégorie</label><select class="select" id="category-filter" data-category-filter><option value="">Toutes les catégories</option></select></div>
@@ -51,7 +51,7 @@
     <div class="command-list" data-command-list aria-live="polite"></div>
     <div class="empty-state" data-command-empty hidden>Aucune commande ne correspond. Essaie un autre mot.</div>
     <div class="pagination"><button class="button" type="button" data-load-more hidden>Afficher plus de commandes</button></div>
-    <p class="muted small" style="margin-top:24px">Les accès du jeu d’exemples sont provisoires et non vérifiés. Après génération du registre réel, les niveaux d’accès proviennent directement du bot.</p>
+    <p class="muted small" style="margin-top:24px">Les commandes, alias, catégories et niveaux d’accès proviennent du registre réellement chargé par le bot. Lance <code>node scripts/export-site-data.js</code> après toute modification du registre.</p>
   </section>
 </main>
 <footer class="site-footer"><div class="container footer-grid">

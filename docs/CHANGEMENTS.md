@@ -1,5 +1,7 @@
 # Changements de la restructuration
 
+> **Document historique.** Les chiffres de cette page décrivent l’état de la restructuration v1 (avant le nettoyage et l’ajout de `.flash`). L’état courant vérifiable est **984 commandes distinctes / 1 366 clés / 382 alias** : voir [`COMMANDES.md`](COMMANDES.md) et le README.
+
 ## Phases et commits
 
 | Phase | Commit(s) | Résultat |
