@@ -1,7 +1,27 @@
-// @legacy-order {"sourceFile":"04-sticker-media/tools3.js","sourceOrder":249,"definitionIndex":0,"entryOrder":688}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-tools3.js","sourceFile":"04-sticker-media/tools3.js","sourceOrder":249,"definitionIndex":0,"entryOrder":688,"names":["debinary"]},
-  commands: ["debinary"],
-  description: "Extended tools and utilities",
+    commands: ['debinary'],
+    description: 'Convert binary to text',
+    permission: 'public',
+    group: true,
+    private: true,
+
+    run: async (sock, message, args, ctx) => {
+        const text = args.join(' ').trim();
+        const reply = value => ctx.reply(style.renderOutgoingText(value));
+
+        if (!text) return reply('❌ *Usage:* `.debinary <binary>`');
+
+        try {
+            const decoded = text.trim().split(/\s+/)
+                .map(binary => String.fromCharCode(parseInt(binary, 2)))
+                .join('');
+            return reply(`🔢 *Binary → Text*\n\n*Input:* ${text}\n*Output:* ${decoded}`);
+        } catch {
+            return reply('❌ Invalid binary input.');
+        }
+    },
 };

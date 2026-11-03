@@ -34,7 +34,7 @@ module.exports = {
                 video:     Buffer.from(gifData),
                 gifPlayback: true,
                 mimetype:  'video/mp4',
-                caption:   `🎭 *${query}* — Silva MD`,
+                caption:   `🎭 *${query}* — DJOUSSE TECH`,
                 contextInfo
             }, { quoted: message });
         } catch (e) {

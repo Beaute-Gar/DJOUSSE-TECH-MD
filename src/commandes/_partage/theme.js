@@ -1,8 +1,8 @@
 'use strict';
 /**
  * Shim DJOUSSE : '../lib/theme'
- * Autonome (aucune dépendance) : fournit l'API utilisée par les plugins
- * silva — getStr, fmt, getActiveTheme, setActiveTheme, listThemes.
+ * Autonome (aucune dépendance) : fournit l'API utilisée par les commandes
+ * historiques — getStr, fmt, getActiveTheme, setActiveTheme, listThemes.
  */
 
 const THEME = {

@@ -28,8 +28,53 @@ const { send } = require('./wa-send');
 /* Un seul unwrap dans le projet (guard) — utilisé pour citer le statut */
 const { unwrap } = require('../guard/utils/message');
 
-/** Dernier recours si la liste d'emojis est vide/cassée. */
-const FALLBACK_EMOJI = '👍';
+/** Dernier recours si la liste configurée est vide, corrompue ou invalide.
+ *  Volontairement varié : jamais le 💚 (cœur vert par défaut de WhatsApp). */
+const DEFAULT_EMOJIS = ['🔥', '💯', '😍', '👏', '⚡', '🙌', '✨', '🤩', '👍', '🎉', '🥳', '💥'];
+const FALLBACK_EMOJI = '🔥';
+
+/* Emoji valide = pictogramme Unicode (avec sélecteurs/ZWJ/teintes), pas
+   un « ?? » issu d'un .env mal encodé. */
+const EMOJI_RE = /^(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|\uFE0F|\u200D|[\u{1F3FB}-\u{1F3FF}])+$/u;
+
+/* Emojis explicitement exclus : le cœur vert est le « like » par défaut
+   de WhatsApp, le bot doit réagir avec AUTRE CHOSE. */
+const FORBIDDEN_EMOJIS = new Set(['💚']);
+
+/**
+ * Nettoie une liste d'emojis (CSV ou tableau) : trim, dédoublonnage,
+ * rejet des entrées corrompues (« ?? ») et du cœur vert.
+ * @returns {string[]}
+ */
+function cleanEmojiList(input) {
+  const raw = Array.isArray(input) ? input : String(input || '').split(',');
+  const out = [];
+  for (const item of raw) {
+    const emoji = String(item || '').trim();
+    if (!emoji || emoji.length > 8) continue;
+    if (FORBIDDEN_EMOJIS.has(emoji)) continue;
+    if (!EMOJI_RE.test(emoji)) continue;
+    if (!out.includes(emoji)) out.push(emoji);
+  }
+  return out;
+}
+
+/**
+ * Liste effective : override runtime (.autolike emojis …), sinon
+ * CUSTOM_REACT_EMOJIS, sinon liste par défaut. Une liste vide après
+ * nettoyage retombe TOUJOURS sur DEFAULT_EMOJIS.
+ */
+function listEmojis(overrides = {}) {
+  const source = overrides.emojis !== undefined ? overrides.emojis : config.statusEmojis;
+  const list = cleanEmojiList(source);
+  return list.length ? list : DEFAULT_EMOJIS;
+}
+
+/** Emoji aléatoire valide (jamais le cœur vert WhatsApp). */
+function pickEmoji(overrides = {}) {
+  const list = listEmojis(overrides);
+  return list[Math.floor(Math.random() * list.length)] || FALLBACK_EMOJI;
+}
 
 /**
  * Résolution effective des 3 drapeaux : override runtime (état persisté)
@@ -62,15 +107,6 @@ function phoneJidOf(key = {}) {
 function botPhoneJid(sock) {
   const raw = (sock && sock.user && sock.user.id) || '';
   return raw.replace(/:\d+@/, '@');
-}
-
-/** Emoji aléatoire dans la liste configurée (CUSTOM_REACT_EMOJIS). */
-function pickEmoji() {
-  const list = (config.statusEmojis || [])
-    .map((e) => String(e).trim())
-    .filter((e) => e && e.length <= 8);
-  if (!list.length) return FALLBACK_EMOJI;
-  return list[Math.floor(Math.random() * list.length)];
 }
 
 /**
@@ -112,7 +148,7 @@ async function handleStatus(sock, msg, overrides = {}) {
 
     /* ── 2. RÉACTION : statusJidList OBLIGATOIRE (sinon avalée) ── */
     if (flags.react) {
-      const emoji = pickEmoji();
+      const emoji = pickEmoji(overrides);
       const statusJidList = [phoneJid, botJid].filter(Boolean);
       try {
         await send(sock, 'status@broadcast', {
@@ -148,4 +184,13 @@ async function handleStatus(sock, msg, overrides = {}) {
   return done;
 }
 
-module.exports = { handleStatus, effective, phoneJidOf, botPhoneJid, pickEmoji };
+module.exports = {
+  handleStatus,
+  effective,
+  phoneJidOf,
+  botPhoneJid,
+  pickEmoji,
+  listEmojis,
+  cleanEmojiList,
+  DEFAULT_EMOJIS,
+};

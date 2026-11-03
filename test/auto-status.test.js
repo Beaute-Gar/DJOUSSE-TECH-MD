@@ -115,9 +115,12 @@ test('réaction : statusJidList présent, JID téléphone uniquement, emoji de l
   assert.ok(opts.statusJidList.every((j) => j.includes('@s.whatsapp.net')), `JID non-téléphone dedans : ${opts.statusJidList}`);
   assert.ok(opts.statusJidList.includes(PHONE), 'auteur en JID téléphone');
   assert.ok(opts.statusJidList.includes('237699988877@s.whatsapp.net'), 'bot sans suffixe appareil');
-  /* Emoji issu de CUSTOM_REACT_EMOJIS (plus l’emoji corrompu du .env). */
-  const emojis = String(process.env.CUSTOM_REACT_EMOJIS || '').split(',').map((s) => s.trim()).filter(Boolean);
-  if (emojis.length) assert.ok(emojis.includes(content.react.text), `emoji « ${content.react.text} » hors liste`);
+  /* Emoji issu de la liste VALIDÉE (CUSTOM_REACT_EMOJIS si sain, sinon
+     la liste par défaut) : jamais le cœur vert 💚 de WhatsApp. */
+  const { listEmojis } = require('../src/lib/auto-status');
+  const emojis = listEmojis();
+  assert.ok(emojis.includes(content.react.text), `emoji « ${content.react.text} » hors liste`);
+  assert.notEqual(content.react.text, '💚', 'jamais le cœur vert par défaut');
   assert.ok(content.react.key && content.react.key.id === 'ST-1', 'la réaction est portée par la clé du statut');
   assert.equal(sock.calls.presence.length, 0, 'pas de « écrit… » sur une réaction (envoi immédiat)');
 });
@@ -142,7 +145,8 @@ test('réponse : DM au numéro réel citant le statut', async () => {
   assert.equal(sock.calls.msgs.length, 1);
   const { jid, content } = sock.calls.msgs[0];
   assert.equal(jid, PHONE, 'réponse au numéro réel, pas au @lid');
-  assert.equal(content.text, config.autoStatusMsg, 'texte = AUTO_STATUS_MSG');
+  const style = require('../src/config/style');
+  assert.equal(content.text, style.renderOutgoingText(config.autoStatusMsg), 'texte AUTO_STATUS rendu par le style central');
   assert.ok(config.autoStatusMsg, 'AUTO_STATUS_MSG non vide');
   assert.equal(content.contextInfo.stanzaId, 'ST-1', 'citation du statut');
   assert.deepEqual(content.contextInfo.quotedMessage, { conversation: 'mon statut du jour' });
@@ -207,11 +211,19 @@ test('botPhoneJid : suffixe appareil retiré', () => {
   assert.equal(botPhoneJid({}), '');
 });
 
-test('pickEmoji : toujours un emoji de CUSTOM_REACT_EMOJIS', () => {
-  const { pickEmoji } = require('../src/lib/auto-status');
-  const list = String(process.env.CUSTOM_REACT_EMOJIS || '').split(',').map((s) => s.trim()).filter(Boolean);
-  assert.ok(list.length >= 1, 'liste d’emojis configurée');
+test('pickEmoji : toujours un emoji valide, jamais le cœur vert 💚', () => {
+  const { pickEmoji, listEmojis } = require('../src/lib/auto-status');
+  const list = listEmojis();
+  assert.ok(list.length >= 1, 'liste d’emojis disponible');
+  assert.ok(!list.includes('💚'), 'le cœur vert WhatsApp est exclu');
   for (let i = 0; i < 20; i += 1) assert.ok(list.includes(pickEmoji()));
+});
+
+test('cleanEmojiList : rejette les « ?? » du .env et le 💚, dédoublonne', () => {
+  const { cleanEmojiList } = require('../src/lib/auto-status');
+  assert.deepEqual(cleanEmojiList('??,💚,🔥,🔥,😍,abc'), ['🔥', '😍']);
+  assert.deepEqual(cleanEmojiList(''), []);
+  assert.deepEqual(cleanEmojiList(['💚']), []);
 });
 
 /* ═══ 6. INTÉGRATION — chaîne complète config → handler → module → socket ═══ */

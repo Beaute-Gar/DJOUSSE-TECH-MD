@@ -12,7 +12,7 @@ module.exports = {
     run: async (sock, message, args, { sender, contextInfo }) => {
         if (!args[0]) {
             return sock.sendMessage(sender, {
-                text: `❌ Please provide a GitHub URL.\nExample: .gitclone https://github.com/SilvaTechB/silva-md-bot`,
+                text: `❌ Please provide a GitHub URL.\nExample: .gitclone https://github.com/Beaute-Gar/DJOUSSE-TECH-MD`,
                 contextInfo
             }, { quoted: message });
         }
@@ -43,7 +43,7 @@ module.exports = {
                 document: { url },
                 fileName: filename,
                 mimetype: 'application/zip',
-                caption:  `📦 *${user}/${cleanRepo}*\n_Downloaded via ${getStr('botName') || 'Silva MD'}_`,
+                caption:  `📦 *${user}/${cleanRepo}*\n_Downloaded via ${getStr('botName') || 'DJOUSSE TECH'}_`,
                 contextInfo
             }, { quoted: message });
         } catch (err) {

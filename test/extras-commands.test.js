@@ -47,7 +47,15 @@ function mkC(args, q, from) {
   const c = {
     args, q: q !== undefined ? q : args.join(' '),
     from: from || '123@g.us', sender: '229@s.whatsapp.net',
-    sock: { user: { id: 'bot@s.whatsapp.net' } },
+    sock: {
+      user: { id: 'bot@s.whatsapp.net' },
+      /* Les commandes « portées » envoient directement via sock.sendMessage :
+         le faux socket l'expose et capture le texte comme ctx.reply. */
+      sendMessage: async (jid, content) => {
+        out.push(String(content?.text ?? content?.caption ?? ''));
+        return { key: { id: 'S' + out.length } };
+      },
+    },
     msg: { key: { remoteJid: from || '123@g.us' }, message: {} },
     reply: async (t) => { out.push(String(t)); },
     error: async (l) => { out.push('ERR: ' + (Array.isArray(l) ? l.join(' ') : l)); },
@@ -132,13 +140,15 @@ test('outils — morse, hash, password, ascii, timezone, notes, bookmarks', asyn
   await reg.get('timezone').fn(c);
   assert.match(c._out.join(' '), /HEURE — PARIS/);
 
-  /* notes : ajout puis liste */
-  c = mkC(['ma note']);
+  /* notes : ajout puis liste (module réel : « .note add <titre> | <contenu> ») */
+  c = mkC(['add', 'ma note', '|', 'contenu']);
+  c.msg.message = { conversation: '.note add ma note | contenu' };
   await reg.get('note').fn(c);
-  assert.match(c._out.join(' '), /NOTE AJOUTÉE/);
+  assert.match(c._out.join(' '), /Note saved/i);
   c = mkC(['list']);
+  c.msg.message = { conversation: '.note list' };
   await reg.get('note').fn(c);
-  assert.match(c._out.join(' '), /NOTES \(1\)/);
+  assert.match(c._out.join(' '), /Your Notes \(1\)/i);
 
   c = mkC(['https://exemple.com']);
   await reg.get('bookmark').fn(c);

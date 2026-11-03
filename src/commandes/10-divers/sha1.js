@@ -1,7 +1,20 @@
-// @legacy-order {"sourceFile":"10-divers/hash.js","sourceOrder":110,"definitionIndex":0,"entryOrder":313}
 'use strict';
+
+const crypto = require('node:crypto');
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-hash.js","sourceFile":"10-divers/hash.js","sourceOrder":110,"definitionIndex":0,"entryOrder":313,"names":["sha1"]},
-  commands: ["sha1"],
-  description: "Generate MD5, SHA1, SHA256 hashes",
+  commands: ['sha1'],
+  description: 'Generate a SHA-1 digest',
+  usage: '.sha1 <text>',
+  permission: 'public',
+  run: async (sock, message, args, ctx) => {
+    const text = args.join(' ');
+    if (!text) {
+      return ctx.reply(style.renderError(['Indique le texte à hacher. Exemple : .sha1 hello world']));
+    }
+
+    const digest = crypto.createHash('sha1').update(text).digest('hex');
+    return ctx.reply(style.renderInfo(['SHA-1', '', `Texte : ${text}`, '', digest]));
+  },
 };

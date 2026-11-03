@@ -28,7 +28,7 @@ module.exports = {
             const date = h?.date || new Date().toDateString();
             const text = h?.horoscope_data || 'No horoscope available today.';
             await sock.sendMessage(chatId, {
-                text: `${EMOJIS[sign]} *${sign.charAt(0).toUpperCase() + sign.slice(1)} Daily Horoscope*\n📅 ${date}\n\n${text}\n\n_Powered by Silva MD_`,
+                text: `${EMOJIS[sign]} *${sign.charAt(0).toUpperCase() + sign.slice(1)} Daily Horoscope*\n📅 ${date}\n\n${text}\n\n_Powered by DJOUSSE TECH_`,
                 contextInfo
             }, { quoted: message });
         } catch (e) {

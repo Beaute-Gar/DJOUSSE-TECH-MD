@@ -41,7 +41,7 @@ function trackMessage(jid, participant) {
     return record.count > gs.limit;
 }
 
-// Expose tracker for silva.js messages.upsert hook
+// Expose tracker for the central messages.upsert hook
 global.antifloodTrack = trackMessage;
 global.antifloodSettings = settings;
 

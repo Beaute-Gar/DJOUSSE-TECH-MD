@@ -67,7 +67,7 @@ module.exports = {
             }, { quoted: message });
 
             // 4. Send cover art + caption
-            const caption = `🎵 *${title}*\n👤 ${channel}  •  ⏱ ${duration}\n_Powered by Silva MD_`;
+            const caption = `🎵 *${title}*\n👤 ${channel}  •  ⏱ ${duration}\n_Powered by DJOUSSE TECH_`;
             if (thumb) {
                 await sock.sendMessage(sender, {
                     image: { url: thumb }, caption, contextInfo

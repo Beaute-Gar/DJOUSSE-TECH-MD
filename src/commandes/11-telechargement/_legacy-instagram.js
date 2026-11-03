@@ -559,7 +559,7 @@ module.exports = [
                 ));
             }
 
-            const botName = getStr('botName') || 'Silva MD';
+            const botName = getStr('botName') || 'DJOUSSE TECH';
 
             const loading = await sock.sendMessage(jid, {
                 text: fmt(`⏳ _Fetching Instagram content…_`),
@@ -673,59 +673,7 @@ module.exports = [
         },
     },
 
-    // ── Owner: set Instagram session cookie ─────────────────────────────────
-    {
-        commands:    ['setigsession', 'igsession'],
-        description: 'Set Instagram session cookie for downloads (owner only)',
-        usage:       '<sessionid_cookie_value>',
-        permission:  'owner',
-        group:       true,
-        private:     true,
-
-        run: async (sock, message, args, { reply }) => {
-            const sessionid = (args[0] || '').trim();
-            if (!sessionid) {
-                const current = loadSession();
-                return reply(fmt(
-                    `🔐 *Instagram Session Manager*\n\n` +
-                    `Current status: ${current ? '✅ Session is set' : '❌ No session configured'}\n\n` +
-                    `*Usage:* \`.setigsession <your_sessionid>\`\n\n` +
-                    `*How to get it:*\n` +
-                    `1. Log in to Instagram on Chrome\n` +
-                    `2. Press F12 → Application tab → Cookies → instagram.com\n` +
-                    `3. Find the cookie named *sessionid*\n` +
-                    `4. Copy its value and send it here\n\n` +
-                    `_Your session stays private on this server only._`
-                ));
-            }
-
-            saveSession(sessionid);
-
-            // Quick verify
-            let verified = false;
-            try {
-                const r = await axios.get('https://www.instagram.com/accounts/edit/', {
-                    headers: {
-                        'User-Agent': UA_BROWSER,
-                        'Cookie': `sessionid=${sessionid}`,
-                    },
-                    timeout: 10000,
-                    maxRedirects: 0,
-                    validateStatus: s => s < 400,
-                });
-                verified = r.status === 200 && !String(r.data || '').includes('"login_required"');
-            } catch (_) {}
-
-            return reply(fmt(
-                `🔐 *Instagram Session ${verified ? 'Verified ✅' : 'Saved ⚠️'}*\n\n` +
-                (verified
-                    ? `Session is valid and active. Downloads will now work reliably.`
-                    : `Session saved, but verification was inconclusive. Try *.ig <url>* to confirm it works.`
-                ) +
-                `\n\n_Use *.setigsession* again to update or check status._`
-            ));
-        },
-    },
+    null,
 
     // ── Owner: clear Instagram session ──────────────────────────────────────
     {

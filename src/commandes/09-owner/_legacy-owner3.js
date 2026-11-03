@@ -29,18 +29,11 @@ function isRealOwner(ctx) {
 module.exports = {
     commands: [
         'block', 'unblock', 'forward', 'mygroups', 'pp', 'fullpp',
-        'setbotname', 'setmode', 'setsudo', 'delsudo', 'getsudo', 'resetsudo',
-        'setownername', 'setownernumber', 'join', 'cmd',
+        'setbotname', 'setsudo', 'delsudo', 'getsudo', 'resetsudo',
+        'join', 'cmd',
         'cachedmeta', 'report', 'save', 'tostatus', 'vv2', 'update',
-        'return', 'setpmpermit', 'setpackname', 'setpackauthor',
-        'setbotpic', 'setbotrepo', 'setcaption', 'setchatbot', 'setchatbotmode',
-        'setdmpresence', 'setfooter', 'setgcjid', 'setgcpresence',
-        'setnewsletterjid', 'setnewsletterurl', 'setstartmsg',
-        'setstatusemojis', 'setstatusreplytext', 'settimezone', 'setytlink',
-        'setautolikestatus', 'setautoreact', 'setautoread', 'setautoreadstatus',
-        'setautoreplystatus', 'setautoblock', 'setautobio', 'setanticall',
-        'setantidelete', 'setantiedit', 'getsetting', 'setsetting',
-        'resetsetting', 'resetallsettings', 'resetdb', 'jid'
+        'return', 'setbotpic',
+        'resetallsettings', 'resetdb', 'jid'
     ],
     description: 'Extended owner/admin control commands',
     permission:  'owner',
@@ -121,30 +114,6 @@ module.exports = {
             config.BOT_NAME = text;
             process.env.BOT_NAME = text;
             return send(`✅ Bot name set to *${text}*`);
-        }
-
-        if (cmd === 'setownername') {
-            if (!text) return send('❌ *Usage:* `.setownername <name>`');
-            config.OWNER_NAME = text;
-            process.env.OWNER_NAME = text;
-            return send(`✅ Owner name set to *${text}*`);
-        }
-
-        if (cmd === 'setownernumber') {
-            const num = text.replace(/\D/g, '');
-            if (!num) return send('❌ *Usage:* `.setownernumber <number>`');
-            config.OWNER_NUMBER = num;
-            process.env.OWNER_NUMBER = num;
-            return send(`✅ Owner number set to *+${num}*`);
-        }
-
-        if (cmd === 'setmode') {
-            const modes = ['public', 'private', 'group', 'inbox', 'both'];
-            const mode  = args[0]?.toLowerCase();
-            if (!mode || !modes.includes(mode)) return send(`❌ *Usage:* \`.setmode <mode>\`\n\nModes: ${modes.join(', ')}`);
-            config.MODE = mode;
-            process.env.MODE = mode;
-            return send(`✅ Mode set to *${mode}*`);
         }
 
         if (cmd === 'setsudo') {
@@ -283,130 +252,12 @@ module.exports = {
             return send(`🆔 *JID Info*\n\n📌 Chat JID: \`${jid}\`\n👤 Target JID: \`${target}\`\n🤖 Bot JID: \`${sock.user?.id || 'N/A'}\``);
         }
 
-        if (cmd === 'setbotrepo') {
-            if (!text) return send('❌ *Usage:* `.setbotrepo <github url>`');
-            config.REPO_URL = text;
-            return send(`✅ Repo URL set to ${text}`);
-        }
-
-        if (cmd === 'setpackname') {
-            if (!text) return send('❌ *Usage:* `.setpackname <name>`');
-            config.PACK_NAME = text;
-            return send(`✅ Sticker pack name set to *${text}*`);
-        }
-
-        if (cmd === 'setpackauthor') {
-            if (!text) return send('❌ *Usage:* `.setpackauthor <name>`');
-            config.PACK_AUTHOR = text;
-            return send(`✅ Sticker pack author set to *${text}*`);
-        }
-
-        if (cmd === 'setfooter') {
-            if (!text) return send('❌ *Usage:* `.setfooter <footer text>`');
-            config.FOOTER = text;
-            return send(`✅ Footer set to: _${text}_`);
-        }
-
-        if (cmd === 'settimezone') {
-            if (!text) return send('❌ *Usage:* `.settimezone <timezone>`\n\nExample: `.settimezone Africa/Douala`');
-            process.env.TZ = text;
-            config.TIMEZONE = text;
-            return send(`✅ Timezone set to *${text}*`);
-        }
-
-        if (cmd === 'setstartmsg') {
-            if (!text) return send('❌ *Usage:* `.setstartmsg <message>`');
-            config.START_MSG = text;
-            return send(`✅ Start message updated.`);
-        }
-
-        if (cmd === 'setstatusemojis') {
-            if (!text) return send('❌ *Usage:* `.setstatusemojis <emoji1,emoji2,...>`');
-            config.STATUS_EMOJIS = text.split(',').map(e => e.trim());
-            return send(`✅ Status reaction emojis set: ${text}`);
-        }
-
-        if (cmd === 'setstatusreplytext') {
-            if (!text) return send('❌ *Usage:* `.setstatusreplytext <text>`');
-            config.STATUS_REPLY_TEXT = text;
-            return send(`✅ Status reply text set.`);
-        }
-
-        if (cmd === 'setnewsletterjid') {
-            if (!text) return send('❌ *Usage:* `.setnewsletterjid <jid>`');
-            config.NEWSLETTER_JID = text;
-            return send(`✅ Newsletter JID set to \`${text}\``);
-        }
-
-        if (cmd === 'setnewsletterurl') {
-            if (!text) return send('❌ *Usage:* `.setnewsletterurl <url>`');
-            config.NEWSLETTER_URL = text;
-            return send(`✅ Newsletter URL set.`);
-        }
-
-        if (cmd === 'setytlink') {
-            if (!text) return send('❌ *Usage:* `.setytlink <youtube channel url>`');
-            config.YT_LINK = text;
-            return send(`✅ YouTube link set.`);
-        }
-
-        if (cmd === 'setgcjid') {
-            if (!text) return send('❌ *Usage:* `.setgcjid <group jid>`');
-            config.GROUP_JID = text;
-            return send(`✅ Group JID set to \`${text}\``);
-        }
-
         if (['setgcpresence', 'setdmpresence'].includes(cmd)) {
             const types = ['available', 'unavailable', 'composing', 'recording', 'paused'];
             const type  = args[0]?.toLowerCase();
             if (!type || !types.includes(type)) return send(`❌ *Usage:* \`.${cmd} <type>\`\n\nTypes: ${types.join(', ')}`);
             config[cmd === 'setgcpresence' ? 'GC_PRESENCE' : 'DM_PRESENCE'] = type;
             return send(`✅ ${cmd === 'setgcpresence' ? 'Group' : 'DM'} presence set to *${type}*`);
-        }
-
-        if (cmd === 'setcaption') {
-            config.CAPTION = text;
-            return send(`✅ Caption set to: _${text || '(removed)'}_`);
-        }
-
-        if (['setchatbot', 'setchatbotmode'].includes(cmd)) {
-            const sub = (args[0] || 'on').toLowerCase();
-            config.CHATBOT = sub === 'on' || sub === 'enable';
-            return send(`🤖 Chatbot *${config.CHATBOT ? 'ON' : 'OFF'}*`);
-        }
-
-        if (['setpmpermit', 'setautoblock', 'setautobio', 'setanticall', 'setantidelete',
-             'setantiedit', 'setautolikestatus', 'setautoreact', 'setautoread',
-             'setautoreadstatus', 'setautoreplystatus'].includes(cmd)) {
-            const sub = (args[0] || 'on').toLowerCase();
-            const val = sub === 'on' || sub === 'enable' || sub === 'true';
-            const key = cmd.replace('set', '').toUpperCase();
-            config[key] = val;
-            return send(`✅ *${cmd}* → *${val ? 'ON' : 'OFF'}*`);
-        }
-
-        if (cmd === 'getsetting') {
-            const key = args[0]?.toUpperCase();
-            if (!key) return send('❌ *Usage:* `.getsetting <key>`');
-            const val = config[key] ?? process.env[key] ?? 'not set';
-            return send(`⚙️ *Setting: ${key}*\n\nValue: \`${val}\``);
-        }
-
-        if (cmd === 'setsetting') {
-            const key = args[0]?.toUpperCase();
-            const val = args.slice(1).join(' ');
-            if (!key || !val) return send('❌ *Usage:* `.setsetting <KEY> <value>`');
-            config[key] = val;
-            process.env[key] = val;
-            return send(`✅ Set \`${key}\` = \`${val}\``);
-        }
-
-        if (cmd === 'resetsetting') {
-            const key = args[0]?.toUpperCase();
-            if (!key) return send('❌ *Usage:* `.resetsetting <KEY>`');
-            delete config[key];
-            delete process.env[key];
-            return send(`✅ Setting \`${key}\` reset to default.`);
         }
 
         if (cmd === 'resetallsettings') {

@@ -1,7 +1,17 @@
-// @legacy-order {"sourceFile":"02-groupe/security-tools.js","sourceOrder":195,"definitionIndex":3,"entryOrder":582}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"../02-groupe/_legacy-security-tools.js","sourceFile":"02-groupe/security-tools.js","sourceOrder":195,"definitionIndex":3,"entryOrder":582,"names":["mode2"]},
-  commands: ["mode2"],
-  description: "Change bot mode",
+  commands: ['mode2'],
+  description: 'Change bot mode',
+  permission: 'owner',
+  run: async (sock, message, args, ctx) => {
+    const mode = (args[0] || '').toLowerCase();
+    if (!['public', 'private', 'both'].includes(mode)) {
+      return ctx.reply(style.renderError(['Usage: .setmode public/private/both']));
+    }
+    process.env.MODE = mode;
+    ctx.reply(style.renderInfo([`✅ Bot mode changed to: ${mode}`]));
+  },
 };

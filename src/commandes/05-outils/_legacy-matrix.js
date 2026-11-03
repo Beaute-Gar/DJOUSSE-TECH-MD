@@ -65,7 +65,7 @@ module.exports = {
     run: async (sock, message, args, ctx) => {
         const { jid, contextInfo } = ctx;
 
-        const text = args.join(' ').trim() || 'SILVA MD';
+        const text = args.join(' ').trim() || 'DJOUSSE TECH';
 
         const lines = buildMatrix(text);
 

@@ -422,10 +422,10 @@ const agentActions = {
 
     // ── Info ─────────────────────────────────────────────────────────────────
     menu:           /^(show\s+)?(menu|commands|help|list\s+commands)/i,
-    about_bot:      /about\s*(the\s*)?(bot|silva|djousse|yourself)|who\s*are\s*you|what\s*are\s*you|tell\s*me\s*about\s*(yourself|silva|this\s*bot)/i,
-    about_platform: /platform|server|hosting|where\s*(are\s*you|is\s*(the\s*bot|silva|djousse))\s*(running|hosted)|system\s*info|server\s*info|specs/i,
+    about_bot:      /about\s*(the\s*)?(bot|djousse|yourself)|who\s*are\s*you|what\s*are\s*you|tell\s*me\s*about\s*(yourself|this\s*bot)/i,
+    about_platform: /platform|server|hosting|where\s*(are\s*you|is\s*(the\s*bot|djousse))\s*(running|hosted)|system\s*info|server\s*info|specs/i,
     about_owner:    /who\s*(is\s*)?(the\s*)?(owner|creator|developer|made|built|coded)|your\s*(owner|creator|dev)/i,
-    features:       /features|what\s*can\s*(you|the\s*bot|silva|djousse)\s*do|capabilities|abilities|powers/i,
+    features:       /features|what\s*can\s*(you|the\s*bot|djousse)\s*do|capabilities|abilities|powers/i,
     settings:       /settings|config|current\s*settings|bot\s*settings|show\s*settings/i,
     plugin_list:    /list\s*plugins|how\s*many\s*(commands|plugins)|plugin\s*count|total\s*commands/i,
     sudo:           /sudo\s*(list|users|info)|who\s*(are|is)\s*(the\s*)?sudo/i,
@@ -470,7 +470,7 @@ const agentActions = {
 };
 
 module.exports = {
-    commands: ['djousse', 'silva', 'agent', 'do', 'assistant', 'ask'],
+    commands: ['djousse', 'agent', 'do', 'assistant', 'ask'],
     description: 'Djousse - AI assistant that runs commands, creates content, searches the web, and knows everything about the bot',
     permission: 'public',
     run: async (sock, message, args, ctx) => {
@@ -1489,7 +1489,7 @@ module.exports = {
             const fileKeyword = query.match(/\b(readme|package\.json|index\.js|config|handler|djousse)\b/i)?.[1] || '';
 
             if (!repoMatch) {
-                return reply(`📄 Specify the repo and file.\n\nExamples:\n• _djousse get README from Beaute-Gar/DJOUSSE-TECH-MD_\n• _.silvatech silva-md-bot README.md_`);
+                return reply(`📄 Specify the repo and file.\n\nExample:\n• _djousse get README from Beaute-Gar/DJOUSSE-TECH-MD_`);
             }
 
             const [owner, repo] = repoMatch[1].split('/');

@@ -1,7 +1,28 @@
-// @legacy-order {"sourceFile":"05-outils/text-tools.js","sourceOrder":236,"definitionIndex":32,"entryOrder":674}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"../05-outils/_legacy-text-tools.js","sourceFile":"05-outils/text-tools.js","sourceOrder":236,"definitionIndex":32,"entryOrder":674,"names":["pig","piglatin"]},
-  commands: ["pig","piglatin"],
-  description: "Convert to Pig Latin",
+  commands: ['pig', 'piglatin'],
+  description: 'Convert to Pig Latin',
+  permission: 'public',
+  run: async (sock, message, args, { jid, contextInfo, prefix }) => {
+    const text = args.join(' ');
+    if (!text) {
+      return sock.sendMessage(jid, {
+        text: style.renderSaisie(`Usage: ${prefix || '.'}pig <text>`),
+        contextInfo,
+      }, { quoted: message });
+    }
+
+    const converted = text.split(' ').map((word) => {
+      const match = word.match(/^([^aeiouAEIOU]*)(.*)/);
+      return `${match[2]}${match[1]}ay`;
+    }).join(' ');
+
+    await sock.sendMessage(jid, {
+      text: style.renderInfo([converted]),
+      contextInfo,
+    }, { quoted: message });
+  },
 };

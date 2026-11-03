@@ -10,7 +10,7 @@ module.exports = {
         const bio = args.join(' ');
         if (!bio) {
             return sock.sendMessage(sender, {
-                text: '📝 Usage: .setbio <text>\nExample: .setbio Silva MD Bot 🤖 | Always Online',
+                text: '📝 Usage: .setbio <text>\nExample: .setbio DJOUSSE TECH 🤖 | Always Online',
                 contextInfo
             }, { quoted: message });
         }

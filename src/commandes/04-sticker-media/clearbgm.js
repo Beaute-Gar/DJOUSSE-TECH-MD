@@ -1,7 +1,26 @@
-// @legacy-order {"sourceFile":"04-sticker-media/setbgm.js","sourceOrder":197,"definitionIndex":0,"entryOrder":596}
 'use strict';
+
+const style = require('../../config/style');
+const { isEnabled, listTriggers, delTrigger } = require('../_partage/bgmTrigger');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-setbgm.js","sourceFile":"04-sticker-media/setbgm.js","sourceOrder":197,"definitionIndex":0,"entryOrder":596,"names":["clearbgm"]},
-  commands: ["clearbgm"],
-  description: "Word-triggered audio autoresponder. Set audios that play when trigger words are detected.",
+    commands: ['clearbgm'],
+    description: 'Clear word-triggered audio autoresponder triggers',
+    permission: 'owner',
+    group: true,
+    private: true,
+
+    run: async (_sock, _message, _args, { reply }) => {
+        if (!isEnabled()) {
+            return reply(style.renderInfo([
+                'Les déclencheurs audio automatiques sont désactivés pour protéger le compte WhatsApp.',
+            ]));
+        }
+
+        const list = listTriggers();
+        if (!list.length) return reply(style.renderInfo(['No triggers to clear.']));
+
+        list.forEach(delTrigger);
+        return reply(style.renderSuccess([`Cleared all ${list.length} BGM trigger(s).`]));
+    },
 };

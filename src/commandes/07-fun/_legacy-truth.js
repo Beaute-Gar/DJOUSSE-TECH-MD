@@ -21,7 +21,7 @@ const dares = [
     "Send a screenshot of your most recent conversation",
     "Send a selfie with a funny face 🤪",
     "Write 'I am a potato 🥔' in your status for 10 minutes",
-    "Send a voice message saying 'I love Silva MD Bot'",
+    "Send a voice message saying 'I love DJOUSSE TECH'",
     "Call someone and sing happy birthday",
     "Let the group rename you for the next 30 minutes"
 ];

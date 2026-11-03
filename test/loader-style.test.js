@@ -1,5 +1,5 @@
 'use strict';
-/* Test réel : le proxy d'envoi normalise le style des plugins silva. */
+/* Test réel : le proxy d'envoi normalise le style des commandes historiques. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { normaliserStyle, wrapSock } = require('../src/lib/plugin-loader');
@@ -9,7 +9,7 @@ const style = {
   renderSuccess: (lignes) => `[CADRE-SUCCES] ${lignes.join(' | ')}`,
 };
 
-test('erreur anglaise d\'un plugin silva → cadre DJOUSE', () => {
+test('erreur anglaise d\'un module historique → cadre DJOUSSE', () => {
   const out = normaliserStyle('❌ *Error!* Movie not found', style);
   assert.match(out, /^\[CADRE-ERREUR\]/);
   assert.match(out, /Movie not found/);
@@ -21,7 +21,7 @@ test('usage demandé → cadre DJOUSE', () => {
   assert.match(out, /^\[CADRE-ERREUR\]/);
 });
 
-test('succès d\'un plugin silva → cadre DJOUSE', () => {
+test('succès d\'un module historique → cadre DJOUSSE', () => {
   const out = normaliserStyle('✅ Done! Your note was saved', style);
   assert.match(out, /^\[CADRE-SUCCES\]/);
   assert.match(out, /note was saved/);
@@ -65,43 +65,53 @@ test('proxy : si wa-send échoue, repli sur le sock brut', async () => {
   assert.equal(envoyes[0][0], 'BRUT', 'repli brut utilisé');
 });
 
-/* ── Marque tierce « Silva » → identité maison ── */
-const { retirerSignatureTierce, normaliserContenu, loadCorePlugins } = require('../src/lib/plugin-loader');
+/* ── Normalisation des marques historiques ── */
+const { nettoyerTexteExterne, normaliserContenu, loadCorePlugins } = require('../src/lib/plugin-loader');
 
-test('« Powered by Silva MD » réécrit en identité maison', () => {
-  const out = retirerSignatureTierce('_Powered by Silva MD_');
+test('ancienne signature réécrite en identité maison', () => {
+  const out = nettoyerTexteExterne('_Powered by Silva MD_');
   assert.ok(!/silva/i.test(out), 'plus aucune trace de Silva');
   assert.match(out, /DJOUSSE-TECH-MD/);
 });
 
-test('variantes Silva (Tech Inc, CoinGecko, bare) toutes réécrites', () => {
+test('variantes de signature tierce toutes réécrites', () => {
   for (const s of [
     'Powered by Silva Tech Inc',
     'Powered by CoinGecko • Silva MD_',
     "I'm *Silva* 🤖",
     'SilvaTech repository',
   ]) {
-    const out = retirerSignatureTierce(s);
+    const out = nettoyerTexteExterne(s);
     assert.ok(!/silva/i.test(out), `trace Silva restante: ${out}`);
   }
 });
 
 test('les références de commandes en minuscules ne sont PAS réécrites', () => {
   const s = '• "silva play <song>" • "silva silvatech repos"';
-  assert.equal(retirerSignatureTierce(s), s, 'aide des commandes laissée intacte');
+  assert.equal(nettoyerTexteExterne(s), s, 'aide des commandes laissée intacte');
 });
 
-test('légende média : marque nettoyée, mais AUCUN cadre erreur/succès', () => {
+test('légende média : signature nettoyée, mais AUCUN cadre erreur/succès', () => {
   const c = normaliserContenu({ image: { url: 'x' }, caption: '✅ Done Silva MD' }, style);
   assert.ok(!/silva/i.test(c.caption), 'marque retirée de la légende');
   assert.ok(!/CADRE-/.test(c.caption), 'pas de cadre dans une légende d’image');
 });
 
-test('le ctx silva expose bien safeSend / jid / message / theme / download', async () => {
+test('le style central rend les textes informatifs et légendes média', () => {
+  const central = require('../src/config/style');
+  const c = normaliserContenu({
+    text: 'Réponse informative',
+    caption: 'Légende informative',
+  }, central);
+  assert.equal(c.text, central.renderOutgoingText('Réponse informative'));
+  assert.equal(c.caption, central.renderOutgoingText('Légende informative'));
+});
+
+test('le contexte expose bien safeSend / jid / message / theme / download', async () => {
   const fs = require('node:fs');
   const os = require('node:os');
   const path = require('node:path');
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'silva-ctx-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'djou-ctx-'));
   fs.writeFileSync(path.join(dir, 'demo.js'), `module.exports = { commands: ['demotestctx'], run: async (sock, m, a, ctx) => {
     const { safeSend, send, jid, message, groupMetadata, mentionedJid, theme, pushName, download } = ctx;
     const resume = {
@@ -140,4 +150,3 @@ test('le ctx silva expose bien safeSend / jid / message / theme / download', asy
   assert.equal(r.pushName, 'string');
   assert.equal(r.download, 'function');
 });
-

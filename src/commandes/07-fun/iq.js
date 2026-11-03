@@ -1,7 +1,31 @@
-// @legacy-order {"sourceFile":"07-fun/entertainment.js","sourceOrder":85,"definitionIndex":14,"entryOrder":195}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-entertainment.js","sourceFile":"07-fun/entertainment.js","sourceOrder":85,"definitionIndex":14,"entryOrder":195,"names":["iq","iqtest"]},
-  commands: ["iq","iqtest"],
-  description: "IQ test (for fun)",
+  commands: ['iq', 'iqtest'],
+  description: 'IQ test (for fun)',
+  permission: 'public',
+  run: async (sock, message, args, ctx) => {
+    const name = args.join(' ') || 'Your';
+    const iq = Math.floor(Math.random() * 101) + 80;
+    const result = iq > 160
+      ? 'Genius level! 🎓'
+      : iq > 130
+        ? 'Very gifted! 📚'
+        : iq > 110
+          ? 'Above average! 👍'
+          : iq > 90
+            ? 'Average intelligence 🙂'
+            : 'Hmm... maybe study more? 📖';
+    await ctx.reply(style.renderInfo([
+      'IQ Test',
+      '',
+      `${name} IQ: ${iq}`,
+      '',
+      result,
+      '',
+      'This is just for fun!',
+    ]));
+  },
 };

@@ -1,7 +1,12 @@
-// @legacy-order {"sourceFile":"09-owner/owner3.js","sourceOrder":158,"definitionIndex":0,"entryOrder":489}
 'use strict';
-module.exports = {
-  __legacyCommand: {"source":"_legacy-owner3.js","sourceFile":"09-owner/owner3.js","sourceOrder":158,"definitionIndex":0,"entryOrder":489,"names":["setcaption"]},
-  commands: ["setcaption"],
-  description: "Extended owner/admin control commands",
-};
+// @legacy-order {"sourceFile":"09-owner/owner3.js","sourceOrder":158,"definitionIndex":0,"entryOrder":489}
+module.exports = require('./_owner-setting')({
+  command: 'setcaption',
+  description: 'Set media caption',
+  usage: '.setcaption <text>',
+  run(ctx, config) {
+    const text = ctx.args.join(' ').trim();
+    config.CAPTION = text;
+    return { lines: [`CAPTION SET TO: ${text || '(removed)'}`] };
+  },
+});

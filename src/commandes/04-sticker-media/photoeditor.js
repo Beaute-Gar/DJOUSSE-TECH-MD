@@ -1,7 +1,15 @@
-// @legacy-order {"sourceFile":"04-sticker-media/tools3.js","sourceOrder":249,"definitionIndex":0,"entryOrder":711}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-tools3.js","sourceFile":"04-sticker-media/tools3.js","sourceOrder":249,"definitionIndex":0,"entryOrder":711,"names":["photoeditor"]},
-  commands: ["photoeditor"],
-  description: "Extended tools and utilities",
+    commands: ['photoeditor'],
+    description: 'List built-in photo editing commands',
+    permission: 'public',
+    group: true,
+    private: true,
+
+    run: async (sock, message, args, ctx) => ctx.reply(style.renderOutgoingText(
+        '🖼️ *Photo Editor*\n\nUse these built-in commands:\n• `.sticker` — convert to sticker\n• `.toimg` — convert sticker to image\n• `.tojpeg` — convert to JPEG\n• `.togif` — convert to GIF\n• `.color` — color palette from image'
+    )),
 };

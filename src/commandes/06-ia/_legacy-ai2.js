@@ -12,7 +12,7 @@ async function callChAt(prompt, retries = 3) {
         try {
             const res = await axios.post('https://ch.at/api/chat',
                 { message: prompt },
-                { headers: { 'Content-Type': 'application/json', 'User-Agent': 'SilvaMD-Bot/2.0' }, timeout: 12000 }
+                { headers: { 'Content-Type': 'application/json', 'User-Agent': 'DJOUSSE-TECH-MD/1.0' }, timeout: 12000 }
             );
             const t = res.data?.answer || res.data?.reply || res.data?.message || res.data?.response || res.data?.result;
             if (t && String(t).trim().length > 2) return String(t).trim();
@@ -81,7 +81,7 @@ function buildPlugin(cmds, label, systemHint) {
 
 module.exports = [
     buildPlugin(['chatat', 'chat'],      'ch.at AI',      null),
-    buildPlugin(['chatai'],               'Silva Chat AI', null),
+    buildPlugin(['chatai'],               'DJOUSSE TECH Chat AI', null),
     buildPlugin(['gemini', 'bard'],       'Gemini AI',     'Answer as a knowledgeable AI assistant'),
     buildPlugin(['giftedai'],             'Gifted AI',     'Be creative and helpful'),
     buildPlugin(['gpt4', 'gpt-4'],        'GPT-4',         'Provide a detailed expert answer'),

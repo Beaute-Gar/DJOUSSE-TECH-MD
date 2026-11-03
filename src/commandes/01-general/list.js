@@ -1,9 +1,14 @@
 'use strict';
 
+const build = require('../../lib/build-info');
+const deadCommands = require('../../config/disabled-commands');
+
 module.exports = function enregistrer(env) {
   const { CATEGORIES, buildFrame, bullet, catBox, cmd, config, frameFooter, numItem, signature, state, title, toUnicode, visibleCommands } = env;
 cmd('list', { cat: 1, desc: 'Toutes les commandes', icon: '📜' }, async (ctx) => {
-  /* En-tête façon `.info` : BOT / PREFIX / TOTAL / MODE */
+  /* En-tête façon `.info` : BOT / PREFIX / TOTAL / MODE + VERSION / BUILD.
+     VERSION + BUILD permettent de vérifier que le bot déployé est bien la
+     version à jour (commandes retirées réellement absentes). */
   const cats = CATEGORIES
     .map((c) => ({ ...c, list: visibleCommands(c.n, ctx) }))
     .filter((c) => c.list.length > 0);
@@ -12,7 +17,15 @@ cmd('list', { cat: 1, desc: 'Toutes les commandes', icon: '📜' }, async (ctx) 
   const header = buildFrame('ALL COMMANDS', [
     bullet('BOT', config.botName),
     bullet('PREFIX', `〔${config.prefix}〕`),
+    bullet('VERSION', build.label),
+    bullet('BUILD', build.dateLabel),
     bullet('TOTAL', `${total} ${toUnicode('COMMANDES')}`),
+    bullet('FILTRE', deadCommands.filterActive()
+      ? `${env.removedCount} ${toUnicode('RETIRÉES · ACTIF')}`
+      : `${deadCommands.deadCount} ${toUnicode('RÉACTIVÉES · FILTRE OFF')}`),
+    ...(deadCommands.filterActive() ? [] : [
+      bullet('ALERTE', toUnicode('ENABLE_DEAD_COMMANDS=1 : ANCIENNES COMMANDES VISIBLES')),
+    ]),
     bullet('MODE', state.settings.selfMode ? toUnicode('SELF') : toUnicode('PUBLIC')),
     title(toUnicode('REPLY WITH A NUMBER TO OPEN')),
   ]);

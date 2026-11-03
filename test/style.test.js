@@ -29,6 +29,29 @@ test('les réponses système préservent les valeurs non ASCII et les symboles',
   assert.ok(output.includes('+𝟸𝟹𝟽 𝟼𝟶𝟶 𝟶𝟶𝟶 𝟶𝟶𝟶'));
 });
 
+test('tout texte sortant reçoit le cadre central, sans doubler un cadre existant', () => {
+  const plain = style.renderOutgoingText('Une réponse');
+  assert.equal(plain, style.buildFrame('INFO', ['│✦ Une réponse']));
+  assert.equal(style.renderOutgoingText(plain), plain);
+  assert.equal(
+    style.renderOutgoingText('❌ Échec'),
+    style.buildFrame('ERREUR', ['│✦ ❌ Échec']),
+  );
+  assert.equal(
+    style.renderOutgoingText('✅ Terminé'),
+    style.buildFrame('SUCCÈS', ['│✦ ✅ Terminé']),
+  );
+  assert.ok(style.renderOutgoingText('Lien https://example.com').includes('https://example.com'));
+});
+
+test('les longs messages gardent le cadre sans expansion excessive du texte', () => {
+  const longText = 'a'.repeat(2100);
+  const output = style.renderOutgoingText(longText);
+  assert.ok(output.startsWith('╭┄┄『 '));
+  assert.ok(output.includes(`│✦ ${longText}`));
+  assert.ok(output.length < 2200);
+});
+
 test('le tableau de démarrage affiche les états réels dans un cadre de largeur fixe', () => {
   const output = style.renderStartupDashboard({
     process: 'ACTIF',

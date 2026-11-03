@@ -1,7 +1,19 @@
-// @legacy-order {"sourceFile":"05-outils/random-generators.js","sourceOrder":181,"definitionIndex":3,"entryOrder":549}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-random-generators.js","sourceFile":"05-outils/random-generators.js","sourceOrder":181,"definitionIndex":3,"entryOrder":549,"names":["fakephone","phone"]},
-  commands: ["fakephone","phone"],
-  description: "Generate random phone",
+  commands: ['fakephone', 'phone'],
+  description: 'Generate a fictional example phone number',
+  permission: 'public',
+  run: async (sock, message, args, ctx) => {
+    const suffix = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+    await ctx.reply(style.renderInfo([
+      'Random Phone',
+      '',
+      `+1 (202) 555-01${suffix}`,
+      '',
+      'Fictional example',
+    ]));
+  },
 };

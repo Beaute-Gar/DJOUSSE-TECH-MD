@@ -1,7 +1,15 @@
-// @legacy-order {"sourceFile":"04-sticker-media/tools3.js","sourceOrder":249,"definitionIndex":0,"entryOrder":694}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-tools3.js","sourceFile":"04-sticker-media/tools3.js","sourceOrder":249,"definitionIndex":0,"entryOrder":694,"names":["rename"]},
-  commands: ["rename"],
-  description: "Extended tools and utilities",
+    commands: ['rename'],
+    description: 'Show file renaming guidance',
+    permission: 'public',
+    group: true,
+    private: true,
+
+    run: async (sock, message, args, ctx) => ctx.reply(style.renderOutgoingText(
+        '🔧 *rename*\n\n_This feature requires desktop tools. Use your file manager or an online converter._'
+    )),
 };

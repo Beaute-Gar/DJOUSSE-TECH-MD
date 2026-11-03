@@ -1,6 +1,6 @@
 # Changements de la restructuration
 
-> **Document historique.** Les chiffres de cette page décrivent l’état de la restructuration v1 (avant le nettoyage et l’ajout de `.flash`). L’état courant vérifiable est **984 commandes distinctes / 1 366 clés / 382 alias** : voir [`COMMANDES.md`](COMMANDES.md) et le README.
+> **Document historique.** Les chiffres de cette page décrivent l’état de la restructuration v1 (avant le nettoyage et l’ajout de `.flash`). L’état courant vérifiable est **983 commandes distinctes / 1 367 clés / 384 alias** : voir [`COMMANDES.md`](COMMANDES.md) et le README.
 
 ## Phases et commits
 
@@ -75,11 +75,11 @@ Les quatre premiers étaient des fichiers en collision avec des commandes maison
 
 ## Noms retirés du registre
 
-Les 11 clés retirées, affichées explicitement :
+Les 10 clés retirées, affichées explicitement :
 
-`ask`, `assistant`, `commands`, `do`, `math`, `pollstats`, `silva`, `textart`, `tovn`, `votes`, `ytv`.
+`ask`, `assistant`, `commands`, `do`, `math`, `pollstats`, `textart`, `tovn`, `votes`, `ytv`.
 
-Les suppressions de phase 2 sont des synonymes redondants ou l’ancien nom de marque. `math` a été retiré lors de la fusion calculatrice : `calc` reste le nom principal et `calculate` son alias; les expressions `Math.*` et `**` sont prises en charge. Aucun nom retiré n’est caché dans le chargeur.
+Les suppressions de phase 2 sont des synonymes redondants ou des noms externes obsolètes. `math` a été retiré lors de la fusion calculatrice : `calc` reste le nom principal et `calculate` son alias; les expressions `Math.*` et `**` sont prises en charge. Aucun nom retiré n’est caché dans le chargeur.
 
 ## Familles examinées et séparées
 

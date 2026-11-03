@@ -22,7 +22,7 @@ module.exports = {
             const { data } = await axios.get(ssUrl, { responseType: 'arraybuffer', timeout: 30000 });
             await sock.sendMessage(sender, {
                 image:   Buffer.from(data),
-                caption: `📸 *Screenshot:* ${url}\n_Powered by Silva MD_`,
+                caption: `📸 *Screenshot:* ${url}\n_Powered by DJOUSSE TECH_`,
                 contextInfo
             }, { quoted: message });
         } catch (e) {

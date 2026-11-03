@@ -7,7 +7,7 @@ publié sous licence MIT :
 
 Conformément à la licence MIT, l'avis de copyright d'origine est conservé
 ci-dessous et doit rester présent dans toutes les copies substantielles du
-code concerné (dossier plugins/core/, adaptations dans lib/plugin-loader.js).
+code concerné (définitions de commandes héritées sous src/commandes/).
 Cet avis ne confère aucune propriété sur le présent dépôt, dont le
 titulaire est Beaute Gar (DJOUSSE TECH EVOLUTION).
 
@@ -33,14 +33,15 @@ titulaire est Beaute Gar (DJOUSSE TECH EVOLUTION).
     SOFTWARE.
 
 Détail des éléments concernés :
-  · plugins/core/          — plugins tiers chargés tels quels (ex-« silva/ »),
-                             dont le code provient très probablement du projet
-                             cité ; il n'a pas été possible de prouver une
-                             autre origine, l'avis est donc conservé.
-  · lib/plugin-loader.js   — adaptation de contexte, routage d'envoi et
-                             filet de réécriture d'identité.
+  · src/commandes/         — définitions de commandes héritées et wrappers
+                             chargés par le moteur de plugins.
+  · src/lib/plugin-loader.js — adaptation de contexte, routage d'envoi et
+                               compatibilité avec les définitions héritées.
   · test/loader-style.test.js, test/plugin-loader.test.js — verrous de
                              comportement associés.
+
+Le remplacement indépendant de ces définitions est en cours. Conserver cet
+avis jusqu'à ce que le code dérivé ait été entièrement retiré.
 
 Toute autre marque, image ou texte cité dans ce dépôt reste la propriété de
 ses titulaires respectifs.

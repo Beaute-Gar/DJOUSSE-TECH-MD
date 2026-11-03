@@ -1,7 +1,26 @@
-// @legacy-order {"sourceFile":"05-outils/random-generators.js","sourceOrder":181,"definitionIndex":2,"entryOrder":548}
 'use strict';
+
+const style = require('../../config/style');
+
+const WORDS = Object.freeze([
+  'cool', 'super', 'mega', 'ultra', 'fast', 'smart', 'tech', 'code',
+  'dev', 'pixel', 'data', 'cloud',
+]);
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-random-generators.js","sourceFile":"05-outils/random-generators.js","sourceOrder":181,"definitionIndex":2,"entryOrder":548,"names":["fakeemail","email"]},
-  commands: ["fakeemail","email"],
-  description: "Generate random email",
+  commands: ['fakeemail', 'email'],
+  description: 'Generate a fictional example email address',
+  permission: 'public',
+  run: async (sock, message, args, ctx) => {
+    const first = WORDS[Math.floor(Math.random() * WORDS.length)];
+    const second = WORDS[Math.floor(Math.random() * WORDS.length)];
+    const number = Math.floor(Math.random() * 1000);
+    await ctx.reply(style.renderInfo([
+      'Random Email',
+      '',
+      `${first}${second}${number}@example.com`,
+      '',
+      'Fictional example',
+    ]));
+  },
 };

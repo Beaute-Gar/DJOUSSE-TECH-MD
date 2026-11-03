@@ -1,6 +1,6 @@
 # Catalogue des commandes
 
-Inventaire généré automatiquement : **984 commandes**, **382 alias**, **1366 clés de registre**.
+Inventaire généré automatiquement : **983 commandes**, **384 alias**, **1367 clés de registre**.
 
 Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 
@@ -8,15 +8,15 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 
 | Commande | Alias | Description |
 |---|---|---|
-| `alive` | `bot` | Show bot status with full theme styling |
+| `alive` | `bot` | Afficher l’état du bot |
 | `claim` | `claimsudo` | Activer un accès sudo avec un code |
-| `creator` | — | Show bot owner contact information |
 | `diag` | `diagnostic` | Diagnostic connexion Baileys |
 | `hello` | — | Simple hello test command |
 | `help` | `cmds` | Show all commands in a categorized menu — use .menu <number> for a category deep-dive |
 | `info` | — | Informations du bot |
+| `list` | — | Toutes les commandes |
 | `menu` | — | Menu interactif par chiffres |
-| `owner` | — | Contacter le propriétaire |
+| `owner` | `creator` | Contacter le propriétaire |
 | `ping` | — | Latence du bot |
 | `runtime` | — | Show bot uptime and system stats |
 | `source` | — | Code source du bot |
@@ -114,7 +114,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `setchallenge` | — | Auto-post daily trivia, puzzles, or word games in groups |
 | `setdesc` | `setdescription` | Changer la description |
 | `setgoodbye` | — | Auto-welcome new members and farewell members who leave |
-| `setname` | — | Changer le nom du groupe |
+| `setname` | `groupname` | Changer le nom du groupe |
 | `setquiz` | — | Welcome quiz — new members must answer a question to stay |
 | `setrules` | — | Set/show/delete group rules |
 | `setwelcome` | — | Auto-welcome new members and farewell members who leave |
@@ -122,7 +122,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `tagadmin` | — | Mentionner tous les admins du groupe |
 | `tagall` | `all` | Mentionner tout le groupe |
 | `terminategc` | — | Kick all members from the group and leave — permanently terminates the group. |
-| `time` | `clock` | Get the current time in any city or timezone |
+| `time` | `clock` | Get the current time in a city or timezone |
 | `togglestatus` | — | Send text / image / video / audio as group status |
 | `topusers` | — | View group chat analytics — top members, peak hours, activity stats |
 | `tz` | `worldclock` | World clock |
@@ -138,7 +138,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `welcomeoff` | — | Auto-welcome new members and farewell members who leave |
 | `welcomequiz` | — | Welcome quiz — new members must answer a question to stay |
 
-## 03 — PROTECTION (85)
+## 03 — PROTECTION (84)
 
 | Commande | Alias | Description |
 |---|---|---|
@@ -185,7 +185,6 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `getlid` | — | Extended group management commands |
 | `goodbye` | — | Message de départ |
 | `goodbyemessage` | — | Extended group management commands |
-| `groupname` | — | Extended group management commands |
 | `groupsettings` | — | Extended group management commands |
 | `groupstats` | — | Statistiques de protection |
 | `killgc` | — | Extended group management commands |
@@ -401,21 +400,21 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `dogbreed` | `dog` | Dog breed info |
 | `dq` | — | Daily quote |
 | `dragonball` | — | Logo « dragonball » (effet texte) |
-| `dreammeaning` | `dream` | Dream interpretation |
+| `dreammeaning` | `dream` | Interpret a common dream symbol |
 | `edit` | — | Modifier un message envoyé par le bot |
 | `effectclouds` | — | Logo maker and text effect generator |
 | `element` | `chem` | Periodic table lookup |
 | `emojimeaning` | — | Emoji meaning |
 | `eventcountdown` | — | Event countdown |
 | `exchange` | `forex` | Currency info |
-| `excuse` | `randomexcuse` | Random excuse |
+| `excuse` | `randomexcuse` | Generate a random humorous excuse |
 | `fahrenheit` | `ctof` | Celsius to Fahrenheit |
-| `fakeaddress` | `address` | Generate random address |
-| `fakeemail` | `email` | Generate random email |
+| `fakeaddress` | `address` | Generate a fictional sample address |
+| `fakeemail` | `email` | Generate a fictional example email address |
 | `fakehack` | — | Fake hack animation |
-| `fakeid` | `identity` | Generate fake identity |
-| `fakename` | `name` | Generate random name |
-| `fakephone` | `phone` | Generate random phone |
+| `fakeid` | `identity` | Generate a fictional character profile |
+| `fakename` | `name` | Generate a fictional name |
+| `fakephone` | `phone` | Generate a fictional example phone number |
 | `fetch` | `get` | Fetch a URL and return its content or file |
 | `fibonacci` | `fib` | Fibonacci sequence |
 | `flag` | `countryflag` | Country flag emoji |
@@ -464,13 +463,13 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `meditation` | `breathe` | Breathing exercise |
 | `mock` | `spongebob` | sPoNgEbOb MoCk text |
 | `morse` | — | Texte → code morse |
-| `motivate` | — | Motivational message |
+| `motivate` | — | Send a motivational message |
 | `multiply` | `mul` | Multiply numbers |
 | `multipoll` | `multivote` | Poll where users can pick multiple options. Usage: .multipoll Question \| Opt1 \| Opt2 ... |
 | `naruto` | — | Logo « naruto » (effet texte) |
 | `neon` | — | Logo « neon » (effet texte) |
 | `neonglitch` | — | Logo maker and text effect generator |
-| `nickname` | `nick` | Generate nickname |
+| `nickname` | `nick` | Generate a random nickname |
 | `nigerianflag` | — | Logo maker and text effect generator |
 | `nitumie` | `statussave` | Save a WhatsApp status (reply to a status with this command) |
 | `onwa` | — | Vérifier si un numéro a WhatsApp |
@@ -532,7 +531,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `summer` | — | Logo « summer » (effet texte) |
 | `summerbeach` | — | Logo maker and text effect generator |
 | `superhero` | `hero` | Superhero info |
-| `superpower` | `randompower` | Random superpower |
+| `superpower` | `randompower` | Generate a random fictional superpower |
 | `sus` | `susmeter` | Sus meter |
 | `texteffect` | — | Logo maker and text effect generator |
 | `thankyou` | `thanks2` | Thank you in many languages |
@@ -600,7 +599,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `adance` | — | Réaction anime « dance » (GIF, otakugifs) |
 | `advice` | `tip` | Get a random piece of advice |
 | `afacepalm` | — | Réaction anime « facepalm » (GIF, otakugifs) |
-| `affirmation` | `affirm` | Daily affirmation |
+| `affirmation` | `affirm` | Share a positive daily affirmation |
 | `ahappy` | — | Réaction anime « happy » (GIF, otakugifs) |
 | `ahug` | — | Réaction anime « hug » (GIF, otakugifs) |
 | `akiss` | — | Réaction anime « kiss » (GIF, otakugifs) |
@@ -681,7 +680,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `hm` | — | Hangman game |
 | `horo` | — | Get daily horoscope for a zodiac sign |
 | `hug` | — | Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy |
-| `insult` | `friendlyinsult` | Friendly insult |
+| `insult` | `friendlyinsult` | Share a light-hearted friendly roast |
 | `invest` | `investtip` | Investment tip |
 | `iq` | `iqtest` | IQ test (for fun) |
 | `joke` | — | Une blague |
@@ -691,7 +690,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `laliga_top_assist` | — | La Liga — meilleurs passeurs |
 | `laliga_top_scorer` | — | La Liga — meilleurs buteurs |
 | `laugh` | — | Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy |
-| `lifeadvice` | — | Random life advice |
+| `lifeadvice` | — | Share a general life-advice suggestion |
 | `liga_portugal_matchday` | — | Liga Portugal — rencontres |
 | `liga_portugal_table` | — | Liga Portugal — classement |
 | `liga_portugal_top_assist` | — | Liga Portugal — meilleurs passeurs |
@@ -774,7 +773,7 @@ Chaque ligne décrit une commande principale et, au plus, un alias joignable.
 | `wink` | — | Anime reaction GIFs — hug, kiss, pat, slap, poke, bite, bonk, cuddle, wave, blush, smile, cry, laugh, dance, wink, happy |
 | `wordgame` | `motcache` | Devine le mot caché (lettres mélangées) |
 | `wordscramble` | `unscramble` | Word scramble game |
-| `wouldyou` | `wyd` | What would you do scenario |
+| `wouldyou` | `wyd` | Generate a what-would-you-do scenario |
 | `ws` | — | Unscramble the word game |
 | `zodiac` | `starsign` | Zodiac sign info |
 

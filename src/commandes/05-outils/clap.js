@@ -1,7 +1,18 @@
 // @legacy-order {"sourceFile":"05-outils/text-tools.js","sourceOrder":236,"definitionIndex":25,"entryOrder":667}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-text-tools.js","sourceFile":"05-outils/text-tools.js","sourceOrder":236,"definitionIndex":25,"entryOrder":667,"names":["clap","clapback"]},
-  commands: ["clap","clapback"],
-  description: "Add clap emoji between words",
+  commands: ['clap', 'clapback'],
+  description: 'Add clap emoji between words',
+  permission: 'public',
+  run: async (_sock, _message, args, ctx) => {
+    const text = args.join(' ');
+    if (!text) {
+      return ctx.reply(style.renderError(['Usage: .clap <text>']));
+    }
+
+    return ctx.reply(style.renderInfo([text.split(/\s+/).join(' 👏 ')]));
+  },
 };

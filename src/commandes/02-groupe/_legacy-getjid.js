@@ -231,7 +231,7 @@ async function buildUserCard(sock, targetJid, ctxJid, isOwner, isSelf) {
         lines.push('');
     }
 
-    lines.push(`_Powered by Silva MD — Real-time WhatsApp intelligence_`);
+    lines.push(`_Powered by DJOUSSE TECH — Real-time WhatsApp intelligence_`);
 
     return { text: fmt(lines.join('\n')), pic };
 }
@@ -311,7 +311,7 @@ async function buildGroupCard(sock, groupJid, isAdmin) {
 
     lines.push(`• *Profile pic:* ${pic ? '✅ Available' : '🔒 Hidden / None'}`);
     lines.push('');
-    lines.push(`_Powered by Silva MD — Real-time WhatsApp intelligence_`);
+    lines.push(`_Powered by DJOUSSE TECH — Real-time WhatsApp intelligence_`);
 
     return { text: fmt(lines.join('\n')), pic, mentions: meta.owner ? [meta.owner] : [] };
 }

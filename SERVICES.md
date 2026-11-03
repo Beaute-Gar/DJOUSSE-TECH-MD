@@ -14,18 +14,18 @@ lance `node scripts/api-check.js` sur ta machine pour savoir lesquels répondent
 | Moteurs de logos (textpro.me, ephoto360) | 2 | élevé (scraping de formulaires) |
 | Hébergeurs de fichiers (catbox, pixhost, imgbb, paste.rs, dpaste) | 5 | moyen |
 | Ton site (djousse-tech-md-web.vercel.app — à confirmer que c'est bien le tien) | 1 | à vérifier |
-| Site d'un tiers (silvatech.co.ke, l'ancien auteur du bot) : seulement un lien affiché dans `menu.js` et un exemple dans `qrcode.js` | 1 | aucun appel d'API ; à remplacer par ton site |
+| Anciennes destinations externes | — | Les sorties historiques sont normalisées vers les destinations officielles du bot ; aucun lien tiers ne doit être affiché |
 | Liens WhatsApp / GitHub (chat.whatsapp.com, wa.me, github.com) | — | liens statiques, pas d'API |
 
 ## À corriger en priorité (constaté dans le code, sans test réseau)
-1. **Clés en dur** : une clé OpenWeatherMap dans `weather.js` et une clé VirusTotal dans `virus.js`. Clés partagées/publiques : quota souvent épuisé ou révoquées, et visibles par quiconque lit le code. Mets les tiennes dans `.env`.
+1. **Clés en dur** : une ancienne clé OpenWeatherMap a été retirée de `weather.js` ; la commande météo utilise désormais `OPENWEATHER_API_KEY` dans `.env`. Une clé VirusTotal reste dans `virus.js` et doit être remplacée par une variable d'environnement.
 2. **Truecaller** (`vcf-generator.js`) : appel à l'API non officielle, avec jeton. Contraire aux conditions d'utilisation et peut exposer des données de tiers : à retirer ou à remplacer.
 3. **Instagram / Threads** (`i.instagram.com`, `www.threads.net/api/graphql`, oembed) : exigent maintenant une session/jeton ; les appels anonymes échouent le plus souvent.
 4. **API hobby** : si leur hébergeur gratuit a supprimé le service, les commandes concernées (ai, music, hacktools, quotly) tombent. Prévois une alternative ou un message clair.
 5. **Sites scrapés** : une page qui répond (HTTP 200) ne prouve PAS que l'extraction marche encore. Teste la commande réelle (`.fb <lien>`, `.ig <lien>`, `.tiktok <lien>`).
 
 ## Variables `.env` utilisées pour des services externes
-GEMINI_API_KEY (ou GEMINI_KEY / GOOGLE_AI_KEY), OPENROUTER_API_KEY, GROQ_API_KEY, SERPER_API_KEY, GNEWS_API_KEY,
+GEMINI_API_KEY (ou GEMINI_KEY / GOOGLE_AI_KEY), OPENROUTER_API_KEY, GROQ_API_KEY, SERPER_API_KEY, OPENWEATHER_API_KEY, GNEWS_API_KEY,
 ELEVENLABS_API_KEY, OMDB_API_KEY, FOOTBALL_API_KEY, TENOR_API_KEY, REMOVEBG_API_KEY, GITHUB_TOKEN (+ GITHUB_REPO),
 IMGBB_KEY, AUDD_API_KEY, TECHNEWS_API, MONGO_URI (+ MONGO_DB), PAIRING_API_TOKEN.
 

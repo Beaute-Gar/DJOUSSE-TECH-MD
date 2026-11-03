@@ -67,6 +67,14 @@
       "access": "public"
     },
     {
+      "name": "list",
+      "aliases": [],
+      "category": 1,
+      "description": "Toutes les commandes",
+      "usage": "",
+      "access": "public"
+    },
+    {
       "name": "menu",
       "aliases": [],
       "category": 1,
@@ -888,7 +896,9 @@
     },
     {
       "name": "setname",
-      "aliases": [],
+      "aliases": [
+        "groupname"
+      ],
       "category": 2,
       "description": "Changer le nom du groupe",
       "usage": "setname <nom>",
@@ -1428,14 +1438,6 @@
       "category": 3,
       "description": "Extended group management commands",
       "usage": "goodbyemessage",
-      "access": "admin"
-    },
-    {
-      "name": "groupname",
-      "aliases": [],
-      "category": 3,
-      "description": "Extended group management commands",
-      "usage": "groupname",
       "access": "admin"
     },
     {
@@ -6653,7 +6655,7 @@
       ],
       "category": 9,
       "description": "Réaction automatique aux statuts",
-      "usage": "autolike on|off",
+      "usage": "autolike on|off | autolike emojis 🔥,💯,😍",
       "access": "owner"
     },
     {
@@ -8596,7 +8598,7 @@
       "n": 1,
       "name": "GÉNÉRal",
       "icon": "🌟",
-      "count": 13
+      "count": 14
     },
     {
       "n": 2,
@@ -8608,7 +8610,7 @@
       "n": 3,
       "name": "Protection",
       "icon": "🛡️",
-      "count": 85
+      "count": 84
     },
     {
       "n": 4,
@@ -8661,6 +8663,6 @@
   ],
   "totals": {
     "commands": 978,
-    "aliases": 382
+    "aliases": 383
   }
 }

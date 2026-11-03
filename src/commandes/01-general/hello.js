@@ -1,7 +1,16 @@
-// @legacy-order {"sourceFile":"01-general/hello.js","sourceOrder":112,"definitionIndex":0,"entryOrder":325}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-hello.js","sourceFile":"01-general/hello.js","sourceOrder":112,"definitionIndex":0,"entryOrder":325,"names":["hello"]},
-  commands: ["hello"],
-  description: "Simple hello test command",
+  commands: ['hello'],
+  description: 'Simple hello test command',
+  permission: 'public',
+  run: async (sock, message, args, ctx) => {
+    const received = args.length ? args.join(', ') : 'none';
+    await ctx.reply(style.renderInfo([
+      'Hello!',
+      `Arguments received: ${received}`,
+    ]));
+  },
 };

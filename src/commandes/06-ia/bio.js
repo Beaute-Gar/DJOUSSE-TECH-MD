@@ -1,7 +1,19 @@
-// @legacy-order {"sourceFile":"02-groupe/security-tools.js","sourceOrder":195,"definitionIndex":6,"entryOrder":585}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"../02-groupe/_legacy-security-tools.js","sourceFile":"02-groupe/security-tools.js","sourceOrder":195,"definitionIndex":6,"entryOrder":585,"names":["bio","updatebio"]},
-  commands: ["bio","updatebio"],
-  description: "Update bot bio/status",
+  commands: ['bio', 'updatebio'],
+  description: 'Update bot bio/status',
+  permission: 'owner',
+  run: async (sock, message, args, ctx) => {
+    const bio = args.join(' ');
+    if (!bio) return ctx.reply(style.renderError(['Usage: .setbio <new bio text>']));
+    try {
+      await sock.updateProfileStatus(bio);
+      ctx.reply(style.renderInfo([`✅ Bio updated to: "${bio}"`]));
+    } catch (error) {
+      ctx.reply(style.renderError([`Failed: ${error.message}`]));
+    }
+  },
 };

@@ -1,7 +1,7 @@
 'use strict';
 
 // Map of jid -> { welcome: bool, goodbye: bool, customWelcome: string, customGoodbye: string }
-// Read by silva.js group-participants.update handler
+// Read by the central group-participants.update handler
 const groupSettings = new Map();
 global.welcomeSettings = groupSettings;
 

@@ -3,7 +3,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-// ── In-memory stores (populated by silva.js event hooks) ─────────────────────
+// ── In-memory stores populated by the central event handler ─────────────────
 // global.groupMsgMap   = Map<groupJid, Map<memberNum, count>>
 // global.groupJoinLog  = Map<groupJid, [{action,num,name,ts}]>  (last 50 per group)
 
@@ -26,7 +26,7 @@ function pushJoinLog(gid, entry) {
     log.unshift(entry);
     if (log.length > 50) log.length = 50;
 }
-global.pushGroupJoinLog = pushJoinLog;   // exported for silva.js
+global.pushGroupJoinLog = pushJoinLog;   // consumed by the central event handler
 
 function fmtAge(creationUnix) {
     if (!creationUnix) return 'Unknown';
@@ -252,7 +252,7 @@ module.exports = {
                 memberList,
                 ``,
                 `Exported at: ${new Date().toLocaleString()}`,
-                `Export by  : Silva MD Bot`,
+                `Export by  : DJOUSSE TECH`,
             ].join('\n');
 
             const tmpPath = `/tmp/groupexport_${Date.now()}.txt`;

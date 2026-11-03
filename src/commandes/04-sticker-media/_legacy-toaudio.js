@@ -8,7 +8,7 @@ const { fmt }      = require('../_partage/theme');
 const { dlBuffer } = require('../_partage/dlmedia');
 
 module.exports = {
-    commands:    ['toaudio', 'tomp3', 'tovn', 'audio'],
+    commands:    ['toaudio', 'tovn'],
     description: 'Convert a video or voice message to an MP3 audio file',
     usage:       '.toaudio (reply to a video or audio message)',
     permission:  'public',
@@ -34,8 +34,8 @@ module.exports = {
 
         await sock.sendMessage(jid, { text: fmt('⏳ Converting to audio…'), contextInfo }, { quoted: message });
 
-        const inputPath  = path.join(os.tmpdir(), `silva_in_${Date.now()}`);
-        const outputPath = path.join(os.tmpdir(), `silva_out_${Date.now()}.mp3`);
+        const inputPath  = path.join(os.tmpdir(), `djou_in_${Date.now()}`);
+        const outputPath = path.join(os.tmpdir(), `djou_out_${Date.now()}.mp3`);
 
         try {
             await sock.sendPresenceUpdate('composing', jid);

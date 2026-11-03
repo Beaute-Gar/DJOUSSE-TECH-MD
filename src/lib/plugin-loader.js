@@ -1,8 +1,7 @@
 'use strict';
 /**
  * ══════════════════════════════════════════════════════════════════
- * CHARGEUR DES PLUGINS TIERS — dossier commandes/ (ex-code Silva MD,
- * conservé tel quel : l'attribution complète est dans NOTICE)
+ * CHARGEUR DES COMMANDES COMPATIBLES — dossier commandes/
  * ──────────────────────────────────────────────────────────────────
  * Les modules de commandes sont chargés depuis commandes/ puis
  * ADAPTÉS au registre DJOUSE (cmd()). Les wrappers mono-commande
@@ -17,7 +16,7 @@
  * valide est IGNORÉ avec un log — jamais le bot entier.
  *
  * SÉCURITÉ : les commandes interdites (crash / arme anti-compte / NSFW)
- * ne sont PAS enregistrées, même présentes dans un plugin silva.
+ * ne sont PAS enregistrées, même présentes dans un module de commandes.
  * ══════════════════════════════════════════════════════════════════
  */
 const fs = require('fs');
@@ -29,18 +28,17 @@ const { isDisabled } = require('../config/disabled-commands');
 /* Commandes refusées (règle de sécurité, non négociable) */
 const INTERDITS = /^(loccrash|crashbug|amountbug|pmbug|delaybug|docubug|unlimitedbug|bombug|lagbug|trollybug|terminate|hentai|hwaifu|trap|hneko|hentaivid|blowjobs|waifues|bug|crash|hack|xcrash)$/i;
 
-/* BLOQUES IDENTITÉ / SÉCURITÉ — garde-fou DU CHARGEUR (les fichiers
+/* COMMANDES TIERCES BLOQUÉES — garde-fou DU CHARGEUR (les fichiers
    sources concernés ont été supprimés, les commandes bloquées restent
    interdites par sécurité — filet anti-réintroduction) :
-   · getcode/lend (+alias) : réclamaient un code de pairage à un serveur
-     TIERS (session.silvatech.co.ke) en y envoyant des numéros de
-     téléphone → fuite de données + session hors de notre contrôle.
+   · getcode/lend (+alias) : réclamaient un code de pairage à un service
+     tiers en y envoyant des numéros de téléphone → fuite de données +
+     session hors de notre contrôle.
      L'API de jumelage locale du projet (lib/pairing-api.js) fait le
      même travail sans rien externaliser.
-   · silvatech/svrepo/… : parcouraient les dépôts d'un autre auteur.
    · call : panneau de support d'un tiers (réseaux sociaux tierces +
      numéro WhatsApp personnel). Notre .support maison le remplace. */
-const BLOQUES_IDENTITE = /^(getcode|paircode|getpair|sessioncode|connectbot|lend|approvelend|rejectlend|lendlist|lendstatus|revokelend|silvatech|silvarepos|silvafiles|svrepo|call)$/i;
+const COMMANDES_EXTERNES_BLOQUEES = /^(getcode|paircode|getpair|sessioncode|connectbot|lend|approvelend|rejectlend|lendlist|lendstatus|revokelend|call)$/i;
 
 /* Fichiers dont les commandes restent JOIGNABLES en direct mais sortent
    des menus : l'assistant garde son nom historique en alias (ne rien
@@ -61,7 +59,6 @@ const FICHIERS_MIXTES = new Set([
   'math-tools.js',
   'misc-extras.js',
   'productivity.js',
-  'random-generators.js',
   'security-tools.js',
   'social-tools.js',
   'text-tools.js',
@@ -121,20 +118,14 @@ function wrapSock(sock, send, style) {
   });
 }
 
-/* Marque tierce des plugins silva (« Powered by Silva MD », « Silva Tech
-   Inc », « I'm *Silva* »…) → identité maison. Un SEUL endroit : tout
-   texte/légende qui sort d'un plugin tiers passe par ici. */
+/* Remplace les anciennes identités et URLs dans les réponses des modules
+   de commandes avant tout envoi WhatsApp. */
 const NOM_MAISON = 'DJOUSSE-TECH-MD';
-function retirerSignatureTierce(txt, nom) {
+function nettoyerTexteExterne(txt, nom) {
   if (typeof txt !== 'string' || !txt) return txt;
   const n = nom || NOM_MAISON;
-  /* CASSE SENSIBLE volontairement : la marque tierce est toujours
-     capitalisée (« Silva », « Silva MD », « SilvaTech »…), alors que les
-     RÉFÉRENCES DE COMMANDES sont en minuscules (`"silva play <song>"`).
-     On réécrit donc la marque sans casser l'aide des commandes. */
   return txt
-    /* ── 1. URLs tierces → destinations officielles AVANT toute marque
-       (sinon il resterait des liens cassés vers l'ancien écosystème) ── */
+    /* Remplace les anciens liens avant les noms de marque. */
     .replace(/https?:\/\/(?:www\.)?github\.com\/SilvaTechB\/silva-md-bot\/?/gi,
       'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD')
     .replace(/(?:https?:\/\/)?(?:session\.)?(?:www\.)?silvatech\.co\.ke\/?/gi,
@@ -145,9 +136,7 @@ function retirerSignatureTierce(txt, nom) {
       'https://djousse-tech-md-web.vercel.app')
     .replace(/https?:\/\/wa\.me\/254700143167(?:\/\S*)?/gi,
       'https://github.com/Beaute-Gar/DJOUSSE-TECH-MD/issues')
-    /* ── 2. restes d'ancienne identité (cas stricte : les références de
-       commandes en minuscules — « silva play », « silvatech repos » —
-       restent intactes, cf. test loader-style) ── */
+    /* Anciennes formes de marque. */
     .replace(/silva-md-bot/g, 'DJOUSSE-TECH-MD')
     .replace(/Silvatech/g, 'DJOUSSE TECH')
     .replace(/\bSILVA\b/g, 'DJOUSSE-TECH-MD')
@@ -161,35 +150,34 @@ function retirerSignatureTierce(txt, nom) {
     .replace(/\bSilva\b/g, n);
 }
 
-/* ── Identité : logo officiel maison ────────────────────────────────
-   Les plugins tierces utilisent en repli un logo hébergé par un
-   tiers (« SILVA MD », filigrane Meta AI). On réécrit cette URL
-   unique vers NOTRE logo (icône officielle du site, mêmes URL et
-   hébergeur que l'ancien) : un seul point de vérité, les 11 plugins
-   concernés restent intacts. */
-const URL_LOGO_TIERCE = 'https://files.catbox.moe/5uli5p.jpeg';
+/* URL d'une ancienne vignette remplacée par le logo officiel. */
+const URL_LOGO_HISTORIQUE = 'https://files.catbox.moe/5uli5p.jpeg';
 const URL_LOGO_OFFICIEL = 'https://files.catbox.moe/h6zdty.png';
 
-function remplacerLogoTierce(url) {
-  return typeof url === 'string' && url.includes(URL_LOGO_TIERCE)
+function normaliserLogo(url) {
+  return typeof url === 'string' && url.includes(URL_LOGO_HISTORIQUE)
     ? URL_LOGO_OFFICIEL
     : url;
 }
 
-/* Normalise un contenu d'envoi : le TEXTE passe par la charte complète
-   (erreur/succès encadrés), les LÉGENDES ne reçoivent que le nettoyage de
-   marque tierce (pas de cadre dans une légende d'image). */
+/* Normalise chaque texte et légende avec le moteur de rendu central. */
 function normaliserContenu(content, style) {
   if (!content || typeof content !== 'object') return content;
   let c = content;
   if (typeof c.text === 'string') c = { ...c, text: normaliserStyle(c.text, style) };
   if (typeof c.caption === 'string') {
-    c = { ...c, caption: retirerSignatureTierce(c.caption, style && style.botName) };
+    const caption = nettoyerTexteExterne(c.caption, style && style.botName);
+    c = {
+      ...c,
+      caption: style && typeof style.renderOutgoingText === 'function'
+        ? style.renderOutgoingText(caption)
+        : caption,
+    };
   }
   /* logo : l'ancien repli tierce est réécrit vers le logo officiel
      (image d'envoi directe + vignette externalAdReply des liens) */
   if (c.image && typeof c.image.url === 'string') {
-    c = { ...c, image: { ...c.image, url: remplacerLogoTierce(c.image.url) } };
+    c = { ...c, image: { ...c.image, url: normaliserLogo(c.image.url) } };
   }
   const ext = c.contextInfo && c.contextInfo.externalAdReply;
   if (ext && typeof ext.thumbnailUrl === 'string') {
@@ -197,22 +185,24 @@ function normaliserContenu(content, style) {
       ...c,
       contextInfo: {
         ...c.contextInfo,
-        externalAdReply: { ...ext, thumbnailUrl: remplacerLogoTierce(ext.thumbnailUrl) },
+        externalAdReply: { ...ext, thumbnailUrl: normaliserLogo(ext.thumbnailUrl) },
       },
     };
   }
   return c;
 }
 
-/* Normalisation du style d'un texte tiers vers la charte DJOUSSE.
-   On ne touche PAS au contenu utile : seuls les messages d'erreur et de
-   succès sont encadrés dans le style maison (renderError / renderSuccess),
-   ce sont ceux qui se voient le plus. Le reste passe en texte propre. */
+/* Normalisation du texte tiers vers le style central DJOUSSE. */
 function normaliserStyle(txt, style) {
   if (!style || typeof txt !== 'string') return txt;
-  const propre = retirerSignatureTierce(txt, style.botName);
+  const propre = nettoyerTexteExterne(txt, style.botName);
   const t = propre.trim();
   if (!t) return propre;
+
+  const nettoye = propre.replace(/\*([^*\n]{2,40})\*/g, '$1').replace(/`([^`\n]{2,40})`/g, '$1');
+  if (typeof style.renderOutgoingText === 'function') {
+    return style.renderOutgoingText(nettoye);
+  }
 
   /* les 3 premières lignes servent au diagnostic */
   const debut = t.slice(0, 120).toLowerCase();
@@ -232,12 +222,11 @@ function normaliserStyle(txt, style) {
     if (lignes.length && typeof style.renderSuccess === 'function') return style.renderSuccess(lignes);
   }
 
-  /* sinon : on nettoie juste le markdown lourd des plugins (*Trash* → Trash) */
-  return propre.replace(/\*([^*\n]{2,40})\*/g, '$1').replace(/`([^`\n]{2,40})`/g, '$1');
+  return nettoye;
 }
 
-/* Adapte le run() d'un plugin silva au ctx DJOUSE.
-   Le 4e argument est le contexte attendu par les plugins silva
+/* Adapte le run() d'un module historique au contexte DJOUSSE.
+   Le 4e argument est le contexte utilisé par ces modules
    (`const { jid, reply, safeSend, … } = ctx`). On fournit TOUTES les clés
    qu'ils déstructurent réellement, sinon `safeSend is not a function`. */
 function adapterRun(plugin, send, config, style, deps = {}) {
@@ -247,7 +236,7 @@ function adapterRun(plugin, send, config, style, deps = {}) {
     const ci = ctx.msg?.message?.extendedTextMessage?.contextInfo
       || ctx.msg?.message?.imageMessage?.contextInfo
       || {};
-    const nettoyer = (t) => (typeof t === 'string' ? retirerSignatureTierce(t, config.botName) : t);
+    const nettoyer = (t) => (typeof t === 'string' ? nettoyerTexteExterne(t, config.botName) : t);
     const envoyer = (contenu, opts) => wrapped.sendMessage(ctx.from, contenu, opts);
     const extra = {
       /* identité / cible du chat */
@@ -365,7 +354,7 @@ function loadCorePlugins(cmd, deps) {
         continue;
       }
       /* desc nettoyée ICI : c'est elle qui s'affiche dans les menus */
-      const desc = retirerSignatureTierce(
+      const desc = nettoyerTexteExterne(
         String(def.description || def.desc || '').slice(0, 120),
         config && config.botName,
       );
@@ -383,11 +372,10 @@ function loadCorePlugins(cmd, deps) {
         .filter((n) => typeof n === 'string' && n.trim())
         .map((n) => n.trim().toLowerCase())
         /* RÈGLE DE SÉCURITÉ : pas d'arme anti-compte ni de contenu interdit,
-           même présente dans un plugin silva. */
+           même présent dans un module historique. */
         .filter((n) => !INTERDITS.test(n))
-        /* SÉCURITÉ/IDENTITÉ : serveur de session tiers, dépôts d'un autre
-           auteur, support tiers — voir BLOQUES_IDENTITE. */
-        .filter((n) => !BLOQUES_IDENTITE.test(n))
+        /* SÉCURITÉ/IDENTITÉ : services de pairage et de support externes. */
+        .filter((n) => !COMMANDES_EXTERNES_BLOQUEES.test(n))
         /* SERVICES MORTS : commandes retirées (voir config/disabled-commands.js).
            ENABLE_DEAD_COMMANDS=1 pour toutes les réactiver. */
         .filter((n) => !isDisabled(n))
@@ -398,7 +386,7 @@ function loadCorePlugins(cmd, deps) {
       if (!noms.length) { rapport.ignores += 1; rapport.echecs.push(`${cheminRelatif}: commandes déjà présentes ou filtrées`); continue; }
       try {
         cmd(noms, {
-          cat, desc: desc || 'Commande silva', usage: noms[0],
+          cat, desc: desc || 'Commande', usage: noms[0],
           owner: owner || undefined, admin: admin || undefined,
           group: groupOnly || undefined,
         }, runAdapte);
@@ -414,23 +402,9 @@ function loadCorePlugins(cmd, deps) {
   return rapport;
 }
 
-/* Compte les commandes réellement enregistrées depuis silva */
-function compterSilva(rapport) {
-  let n = 0;
-  for (const f of rapport.fichiers) {
-    try {
-      const p = require(path.join(rapport.dir || path.join(__dirname, '..', 'commandes'), f));
-      const names = p.commands || p.command || [];
-      const al = p.aliases || p.alias || [];
-      n += (Array.isArray(names) ? names.length : 1) + (Array.isArray(al) ? al.length : 0);
-    } catch {}
-  }
-  return n;
-}
-
 module.exports = {
-  loadCorePlugins, INTERDITS, BLOQUES_IDENTITE, HORS_MENUS, deduireCat,
+  loadCorePlugins, INTERDITS, COMMANDES_EXTERNES_BLOQUEES, HORS_MENUS, deduireCat,
   catDepuisDossier, FICHIERS_MIXTES,
-  wrapSock, normaliserStyle, normaliserContenu, retirerSignatureTierce,
-  remplacerLogoTierce, URL_LOGO_TIERCE, URL_LOGO_OFFICIEL,
+  wrapSock, normaliserStyle, normaliserContenu, nettoyerTexteExterne,
+  normaliserLogo, URL_LOGO_HISTORIQUE, URL_LOGO_OFFICIEL,
 };

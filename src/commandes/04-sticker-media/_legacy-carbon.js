@@ -35,7 +35,7 @@ module.exports = {
             if (res.data?.length > 5000) {
                 return sock.sendMessage(chatId, {
                     image:   Buffer.from(res.data),
-                    caption: `💻 *Code Image*\n_Powered by Silva MD_`,
+                    caption: `💻 *Code Image*\n_Powered by DJOUSSE TECH_`,
                     contextInfo
                 }, { quoted: message });
             }
@@ -43,7 +43,7 @@ module.exports = {
 
         // Fallback: send the carbon.now.sh link
         await sock.sendMessage(chatId, {
-            text: `💻 *Code Image*\n\nOpen this link to view your code image:\n${carbonUrl}\n\n_Powered by Silva MD_`,
+            text: `💻 *Code Image*\n\nOpen this link to view your code image:\n${carbonUrl}\n\n_Powered by DJOUSSE TECH_`,
             contextInfo
         }, { quoted: message });
     }

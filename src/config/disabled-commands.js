@@ -6,6 +6,10 @@
  * (src/lib/plugin-loader.js) : la commande n'existe plus, elle ne
  * répond plus et n'est plus enregistrée dans le registre.
  *
+ * `.list`, `.menu` et `.info` affichent le nombre de retraits ainsi que
+ * l'état du filtre : on voit immédiatement si le bot déployé applique
+ * bien cette liste ou s'il tourne encore sur une ancienne version.
+ *
  * Critère : le service externe est MORT (voir api-report.txt du
  * 2026-10-29) et la commande ne peut plus rien renvoyer d'utile.
  * Retirer un nom de cette liste suffit à réactiver la commande.
@@ -93,8 +97,9 @@ const DEAD = {
      (système de fichiers éphémère, pas de shell, pas de binaire
      système, redémarrage géré par la plateforme). */
 
-  /* Doublons — une seule commande conservée par fonction */
-  list:          'doublon de .menu',
+  /* Doublons — une seule commande conservée par fonction.
+     `.list` N'EST PLUS retiré : c'est le catalogue complet demandé par
+     les utilisateurs (`.menu` reste le panneau interactif par chiffres). */
   ascii2:        'doublon de .ascii',
   ascii3:        'doublon de .ascii',
   bio2:          'doublon de .bio',
@@ -265,8 +270,15 @@ if (!process.env.TENOR_API_KEY && !process.env.GIPHY_API_KEY) {
 
 const isOn = (value) => ['1', 'on', 'true', 'yes'].includes(String(value || '').trim().toLowerCase());
 
+/* État figé au chargement : le filtre est actif par défaut. */
+const FILTER_ACTIVE = !isOn(process.env.ENABLE_DEAD_COMMANDS);
+const deadCount = Object.keys(DEAD).length;
+
 module.exports = {
   DEAD,
-  DISABLED_COMMANDS: isOn(process.env.ENABLE_DEAD_COMMANDS) ? new Set() : new Set(Object.keys(DEAD)),
-  isDisabled: (name) => !isOn(process.env.ENABLE_DEAD_COMMANDS) && Object.hasOwn(DEAD, String(name || '').toLowerCase()),
+  DISABLED_COMMANDS: FILTER_ACTIVE ? new Set(Object.keys(DEAD)) : new Set(),
+  /* Affichage (.list / .info) : nombre total de retraits + état réel. */
+  filterActive: () => FILTER_ACTIVE,
+  deadCount,
+  isDisabled: (name) => FILTER_ACTIVE && Object.hasOwn(DEAD, String(name || '').toLowerCase()),
 };

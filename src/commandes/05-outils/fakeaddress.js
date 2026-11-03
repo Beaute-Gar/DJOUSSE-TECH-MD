@@ -1,7 +1,26 @@
-// @legacy-order {"sourceFile":"05-outils/random-generators.js","sourceOrder":181,"definitionIndex":1,"entryOrder":547}
 'use strict';
+
+const style = require('../../config/style');
+
+const STREETS = Object.freeze([
+  'Example Street', 'Sample Avenue', 'Fictional Road', 'Demo Lane',
+]);
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-random-generators.js","sourceFile":"05-outils/random-generators.js","sourceOrder":181,"definitionIndex":1,"entryOrder":547,"names":["fakeaddress","address"]},
-  commands: ["fakeaddress","address"],
-  description: "Generate random address",
+  commands: ['fakeaddress', 'address'],
+  description: 'Generate a fictional sample address',
+  permission: 'public',
+  run: async (sock, message, args, ctx) => {
+    const street = STREETS[Math.floor(Math.random() * STREETS.length)];
+    const number = Math.floor(Math.random() * 999) + 1;
+    await ctx.reply(style.renderInfo([
+      'Random Address',
+      '',
+      `${number} ${street}`,
+      'Sample City',
+      '00000',
+      '',
+      'Fictional example',
+    ]));
+  },
 };

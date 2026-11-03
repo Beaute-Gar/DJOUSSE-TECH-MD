@@ -551,25 +551,6 @@ module.exports = [
         }
     },
 
-    // ── Chat Statistics ───────────────────────────────────────────────────────
-    {
-        commands: ['chatstats', 'toptalkers', 'whotalks'],
-        description: 'Show who talks most in this group',
-        permission: 'public',
-        group: true,
-        run: async (sock, message, args, ctx) => {
-            const { jid, reply } = ctx;
-            const gMap = global.groupMsgMap?.get(jid);
-            if (!gMap?.size) return reply('📊 Not enough data yet. Chat a bit more and try again!');
-            const sorted = [...gMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
-            const total = [...gMap.values()].reduce((a, b) => a + b, 0);
-            const lines = sorted.map(([phone, count], i) => {
-                const pct = Math.round(count / total * 100);
-                const bar = '█'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
-                return `${i + 1}. +${phone}\n   ${bar} ${count} msgs (${pct}%)`;
-            });
-            reply(`📊 *Top Talkers*\n\n${lines.join('\n\n')}\n\n_Total messages tracked: ${total}_`);
-        }
-    },
+    null,
 
 ];

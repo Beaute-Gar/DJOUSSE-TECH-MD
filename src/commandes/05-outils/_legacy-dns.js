@@ -35,7 +35,7 @@ module.exports = {
 🌐 *NS:*        ${nsR}
 📋 *TXT:*       ${txtR}
 
-_Powered by Silva MD_`,
+_Powered by DJOUSSE TECH_`,
                 contextInfo
             }, { quoted: message });
         } catch (e) {

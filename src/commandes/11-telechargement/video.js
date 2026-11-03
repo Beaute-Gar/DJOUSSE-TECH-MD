@@ -20,7 +20,7 @@ cmd(['video', 'ytmp4'], { cat: 11, desc: 'Télécharger une vidéo YouTube', usa
     await send(ctx.sock, ctx.from, {
       video: buf,
       mimetype: 'video/mp4',
-      caption: `🎬 *${meta.title}*\n👤 ${meta.author}\n⏱ ${formatDuration(meta.seconds * 1000)} · ${(buf.length / 1048576).toFixed(1)} Mo`,
+      caption: `🎬 *${meta.title}*\n👤 ${meta.author}\n⏱ ${formatDuration(meta.seconds * 1000)}`,
       fileName: `${meta.title.replace(/[^\w\s.-]/g, '').trim().slice(0, 60) || 'video'}.mp4`,
     }, { quoted: ctx.msg });
     await ctx.react('✅');

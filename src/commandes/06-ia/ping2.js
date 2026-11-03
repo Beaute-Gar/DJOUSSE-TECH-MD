@@ -1,7 +1,22 @@
-// @legacy-order {"sourceFile":"02-groupe/advanced-features.js","sourceOrder":4,"definitionIndex":17,"entryOrder":16}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"../02-groupe/_legacy-advanced-features.js","sourceFile":"02-groupe/advanced-features.js","sourceOrder":4,"definitionIndex":17,"entryOrder":16,"names":["ping2","ms"]},
-  commands: ["ping2","ms"],
-  description: "Check bot response latency",
+  commands: ['ping2', 'ms'],
+  description: 'Check bot response latency',
+  permission: 'public',
+  run: async (sock, message, args, ctx) => {
+    const start = Date.now();
+    await ctx.safeSend({ text: style.renderInfo(['🏓 Pinging...']) }, { quoted: message });
+    const latency = Date.now() - start;
+    const memory = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+    ctx.reply(style.renderInfo([
+      '🏓 Pong!',
+      '',
+      `⚡ Latency: ${latency}ms`,
+      '🤖 Status: Online',
+      `💾 Memory: ${memory}MB`,
+    ]));
+  },
 };

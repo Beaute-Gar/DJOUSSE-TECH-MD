@@ -39,7 +39,7 @@ module.exports = {
             if (!videoUrl) throw new Error('no video found');
             await sock.sendMessage(sender, {
                 video:   { url: videoUrl },
-                caption: `✂️ *CapCut Download*\n_Powered by Silva MD_`,
+                caption: `✂️ *CapCut Download*\n_Powered by DJOUSSE TECH_`,
                 contextInfo
             }, { quoted: message });
         } catch {

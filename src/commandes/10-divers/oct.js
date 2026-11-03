@@ -1,7 +1,20 @@
-// @legacy-order {"sourceFile":"05-outils/math-tools.js","sourceOrder":138,"definitionIndex":25,"entryOrder":414}
 'use strict';
+// @legacy-order {"sourceFile":"05-outils/math-tools.js","sourceOrder":138,"definitionIndex":25,"entryOrder":414}
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"../05-outils/_legacy-math-tools.js","sourceFile":"05-outils/math-tools.js","sourceOrder":138,"definitionIndex":25,"entryOrder":414,"names":["oct","octal"]},
-  commands: ["oct","octal"],
-  description: "Convert to/from octal",
+  commands: ['oct', 'octal'],
+  description: 'Convert to/from octal',
+  permission: 'public',
+  run: async (sock, message, args, ctx) => {
+    const number = Number.parseInt(args[0], 10);
+    if (Number.isNaN(number)) {
+      return ctx.reply(style.renderError(['Usage: .oct <number>']));
+    }
+
+    return ctx.reply(style.renderInfo([
+      `${number} = *0o${number.toString(8)}* (octal)`,
+    ]));
+  },
 };

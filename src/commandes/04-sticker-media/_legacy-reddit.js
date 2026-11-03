@@ -20,7 +20,7 @@ module.exports = {
             const jsonUrl = url.replace(/\/?$/, '') + '.json';
             const { data } = await axios.get(jsonUrl, {
                 timeout: 20000,
-                headers: { 'User-Agent': 'SilvaMD/1.0' }
+                headers: { 'User-Agent': 'DJOUSSE-TECH-MD/1.0' }
             });
             const post = data?.[0]?.data?.children?.[0]?.data;
             if (!post) throw new Error('Could not fetch post data.');
@@ -29,13 +29,13 @@ module.exports = {
                 const videoUrl = post.media.reddit_video.fallback_url.split('?')[0];
                 await sock.sendMessage(sender, {
                     video: { url: videoUrl },
-                    caption: `📤 *${title}*\n👍 ${post.ups} upvotes\n_Powered by Silva MD_`,
+                    caption: `📤 *${title}*\n👍 ${post.ups} upvotes\n_Powered by DJOUSSE TECH_`,
                     contextInfo
                 }, { quoted: message });
             } else if (post.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(post.url)) {
                 await sock.sendMessage(sender, {
                     image: { url: post.url },
-                    caption: `📤 *${title}*\n👍 ${post.ups} upvotes\n_Powered by Silva MD_`,
+                    caption: `📤 *${title}*\n👍 ${post.ups} upvotes\n_Powered by DJOUSSE TECH_`,
                     contextInfo
                 }, { quoted: message });
             } else {

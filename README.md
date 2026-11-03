@@ -7,14 +7,14 @@
 > **Des solutions fiables pour un avenir sans limites**
 
 <img
-  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=984+commandes+%C2%B7+12+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+14+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
-  alt="984 commandes · 12 catégories · Moteur DJOUSSE GUARD · IA Gemini"
+  src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3000&pause=900&color=2ECC71&center=true&vCenter=true&width=680&lines=983+commandes+%C2%B7+12+cat%C3%A9gories;Moteur+DJOUSSE+GUARD+%C2%B7+14+protections;IA+Gemini+%C2%B7+Stickers+%C2%B7+T%C3%A9l%C3%A9chargements;Z%C3%A9ro+bouton+natif+%C2%B7+100%25+texte"
+  alt="983 commandes · 12 catégories · Moteur DJOUSSE GUARD · IA Gemini"
 />
 
 <br/>
 
 <img src="https://img.shields.io/badge/version-4.0.0-2ECC71?style=flat-square" alt="Version 4.0.0" />
-<img src="https://img.shields.io/badge/commandes-984-00b894?style=flat-square" alt="984 commandes" />
+<img src="https://img.shields.io/badge/commandes-983-00b894?style=flat-square" alt="983 commandes" />
 <img src="https://img.shields.io/badge/cat%C3%A9gories-12-111b26?style=flat-square" alt="12 catégories" />
 <img src="https://img.shields.io/badge/Baileys-6.7.24-25D366?style=flat-square&logo=whatsapp&logoColor=white" alt="Baileys 6.7.24" />
 <img src="https://img.shields.io/badge/Node.js-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 18+" />
@@ -162,9 +162,9 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 
 | # | Catégorie | | Commandes |
 |:-:|---|:-:|--:|
-| 1 | 🌟 **GÉNÉRAL** | | 13 |
+| 1 | 🌟 **GÉNÉRAL** | | 14 |
 | 2 | 👥 **GROUPE** | | 111 |
-| 3 | 🛡️ **PROTECTION** | | 85 |
+| 3 | 🛡️ **PROTECTION** | | 84 |
 | 4 | 🖼️ **STICKER & MEDIA** | | 92 |
 | 5 | 🧰 **OUTILS** | | 241 |
 | 6 | 🤖 **IA** | | 13 |
@@ -174,10 +174,10 @@ L'objectif n'est pas d'accumuler des commandes, mais de rendre l'assistant navig
 | 10 | 📦 **DIVERS** | | 72 |
 | 11 | ⬇️ **TÉLÉCHARGEMENT** | | 23 |
 | 12 | 🔐 **ARCHIVES** | | 0 (retirée) |
-| | | | **Total (visibles)** | **978** |
+| | | | **Total (visibles)** | **977** |
 
-> **+ 6 commandes hors menus** (accès direct, ex. `.hacktools`) — total **984**.
-> **+ 382 alias** (1366 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
+> **+ 6 commandes hors menus** (accès direct, ex. `.hacktools`) — total **983**.
+> **+ 384 alias** (1367 entrées au registre) — par exemple `.s` → `sticker`, `.tr` → `translate`, `.bc` → `broadcast`.
 
 ---
 
@@ -452,9 +452,9 @@ sur VPS, Docker, Render, Fly.io, Railway, Heroku ou Replit. Fichiers livrés :
 ```
 DJOUSSE-TECH-MD/
 ├── index.js          # Point d'entrée : connexion Baileys, QR/pairing, reconnexion
-├── handler.js        # 🧠 Cerveau unique - 984 commandes, menu, moteur d'événements
+├── handler.js        # 🧠 Cerveau unique - 983 commandes, menu, moteur d'événements
 ├── config.js         # Toutes les constantes lues depuis .env (aucune logique métier)
-├── style.js          # 🎨 Source unique du rendu (cadres ╭┄┄『 』┄❍, alphabet officiel)
+├── style.js          # 🎨 Rendu unique des textes/légendes sortants via wa-send
 │
 ├── guard/            # 🛡️ DJOUSSE GUARD — moteur de protections isolé
 │   └── src/
@@ -733,7 +733,7 @@ Les dépendances externes restent soumises à leurs licences respectives — l'u
 
 ### Crédits et licences tierces
 
-Le dossier `plugins/core/` reprend du code de **« Silva MD Bot » (Silva Tech Nexus)**, publié sous licence MIT (<https://github.com/SilvaTechB/silva-md-bot>). Conformément à cette licence, l'avis de copyright d'origine est **conservé dans le fichier `NOTICE`** — ne pas le supprimer. Les anciens services liés à cette identité (`.getcode`, `.silvatech`, `.call`, la famille `.lend`…) ont été retirés du code source ; les équivalents `.repo`, `.support` et `.ia` sont désormais 100 % maison.
+Le dépôt contient encore des définitions de commandes héritées dans `src/commandes/`, chargées par le moteur de plugins. Leur attribution est conservée dans [`NOTICE`](./NOTICE), conformément à la licence MIT de **« Silva MD Bot » (Silva Tech Nexus)** (<https://github.com/SilvaTechB/silva-md-bot>). Le remplacement indépendant de ces définitions est en cours ; tant que du code dérivé subsiste, ne supprimez pas cet avis.
 
 ---
 

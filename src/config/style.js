@@ -267,6 +267,32 @@ const renderSuccess = lines => renderNotice('SUCCÈS', lines);
 const renderError = lines => renderNotice('ERREUR', lines);
 const renderSaisie = hint => renderNotice('SAISISSEZ REQUIS', [hint]);
 
+function renderOutgoingText(value) {
+  if (typeof value !== 'string' || !value.trim()) return value;
+
+  const text = value.trim();
+  const alreadyRendered = [
+    '╭┄┄『 ',
+    '╭『 ',
+    '╭┄┄┄┄',
+    '╔',
+    '┏',
+    '┌',
+  ].some(marker => text.startsWith(marker));
+  if (alreadyRendered) return value;
+
+  const isError = /^(?:❌|⚠|🚫|⛔|✖|error\b|erreur\b|failed\b|échec\b)/i.test(text);
+  const isSuccess = /^(?:✅|☑|✔|done\b|success\b|succès\b|completed\b|saved\b|added\b|removed\b|sent\b|updated\b|created\b)/i.test(text);
+  const heading = isError ? 'ERREUR' : isSuccess ? 'SUCCÈS' : 'INFO';
+  const lines = text.split(/\r?\n/).map(line => `│✦ ${line}`);
+  const rendered = buildFrame(heading, lines);
+
+  if (rendered.length <= 4096) return rendered;
+
+  const compact = buildFrame(heading, [`│✦ ${text}`]);
+  return compact.length <= 4096 ? compact : value;
+}
+
 /* ─────────────── DATE ET HEURE ─────────────── */
 
 const two = n => String(n).padStart(2, '0');
@@ -315,6 +341,7 @@ module.exports = {
   renderSuccess,
   renderError,
   renderSaisie,
+  renderOutgoingText,
   two,
   nowTime,
   nowDate

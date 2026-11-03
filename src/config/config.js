@@ -9,6 +9,10 @@ const dotenv = require('dotenv');
 if (process.env.ENV_FILE) dotenv.config({ path: process.env.ENV_FILE });
 else dotenv.config();
 
+/* Version + commit + date du build : affichés par .list / .menu / .info
+   pour vérifier d'un coup d'œil que le bot tourne sur la bonne version. */
+const build = require('../lib/build-info');
+
 const bool = (value, fallback = false) => {
   if (value === undefined || value === null || value === '') return fallback;
   return /^(1|true|yes|on)$/i.test(String(value).trim());
@@ -75,6 +79,28 @@ module.exports = {
   // Moteurs temps réel (Baileys)
   autoTyping: bool(process.env.AUTO_TYPING, false),
   alwaysOnline: bool(process.env.ALWAYS_ONLINE, false),
+  // ── Couche anti-détection (src/lib/wa-*) — DÉSACTIVÉE par défaut ──
+  // WA_IDENTITY=on : identité navigateur/persona persistée PAR SESSION.
+  // (garder la même identité longtemps ; rotation douce optionnelle)
+  waIdentity: bool(process.env.WA_IDENTITY, false),
+  waIdentityRotateDays: Math.max(0, parseInt(process.env.WA_IDENTITY_ROTATE_DAYS || '0', 10) || 0),
+  // WA_PROXIES=socks5://user:pass@host:1080,http://host:8080
+  // Rotation (round_robin|random|sticky) + health-check + persistance.
+  waProxies: String(process.env.WA_PROXIES || '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean),
+  waProxyStrategy: String(process.env.WA_PROXY_STRATEGY || 'round_robin').trim().toLowerCase(),
+  waProxyHealthMinutes: Math.max(1, parseInt(process.env.WA_PROXY_HEALTH_MINUTES || '10', 10) || 10),
+  // PRESENCE_REALISTIC=on : « vu » probabiliste, délai, créneaux hors ligne.
+  // PRESENCE_SKIP_REPLY=on : ignore parfois un DM NON-commande (jamais un event guard).
+  // PRESENCE_RESPECT_HOURS=on : applique les heures d'activité du persona aux DM non-commandes.
+  waPresenceRealistic: bool(process.env.PRESENCE_REALISTIC, false),
+  waPresenceSkipReply: bool(process.env.PRESENCE_SKIP_REPLY, false),
+  waPresenceRespectHours: bool(process.env.PRESENCE_RESPECT_HOURS, false),
+  // WA_SECURE=on : instance WaSecure attachée à la socket (file, bursts, quotas).
+  waSecure: bool(process.env.WA_SECURE, false),
+  waSecureVerbose: bool(process.env.WA_SECURE_VERBOSE, false),
   autoReact: bool(process.env.AUTO_REACT, false),
   // AUTO-STATUTS (module lib/auto-status.js) — défauts : vue ON, réaction ON, réponse OFF
   autoStatusSeen: bool(process.env.AUTO_STATUS_SEEN, true),
@@ -84,8 +110,12 @@ module.exports = {
     false,
   ),
   autoStatusMsg: process.env.AUTO_STATUS_MSG || process.env.STATUS_READ_MSG || '',
-  // Emojis de réaction tirés au sort (liste CSV) — CUSTOM_REACT_EMOJIS
-  statusEmojis: String(process.env.CUSTOM_REACT_EMOJIS || '❤️,🔥,💯,😍,👏').split(','),
+  // Emojis de réaction tirés au sort (liste CSV) — CUSTOM_REACT_EMOJIS.
+  // Défaut varié SANS 💚 : le cœur vert est le « like » natif de WhatsApp,
+  // le bot doit réagir avec autre chose.
+  statusEmojis: String(
+    process.env.CUSTOM_REACT_EMOJIS || '🔥,💯,😍,👏,⚡,🙌,✨,🤩,👍,🎉',
+  ).split(','),
   likeEmoji: process.env.AUTOLIKE_EMOJI || '👍',
 
   // Aperçus de liens haute qualité (Baileys)
@@ -127,6 +157,7 @@ module.exports = {
   // Clé API Serper (recherche Google officielle) — utilisée par .google
   serperKey: process.env.SERPER_API_KEY || '',
   // Clé API GNews — utilisée par .news
+  weatherApiKey: process.env.OPENWEATHER_API_KEY || '',
   gnewsKey: process.env.GNEWS_API_KEY || '',
   // Clé API ElevenLabs — utilisée par .tts (voix premium)
   elevenlabsKey: process.env.ELEVENLABS_API_KEY || '',
@@ -197,7 +228,6 @@ module.exports = {
     website: 'https://djousse-tech-md-web.vercel.app',
   },
 
-  version: (() => {
-    try { return require('../../package.json').version; } catch { return '1.0.0'; }
-  })(),
+  version: build.version,
+  build,
 };

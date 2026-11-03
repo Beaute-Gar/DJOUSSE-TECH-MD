@@ -1,7 +1,13 @@
-// @legacy-order {"sourceFile":"02-groupe/security-tools.js","sourceOrder":195,"definitionIndex":9,"entryOrder":587}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"../02-groupe/_legacy-security-tools.js","sourceFile":"02-groupe/security-tools.js","sourceOrder":195,"definitionIndex":9,"entryOrder":587,"names":["restart2","reboot"]},
-  commands: ["restart2","reboot"],
-  description: "Restart bot",
+  commands: ['restart2', 'reboot'],
+  description: 'Restart bot',
+  permission: 'owner',
+  run: async (sock, message, args, ctx) => {
+    await ctx.reply(style.renderInfo(['♻️ Restarting bot in 3 seconds...']));
+    setTimeout(() => process.exit(0), 3000);
+  },
 };

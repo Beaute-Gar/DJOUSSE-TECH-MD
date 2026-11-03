@@ -34,7 +34,7 @@ module.exports = {
         try {
             const res = await axios.get(
                 `https://some-random-api.com/lyrics?title=${encodeURIComponent(searchQ)}`,
-                { headers: { 'User-Agent': 'SilvaMD-Bot/2.0' }, timeout: 12000 }
+                { headers: { 'User-Agent': 'DJOUSSE-TECH-MD/1.0' }, timeout: 12000 }
             );
             const d   = res.data;
             const raw = d?.lyrics;

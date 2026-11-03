@@ -40,7 +40,9 @@ const { registerExtras } = require('../lib/extras');
 const { registerHackTools, GROUPES: HACK_SECTIONS } = require('../lib/hacktools');
 const { loadCorePlugins } = require('../lib/plugin-loader');
 const { appliquerTables, appliquerFamilles } = require('../commandes/_regles');
-const { isDisabled: commandeMorte } = require('../config/disabled-commands');
+const deadCommands = require('../config/disabled-commands');
+const { isDisabled: commandeMorte } = deadCommands;
+const build = require('../lib/build-info');
 const chargerCommandes = require('../commandes/_maison');
 const { registerPortedAuto, onMessage: autoOnMessage, onStatus: autoOnStatus, startOnlineTimer: autoStartTimer, autoSettings } = require('../lib/ported-auto');
 const portedGroup = require('../lib/ported-group');
@@ -49,8 +51,6 @@ const portedFun = require('../lib/ported-fun');
 const { registerPortedLogo, registerPortedLookup } = require('../lib/ported-logo');
 const { registerPortedShot } = require('../lib/ported-shot');
 const { registerPortedFoot } = require('../lib/ported-foot');
-/* Conversion vidéo via ffmpeg-static — helper partagé (voir lib/wa-sticker.js) */
-const { ffmpegBuffer } = require('../lib/ffmpeg');
 const { registerTools } = require('../lib/tools');
 const { registerMissing } = require('../lib/missing');
 /* Service unique d'envoi WhatsApp (G2) : tout envoi passe par send()
@@ -734,21 +734,24 @@ function renderMainMenu(base) {
     ? `PAIRING ${config.pairingPhone ? `+${config.pairingPhone}` : '(auto)'}`
     : config.connectMethod === 'qr' ? 'QR' : 'AUTO';
 
+  const cats = CATEGORIES
+    .map((c) => ({ ...c, list: visibleCommands(c.n, base) }))
+    /* Une catégorie vide disparaît du cadran : plus d'entrée 12 « ARCHIVES »
+       quand la commande .archives a été retirée. */
+    .filter((c) => c.list.length > 0);
+  const total = cats.reduce((n, c) => n + c.list.length, 0);
+
   const header = buildFrame('INFO BOT', [
     bullet('PREFIX', `〔${config.prefix}〕`),
     bullet('BOT', config.botName),
+    bullet('VERSION', build.label),
+    bullet('BUILD', `${build.dateLabel} · ${total} ${toUnicode('COMMANDES')}`),
     bullet('TIME', nowTime()),
     bullet('DATE', nowDate()),
     bullet('CONNEXION', linkLabel),
     title(toUnicode('STATUS PANEL')),
     row(toUnicode('REPLY WITH A NUMBER')),
   ]);
-
-  const cats = CATEGORIES
-    .map((c) => ({ ...c, list: visibleCommands(c.n, base) }))
-    /* Une catégorie vide disparaît du cadran : plus d'entrée 12 « ARCHIVES »
-       quand la commande .archives a été retirée. */ 
-    .filter((c) => c.list.length > 0);
 
   const catLines = cats.map((c) => listItem(c.n, `${c.emoji} ${toUnicode(`${c.label} MENU`)}`));
   const list = [listHeader('CATEGORIES'), ...catLines, frameFooter()].join('\n');
@@ -1159,6 +1162,7 @@ const ENV_COMMANDES = {
   get renderInfo() { return renderInfo; },
   get renderMainMenu() { return renderMainMenu; },
   get renderSuccess() { return renderSuccess; },
+  get removedCount() { return _mortesRetirees.length; },
   get row() { return row; },
   get saveState() { return saveState; },
   get send() { return send; },
@@ -1677,8 +1681,8 @@ function findTmp(base) {
   } catch { return null; }
 }
 
-/* ffmpegBuffer() vit désormais dans lib/ffmpeg.js (helper partagé avec
-   lib/wa-sticker.js) : une seule implémentation (G4 « pas de doublon »). */
+/* La normalisation vidéo WhatsApp vit dans lib/wa-video.js (service
+   d'envoi) : une seule implémentation (G4 « pas de doublon »). */
 
 async function ytResolve(query) {
   const m = String(query || '').match(YT_URL_RE);
@@ -1734,9 +1738,12 @@ async function ytDownloadAudio(url) {
 
 async function ytDownloadVideo(url) {
   const base = tmpBase();
+  /* Priorité ABSOLUE à H.264/AAC dans un conteneur MP4 : c'est le seul
+     couple que WhatsApp lit partout. Les replis restent possibles, mais
+     lib/wa-video.js réencode alors en MP4 H.264/AAC avant l'envoi. */
   await runYtDlp([
-    '-f', 'bv*[height<=480][ext=mp4]+ba[ext=m4a]/b[height<=480][ext=mp4]/b[height<=480]/b',
-    '--merge-output-format', 'mp4', '--max-filesize', '15M',
+    '-f', 'bv*[height<=480][vcodec^=avc1][ext=mp4]+ba[ext=m4a]/b[height<=480][vcodec^=avc1][ext=mp4]/bv*[height<=480][ext=mp4]+ba[ext=m4a]/b[height<=480][ext=mp4]/bv*[height<=480]+ba/b[height<=480]/b',
+    '--merge-output-format', 'mp4', '--remux-video', 'mp4', '--max-filesize', '25M',
     '--ffmpeg-location', ffmpegPath,
     '-o', `${base}.%(ext)s`, '--no-playlist', '--newline',
     '--', url,
@@ -1744,16 +1751,10 @@ async function ytDownloadVideo(url) {
   const file = findTmp(base);
   if (!file) throw new Error('fichier vidéo introuvable');
   try {
-    let buf = fs.readFileSync(file);
-    if (buf.length > 14 * 1024 * 1024) {
-      buf = await ffmpegBuffer(
-        buf,
-        ['-i', 'pipe:0', '-vf', 'scale=-2:360', '-c:v', 'libx264', '-preset', 'veryfast',
-         '-crf', '28', '-c:a', 'aac', '-b:a', '96k', '-movflags', 'frag_keyframe+empty_moov', '-f', 'mp4', 'pipe:1'],
-        15 * 1024 * 1024
-      );
-    }
-    if (buf.length > 15 * 1024 * 1024) throw new Error('fichier trop volumineux pour WhatsApp (> 15 Mo)');
+    const buf = fs.readFileSync(file);
+    if (!buf.length) throw new Error('fichier vidéo vide');
+    /* La compression/normalisation WhatsApp est faite UNE seule fois,
+       dans lib/wa-video.js, au moment de l'envoi. */
     return buf;
   } finally {
     try { fs.unlinkSync(file); } catch {}
@@ -1798,9 +1799,8 @@ async function executeCommand(sock, msg, name, args, base) {
        se terminaient sans envoyer MOINDRE message (constaté sur
        .newsletter, .setgreet, .setbgm, .rules — silencieux). */
     command: String(name).toLowerCase(),
-    /* Réponses : tout ce qui commence par ❌ est automatiquement
-       encadré dans le style ERREUR officiel (rendu centralisé) ;
-       les cadres (╭…) sont transmis tels quels. */
+    /* Les erreurs sont encadrées ici ; wa-send applique ensuite le rendu
+       central à tout texte ou légende qui n'a pas déjà un cadre officiel. */
     reply: async (text, mentions) => {
       let body = text;
       if (typeof body === 'string' && body.startsWith('❌')) {

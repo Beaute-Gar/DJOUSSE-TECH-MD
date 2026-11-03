@@ -1,7 +1,19 @@
-// @legacy-order {"sourceFile":"04-sticker-media/tools3.js","sourceOrder":249,"definitionIndex":0,"entryOrder":689}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-tools3.js","sourceFile":"04-sticker-media/tools3.js","sourceOrder":249,"definitionIndex":0,"entryOrder":689,"names":["ebase"]},
-  commands: ["ebase"],
-  description: "Extended tools and utilities",
+    commands: ['ebase'],
+    description: 'Encode text as Base64',
+    permission: 'public',
+    group: true,
+    private: true,
+
+    run: async (sock, message, args, ctx) => {
+        const text = args.join(' ').trim();
+        const reply = value => ctx.reply(style.renderOutgoingText(value));
+
+        if (!text) return reply('❌ *Usage:* `.ebase <text>`');
+        return reply(`🔐 *Base64 Encode*\n\n*Input:* ${text}\n*Output:* ${Buffer.from(text).toString('base64')}`);
+    },
 };

@@ -1,7 +1,15 @@
-// @legacy-order {"sourceFile":"07-fun/flipcoin.js","sourceOrder":92,"definitionIndex":0,"entryOrder":207}
 'use strict';
+
+const style = require('../../config/style');
+
 module.exports = {
-  __legacyCommand: {"source":"_legacy-flipcoin.js","sourceFile":"07-fun/flipcoin.js","sourceOrder":92,"definitionIndex":0,"entryOrder":207,"names":["flip"]},
-  commands: ["flip"],
-  description: "Flip a coin or roll dice",
+  commands: ['flip'],
+  description: 'Flip a coin or roll dice',
+  permission: 'public',
+  group: true,
+  private: true,
+  run: async (sock, message, args, ctx) => {
+    const result = Math.random() < 0.5 ? 'HEADS 🪙' : 'TAILS 💿';
+    await ctx.reply(style.renderInfo(['Coin Flip Result', '', `${result}!`]));
+  },
 };

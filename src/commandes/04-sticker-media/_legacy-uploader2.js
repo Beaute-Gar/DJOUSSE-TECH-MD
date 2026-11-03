@@ -92,7 +92,7 @@ module.exports = {
                 const content  = buf.toString('base64');
                 const res      = await axios.put(
                     `https://api.github.com/repos/${repo}/contents/${filename}`,
-                    { message: 'Upload via Silva MD', content },
+                    { message: 'Upload via DJOUSSE TECH', content },
                     { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }, timeout: 30000 }
                 );
                 const rawUrl = res.data?.content?.download_url;

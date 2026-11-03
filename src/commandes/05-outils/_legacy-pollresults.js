@@ -8,8 +8,8 @@ const { fmt } = require('../_partage/theme');
 // value = { jid, question, meId, pollCreationMessage, pollUpdates: [] }
 if (!global.pollRegistry) global.pollRegistry = new Map();
 
-// ─── Poll update hook called from silva.js messages.update ───────────────────
-// silva.js calls: if (global.pollUpdateHook) global.pollUpdateHook(key, update, sock)
+// ─── Poll update hook called from the central messages.update handler ────────
+// The handler calls: if (global.pollUpdateHook) global.pollUpdateHook(key, update, sock)
 global.pollUpdateHook = async (key, update, sock) => {
     const { pollUpdates } = update;
     if (!pollUpdates?.length) return;

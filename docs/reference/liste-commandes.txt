@@ -90,7 +90,7 @@ Format : primaire  ou  primaire(ali1,ali2…)  [familles = plusieurs noms]
   savings(savingscalc)  ·  saying(adage)  ·  scanurl(urlscan)  ·  sched  ·  sciencefact(sciencef)  ·  scramblesentence
   senddoc(doc)  ·  sepia  ·  setabout(about)  ·  setbgm(bgmlist,clearbgm,delbgm,listbgm,removebgm)  ·  setgreet(delgreet,getgreet,greetoff,greeton)  ·  setigsession(igsession)
   sh(bash)  ·  sha1  ·  sharecontact  ·  shazam(identify)  ·  shipping(lovematch)  ·  shorten
-  shorturl  ·  shuffle(scramble)  ·  silva(agent,ask,assistant,do)  ·  silvatech(svrepo)  ·  simp(simpmeter)  ·  slang(genz)
+  shorturl  ·  shuffle(scramble)  ·  simp(simpmeter)  ·  slang(genz)
   sleep(sleepcalc)  ·  slot(slots)  ·  slow  ·  slowmode  ·  smallcaps  ·  smeme(stickermeme)
   smooth  ·  snake(snakecase)  ·  socialinfo(platform)  ·  solve  ·  soundcloud(sc)  ·  space(spaced)
   spacefact(spacef)  ·  speak(voice)  ·  speed  ·  spell(spellcheck)  ·  split(billsplit)  ·  sportfact(sportf)

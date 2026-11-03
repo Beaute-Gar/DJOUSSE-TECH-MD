@@ -36,7 +36,7 @@ module.exports = {
 
     async run(sock, message, args, ctx) {
         const { reply, jid } = ctx;
-        const botName = getStr('botName') || 'Silva MD';
+        const botName = getStr('botName') || 'DJOUSSE TECH';
         const footer  = getStr('footer')  || '';
 
         const cfg = getGroupConfig(jid);
@@ -115,7 +115,7 @@ module.exports = {
 
         if (isAdmin) return;
 
-        const botName = getStr('botName') || 'Silva MD';
+        const botName = getStr('botName') || 'DJOUSSE TECH';
 
         try {
             await sock.sendMessage(jid, { delete: message.key });

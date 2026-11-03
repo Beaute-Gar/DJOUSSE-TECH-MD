@@ -1,7 +1,34 @@
-// @legacy-order {"sourceFile":"07-fun/fun-facts.js","sourceOrder":93,"definitionIndex":10,"entryOrder":218}
 'use strict';
+
+const style = require('../../config/style');
+
+const FACTS = [
+  "The world's longest concert lasted 453 hours.",
+  'Happy Birthday was copyrighted until 2015.',
+  "The Beatles couldn't read music.",
+  'Metallica is the only band to have played on all 7 continents.',
+  'A violin contains about 70 individual pieces of wood.',
+  'The most expensive instrument sold was a Stradivarius for $15.9 million.',
+  "Jimi Hendrix couldn't read music.",
+  'Mozart wrote his first symphony at age 8.',
+  'The longest song ever recorded is 13 hours long.',
+  'Finland has the most heavy metal bands per capita.',
+  'A piano has 230 strings.',
+  'Elvis never performed outside of North America.',
+  "The guitar is the world's most popular instrument.",
+  'Spotify pays artists $0.003-0.005 per stream.',
+  'The first music video on MTV was "Video Killed the Radio Star."',
+];
+
 module.exports = {
-  __legacyCommand: {"source":"../07-fun/_legacy-fun-facts.js","sourceFile":"07-fun/fun-facts.js","sourceOrder":93,"definitionIndex":10,"entryOrder":218,"names":["musicfact","musicf"]},
-  commands: ["musicfact","musicf"],
-  description: "Random music fact",
+  commands: ['musicfact', 'musicf'],
+  description: 'Random music fact',
+  permission: 'public',
+  run: async (sock, message, args, { jid, contextInfo }) => {
+    const fact = FACTS[Math.floor(Math.random() * FACTS.length)];
+    await sock.sendMessage(jid, {
+      text: style.renderInfo(['🎵 Music Fact', '', fact]),
+      contextInfo,
+    }, { quoted: message });
+  },
 };

@@ -24,7 +24,7 @@ module.exports = {
             await sock.sendMessage(sender, {
                 image:    buf,
                 mimetype: 'image/webp',
-                caption:  '🖼️ *Sticker converted to image*\n_Powered by Silva MD_',
+                caption:  '🖼️ *Sticker converted to image*\n_Powered by DJOUSSE TECH_',
                 contextInfo
             }, { quoted: message });
         } catch (e) {

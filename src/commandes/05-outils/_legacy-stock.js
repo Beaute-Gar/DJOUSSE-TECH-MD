@@ -40,7 +40,7 @@ ${emoji} *Change:* ${change >= 0 ? '+' : ''}${change} (${pct}%)
 💱 *Currency:* ${meta.currency}
 🏛️ *Exchange:* ${meta.exchangeName}
 
-_Powered by Yahoo Finance • Silva MD_`,
+_Powered by Yahoo Finance • DJOUSSE TECH_`,
                 contextInfo
             }, { quoted: message });
         } catch (e) {

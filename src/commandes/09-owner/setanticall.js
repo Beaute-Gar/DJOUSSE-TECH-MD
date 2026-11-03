@@ -1,7 +1,13 @@
-// @legacy-order {"sourceFile":"09-owner/owner3.js","sourceOrder":158,"definitionIndex":0,"entryOrder":510}
 'use strict';
-module.exports = {
-  __legacyCommand: {"source":"_legacy-owner3.js","sourceFile":"09-owner/owner3.js","sourceOrder":158,"definitionIndex":0,"entryOrder":510,"names":["setanticall"]},
-  commands: ["setanticall"],
-  description: "Extended owner/admin control commands",
-};
+// @legacy-order {"sourceFile":"09-owner/owner3.js","sourceOrder":158,"definitionIndex":0,"entryOrder":510}
+module.exports = require('./_owner-setting')({
+  command: 'setanticall',
+  description: 'Toggle anti-call',
+  usage: '.setanticall on|off',
+  run(ctx, config) {
+    const sub = (ctx.args[0] || 'on').toLowerCase();
+    const value = sub === 'on' || sub === 'enable' || sub === 'true';
+    config.ANTICALL = value;
+    return { lines: [`SETANTICALL → ${value ? 'ON' : 'OFF'}`] };
+  },
+});

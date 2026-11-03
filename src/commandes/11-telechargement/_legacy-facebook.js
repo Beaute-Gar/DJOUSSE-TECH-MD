@@ -256,7 +256,7 @@ module.exports = {
             ...contextInfo,
             externalAdReply: {
                 title:                 'Facebook Downloader',
-                body:                  'Powered by ' + (getStr('botName') || 'Silva MD'),
+                body:                  'Powered by ' + (getStr('botName') || 'DJOUSSE TECH'),
                 thumbnailUrl:          'https://files.catbox.moe/h6zdty.png',
                 sourceUrl:             url,
                 mediaType:             1,

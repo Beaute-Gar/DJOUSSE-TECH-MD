@@ -42,7 +42,7 @@ module.exports = {
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: "120363200367779016@newsletter",
-                            newsletterName: "SILVA GROUP STATUS\uD83D\uDC96",
+                            newsletterName: "DJOUSSE TECH STATUS\uD83D\uDC96",
                             serverMessageId: 143,
                         },
                     },

@@ -1,7 +1,20 @@
 // @legacy-order {"sourceFile":"09-owner/owner3.js","sourceOrder":158,"definitionIndex":0,"entryOrder":482}
 'use strict';
-module.exports = {
-  __legacyCommand: {"source":"_legacy-owner3.js","sourceFile":"09-owner/owner3.js","sourceOrder":158,"definitionIndex":0,"entryOrder":482,"names":["update"]},
-  commands: ["update"],
-  description: "Extended owner/admin control commands",
-};
+
+const createOwnerSetting = require('./_owner-setting');
+
+module.exports = createOwnerSetting({
+  command: 'update',
+  description: 'Show bot update information',
+  usage: '.update',
+  run() {
+    return {
+      lines: [
+        'BOT UPDATE',
+        'CURRENT VERSION RUNNING.',
+        'TO UPDATE: RESTART THE WORKFLOW OR PULL THE LATEST CODE.',
+        'AUTO-UPDATE IS NOT SUPPORTED IN THIS ENVIRONMENT.',
+      ],
+    };
+  },
+});

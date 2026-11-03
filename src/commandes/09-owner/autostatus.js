@@ -11,9 +11,10 @@ cmd('autostatus', ['statusconfig'], { cat: 9, desc: 'Panneau Auto-Status (vue ·
     bullet('VUE', `${mark(eff.seen)} — ${src('seen', config.autoStatusSeen)}`),
     bullet('RÉACTION', `${mark(eff.react)} — ${src('react', config.autoStatusReact)}`),
     bullet('RÉPONSE', `${mark(eff.reply)} — ${src('reply', config.autoStatusReply)}`),
-    bullet('EMOJIS', (config.statusEmojis || []).map((e) => e.trim()).filter(Boolean).join(' ') || '👍'),
+    bullet('EMOJIS', autoStatus.listEmojis(o).join(' ')),
     bullet('MSG RÉPONSE', config.autoStatusMsg || '(aucun)'),
     `Commandes : ${config.prefix}autoview on|off · ${config.prefix}autolike on|off`,
+    `${config.prefix}autolike emojis 🔥,💯,😍`,
   ]));
 });
 };

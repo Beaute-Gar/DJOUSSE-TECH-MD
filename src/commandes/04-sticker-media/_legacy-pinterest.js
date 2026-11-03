@@ -102,7 +102,7 @@ module.exports = {
         try {
             await sock.sendMessage(sender, {
                 [isVideo ? 'video' : 'image']: { url: media.url },
-                caption: `📌 *Pinterest Download*${media.title ? `\n📝 ${media.title}` : ''}\n_Powered by Silva MD_`,
+                caption: `📌 *Pinterest Download*${media.title ? `\n📝 ${media.title}` : ''}\n_Powered by DJOUSSE TECH_`,
                 contextInfo
             }, { quoted: message });
         } catch {

@@ -16,6 +16,7 @@ process.env.ENVOI_ACTIF = '0';
 
 const waSend = require('../src/lib/wa-send');
 const config = require('../src/config/config');
+const style = require('../src/config/style');
 
 const savedAutoTyping = config.autoTyping;
 const savedEnv = {
@@ -118,6 +119,21 @@ test('HUMAN_DELAY=0 coupe le délai sur le texte', async () => {
   await waSend.send(sock, 'c@s.whatsapp.net', { text: 'instantané' });
   const elapsed = Date.now() - t0;
   assert.ok(elapsed < 150, `délai coupé, obtenu ${elapsed} ms`);
+});
+
+test('texte et légende sortants passent par le rendu central, sans toucher aux médias', async () => {
+  process.env.HUMAN_DELAY = '0';
+  const { sock, sends } = makeSock();
+  const image = Buffer.from('image');
+  await waSend.send(sock, 'style@s.whatsapp.net', {
+    image,
+    caption: 'Légende simple',
+  });
+  assert.equal(sends[0].content.image, image);
+  assert.equal(sends[0].content.caption, style.renderOutgoingText('Légende simple'));
+
+  await waSend.send(sock, 'style@s.whatsapp.net', { text: 'Réponse simple' });
+  assert.equal(sends[1].content.text, style.renderOutgoingText('Réponse simple'));
 });
 
 test('socket absent ou incomplet → undefined (aucune TypeError)', async () => {

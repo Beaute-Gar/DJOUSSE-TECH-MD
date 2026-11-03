@@ -1,8 +1,8 @@
 'use strict';
-/* Mission identité DJOUSE-TECH-MD — garde-fous REPRODUCTIBLES :
+/* Mission identité DJOUSSE-TECH-MD — garde-fous reproductibles :
    1. aucune marque tierce (Silva/TEDDY/SilvaTech…) visible par l'utilisateur ;
    2. commandes tierces dangereuses/identitaires neutralisées côté chargeur ;
-   3. commandes maison .repo / .support / .ia en place, silva hors menus ;
+   3. commandes maison .repo / .support / .ai en place, alias obsolètes retirés ;
    4. URLs tierces réécrites vers les destinations officielles ;
    5. slogan + chiffres du README cohérents avec le registre réel ;
    6. ancien logo tierce en repli réécrit vers le logo officiel maison. */
@@ -14,8 +14,8 @@ process.env.HACKTOOLS_PASSWORD = 'test-identite';
 const h = require('../src/handlers/handler');
 const { toUnicode } = require('../src/config/style');
 const {
-  retirerSignatureTierce, BLOQUES_IDENTITE, INTERDITS,
-  normaliserContenu, URL_LOGO_TIERCE, URL_LOGO_OFFICIEL,
+  nettoyerTexteExterne, COMMANDES_EXTERNES_BLOQUEES, INTERDITS,
+  normaliserContenu, URL_LOGO_HISTORIQUE, URL_LOGO_OFFICIEL,
 } = require('../src/lib/plugin-loader');
 
 const MARQUE = /\bSilva\b|SilvaTech|Silvatech|SILVA MD|TEDDY-XMD|Chez TEDDY|silva\.tech|SilvaTechB/i;
@@ -57,19 +57,19 @@ test('README : identité, slogan et chiffres cohérents', () => {
   assert.ok(!/11 catégories|commandes-855|lines=363/.test(site), 'chiffres mis à jour (12 catégories)');
 });
 
-/* ── 2. Blocages (chargeur silva, fichier source intact) ── */
+/* ── 2. Blocages du chargeur, définitions source intactes ── */
 test('commandes tierces dangereuses/identitaires ABSENTES du registre', () => {
   /* serveur de session tiers (fuite de numéros + pair-code) */
   for (const n of ['getcode', 'paircode', 'sessioncode', 'connectbot',
     'lend', 'approvelend', 'rejectlend', 'lendlist', 'lendstatus', 'revokelend']) {
     assert.ok(!h.commands.has(n), `${n} (serveur de session tiers) ne doit pas exister`);
   }
-  /* anciens dépôts d'un autre auteur + support tiers */
-  for (const n of ['silvatech', 'silvarepos', 'silvafiles', 'svrepo', 'call']) {
-    assert.ok(!h.commands.has(n), `${n} (ancienne identité) ne doit pas exister`);
+  /* ancienne commande de support externe */
+  for (const n of ['call']) {
+    assert.ok(!h.commands.has(n), `${n} (commande obsolète) ne doit pas exister`);
   }
-  assert.ok(BLOQUES_IDENTITE.test('getcode') && BLOQUES_IDENTITE.test('svrepo'));
-  assert.ok(!BLOQUES_IDENTITE.test('play') && !BLOQUES_IDENTITE.test('menu'));
+  assert.ok(COMMANDES_EXTERNES_BLOQUEES.test('getcode') && COMMANDES_EXTERNES_BLOQUEES.test('call'));
+  assert.ok(!COMMANDES_EXTERNES_BLOQUEES.test('play') && !COMMANDES_EXTERNES_BLOQUEES.test('menu'));
 });
 
 test('versions tierces remplacées : .repo/.support/.ai maison', () => {
@@ -82,29 +82,27 @@ test('versions tierces remplacées : .repo/.support/.ai maison', () => {
   assert.match(h.commands.get('support').desc, /Support & signalement/);
   assert.equal(h.commands.get('ai').cat, 6, '.ai visible en IA');
   assert.ok(!h.commands.has('ia'), '.ia (doublon) retiré');
-  /* l'historique reste joignable en direct mais sort des menus :
-     .djousse est le nom principal ; l'ancien alias .silva est supprimé. */
+  /* l’assistant conserve ses noms publics maison, mais reste hors des menus. */
   const djousse = h.commands.get('djousse');
   assert.ok(djousse, '.djousse enregistré (assistant maison)');
   assert.equal(djousse.cat, 99, '.djousse retiré des menus (.ai est la porte visible)');
-  assert.ok(!h.commands.has('silva'), '.silva supprimé selon la règle sans ancienne marque');
 });
 
 /* ── 3. Nettoyage des textes tierces ── */
-test('retirerSignatureTierce : URLs tierces → destinations officielles', () => {
+test('nettoyerTexteExterne : URLs tierces → destinations officielles', () => {
   assert.equal(
-    retirerSignatureTierce('Repo: https://github.com/SilvaTechB/silva-md-bot'),
+    nettoyerTexteExterne('Repo: https://github.com/SilvaTechB/silva-md-bot'),
     'Repo: https://github.com/Beaute-Gar/DJOUSSE-TECH-MD',
   );
-  assert.ok(retirerSignatureTierce('https://silvatech.co.ke').includes('djousse-tech-md-web.vercel.app'));
-  assert.ok(retirerSignatureTierce('https://session.silvatech.co.ke').includes('djousse-tech-md-web.vercel.app'));
-  assert.ok(retirerSignatureTierce('Support: https://wa.me/254700143167').includes('/issues'));
-  assert.ok(!/silva/i.test(retirerSignatureTierce('© 2025 Silvatech Inc · SILVA MD · Powered by Silva Tech Inc')));
+  assert.ok(nettoyerTexteExterne('https://silvatech.co.ke').includes('djousse-tech-md-web.vercel.app'));
+  assert.ok(nettoyerTexteExterne('https://session.silvatech.co.ke').includes('djousse-tech-md-web.vercel.app'));
+  assert.ok(nettoyerTexteExterne('Support: https://wa.me/254700143167').includes('/issues'));
+  assert.ok(!/silva/i.test(nettoyerTexteExterne('© 2025 Silvatech Inc · SILVA MD · Powered by Silva Tech Inc')));
 });
 
-test('retirerSignatureTierce : aides de commandes en minuscules intactes', () => {
+test('nettoyerTexteExterne : les aides de commandes en minuscules restent intactes', () => {
   const s = '• "silva play <song>" • "silva silvatech repos"';
-  assert.equal(retirerSignatureTierce(s), s, 'références de commandes préservées');
+  assert.equal(nettoyerTexteExterne(s), s, 'références de commandes préservées');
 });
 
 test('INTERDITS (crash/NSFW) inchangés', () => {
@@ -112,20 +110,20 @@ test('INTERDITS (crash/NSFW) inchangés', () => {
   assert.ok(!INTERDITS.test('menu'));
 });
 
-test('logo maison : repli visuel tierce réécrit (11 plugins couverts)', () => {
+test('logo maison : ancienne vignette remplacée (11 modules couverts)', () => {
   /* envoi d'image direct (alive, menu, repo, music, getpp…) */
-  const c1 = normaliserContenu({ image: { url: URL_LOGO_TIERCE }, caption: 'test' });
+  const c1 = normaliserContenu({ image: { url: URL_LOGO_HISTORIQUE }, caption: 'test' });
   assert.equal(c1.image.url, URL_LOGO_OFFICIEL, 'image d’envoi → logo officiel');
   /* vignette de lien (facebook, instagram, statussave, owner) */
   const c2 = normaliserContenu({
-    contextInfo: { externalAdReply: { thumbnailUrl: URL_LOGO_TIERCE, title: 'x' } },
+    contextInfo: { externalAdReply: { thumbnailUrl: URL_LOGO_HISTORIQUE, title: 'x' } },
   });
   assert.equal(c2.contextInfo.externalAdReply.thumbnailUrl, URL_LOGO_OFFICIEL,
     'vignette externalAdReply → logo officiel');
   /* aucune autre image n'est touchée */
   const c3 = normaliserContenu({ image: { url: 'https://example.com/photo.jpg' } });
   assert.equal(c3.image.url, 'https://example.com/photo.jpg');
-  assert.notEqual(URL_LOGO_TIERCE, URL_LOGO_OFFICIEL);
+  assert.notEqual(URL_LOGO_HISTORIQUE, URL_LOGO_OFFICIEL);
 });
 
 /* ── 4. config : identité + slogan ── */
@@ -151,8 +149,8 @@ test('alerte hacktools sans ancienne marque', () => {
 /* ── 6. Le registre total reste cohérent (pas de commande fantôme) ── */
 test('chiffres du registre : totaux README vérifiables', () => {
   const vus = new Set(h.commands.values());
-  assert.equal(vus.size, 984, '984 commandes distinctes (README, après ajout de .flash)');
-  assert.equal(h.commands.size, 1366, '1366 noms au registre (README)');
+  assert.equal(vus.size, 983, '983 commandes distinctes après fusion de .creator dans .owner');
+  assert.equal(h.commands.size, 1367, '1367 noms au registre (README)');
 });
 
 test('calculatrice : un nom principal, alias .calculate retiré', () => {

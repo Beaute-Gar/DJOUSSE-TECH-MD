@@ -1,6 +1,6 @@
 'use strict';
 
-const SILVA_ALIAS = {
+const HISTORICAL_ALIASES = {
   addfilter: 'blockword',
   addword: 'addban',
   admins: '@admins',
@@ -90,7 +90,6 @@ const SILVA_ALIAS = {
   removeword: 'delword',
   scanurl: 'urlscan',
   sh: 'bash',
-  silvatech: 'svrepo',
   slang: 'genz',
   slot: 'slots',
   soundcloud: 'sc',
@@ -138,10 +137,6 @@ const NOMS_SYNONYMES_SUPPRIMES = [
 ];
 
 function appliquerTables(commands) {
-  for (const key of [...commands.keys()]) {
-    if (/silva/i.test(key)) commands.delete(key);
-  }
-
   for (const name of NOMS_SUPPRIMES) commands.delete(name);
 
   for (const [oldName, survivor] of [['invitelink', 'groupinvite'], ['resetlink', 'newlink']]) {
@@ -149,7 +144,7 @@ function appliquerTables(commands) {
     if (entry && !commands.has(oldName)) commands.set(oldName, entry);
   }
 
-  for (const [primary, alias] of Object.entries(SILVA_ALIAS)) {
+  for (const [primary, alias] of Object.entries(HISTORICAL_ALIASES)) {
     const entry = commands.get(primary);
     if (!entry) continue;
     for (const key of [...commands.keys()]) {
